@@ -176,6 +176,7 @@ Expected:
 ```text
 - Dashboard shows the latest local organize result.
 - Rules & Memory can enable, disable, and delete local rules.
+- Deleting a local rule asks for confirmation and does not move or close tabs.
 - Group title/color updates real Chrome native group.
 - Undo can restore group state after dashboard apply.
 - Dashboard apply does not move tabs or close tabs in this slice.

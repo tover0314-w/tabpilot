@@ -186,5 +186,6 @@
   "hits": { "message": "$1 次命中" },
   "enable": { "message": "启用" },
   "disable": { "message": "停用" },
+  "deleteRuleConfirm": { "message": "要删除这条本地规则吗？\n\n之后整理时将不再应用它。这个操作不会移动或关闭标签页。" },
   "delete": { "message": "删除" }
 }

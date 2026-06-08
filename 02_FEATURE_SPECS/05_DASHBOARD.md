@@ -7,7 +7,7 @@ CONFIRMED BY IMPLEMENTATION:
 ```text
 P0 dashboard is an extension page.
 It shows latest workspace metrics, Smart Groups, Duplicate Center, Settings Snapshot, AI Settings, and Rules & Memory.
-Rules & Memory can enable, disable, and delete local chat-created rules.
+Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
 Dashboard apply-back-to-browser first slice supports native group title/color updates with Undo.
 Dashboard drag/drop tab movement is still not implemented.
 ```

@@ -24,7 +24,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Summarize Current Tab reads visible page text only after a user click and generates a local extractive summary.
 - Open Dashboard shows a local dashboard page with latest workspace metrics, smart groups, duplicates, and settings snapshot.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
-- Dashboard Rules & Memory shows local rules and supports Enable, Disable, and Delete.
+- Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
 - Dashboard can save a local DeepSeek/OpenAI-compatible API key for AI tab classification.
 - Dashboard can test the AI provider connection without sending tab data.
 - Dashboard Settings explains each Chrome permission and what data it supports.

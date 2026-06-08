@@ -186,5 +186,6 @@
   "hits": { "message": "$1 hits" },
   "enable": { "message": "Enable" },
   "disable": { "message": "Disable" },
+  "deleteRuleConfirm": { "message": "Delete this local rule?\n\nFuture organize runs will stop applying it. This does not move or close tabs." },
   "delete": { "message": "Delete" }
 }

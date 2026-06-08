@@ -97,6 +97,9 @@ async function handleRuleAction(event) {
   }
 
   if (button.dataset.ruleAction === "delete") {
+    const confirmed = window.confirm(msg("deleteRuleConfirm"));
+    if (!confirmed) return;
+
     nextRules = rules.filter((rule) => rule.id !== ruleId);
   }
 

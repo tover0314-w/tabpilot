@@ -87,6 +87,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Rule inputs use metadata only: hostname, path, title, and tab state.
 - User rules apply before AI and built-in classification on future organize runs.
 - Dashboard → Rules & Memory lists rules.
+- Dashboard Delete requires confirmation before removing a local rule.
 - Dashboard supports Enable, Disable, and Delete.
 - Hit count and last-used timestamp update when rules match during organize/apply.
 ```

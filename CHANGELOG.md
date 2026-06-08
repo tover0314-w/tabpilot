@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.42 — 2026-06-09
+
+Changed:
+
+- Dashboard Rules & Memory now asks for confirmation before deleting a local rule.
+- Added English/Chinese confirmation copy and smoke coverage for confirmed local rule deletion.
+- Updated Dashboard and Rules specs, Test Plan, QA Runbook, and extension README.
+
+Safety:
+
+- Local rule deletion remains local-only and user-triggered.
+- Delete confirmation states that the action does not move or close tabs.
+- No product scope, permissions, AI payload, analytics, storage backend, or automatic upload behavior changed.
+
 ## v0.41 — 2026-06-09
 
 Added:

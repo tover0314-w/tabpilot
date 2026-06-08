@@ -202,6 +202,23 @@ test("dashboard permission explanation matches manifest permissions", () => {
   }
 });
 
+test("dashboard rule deletion requires confirmation", () => {
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+  const deleteBranchIndex = dashboardJs.indexOf('button.dataset.ruleAction === "delete"');
+  const confirmIndex = dashboardJs.indexOf('window.confirm(msg("deleteRuleConfirm"))');
+  const deleteFilterIndex = dashboardJs.indexOf("rules.filter((rule) => rule.id !== ruleId)");
+
+  assert(deleteBranchIndex >= 0, "Dashboard rule delete branch should exist");
+  assert(confirmIndex > deleteBranchIndex, "Dashboard should confirm after delete branch starts");
+  assert(deleteFilterIndex > confirmIndex, "Dashboard should confirm before deleting a local rule");
+  assert(en.deleteRuleConfirm?.message, "English delete rule confirmation copy");
+  assert(zh.deleteRuleConfirm?.message, "Chinese delete rule confirmation copy");
+  assert(en.deleteRuleConfirm.message.includes("does not move or close tabs"), "English delete confirmation should state tab safety");
+  assert(zh.deleteRuleConfirm.message.includes("不会移动或关闭标签页"), "Chinese delete confirmation should state tab safety");
+});
+
 test("local error log entries redact URLs hosts and secrets", () => {
   const entry = context.buildErrorLogEntry(
     "SUMMARIZE_CURRENT_TAB",

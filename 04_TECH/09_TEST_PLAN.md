@@ -33,6 +33,7 @@ Coverage:
 - Beta diagnostic snapshot and feedback template redact URLs, tab titles, hostnames, rules, group names, page text, and API keys
 - Beta feedback template includes English/Chinese classification quality labeling for the 70/20/10/0 target
 - AI connection test calls `/models` without sending tab data, full URLs, page text, or a request body
+- Dashboard local rule deletion requires confirmation and does not move or close tabs
 - Dashboard Clear Local Data removes local rules, AI key/settings, run state, Undo/Restore snapshots, privacy acceptance, chat draft, and local error log
 ```
 
@@ -145,7 +146,7 @@ FAIL: Runtime behavior regressed.
 - disabled rule 不生效。
 - hit count 更新。
 - Chat Refine 创建规则。
-- Dashboard Enable/Disable/Delete 规则。
+- Dashboard Enable/Disable/Delete 规则；Delete 必须二次确认。
 
 ### AI Output Validator
 
