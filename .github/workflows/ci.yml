@@ -55,9 +55,14 @@ jobs:
             echo "Package unexpectedly contains env files"
             exit 1
           fi
+          test -f dist/tabmosaic-ai-extension-v0.1.0.sha256
+          test -f dist/tabmosaic-ai-extension-v0.1.0.package.json
 
       - name: Upload extension package artifact
         uses: actions/upload-artifact@v4
         with:
           name: tabmosaic-ai-extension
-          path: dist/tabmosaic-ai-extension-v0.1.0.zip
+          path: |
+            dist/tabmosaic-ai-extension-v0.1.0.zip
+            dist/tabmosaic-ai-extension-v0.1.0.sha256
+            dist/tabmosaic-ai-extension-v0.1.0.package.json

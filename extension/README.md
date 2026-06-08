@@ -88,6 +88,8 @@ Output:
 
 ```text
 dist/tabmosaic-ai-extension-v0.1.0.zip
+dist/tabmosaic-ai-extension-v0.1.0.sha256
+dist/tabmosaic-ai-extension-v0.1.0.package.json
 ```
 
 ## Verify Locally

@@ -72,6 +72,8 @@ Expected:
 - i18n.js and diagnostics.js exist
 - _locales/en/messages.json and _locales/zh_CN/messages.json exist
 - default_popup is not present
+- dist/tabmosaic-ai-extension-v0.1.0.sha256 exists
+- dist/tabmosaic-ai-extension-v0.1.0.package.json exists and states env files are excluded
 ```
 
 GitHub Actions CI:
@@ -89,6 +91,7 @@ Coverage:
 - extension smoke test
 - extension package generation
 - extension zip excludes env files
+- package checksum and package manifest generation
 - package artifact upload
 ```
 

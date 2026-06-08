@@ -98,6 +98,8 @@ node tools/package_extension.js
 
 ```text
 dist/tabmosaic-ai-extension-v0.1.0.zip
+dist/tabmosaic-ai-extension-v0.1.0.sha256
+dist/tabmosaic-ai-extension-v0.1.0.package.json
 ```
 
 可选真实 Chrome runtime smoke test：

@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.38 — 2026-06-09
+
+Added:
+
+- Extension packaging now writes a SHA256 checksum file next to the beta zip.
+- Extension packaging now writes a package manifest with version, package name, checksum, commit, generated time, included files, and safety flags.
+- Preflight verifies package metadata exists and matches the generated checksum.
+- CI uploads the zip, checksum, and package manifest as artifacts.
+
+Safety:
+
+- Package metadata is generated into ignored `dist/`.
+- Package manifest explicitly records that env files are excluded.
+- No product behavior, permissions, AI payload, analytics, or storage behavior changed.
+
 ## v0.37 — 2026-06-09
 
 Added:

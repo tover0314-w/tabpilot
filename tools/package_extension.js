@@ -1,4 +1,5 @@
 const childProcess = require("child_process");
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
@@ -17,6 +18,10 @@ validateLocales(manifest);
 fs.mkdirSync(DIST_DIR, { recursive: true });
 const packageName = `tabmosaic-ai-extension-v${manifest.version}.zip`;
 const outputPath = path.join(DIST_DIR, packageName);
+const checksumName = `tabmosaic-ai-extension-v${manifest.version}.sha256`;
+const checksumPath = path.join(DIST_DIR, checksumName);
+const packageManifestName = `tabmosaic-ai-extension-v${manifest.version}.package.json`;
+const packageManifestPath = path.join(DIST_DIR, packageManifestName);
 
 if (fs.existsSync(outputPath)) {
   fs.unlinkSync(outputPath);
@@ -38,7 +43,29 @@ const packageFiles = [
 
 run("zip", ["-qr", outputPath, ...packageFiles], EXTENSION_DIR);
 
+const checksum = sha256File(outputPath);
+const packageManifest = {
+  product: "TabMosaic AI",
+  version: manifest.version,
+  packageName,
+  checksumName,
+  sha256: checksum,
+  commit: gitCommit(),
+  generatedAt: new Date().toISOString(),
+  packageFiles,
+  safety: {
+    includesEnvFiles: false,
+    includesSourceMaps: false,
+    includesNodeModules: false
+  }
+};
+
+fs.writeFileSync(checksumPath, `${checksum}  ${packageName}\n`);
+fs.writeFileSync(packageManifestPath, `${JSON.stringify(packageManifest, null, 2)}\n`);
+
 console.log(`Wrote ${path.relative(ROOT_DIR, outputPath)}`);
+console.log(`Wrote ${path.relative(ROOT_DIR, checksumPath)}`);
+console.log(`Wrote ${path.relative(ROOT_DIR, packageManifestPath)}`);
 
 function validateManifestAssets(manifest) {
   const iconPaths = new Set([
@@ -110,4 +137,21 @@ function run(command, args, cwd) {
   if (result.status !== 0) {
     throw new Error(`${command} failed with exit code ${result.status}`);
   }
+}
+
+function sha256File(filePath) {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function gitCommit() {
+  const result = childProcess.spawnSync("git", ["rev-parse", "--short", "HEAD"], {
+    cwd: ROOT_DIR,
+    encoding: "utf8"
+  });
+
+  if (result.status !== 0) {
+    return "unknown";
+  }
+
+  return result.stdout.trim() || "unknown";
 }

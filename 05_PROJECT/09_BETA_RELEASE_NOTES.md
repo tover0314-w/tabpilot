@@ -2,8 +2,9 @@
 
 Release: TabMosaic AI v0.1.0  
 Status: PRIVATE BETA ONLY  
-Commit: `bd365b0`  
 Package: `dist/tabmosaic-ai-extension-v0.1.0.zip`  
+Checksum: `dist/tabmosaic-ai-extension-v0.1.0.sha256`  
+Package manifest: `dist/tabmosaic-ai-extension-v0.1.0.package.json`  
 Date: 2026-06-09
 
 This release is ready for controlled local/private testing. It is not ready for public Chrome Web Store submission until the confirmation gates in `05_PROJECT/07_STORE_SUBMISSION_DRAFT.md` are approved and the manual QA runbook is completed.
@@ -72,6 +73,8 @@ Package safety:
 env_in_zip=no
 .env.local ignored by git
 dist/ ignored by git
+sha256 generated
+package manifest generated
 ```
 
 ## Install Locally
