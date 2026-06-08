@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="extensionName">TabMosaic AI</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">TabMosaic AI</p>
+          <h1 data-i18n="sidepanelHeadline">Work tabs, organized.</h1>
+        </div>
+        <button
+          id="scanButton"
+          class="icon-button"
+          type="button"
+          title="Organize again"
+          aria-label="Organize again"
+          data-i18n-title="organizeAgain"
+          data-i18n-aria-label="organizeAgain"
+        >
+          ↻
+        </button>
+      </header>
+
+      <section id="statusPanel" class="status-panel" aria-live="polite"></section>
+
+      <section id="privacyPanel" class="privacy-panel" hidden>
+        <p class="section-title" data-i18n="firstRunPrivacyTitle">First Run Privacy</p>
+        <h2 data-i18n="firstRunPrivacyHeading">Before TabMosaic organizes your tabs</h2>
+        <ul>
+          <li data-i18n="privacyBulletMetadata">Reads tab title, hostname, path, and tab state.</li>
+          <li data-i18n="privacyBulletBody">Does not read page body unless you ask for summary later.</li>
+          <li data-i18n="privacyBulletDuplicates">Safe exact/tracking duplicates may be closed, with Restore available.</li>
+          <li data-i18n="privacyBulletProtected">Active, pinned, audible, incognito, and internal tabs are protected.</li>
+        </ul>
+        <button id="startButton" class="primary-button" type="button" data-i18n="startOrganizing">Start Organizing</button>
+      </section>
+
+      <div class="action-row">
+        <button id="organizeButton" class="primary-button" type="button" data-i18n="organizeAgain">Organize Again</button>
+        <button id="undoButton" class="secondary-button" type="button" disabled data-i18n="undo">Undo</button>
+        <button id="restoreButton" class="secondary-button" type="button" disabled data-i18n="restoreClosed">Restore Closed</button>
+        <button id="dashboardButton" class="secondary-button" type="button" data-i18n="openDashboard">Open Dashboard</button>
+      </div>
+
+      <section class="section chat-section">
+        <div class="section-title" data-i18n="chatRefine">Chat Refine</div>
+        <form id="chatForm" class="chat-form">
+          <input
+            id="chatInput"
+            type="text"
+            placeholder="Tell TabMosaic how to fix your groups..."
+            data-i18n-placeholder="chatPlaceholder"
+            autocomplete="off"
+          />
+          <button id="chatSendButton" class="secondary-button" type="submit" data-i18n="preview">Preview</button>
+        </form>
+        <div class="prompt-row" aria-label="Suggested refinements" data-i18n-aria-label="suggestedRefinements">
+          <button class="prompt-chip" type="button" data-prompt="GitHub PR to Code Review" data-i18n="promptGithubPr">GitHub PR</button>
+          <button class="prompt-chip" type="button" data-prompt="current tab to Reading" data-i18n="promptCurrentTab">Current tab</button>
+          <button class="prompt-chip" type="button" data-prompt="rename Misc to Reading" data-i18n="promptRename">Rename</button>
+        </div>
+        <div id="chatPanel" class="chat-panel" hidden></div>
+      </section>
+
+      <section class="section summary-section">
+        <div class="section-title" data-i18n="currentTabSummary">Current Tab Summary</div>
+        <p class="section-copy" data-i18n="summaryDescription">
+          Reads visible text from the active page only after you click.
+        </p>
+        <button id="summaryButton" class="secondary-button full-width-button" type="button" data-i18n="summarizeCurrentTab">
+          Summarize Current Tab
+        </button>
+        <div id="summaryPanel" class="summary-panel" hidden></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title" data-i18n="browserResult">Browser Result</div>
+        <div id="metricsGrid" class="metrics-grid"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title" data-i18n="topHosts">Top Hosts</div>
+        <div id="hostsList" class="list"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title" data-i18n="nativeGroups">Native Groups</div>
+        <div id="groupsList" class="list"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title" data-i18n="protectedTabs">Protected Tabs</div>
+        <div id="protectedList" class="list compact"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-title" data-i18n="duplicateCandidates">Duplicate Candidates</div>
+        <div id="duplicatesList" class="list compact"></div>
+      </section>
+
+      <section class="next-card">
+        <p class="next-label" data-i18n="nextBuildSlice">Next build slice</p>
+        <p class="next-copy" data-i18n="nextBuildCopy">
+          Run real Chrome QA with multi-window work tabs.
+        </p>
+      </section>
+    </main>
+
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>

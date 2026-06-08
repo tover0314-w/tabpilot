@@ -1,0 +1,137 @@
+# Sprint Plan
+
+## Sprint 1：Chrome Extension Skeleton
+
+状态：已实现第一版无构建 MV3 切片，代码在 `extension/`。
+
+目标：跑通点击插件 → 打开 sidebar → 扫描 tabs。
+
+任务：
+
+- MV3 manifest。
+- action.onClicked。
+- sidePanel.open。
+- collectAllNormalWindowTabs()。
+- sidePanel progress UI。
+- message bus。
+
+交付：
+
+- 点击 icon 可打开 sidebar。
+- Sidebar 显示当前浏览器所有普通窗口 tabs 数和窗口数。
+
+## Sprint 2：Native Tab Groups
+
+状态：已实现第一版 built-in rules + native tab group apply + basic undo，代码在 `extension/`。
+
+目标：跑通原生分组应用。
+
+任务：
+
+- built-in domain rules。
+- group plan 数据结构。
+- tabs.group / tabGroups.update。
+- group order。
+- collapse/expand。
+- undo snapshot basic。
+
+交付：
+
+- 点击后顶部 tab bar 出现 groups。
+
+## Sprint 3：Deduplication
+
+状态：已实现 safe exact/tracking duplicate close、Restore Closed、Review-only duplicate UI、Keep All、manual confirmed close。
+
+目标：安全去重。
+
+任务：
+
+- canonicalUrl。
+- exact duplicate。
+- tracking params duplicate。
+- keep tab scoring。
+- close safe duplicates。
+- restore closed tabs。
+- duplicate sidebar UI。
+
+交付：
+
+- 自动关闭 exact/tracking duplicates。
+- 可恢复。
+
+## Sprint 4：AI Classification
+
+状态：已实现 optional DeepSeek/OpenAI-compatible classification、local dashboard settings、JSON output validation、fallback to local rules。
+
+目标：AI 分类接近人工。
+
+任务：
+
+- AI provider interface。
+- DeepSeek/OpenAI-compatible provider settings。
+- classification prompt。
+- JSON schema validation。
+- AI fallback。
+- confidence / Review / Misc。
+
+交付：
+
+- 点击后 AI 生成任务导向 group names。
+
+## Sprint 5：Sidebar Chat + Current Tab Summary
+
+状态：已实现 local Chat Refine preview/apply first slice、local user rules、current tab local extractive summary。
+
+目标：用户可纠错和总结当前页面。
+
+任务：
+
+- chat UI。
+- chat-to-action parser。
+- create rule action。
+- regroup action。
+- activeTab + scripting extractor。
+- current tab summary prompt。
+
+交付：
+
+- 用户能说“GitHub PR 放 Code Review”。
+- 用户能总结当前页面。
+
+## Sprint 6：Dashboard V0
+
+状态：已实现 extension page dashboard、workspace metrics、smart group cards、duplicate center、rules memory、AI settings、group title/color apply。Drag/drop tab assignment 和 save workspace 仍未实现。
+
+目标：看板管理好的分组。
+
+任务：
+
+- dashboard extension page。
+- current workspace overview。
+- smart group cards。
+- group detail。
+- drag/drop tab assignment。
+- apply to browser。
+- save workspace locally。
+
+交付：
+
+- 用户可在 dashboard 调整分组并同步到浏览器。
+
+## Sprint 7：Private Beta Polish
+
+目标：可给真实用户试用。
+
+任务：
+
+- onboarding。
+- privacy settings。
+- error states。
+- analytics minimal。
+- performance optimization。
+- Chrome Web Store draft。
+
+交付：
+
+- Private beta build。

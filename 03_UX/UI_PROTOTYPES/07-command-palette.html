@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TabMosaic AI — Command Palette</title>
+<meta name="description" content="TabMosaic AI command palette (⌘K) — single key, four sections, complete." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   TabMosaic AI — Command palette
+   ⌘K single key · 4 sections · 2 states (idle + search)
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#FAFAFA;color:#0A0A0A;font-family:"Inter",-apple-system,"PingFang SC",system-ui,sans-serif;font-size:13px;-webkit-font-smoothing:antialiased;min-height:100vh}
+[data-theme="dark"] html,[data-theme="dark"] body{background:#0B0B0B;color:#F4F4F4}
+
+:root{
+  --n-0:#FFF;--n-50:#FAFAFA;--n-100:#F4F4F4;--n-150:#ECECEC;--n-200:#E0E0E0;
+  --n-300:#CCC;--n-400:#999;--n-500:#767;--n-600:#555;--n-700:#333;--n-800:#1A1A1A;--n-900:#0A0A0A;
+  --g-0:#CCC;--g-1:#999;--g-2:#888;--g-3:#808080;--g-4:#6E6E6E;--g-5:#555;--g-6:#767;--g-7:#333;
+  --font-display:"Fraunces",Georgia,serif;
+  --font-sans:"Inter",-apple-system,"PingFang SC",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --shadow-modal:0 24px 80px -16px rgba(0,0,0,.2);
+}
+[data-theme="dark"]{--n-0:#141414;--n-50:#0B0B0B;--n-100:#171717;--n-150:#1F1F1F;--n-200:#262626;--n-300:#3A3A3A;--n-400:#555;--n-500:#767;--n-600:#999;--n-700:#CCC;--n-800:#E0E0E0;--n-900:#F4F4F4}
+
+/* backdrops for context */
+.stage{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:40px 24px;position:relative;
+  background:radial-gradient(circle at 50% 0%,#FFF,#FAFAFA 70%);
+}
+[data-theme="dark"] .stage{background:radial-gradient(circle at 50% 0%,#171717,#0B0B0B 70%)}
+
+.head{position:absolute;top:32px;left:32px;right:32px;display:flex;align-items:center;justify-content:space-between}
+.head h1{font-family:var(--font-display);font-size:28px;font-weight:500;letter-spacing:-.02em;margin:0 0 4px}
+.head p{color:#767;font-size:13px;margin:0}
+.head .right{font-family:var(--font-mono);font-size:11px;color:#999;letter-spacing:.04em;text-align:right}
+.head .right b{color:#0A0A0A;font-weight:500}
+[data-theme="dark"] .head .right b{color:#F4F4F4}
+
+/* palette wrapper */
+.palette{
+  width:100%;max-width:640px;background:#FFF;border:1px solid #E0E0E0;border-radius:14px;
+  box-shadow:var(--shadow-modal);overflow:hidden;animation:pop .25s cubic-bezier(.16,1,.3,1);
+  position:relative;z-index:2;
+}
+[data-theme="dark"] .palette{background:#141414;border-color:#262626}
+@keyframes pop{from{transform:scale(.96) translateY(8px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+.p-head{
+  display:flex;align-items:center;gap:10px;padding:14px 16px;
+  border-bottom:1px solid #E0E0E0;
+}
+[data-theme="dark"] .p-head{border-color:#262626}
+.p-head .glyph{width:22px;height:22px;background:#0A0A0A;border-radius:5px;display:grid;place-items:center;color:#FFF;font-family:var(--font-display);font-size:13px;flex:0 0 auto}
+[data-theme="dark"] .p-head .glyph{background:#F4F4F4;color:#0A0A0A}
+.p-head .scope-tabs{display:flex;gap:2px;margin-left:2px}
+.p-head .scope-tab{padding:3px 8px;font-size:11px;color:#767;border-radius:3px;cursor:pointer;letter-spacing:-.01em}
+.p-head .scope-tab.active{background:#0A0A0A;color:#FFF}
+[data-theme="dark"] .p-head .scope-tab.active{background:#F4F4F4;color:#0A0A0A}
+.p-head input{flex:1;background:none;border:0;outline:0;font-size:14px;font-family:inherit;color:#0A0A0A;letter-spacing:-.01em}
+[data-theme="dark"] .p-head input{color:#F4F4F4}
+.p-head input::placeholder{color:#999}
+.p-head .esc{font-family:var(--font-mono);font-size:10px;background:#F4F4F4;border:1px solid #E0E0E0;padding:2px 6px;border-radius:3px;color:#555;cursor:pointer;flex:0 0 auto}
+[data-theme="dark"] .p-head .esc{background:#1F1F1F;border-color:#262626;color:#999}
+
+.p-body{max-height:60vh;overflow-y:auto;padding:6px 0}
+.p-section{margin:6px 0}
+.p-section-label{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#999;
+  padding:8px 16px 4px;display:flex;align-items:center;gap:8px;
+}
+.p-section-label .ct{margin-left:auto;font-family:var(--font-mono);background:#F4F4F4;padding:1px 5px;border-radius:2px;font-size:9px;color:#767}
+[data-theme="dark"] .p-section-label .ct{background:#1F1F1F}
+.p-item{
+  display:grid;grid-template-columns:24px 1fr auto auto;gap:12px;align-items:center;
+  padding:8px 16px;cursor:pointer;font-size:12.5px;line-height:1.4;
+  transition:background 100ms;
+}
+.p-item:hover{background:#FAFAFA}
+.p-item.active{background:#0A0A0A;color:#FFF}
+.p-item.active .sub{color:rgba(255,255,255,.6)}
+.p-item.active .meta{color:rgba(255,255,255,.6);background:rgba(255,255,255,.12)}
+[data-theme="dark"] .p-item:hover{background:#1F1F1F}
+.p-item .ic{font-family:var(--font-mono);color:#767;font-size:14px;text-align:center}
+[data-theme="dark"] .p-item .ic{color:#999}
+.p-item.active .ic{color:rgba(255,255,255,.7)}
+.p-item .main{overflow:hidden}
+.p-item .title{font-weight:500;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-item .sub{font-size:11.5px;color:#767;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.p-item .meta{font-family:var(--font-mono);font-size:10px;color:#767;background:#F4F4F4;padding:1px 5px;border-radius:2px;letter-spacing:.04em}
+[data-theme="dark"] .p-item .meta{background:#1F1F1F}
+.p-item .kbd{font-family:var(--font-mono);font-size:10px;background:rgba(0,0,0,.06);padding:2px 5px;border-radius:2px;color:#555}
+.p-item.active .kbd{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
+
+/* group color dots in palette */
+.d{width:6px;height:6px;border-radius:50%;background:#999;flex:0 0 auto}
+.d.g-0{background:var(--g-0)}.d.g-1{background:var(--g-1)}.d.g-2{background:var(--g-2)}.d.g-3{background:var(--g-3)}.d.g-4{background:var(--g-4)}.d.g-5{background:var(--g-5)}.d.g-6{background:var(--g-6)}.d.g-7{background:var(--g-7)}
+
+.p-foot{
+  border-top:1px solid #E0E0E0;padding:8px 16px;
+  display:flex;align-items:center;gap:14px;
+  font-family:var(--font-mono);font-size:10.5px;color:#767;letter-spacing:.04em;
+  background:#FAFAFA;
+}
+[data-theme="dark"] .p-foot{border-color:#262626;background:#0B0B0B}
+.p-foot .group{display:flex;align-items:center;gap:4px}
+.p-foot kbd{font-family:var(--font-mono);font-size:10px;background:#FFF;border:1px solid #E0E0E0;padding:1px 5px;border-radius:2px;color:#555}
+[data-theme="dark"] .p-foot kbd{background:#141414;border-color:#262626;color:#999}
+.p-foot .privacy{margin-left:auto;display:flex;align-items:center;gap:4px}
+
+/* Stage 2 — search */
+.search-stage{padding:60px 24px}
+.search-headline{
+  font-family:var(--font-display);font-size:38px;font-weight:500;letter-spacing:-.02em;line-height:1.1;
+  text-align:center;max-width:560px;margin:0 auto 12px;
+}
+.search-headline em{font-style:italic;color:#555}
+[data-theme="dark"] .search-headline em{color:#999}
+.search-sub{text-align:center;color:#767;font-size:13px;margin:0 auto 32px;max-width:480px}
+
+.theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;background:#0A0A0A;color:#FFF;display:grid;place-items:center;box-shadow:0 8px 24px -8px rgba(0,0,0,.12);border:0;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- ===== STAGE 1: IDLE (the one you see by default) ===== -->
+<div class="stage" id="stageIdle">
+  <div class="head">
+    <div>
+      <h1>Command palette</h1>
+      <p>Single-key launch (⌘K) · 4 sections · always reachable from any tab</p>
+    </div>
+    <div class="right">
+      <b>⌘K</b> anywhere to summon<br>
+      <b>esc</b> to dismiss
+    </div>
+  </div>
+
+  <div class="palette" style="position:relative">
+    <div class="p-head">
+      <div class="glyph">T</div>
+      <div class="scope-tabs">
+        <span class="scope-tab active">All</span>
+        <span class="scope-tab">Groups</span>
+        <span class="scope-tab">Tabs</span>
+        <span class="scope-tab">Commands</span>
+      </div>
+      <input placeholder="Type a command, group, or tab…" />
+      <span class="esc">esc</span>
+    </div>
+
+    <div class="p-body">
+
+      <div class="p-section">
+        <div class="p-section-label">Recent <span class="ct">3</span></div>
+        <div class="p-item">
+          <span class="ic">▸</span>
+          <div class="main"><div class="title">Organize all tabs</div><div class="sub">group + suspend + dedupe in 1.4s</div></div>
+          <span class="meta">⌘ .</span>
+          <span class="kbd">⏎</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">▸</span>
+          <div class="main"><div class="title">Open Dashboard</div><div class="sub">groups · workspaces · rules · billing</div></div>
+          <span class="meta">⌘ D</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">▸</span>
+          <div class="main"><div class="title">Summarize current page</div><div class="sub">chrome.sidePanel API · developer.chrome.com</div></div>
+          <span class="meta">⌘ S</span>
+        </div>
+      </div>
+
+      <div class="p-section">
+        <div class="p-section-label">Smart Groups <span class="ct">8</span></div>
+        <div class="p-item">
+          <span class="d g-0"></span>
+          <div class="main"><div class="title">AI Tab Manager Research</div><div class="sub">arxiv · blog · 14 tabs · last update 14m</div></div>
+          <span class="meta">[ LOCAL ]</span>
+        </div>
+        <div class="p-item">
+          <span class="d g-5"></span>
+          <div class="main"><div class="title">News</div><div class="sub">feed · rss · 12 tabs · 8 suspended</div></div>
+          <span class="meta">[ LOCAL ]</span>
+        </div>
+        <div class="p-item">
+          <span class="d g-2"></span>
+          <div class="main"><div class="title">Design refs</div><div class="sub">dribbble · figma · 11 tabs</div></div>
+          <span class="meta">[ LOCAL ]</span>
+        </div>
+        <div class="p-item">
+          <span class="d g-1"></span>
+          <div class="main"><div class="title">Open PRs</div><div class="sub">github · 6 tabs · [ RULE ] auto-join</div></div>
+          <span class="meta">[ RULE ]</span>
+        </div>
+        <div class="p-item">
+          <span class="d g-3"></span>
+          <div class="main"><div class="title">Docs</div><div class="sub">notion · 8 tabs</div></div>
+          <span class="meta">[ LOCAL ]</span>
+        </div>
+      </div>
+
+      <div class="p-section">
+        <div class="p-section-label">Tabs <span class="ct">5 / 87</span></div>
+        <div class="p-item active">
+          <span class="ic">◉</span>
+          <div class="main"><div class="title">chrome.sidePanel API</div><div class="sub">developer.chrome.com/docs/extensions/reference/api/sidePanel</div></div>
+          <span class="meta">ACTIVE</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">▷</span>
+          <div class="main"><div class="title">arxiv 2401.01234</div><div class="sub">arxiv.org/abs/2401.01234 · suspended</div></div>
+          <span class="meta">SUSP</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">▷</span>
+          <div class="main"><div class="title">Tab Fatigue &amp; Productivity</div><div class="sub">blog.superhuman.com/2024/01/tab-fatigue</div></div>
+          <span class="meta">AUDIO</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">▷</span>
+          <div class="main"><div class="title">pull/4821 — feat: sidePanel agent</div><div class="sub">github.com/aitab/extension/pull/4821</div></div>
+          <span class="meta">PR</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">▷</span>
+          <div class="main"><div class="title">Q2 planning</div><div class="sub">notion.so/team/aitab-roadmap</div></div>
+          <span class="meta">PIN</span>
+        </div>
+      </div>
+
+      <div class="p-section">
+        <div class="p-section-label">Commands</div>
+        <div class="p-item">
+          <span class="ic">⊕</span>
+          <div class="main"><div class="title">New smart group from selection</div><div class="sub">select 2+ tabs, then run</div></div>
+          <span class="meta">⌘ ⇧ N</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">⏸</span>
+          <div class="main"><div class="title">Suspend all inactive tabs</div><div class="sub">saved 1.2 GB last run</div></div>
+          <span class="meta">⌘ ⇧ S</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">⌫</span>
+          <div class="main"><div class="title">Open Duplicate Center</div><div class="sub">12 duplicates · 5 need review</div></div>
+          <span class="meta">⌘ ⇧ D</span>
+        </div>
+        <div class="p-item">
+          <span class="ic">⊘</span>
+          <div class="main"><div class="title">Mute this tab for 1 hour</div><div class="sub">TabMosaic will not touch it until then</div></div>
+          <span class="meta">⌘ M</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="p-foot">
+      <div class="group"><kbd>↑</kbd><kbd>↓</kbd> navigate</div>
+      <div class="group"><kbd>⏎</kbd> open</div>
+      <div class="group"><kbd>⌘ ⏎</kbd> secondary</div>
+      <div class="group"><kbd>⇧</kbd> multi-select</div>
+      <div class="privacy">[ LOCAL ] · all results private</div>
+    </div>
+  </div>
+</div>
+
+<button class="theme-btn" id="themeBtn" title="Toggle theme">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+
+<script>
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+});
+
+// Item click → highlight
+document.querySelectorAll('.p-item').forEach(it=>{
+  it.addEventListener('click',()=>{
+    document.querySelectorAll('.p-item').forEach(x=>x.classList.remove('active'));
+    it.classList.add('active');
+  });
+});
+
+// Scope tabs
+document.querySelectorAll('.scope-tab').forEach(s=>{
+  s.addEventListener('click',()=>{
+    document.querySelectorAll('.scope-tab').forEach(x=>x.classList.remove('active'));
+    s.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

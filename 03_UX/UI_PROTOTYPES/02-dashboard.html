@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TabMosaic AI — Dashboard</title>
+<meta name="description" content="TabMosaic AI Dashboard — 项目空间,自动整理,设置。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   TabMosaic AI — Dashboard v3
+   左侧 sidebar (项目空间 / 自动整理 / 设置 + 当前项目 + 操作 + 隐私)
+   右侧主区(默认:项目空间 — group 卡片网格,每个 group 默认展开 tabs 列表)
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+ul,ol{list-style:none;margin:0;padding:0}
+a{color:inherit;text-decoration:none}
+
+:root{
+  --n-0:#FFF;--n-50:#FAFAFA;--n-100:#F4F4F4;--n-150:#ECECEC;--n-200:#E0E0E0;
+  --n-300:#CCC;--n-400:#999;--n-500:#767;--n-600:#555;--n-700:#333;--n-800:#1A1A1A;--n-900:#0A0A0A;--n-1000:#000;
+  --g-0:#CCC;--g-1:#999;--g-2:#888;--g-3:#808080;--g-4:#6E6E6E;--g-5:#555;--g-6:#767;--g-7:#333;
+  --font-display:"Fraunces","Source Serif Pro","Songti SC",Georgia,serif;
+  --font-sans:"Inter",-apple-system,"PingFang SC","SF Pro Text",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",ui-monospace,monospace;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;
+  --r-sm:4px;--r-md:6px;--r-lg:10px;--r-xl:14px;--r-pill:999px;
+  --shadow-1:0 1px 0 0 var(--n-200);
+  --shadow-2:0 1px 2px 0 rgba(0,0,0,.04),0 4px 8px -2px rgba(0,0,0,.06);
+  --shadow-3:0 8px 24px -8px rgba(0,0,0,.12);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --dur-fast:150ms;--dur-base:240ms;
+  --bg:var(--n-50);--panel:var(--n-0);--line:var(--n-200);--line-2:var(--n-300);
+}
+[data-theme="dark"]{
+  --bg:#0B0B0B;--panel:#141414;--line:#262626;--line-2:#3A3A3A;
+  --n-0:#141414;--n-50:#0B0B0B;--n-100:#171717;--n-150:#1F1F1F;--n-200:#262626;--n-300:#3A3A3A;--n-400:#555;--n-500:#767;--n-600:#999;--n-700:#CCC;--n-800:#E0E0E0;--n-900:#F4F4F4;--n-1000:#FFF;
+}
+body{background:var(--bg);color:var(--n-900);font-family:var(--font-sans);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ===== Top bar (minimal) ===== */
+.topbar{
+  height:40px;background:var(--panel);
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;padding:0 20px;gap:14px;
+  position:sticky;top:0;z-index:30;
+}
+.topbar .brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;letter-spacing:-.01em}
+.topbar .brand-mark{
+  width:22px;height:22px;background:var(--n-900);border-radius:5px;
+  display:grid;place-items:center;color:#FFF;font-family:var(--font-display);font-size:13px;font-weight:600;
+}
+.topbar .privacy{
+  margin-left:auto;display:flex;align-items:center;gap:6px;
+  font-size:11.5px;color:var(--n-600);
+}
+.topbar .privacy .lock{color:var(--n-700);font-size:13px}
+.topbar .theme{
+  width:28px;height:28px;border-radius:5px;display:grid;place-items:center;color:var(--n-500);
+  transition:all var(--dur-fast) var(--ease);
+}
+.topbar .theme:hover{background:var(--n-100);color:var(--n-900)}
+
+/* ===== Layout ===== */
+.shell{
+  display:grid;
+  grid-template-columns:240px 1fr;
+  min-height:calc(100vh - 40px);
+}
+
+/* ===== Sidebar (left) ===== */
+aside{
+  background:var(--panel);
+  border-right:1px solid var(--line);
+  padding:18px 0;
+  display:flex;flex-direction:column;
+  height:calc(100vh - 40px);
+  position:sticky;top:40px;
+  overflow-y:auto;
+}
+.nav-section{padding:0 14px;margin-bottom:16px}
+.nav-label{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--n-400);padding:0 10px;margin-bottom:6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  height:34px;padding:0 10px;border-radius:var(--r-md);
+  color:var(--n-600);font-size:13.5px;cursor:pointer;
+  transition:all var(--dur-fast) var(--ease);
+  position:relative;
+}
+.nav-item:hover{background:var(--n-100);color:var(--n-900)}
+.nav-item.active{background:var(--n-900);color:#FFF}
+.nav-item .ic{font-size:14px;width:18px;text-align:center;flex:0 0 auto;opacity:.85}
+.nav-item.active .ic{opacity:1}
+.nav-item .count{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--n-500)}
+.nav-item.active .count{color:rgba(255,255,255,.6)}
+.nav-item .kbd{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--n-400);background:var(--n-100);padding:1px 5px;border-radius:3px}
+.nav-item.active .kbd{color:rgba(255,255,255,.6);background:rgba(255,255,255,.12)}
+
+/* Workspace card */
+.workspace-card{
+  margin:0 14px;padding:12px 14px;
+  background:var(--n-50);border:1px solid var(--line);border-radius:var(--r-lg);
+}
+.workspace-card .wl{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--n-500);margin-bottom:4px}
+.workspace-card .wn{font-family:var(--font-display);font-size:17px;font-weight:500;letter-spacing:-.01em;display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.workspace-card .wn::before{content:"▸";color:var(--n-400);font-size:12px}
+.workspace-card .wm{font-family:var(--font-mono);font-size:11px;color:var(--n-500);margin-bottom:10px;letter-spacing:.02em}
+.workspace-card .switch{
+  width:100%;height:28px;display:flex;align-items:center;justify-content:center;gap:4px;
+  font-size:11.5px;color:var(--n-600);background:var(--panel);border:1px solid var(--line-2);border-radius:var(--r-md);
+  transition:all var(--dur-fast) var(--ease);cursor:pointer;
+}
+.workspace-card .switch:hover{background:var(--n-100);color:var(--n-900)}
+
+/* CTAs */
+.cta-block{padding:0 14px;display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.cta{
+  height:32px;display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:12.5px;font-weight:500;border-radius:var(--r-md);
+  border:1px solid var(--line-2);background:var(--panel);color:var(--n-700);
+  transition:all var(--dur-fast) var(--ease);cursor:pointer;
+}
+.cta:hover{background:var(--n-100);color:var(--n-900);border-color:var(--n-400)}
+.cta.primary{background:var(--n-900);color:#FFF;border-color:var(--n-900)}
+.cta.primary:hover{background:var(--n-700);border-color:var(--n-700);color:#FFF}
+
+/* Privacy note */
+.privacy-note{
+  margin:auto 14px 0;padding:10px 12px;
+  background:var(--n-50);border:1px solid var(--line);border-radius:var(--r-md);
+  display:flex;gap:8px;align-items:flex-start;
+}
+.privacy-note .lock{color:var(--n-700);font-size:14px;flex:0 0 auto;margin-top:1px}
+.privacy-note .pt{font-size:11.5px;color:var(--n-700);font-weight:500;line-height:1.3;margin-bottom:2px}
+.privacy-note .ps{font-size:10.5px;color:var(--n-500);line-height:1.4}
+
+/* ===== Main ===== */
+main{padding:24px 28px 60px;max-width:100%;overflow-x:hidden}
+.page-head{margin-bottom:18px}
+.page-title{font-family:var(--font-display);font-size:28px;font-weight:500;letter-spacing:-.02em;line-height:1.1;margin:0 0 4px}
+.page-sub{font-family:var(--font-mono);font-size:11.5px;color:var(--n-500);letter-spacing:.02em;margin:0}
+
+.page-actions{display:flex;align-items:center;gap:8px;margin:18px 0 14px;flex-wrap:wrap}
+.btn{
+  height:30px;padding:0 12px;border-radius:var(--r-md);font-size:12.5px;font-weight:500;
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--line-2);background:var(--panel);color:var(--n-700);
+  transition:all var(--dur-fast) var(--ease);cursor:pointer;
+}
+.btn:hover{background:var(--n-100);color:var(--n-900);border-color:var(--n-400)}
+.btn-primary{background:var(--n-900);color:#FFF;border-color:var(--n-900)}
+.btn-primary:hover{background:var(--n-700);color:#FFF;border-color:var(--n-700)}
+.btn .kbd{font-family:var(--font-mono);font-size:10px;opacity:.6;margin-left:4px;background:rgba(0,0,0,.06);padding:1px 4px;border-radius:3px}
+.btn-primary .kbd{background:rgba(255,255,255,.15);opacity:.9}
+
+.filter-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.chip{
+  display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;
+  font-size:12px;border:1px solid var(--line);border-radius:var(--r-pill);
+  background:var(--panel);color:var(--n-600);
+  transition:all var(--dur-fast) var(--ease);cursor:pointer;
+}
+.chip:hover{background:var(--n-100);color:var(--n-900)}
+.chip.active{background:var(--n-900);color:#FFF;border-color:var(--n-900)}
+.chip .ct{font-family:var(--font-mono);font-size:10.5px;background:rgba(0,0,0,.06);padding:0 5px;border-radius:8px;line-height:14px}
+.chip.active .ct{background:rgba(255,255,255,.15)}
+.sort{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:12px;color:var(--n-500);font-family:var(--font-mono)}
+
+/* ===== Group cards grid ===== */
+.group-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:16px;
+}
+@media (max-width:1100px){.group-grid{grid-template-columns:1fr}}
+
+.gcard{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-xl);
+  overflow:hidden;display:flex;flex-direction:column;
+  transition:all var(--dur-base) var(--ease);
+}
+.gcard:hover{border-color:var(--n-400);box-shadow:var(--shadow-2)}
+.gcard-head{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;border-bottom:1px solid var(--line);
+  position:relative;
+}
+.gcard:hover .gcard-head::before{opacity:1}
+.gcard-head::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--n-900);
+  opacity:0;transition:opacity var(--dur-fast) var(--ease);
+}
+.gcard.active .gcard-head::before{opacity:1}
+.gcard .dot{width:8px;height:8px;border-radius:50%;background:var(--n-400);flex:0 0 auto}
+.gcard .dot.g-0{background:var(--g-0)}.gcard .dot.g-1{background:var(--g-1)}.gcard .dot.g-2{background:var(--g-2)}.gcard .dot.g-3{background:var(--g-3)}.gcard .dot.g-4{background:var(--g-4)}.gcard .dot.g-5{background:var(--g-5)}.gcard .dot.g-6{background:var(--g-6)}.gcard .dot.g-7{background:var(--g-7)}
+.gcard .gn{font-size:14px;font-weight:600;letter-spacing:-.01em;flex:0 0 auto}
+.gcard .gcount{font-family:var(--font-mono);font-size:11.5px;color:var(--n-500);margin-left:2px;flex:0 0 auto}
+.gcard .gsource{font-family:var(--font-mono);font-size:10.5px;color:var(--n-500);letter-spacing:.02em;margin-left:6px;flex:0 0 auto}
+.gcard .gmeta{margin-left:auto;display:flex;align-items:center;gap:8px}
+.gcard .susp{font-family:var(--font-mono);font-size:10.5px;color:var(--n-500);display:flex;align-items:center;gap:3px}
+.gcard .susp::before{content:"⏸";font-size:10px;opacity:.7}
+.gcard .gmenu{color:var(--n-500);font-size:14px;width:24px;height:24px;display:grid;place-items:center;border-radius:4px;transition:all var(--dur-fast) var(--ease);cursor:pointer;flex:0 0 auto}
+.gcard .gmenu:hover{background:var(--n-100);color:var(--n-900)}
+
+/* source tag (rule / local / manual) */
+.stag{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;
+  border:1px solid var(--line-2);border-radius:3px;
+  color:var(--n-600);background:var(--n-50);
+  padding:1px 5px;text-transform:uppercase;
+}
+.stag.rule{background:var(--n-900);color:#FFF;border-color:var(--n-900)}
+.stag.manual{border-color:var(--n-400);color:var(--n-700)}
+
+/* expanded tab list */
+.gcard-body{padding:0}
+.tabrow{
+  display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;
+  padding:8px 18px;font-size:12.5px;
+  border-bottom:1px solid var(--line);
+  transition:background var(--dur-fast) var(--ease);
+}
+.tabrow:last-child{border-bottom:0}
+.tabrow:hover{background:var(--n-50)}
+.tabrow .fav{
+  width:14px;height:14px;border-radius:3px;background:var(--n-300);flex:0 0 auto;
+  display:grid;place-items:center;font-family:var(--font-mono);font-size:9px;color:#FFF;font-weight:600;
+}
+.tabrow .fav.g{background:linear-gradient(135deg,#999,#555)}
+.tabrow .fav.r{background:linear-gradient(135deg,#888,#333)}
+.tabrow .fav.b{background:linear-gradient(135deg,#888,#333)}
+.tabrow .fav.y{background:linear-gradient(135deg,#AAA,#555)}
+.tabrow .ttl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--n-700)}
+.tabrow.suspended .ttl{opacity:.5;text-decoration:line-through}
+.tabrow.suspended .fav{filter:grayscale(1) opacity(.6)}
+.tabrow.audible .ttl{font-weight:500}
+.tabrow .right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.tabrow .badge{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;background:var(--n-100);padding:1px 5px;border-radius:3px;color:var(--n-500);text-transform:uppercase}
+.tabrow .x{color:var(--n-400);font-family:var(--font-mono);font-size:12px;width:18px;height:18px;display:grid;place-items:center;border-radius:3px;opacity:0;transition:all var(--dur-fast) var(--ease)}
+.tabrow:hover .x{opacity:1}
+.tabrow .x:hover{background:rgba(0,0,0,.08);color:var(--n-900)}
+.tabrow.audible .aud-dot{width:6px;height:6px;border-radius:50%;background:var(--n-700);position:relative}
+.tabrow.audible .aud-dot::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:1px solid var(--n-700);opacity:.3;animation:ring 1.4s ease-out infinite}
+@keyframes ring{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.8);opacity:0}}
+
+.more-row{
+  padding:8px 18px;font-family:var(--font-mono);font-size:11px;color:var(--n-500);
+  border-top:1px dashed var(--line);background:var(--n-50);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.more-row .open{color:var(--n-700);cursor:pointer}
+.more-row .open:hover{color:var(--n-900);text-decoration:underline}
+
+.empty-foot{padding:18px;text-align:center;color:var(--n-500);font-size:12.5px}
+
+/* Page routing */
+.page{display:none;animation:fadeIn var(--dur-base) var(--ease)}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* Rules page (simple) */
+.rule-row{
+  display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+  padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);
+  margin-bottom:6px;
+}
+.rule-row .ic{width:30px;height:30px;border-radius:var(--r-md);background:var(--n-100);display:grid;place-items:center;font-family:var(--font-mono);font-size:14px;color:var(--n-600)}
+.rule-row .rt{font-size:13px;font-weight:500;margin-bottom:2px}
+.rule-row .rc{font-family:var(--font-mono);font-size:11px;color:var(--n-500)}
+.toggle{width:32px;height:18px;background:var(--n-200);border-radius:9px;position:relative;cursor:pointer;transition:background var(--dur-fast) var(--ease);flex:0 0 auto}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;background:#FFF;border-radius:50%;transition:transform var(--dur-fast) var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.toggle.on{background:var(--n-900)}
+.toggle.on::after{transform:translateX(14px)}
+
+/* Settings page */
+.set-section{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:12px}
+.set-section h3{font-size:14px;font-weight:600;margin:0 0 12px;letter-spacing:-.01em}
+.set-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.set-row:last-child{border-bottom:0}
+.set-row .lbl{font-size:13px;font-weight:500}
+.set-row .hint{font-size:11.5px;color:var(--n-500);margin-top:2px}
+.kbd{font-family:var(--font-mono);font-size:10.5px;background:var(--n-100);border:1px solid var(--line);padding:3px 7px;border-radius:4px;color:var(--n-700)}
+
+/* Theme switch */
+.theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;background:var(--n-900);color:#FFF;display:grid;place-items:center;box-shadow:var(--shadow-3);border:0;cursor:pointer}
+
+.foot{font-family:var(--font-mono);font-size:10px;color:var(--n-400);text-align:center;padding:32px 0 0;letter-spacing:.04em}
+</style>
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">T</div>
+    <span>TabMosaic</span>
+  </div>
+  <div style="margin-left:auto"></div>
+  <div class="privacy">
+    <span class="lock">🔒</span>
+    <span>数据都在本机</span>
+  </div>
+  <button class="theme" id="themeBtn" title="切换主题">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</header>
+
+<div class="shell">
+
+  <!-- ============ LEFT SIDEBAR ============ -->
+  <aside>
+    <div class="nav-section">
+      <div class="nav-label">导航</div>
+      <div class="nav-item active" data-page="workspaces">
+        <span class="ic">⊟</span>项目空间
+      </div>
+      <div class="nav-item" data-page="rules">
+        <span class="ic">⊕</span>自动整理 <span class="count">6</span>
+      </div>
+      <div class="nav-item" data-page="settings">
+        <span class="ic">⚙</span>设置
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">当前项目</div>
+      <div class="workspace-card">
+        <div class="wl">aitab-dev</div>
+        <div class="wn">当前项目</div>
+        <div class="wm">87 个标签 · 3 个窗口</div>
+        <button class="switch">切换项目 ▾</button>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="cta-block">
+        <button class="cta primary">+ 手动分组</button>
+        <button class="cta">+ 一键整理</button>
+      </div>
+    </div>
+
+    <div class="privacy-note">
+      <span class="lock">🔒</span>
+      <div>
+        <div class="pt">数据都在本机</div>
+        <div class="ps">不上传任何网站</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+
+    <!-- ===== Page: 项目空间 (workspaces) ===== -->
+    <section class="page active" data-page="workspaces">
+      <div class="page-head">
+        <h1 class="page-title">aitab-dev</h1>
+        <p class="page-sub">87 个标签 · 3 个窗口 · 上次整理 14 分钟前</p>
+      </div>
+
+      <div class="page-actions">
+        <button class="btn">↻ 重新整理</button>
+        <button class="btn">⊕ 自动分类</button>
+        <button class="btn-primary btn">+ 新分组</button>
+      </div>
+
+      <div class="filter-chips">
+        <span class="chip active">全部 <span class="ct">8</span></span>
+        <span class="chip">自动整理的 <span class="ct">6</span></span>
+        <span class="chip">我手动分的 <span class="ct">2</span></span>
+        <span class="chip">跟规则走的 <span class="ct">3</span></span>
+        <span class="sort">排序 ▾</span>
+      </div>
+
+      <div class="group-grid">
+
+        <!-- Group 1 -->
+        <div class="gcard active">
+          <div class="gcard-head">
+            <span class="dot g-0"></span>
+            <span class="gn">AI Tab Manager Research</span>
+            <span class="gcount">14</span>
+            <span class="gsource">arxiv · blog</span>
+            <span class="gmeta">
+              <span class="susp">4</span>
+              <span class="stag">本地</span>
+              <span class="gmenu">⋮</span>
+            </span>
+          </div>
+          <div class="gcard-body">
+            <div class="tabrow">
+              <span class="fav g">d</span>
+              <span class="ttl">chrome.sidePanel API</span>
+              <div class="right"><span class="badge">当前</span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav r">a</span>
+              <span class="ttl">arxiv 2401.01234 — Tab Fatigue</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow audible">
+              <span class="fav y">p</span>
+              <span class="ttl">podcast: tab fatigue · 37 min</span>
+              <div class="right"><span class="aud-dot"></span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav b">b</span>
+              <span class="ttl">blog.superhuman.com — focus stacks</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="more-row">
+              <span>+ 10 个标签</span>
+              <span class="open">展开 ▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 2 -->
+        <div class="gcard">
+          <div class="gcard-head">
+            <span class="dot g-5"></span>
+            <span class="gn">News</span>
+            <span class="gcount">12</span>
+            <span class="gsource">feed · rss</span>
+            <span class="gmeta">
+              <span class="susp">8</span>
+              <span class="stag">本地</span>
+              <span class="gmenu">⋮</span>
+            </span>
+          </div>
+          <div class="gcard-body">
+            <div class="tabrow">
+              <span class="fav b">h</span>
+              <span class="ttl">Hacker News — top stories today</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav b">v</span>
+              <span class="ttl">Verge — AI weekly</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav b">t</span>
+              <span class="ttl">TechCrunch — startup news</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav b">n</span>
+              <span class="ttl">NYT — tech section</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="more-row">
+              <span>+ 8 个标签</span>
+              <span class="open">展开 ▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 3 -->
+        <div class="gcard">
+          <div class="gcard-head">
+            <span class="dot g-2"></span>
+            <span class="gn">设计参考</span>
+            <span class="gcount">11</span>
+            <span class="gsource">dribbble · figma</span>
+            <span class="gmeta">
+              <span class="susp">2</span>
+              <span class="stag">本地</span>
+              <span class="gmenu">⋮</span>
+            </span>
+          </div>
+          <div class="gcard-body">
+            <div class="tabrow">
+              <span class="fav g">d</span>
+              <span class="ttl">dribbble — sidebar patterns</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav b">f</span>
+              <span class="ttl">figma — TabMosaic design v3</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav g">d</span>
+              <span class="ttl">dribbble — dashboard cards</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav b">b</span>
+              <span class="ttl">behance — typography showcase</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="more-row">
+              <span>+ 7 个标签</span>
+              <span class="open">展开 ▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 4 -->
+        <div class="gcard">
+          <div class="gcard-head">
+            <span class="dot g-3"></span>
+            <span class="gn">文档</span>
+            <span class="gcount">8</span>
+            <span class="gsource">notion · gitbook</span>
+            <span class="gmeta">
+              <span class="susp">1</span>
+              <span class="stag">本地</span>
+              <span class="gmenu">⋮</span>
+            </span>
+          </div>
+          <div class="gcard-body">
+            <div class="tabrow">
+              <span class="fav b">n</span>
+              <span class="ttl">Q2 planning — aitab team</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav b">n</span>
+              <span class="ttl">design specs — Monochrome Forge</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav g">g</span>
+              <span class="ttl">gitbook — internal API docs</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav b">n</span>
+              <span class="ttl">competitor analysis (Q1)</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="more-row">
+              <span>+ 4 个标签</span>
+              <span class="open">展开 ▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 5 (rule-driven) -->
+        <div class="gcard">
+          <div class="gcard-head">
+            <span class="dot g-1"></span>
+            <span class="gn">Open PRs</span>
+            <span class="gcount">6</span>
+            <span class="gsource">github</span>
+            <span class="gmeta">
+              <span class="stag rule">规则</span>
+              <span class="gmenu">⋮</span>
+            </span>
+          </div>
+          <div class="gcard-body">
+            <div class="tabrow">
+              <span class="fav g">g</span>
+              <span class="ttl">pull/4821 — feat: sidePanel agent</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav g">g</span>
+              <span class="ttl">pull/4823 — fix: tab state race</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav g">g</span>
+              <span class="ttl">pull/4830 — refactor: tab grouping</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="more-row">
+              <span>+ 3 个标签</span>
+              <span class="open">展开 ▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 6 (manual) -->
+        <div class="gcard">
+          <div class="gcard-head">
+            <span class="dot g-7"></span>
+            <span class="gn">杂项</span>
+            <span class="gcount">7</span>
+            <span class="gsource">misc</span>
+            <span class="gmeta">
+              <span class="susp">3</span>
+              <span class="stag manual">手动</span>
+              <span class="gmenu">⋮</span>
+            </span>
+          </div>
+          <div class="gcard-body">
+            <div class="tabrow">
+              <span class="fav b">m</span>
+              <span class="ttl">mail.google.com — inbox</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav b">c</span>
+              <span class="ttl">calendar — this week</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav b">s</span>
+              <span class="ttl">spotify — playlist</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="more-row">
+              <span>+ 4 个标签</span>
+              <span class="open">展开 ▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 7 -->
+        <div class="gcard">
+          <div class="gcard-head">
+            <span class="dot g-4"></span>
+            <span class="gn">购物</span>
+            <span class="gcount">5</span>
+            <span class="gsource">amazon · carts</span>
+            <span class="gmeta">
+              <span class="susp">4</span>
+              <span class="stag">本地</span>
+              <span class="gmenu">⋮</span>
+            </span>
+          </div>
+          <div class="gcard-body">
+            <div class="tabrow">
+              <span class="fav b">a</span>
+              <span class="ttl">amazon — mechanical keyboard</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav b">a</span>
+              <span class="ttl">amazon — usb-c hub</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav b">j</span>
+              <span class="ttl">jd — laptop stand</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="more-row">
+              <span>+ 3 个标签</span>
+              <span class="open">展开 ▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 8 -->
+        <div class="gcard">
+          <div class="gcard-head">
+            <span class="dot g-6"></span>
+            <span class="gn">视频</span>
+            <span class="gcount">3</span>
+            <span class="gsource">youtube · vimeo</span>
+            <span class="gmeta">
+              <span class="susp">1</span>
+              <span class="stag">本地</span>
+              <span class="gmenu">⋮</span>
+            </span>
+          </div>
+          <div class="gcard-body">
+            <div class="tabrow">
+              <span class="fav r">y</span>
+              <span class="ttl">YouTube — watch later (3)</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow suspended">
+              <span class="fav b">v</span>
+              <span class="ttl">vimeo — short film · 12 min</span>
+              <div class="right"><span class="badge">休眠</span><span class="x">✕</span></div>
+            </div>
+            <div class="tabrow">
+              <span class="fav r">y</span>
+              <span class="ttl">YouTube — Linear talk on speed</span>
+              <div class="right"><span class="x">✕</span></div>
+            </div>
+            <div class="more-row empty-foot">
+              <span>— 没有更多了 —</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="foot">TABPILOT · MONOCHROME FORGE · v0.4.2</div>
+    </section>
+
+    <!-- ===== Page: 自动整理 (rules) ===== -->
+    <section class="page" data-page="rules">
+      <div class="page-head">
+        <h1 class="page-title">自动整理</h1>
+        <p class="page-sub">6 条规则在跑 · 1 条暂停</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn-primary btn">+ 新规则</button>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="rule-row">
+          <div class="ic">⊕</div>
+          <div>
+            <div class="rt">把 GitHub PR 单独分组</div>
+            <div class="rc">如果 网址包含 github.com/*/pull/* → 加到 "Open PRs"</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="rule-row">
+          <div class="ic">⏸</div>
+          <div>
+            <div class="rt">30 分钟没动就休眠</div>
+            <div class="rc">如果 标签空闲超过 30 分钟 且 没有声音 → 休眠</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="rule-row">
+          <div class="ic">⌫</div>
+          <div>
+            <div class="rt">关掉重复的标签</div>
+            <div class="rc">如果 两个标签同网址 → 关闭较早的</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="rule-row">
+          <div class="ic">⊘</div>
+          <div>
+            <div class="rt">隐身模式跳过</div>
+            <div class="rc">如果 隐身窗口 → 不读取、不整理、不总结</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="rule-row">
+          <div class="ic">⌗</div>
+          <div>
+            <div class="rt">YouTube watch-later 自动分组</div>
+            <div class="rc">如果 网址是 youtube.com/watch* 且 在 watch-later 列表 → 加到 "视频"</div>
+          </div>
+          <div class="toggle"></div>
+        </div>
+        <div class="rule-row">
+          <div class="ic">⌖</div>
+          <div>
+            <div class="rt">购物标签 7 天后关闭</div>
+            <div class="rc">如果 在 "购物" 分组 且 超过 7 天 → 关闭</div>
+          </div>
+          <div class="toggle"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Page: 设置 (settings) ===== -->
+    <section class="page" data-page="settings">
+      <div class="page-head">
+        <h1 class="page-title">设置</h1>
+        <p class="page-sub">隐私 · 快捷键 · 账号</p>
+      </div>
+
+      <div class="set-section">
+        <h3>隐私</h3>
+        <div class="set-row">
+          <div>
+            <div class="lbl">读取页面内容</div>
+            <div class="hint">关闭后,总结和聊天功能不可用</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="set-row">
+          <div>
+            <div class="lbl">允许隐身模式</div>
+            <div class="hint">关闭时,隐身窗口不被 TabMosaic 访问</div>
+          </div>
+          <div class="toggle"></div>
+        </div>
+        <div class="set-row">
+          <div>
+            <div class="lbl">跳过这些网站</div>
+            <div class="hint">bank.com · *.health · 2 个更多</div>
+          </div>
+          <button class="btn">编辑</button>
+        </div>
+      </div>
+
+      <div class="set-section">
+        <h3>快捷键</h3>
+        <div class="set-row">
+          <div class="lbl">一键整理</div>
+          <span class="kbd">⌘ .</span>
+        </div>
+        <div class="set-row">
+          <div class="lbl">打开侧边栏</div>
+          <span class="kbd">⌘ ⇧ Y</span>
+        </div>
+        <div class="set-row">
+          <div class="lbl">命令面板</div>
+          <span class="kbd">⌘ K</span>
+        </div>
+        <div class="set-row">
+          <div class="lbl">打开 dashboard</div>
+          <span class="kbd">⌘ D</span>
+        </div>
+      </div>
+
+      <div class="set-section">
+        <h3>账号</h3>
+        <div class="set-row">
+          <div>
+            <div class="lbl">免费版</div>
+            <div class="hint">87 / 150 标签 · v0.4.2</div>
+          </div>
+          <button class="btn-primary btn">升级 Pro</button>
+        </div>
+        <div class="set-row">
+          <div class="lbl">退出登录</div>
+          <button class="btn">退出</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// Page routing
+document.querySelectorAll('.nav-item').forEach(n=>{
+  n.addEventListener('click',()=>{
+    const p = n.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    n.classList.add('active');
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    document.querySelector(`.page[data-page="${p}"]`).classList.add('active');
+  });
+});
+
+// Filter chips
+document.querySelectorAll('.chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+  });
+});
+
+// Toggles
+document.querySelectorAll('.toggle').forEach(t=>{
+  t.addEventListener('click',()=>t.classList.toggle('on'));
+});
+
+// Tab close → fade out (demo)
+document.querySelectorAll('.tabrow .x').forEach(x=>{
+  x.addEventListener('click',e=>{
+    e.stopPropagation();
+    const r = x.closest('.tabrow');
+    r.style.transition = 'all 200ms';
+    r.style.opacity = '0';
+    setTimeout(()=>r.style.display='none', 200);
+  });
+});
+
+// Group menu (demo)
+document.querySelectorAll('.gmenu').forEach(m=>{
+  m.addEventListener('click',e=>{
+    e.stopPropagation();
+    const card = m.closest('.gcard');
+    card.classList.toggle('active');
+  });
+});
+
+// Theme
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+});
+</script>
+</body>
+</html>

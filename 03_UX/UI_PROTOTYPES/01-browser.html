@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TabMosaic AI — Browser</title>
+<meta name="description" content="TabMosaic AI in the browser — the aha moment: organized tab groups appear right in the tab strip." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   TabMosaic AI — Browser main view
+   Full Chrome chrome + tab strip with collapsible groups + sidePanel
+   The "aha moment" view
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+ul,ol{list-style:none;margin:0;padding:0}
+a{color:inherit;text-decoration:none}
+
+:root{
+  --n-0:#FFF;--n-50:#FAFAFA;--n-100:#F4F4F4;--n-150:#ECECEC;--n-200:#E0E0E0;
+  --n-300:#CCC;--n-400:#999;--n-500:#767;--n-600:#555;--n-700:#333;--n-800:#1A1A1A;--n-900:#0A0A0A;--n-1000:#000;
+  --accent:#0A0A0A;--accent-h:#1F1F1F;
+  --g-0:#CCC;--g-1:#999;--g-2:#888;--g-3:#808080;--g-4:#6E6E6E;--g-5:#555;--g-6:#767;--g-7:#333;
+  --font-display:"Fraunces","Source Serif Pro","Songti SC",Georgia,serif;
+  --font-sans:"Inter",-apple-system,"PingFang SC","SF Pro Text",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",ui-monospace,monospace;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;
+  --r-sm:4px;--r-md:6px;--r-lg:10px;--r-xl:14px;--r-pill:999px;
+  --shadow-1:0 1px 0 0 var(--n-200);
+  --shadow-2:0 1px 2px 0 rgba(0,0,0,.04),0 4px 8px -2px rgba(0,0,0,.06);
+  --shadow-3:0 8px 24px -8px rgba(0,0,0,.12);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --dur-fast:150ms;--dur-base:240ms;--dur-slow:400ms;
+  --bg:var(--n-50);--panel:var(--n-0);--line:var(--n-200);--line-2:var(--n-300);
+}
+[data-theme="dark"]{
+  --bg:#0B0B0B;--panel:#141414;--line:#262626;--line-2:#3A3A3A;
+  --n-0:#141414;--n-50:#0B0B0B;--n-100:#171717;--n-150:#1F1F1F;--n-200:#262626;--n-300:#3A3A3A;--n-400:#555;--n-500:#767;--n-600:#999;--n-700:#CCC;--n-800:#E0E0E0;--n-900:#F4F4F4;--n-1000:#FFF;
+  --accent:#F4F4F4;
+}
+body{background:var(--bg);color:var(--n-900);font-family:var(--font-sans);font-size:13px;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* ===== Browser window ===== */
+.window{
+  width:100%;max-width:1440px;height:100vh;
+  margin:0 auto;background:var(--panel);
+  display:grid;grid-template-rows:auto auto auto auto 1fr;
+  position:relative;
+  overflow:hidden;
+}
+.titlebar{height:28px;background:var(--n-100);display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid var(--line)}
+.tlight{display:flex;gap:6px}
+.tlight i{width:11px;height:11px;border-radius:50%;background:var(--n-200);display:block}
+.tlight i:nth-child(1){background:#FF5F57}.tlight i:nth-child(2){background:#FEBC2E}.tlight i:nth-child(3){background:#28C840}
+.tlight.dark i{background:var(--n-700)}.tlight.dark i:nth-child(1){background:#FF5F57}.tlight.dark i:nth-child(2){background:#FEBC2E}.tlight.dark i:nth-child(3){background:#28C840}
+.url-pill{flex:1;display:flex;justify-content:center}
+.url-pill span{background:var(--n-0);border:1px solid var(--line);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--n-500);font-family:var(--font-mono);max-width:520px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.titlebar-right{display:flex;gap:6px}
+.titlebar-right i{width:11px;height:11px;background:var(--n-300);border-radius:2px;display:block}
+
+/* ===== Tab strip ===== */
+.tabstrip{
+  background:var(--n-100);
+  display:flex;align-items:flex-end;gap:1px;
+  padding:6px 6px 0;height:64px;
+  border-bottom:1px solid var(--line);
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabstrip::-webkit-scrollbar{display:none}
+.group-chip{
+  display:flex;align-items:center;gap:6px;
+  height:28px;padding:0 10px 0 8px;
+  background:var(--n-0);border:1px solid var(--line);border-bottom:0;
+  border-radius:8px 8px 0 0;
+  font-size:11.5px;font-weight:500;cursor:pointer;flex:0 0 auto;
+  position:relative;top:1px;
+  transition:all var(--dur-fast) var(--ease);
+  color:var(--n-600);
+}
+.group-chip:hover{background:var(--n-50);color:var(--n-900)}
+.group-chip.open{background:var(--panel);color:var(--n-900);font-weight:600}
+.group-chip.open::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--panel)}
+.group-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--n-400)}
+.group-chip .dot.g-0{background:var(--g-0)}.group-chip .dot.g-1{background:var(--g-1)}.group-chip .dot.g-2{background:var(--g-2)}.group-chip .dot.g-3{background:var(--g-3)}.group-chip .dot.g-4{background:var(--g-4)}.group-chip .dot.g-5{background:var(--g-5)}.group-chip .dot.g-6{background:var(--g-6)}.group-chip .dot.g-7{background:var(--g-7)}
+.group-chip .ct{font-family:var(--font-mono);font-size:10px;background:var(--n-150);padding:0 4px;border-radius:3px;color:var(--n-500);line-height:14px}
+.group-chip.open .ct{background:var(--n-200);color:var(--n-700)}
+.tab-add{
+  width:24px;height:24px;border-radius:5px;display:grid;place-items:center;color:var(--n-500);
+  flex:0 0 auto;align-self:center;margin-bottom:2px;transition:all var(--dur-fast) var(--ease);
+}
+.tab-add:hover{background:var(--n-200);color:var(--n-900)}
+
+/* ===== Tab row (expanded group) ===== */
+.tabrow{
+  background:var(--panel);
+  height:36px;display:flex;align-items:center;gap:4px;
+  padding:0 8px;border-bottom:1px solid var(--line);
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabrow::-webkit-scrollbar{display:none}
+.tabrow .label{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--n-400);
+  padding:0 8px 0 4px;flex:0 0 auto;
+}
+.tabcard{
+  display:flex;align-items:center;gap:6px;
+  height:26px;padding:0 8px 0 6px;
+  background:var(--n-100);border:1px solid var(--line);border-radius:5px;
+  cursor:pointer;flex:0 0 auto;max-width:200px;
+  position:relative;transition:all var(--dur-fast) var(--ease);
+}
+.tabcard.active{background:var(--n-900);color:#FFF;border-color:var(--n-900)}
+.tabcard.active::before{content:"";position:absolute;left:-1px;top:0;bottom:0;width:2px;background:var(--n-900)}
+.tabcard .fav{
+  width:12px;height:12px;border-radius:3px;background:var(--n-300);flex:0 0 auto;
+  display:grid;place-items:center;font-family:var(--font-mono);font-size:8px;color:#FFF;font-weight:600;
+}
+.tabcard .fav.g{background:linear-gradient(135deg,var(--g-5),var(--g-7))}
+.tabcard .fav.r{background:linear-gradient(135deg,#999,#555)}
+.tabcard .fav.b{background:linear-gradient(135deg,#888,#333)}
+.tabcard .fav.y{background:linear-gradient(135deg,#AAA,#555)}
+.tabcard .ttl{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabcard .pin{position:absolute;top:-2px;right:-2px;width:5px;height:5px;background:#FFF;border:1px solid var(--n-900);border-radius:50%}
+.tabcard.active .pin{border-color:#FFF}
+.tabcard .x{opacity:0;color:var(--n-500);font-family:var(--font-mono);font-size:11px;margin-left:2px;padding:0 2px;border-radius:2px}
+.tabcard:hover .x{opacity:1}
+.tabcard:hover .x:hover{background:rgba(0,0,0,.1);color:#FFF}
+.tabcard.suspended{opacity:.55;border-style:dashed}
+.tabcard.suspended .fav{filter:grayscale(1) opacity(.6)}
+.tabcard.audible .aud{position:absolute;bottom:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:#FFF;border:1px solid var(--n-900)}
+.tabcard.audible .aud::after{content:"";position:absolute;inset:2px;border-radius:50%;background:var(--n-900)}
+.tabcard.protected::after{content:"⌥";position:absolute;top:-3px;right:-3px;font-size:8px;background:#FFF;border:1px solid var(--n-900);border-radius:50%;width:10px;height:10px;display:grid;place-items:center}
+
+/* ===== Toolbar ===== */
+.toolbar{
+  height:40px;background:var(--panel);
+  display:flex;align-items:center;padding:0 8px;gap:4px;
+  border-bottom:1px solid var(--line);
+}
+.tbtn{
+  width:28px;height:28px;border-radius:5px;display:grid;place-items:center;color:var(--n-600);
+  transition:all var(--dur-fast) var(--ease);
+}
+.tbtn:hover{background:var(--n-100);color:var(--n-900)}
+.omni{
+  flex:1;display:flex;align-items:center;gap:8px;height:28px;padding:0 10px;
+  background:var(--n-100);border:1px solid transparent;border-radius:14px;
+  transition:all var(--dur-fast) var(--ease);
+}
+.omni:focus-within{background:var(--panel);border-color:var(--n-300)}
+.omni input{background:none;border:0;outline:0;flex:1;font-size:12.5px;font-family:var(--font-mono);color:var(--n-700)}
+.omni .lock{color:var(--n-400);display:flex;align-items:center}
+.omni .pill{font-family:var(--font-mono);font-size:9px;background:var(--n-900);color:#FFF;padding:1px 5px;border-radius:3px}
+.tbtn .badge{position:absolute;top:2px;right:2px;width:5px;height:5px;background:var(--n-900);border-radius:50%;border:1px solid var(--panel)}
+.tbtn.pulse{position:relative}
+.tbtn.pulse::after{content:"";position:absolute;inset:-2px;border-radius:6px;border:1.5px solid var(--n-900);animation:pulse 1.6s ease-out infinite;pointer-events:none}
+@keyframes pulse{0%{transform:scale(.8);opacity:1}100%{transform:scale(1.6);opacity:0}}
+
+/* ===== Bookmarks bar ===== */
+.bookmarks{height:24px;background:var(--n-50);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 8px;gap:12px;font-size:11px;color:var(--n-500);overflow:hidden}
+.bookmarks span{cursor:pointer;transition:color var(--dur-fast) var(--ease)}
+.bookmarks span:hover{color:var(--n-900)}
+
+/* ===== Page content ===== */
+.content{overflow-y:auto;background:#FFF}
+[data-theme="dark"] .content{background:#0A0A0A}
+.content-inner{max-width:720px;margin:0 auto;padding:48px 64px 96px;color:#1A1A1A}
+[data-theme="dark"] .content-inner{color:#E0E0E0}
+.content-inner h1{font-family:var(--font-display);font-size:36px;font-weight:500;letter-spacing:-.02em;line-height:1.15;margin:0 0 12px}
+.content-inner .crumb{font-family:var(--font-mono);font-size:11px;color:#999;letter-spacing:.04em;margin-bottom:24px}
+.content-inner h2{font-family:var(--font-display);font-size:22px;font-weight:500;margin:32px 0 12px;letter-spacing:-.01em}
+.content-inner p{font-size:15px;line-height:1.65;color:#333;margin:0 0 16px}
+[data-theme="dark"] .content-inner p{color:#BBB}
+.content-inner code{font-family:var(--font-mono);font-size:13px;background:#F4F4F4;padding:1px 6px;border-radius:3px;color:#333}
+[data-theme="dark"] .content-inner code{background:#1A1A1A;color:#E0E0E0}
+.content-inner pre{font-family:var(--font-mono);font-size:12.5px;background:#F4F4F4;padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.55;margin:16px 0}
+[data-theme="dark"] .content-inner pre{background:#141414;color:#E0E0E0}
+.content-inner pre .k{color:#555}
+.content-inner .meta{font-family:var(--font-mono);font-size:11px;color:#999;display:flex;gap:16px;margin-top:8px}
+
+/* ===== Floating sidePanel ===== */
+.sidepanel{
+  position:fixed;right:0;top:0;bottom:0;width:380px;
+  background:var(--panel);border-left:1px solid var(--line);
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform var(--dur-slow) var(--ease);
+  z-index:200;box-shadow:var(--shadow-3);
+}
+.sidepanel.open{transform:translateX(0)}
+.sp-head{
+  height:48px;display:flex;align-items:center;padding:0 14px;gap:10px;
+  border-bottom:1px solid var(--line);flex:0 0 auto;
+}
+.sp-head .logo{width:24px;height:24px;background:var(--n-900);border-radius:5px;display:grid;place-items:center;color:#FFF;font-family:var(--font-display);font-size:13px;font-weight:600}
+.sp-head .title{font-size:13px;font-weight:600;letter-spacing:-.01em}
+.sp-head .chip{margin-left:auto}
+.sp-head .close{margin-left:var(--s-2);color:var(--n-500);width:24px;height:24px;border-radius:4px;display:grid;place-items:center}
+.sp-head .close:hover{background:var(--n-100);color:var(--n-900)}
+.sp-body{flex:1;overflow-y:auto;padding:16px}
+.sp-foot{padding:12px;border-top:1px solid var(--line);background:var(--panel)}
+.chip{display:inline-flex;align-items:center;gap:4px;height:18px;padding:0 6px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;border:1px solid var(--line-2);border-radius:3px;color:var(--n-600);background:var(--n-50);text-transform:uppercase}
+
+/* progress steps */
+.prog{display:flex;flex-direction:column;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--n-600)}
+.prog .ok::before{content:"✓ ";color:var(--n-900);font-weight:600}
+.prog .run::before{content:"● ";color:var(--n-900);font-weight:600;animation:blink 1s steps(2) infinite}
+.prog .pend::before{content:"○ ";color:var(--n-400)}
+@keyframes blink{50%{opacity:.3}}
+.sp-stat{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.sp-stat .cell{padding:10px 12px;background:var(--n-50);border:1px solid var(--line);border-radius:8px}
+.sp-stat .cell .v{font-family:var(--font-display);font-size:22px;font-weight:500;line-height:1}
+.sp-stat .cell .l{font-family:var(--font-mono);font-size:9.5px;color:var(--n-500);letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+.group-line{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;font-size:12px}
+.group-line .dot{width:6px;height:6px;border-radius:50%;background:var(--n-400);flex:0 0 auto}
+.group-line .dot.g-0{background:var(--g-0)}.group-line .dot.g-1{background:var(--g-1)}.group-line .dot.g-2{background:var(--g-2)}.group-line .dot.g-3{background:var(--g-3)}.group-line .dot.g-4{background:var(--g-4)}.group-line .dot.g-5{background:var(--g-5)}.group-line .dot.g-6{background:var(--g-6)}.group-line .dot.g-7{background:var(--g-7)}
+.group-line .ct{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--n-500)}
+
+/* result view */
+.aha{
+  font-family:var(--font-display);font-size:24px;font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0 0 6px;
+}
+.aha-sub{color:var(--n-500);font-size:12px;margin:0 0 16px}
+.section-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--n-400);margin:18px 0 8px}
+.prompts{display:flex;flex-direction:column;gap:6px}
+.prompt{
+  text-align:left;padding:8px 12px;font-size:12px;color:var(--n-700);
+  background:var(--n-50);border:1px solid var(--line);border-radius:6px;
+  transition:all var(--dur-fast) var(--ease);cursor:pointer;
+}
+.prompt:hover{background:var(--n-0);border-color:var(--n-400);color:var(--n-900)}
+.prompt::before{content:"→ ";color:var(--n-400);font-family:var(--font-mono)}
+
+/* chat input */
+.chat-input{
+  display:flex;align-items:flex-end;gap:6px;
+  padding:8px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);
+  transition:all var(--dur-fast) var(--ease);
+}
+.chat-input:focus-within{border-color:var(--n-900);box-shadow:0 0 0 3px rgba(0,0,0,.05)}
+.chat-input textarea{flex:1;border:0;outline:0;background:none;resize:none;font-size:12.5px;line-height:1.45;min-height:20px;max-height:80px;font-family:inherit}
+.send{width:28px;height:28px;border-radius:5px;background:var(--n-900);color:#FFF;display:grid;place-items:center;flex:0 0 auto;transition:all var(--dur-fast) var(--ease)}
+.send:hover{background:var(--n-700)}
+.chat-input-hint{font-family:var(--font-mono);font-size:9.5px;color:var(--n-400);margin-top:6px;text-align:center;letter-spacing:.04em}
+
+/* state views */
+.view{display:none;animation:fade var(--dur-base) var(--ease)}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--n-900);color:#FFF;padding:10px 14px;border-radius:8px;
+  font-size:12.5px;display:flex;align-items:center;gap:12px;
+  box-shadow:var(--shadow-3);
+  opacity:0;transition:all var(--dur-base) var(--ease);z-index:300;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast .undo{font-family:var(--font-mono);font-size:10px;background:rgba(255,255,255,.12);padding:2px 6px;border-radius:3px}
+
+/* theme btn */
+.theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;background:var(--n-900);color:#FFF;display:grid;place-items:center;box-shadow:var(--shadow-3)}
+
+/* hint */
+.hint{position:fixed;left:24px;bottom:24px;font-family:var(--font-mono);font-size:11px;color:var(--n-500);background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:8px;box-shadow:var(--shadow-2);z-index:50}
+.hint kbd{font-family:var(--font-mono);font-size:10px;background:var(--n-100);border:1px solid var(--line);padding:1px 4px;border-radius:3px;margin:0 2px}
+</style>
+</head>
+<body>
+
+<div class="window">
+  <!-- Title bar -->
+  <div class="titlebar">
+    <div class="tlight" id="tlight"><i></i><i></i><i></i></div>
+    <div class="url-pill"><span>developer.chrome.com — chrome.sidePanel API</span></div>
+    <div class="titlebar-right"><i></i><i></i><i></i></div>
+  </div>
+
+  <!-- Tab strip (groups as chips) -->
+  <div class="tabstrip" id="tabstrip">
+    <div class="group-chip open" data-group="research"><span class="dot g-0"></span>AI Tab Manager Research <span class="ct">14</span></div>
+    <div class="group-chip" data-group="prs"><span class="dot g-1"></span>Open PRs <span class="ct">6</span></div>
+    <div class="group-chip" data-group="design"><span class="dot g-2"></span>Design refs <span class="ct">11</span></div>
+    <div class="group-chip" data-group="docs"><span class="dot g-3"></span>Docs <span class="ct">8</span></div>
+    <div class="group-chip" data-group="shop"><span class="dot g-4"></span>Shopping <span class="ct">5</span></div>
+    <div class="group-chip" data-group="news"><span class="dot g-5"></span>News <span class="ct">12</span></div>
+    <div class="group-chip" data-group="video"><span class="dot g-6"></span>Video <span class="ct">3</span></div>
+    <div class="group-chip" data-group="other"><span class="dot g-7"></span>Other <span class="ct">7</span></div>
+    <button class="tab-add" title="New tab">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+
+  <!-- Tab row (expanded group's tabs) -->
+  <div class="tabrow" id="tabrow">
+    <span class="label">▸ AI Tab Manager Research</span>
+    <div class="tabcard active">
+      <span class="fav g">d</span>
+      <span class="ttl">chrome.sidePanel API</span>
+      <span class="pin"></span>
+      <span class="x">✕</span>
+    </div>
+    <div class="tabcard suspended">
+      <span class="fav r">a</span>
+      <span class="ttl">arxiv 2401.01234</span>
+      <span class="x">✕</span>
+    </div>
+    <div class="tabcard">
+      <span class="fav b">b</span>
+      <span class="ttl">blog.superhuman.com — tab mgmt</span>
+      <span class="x">✕</span>
+    </div>
+    <div class="tabcard audible">
+      <span class="fav y">p</span>
+      <span class="ttl">podcast: tab fatigue</span>
+      <span class="aud"></span>
+      <span class="x">✕</span>
+    </div>
+    <div class="tabcard protected">
+      <span class="fav g">g</span>
+      <span class="ttl">google.com (keep)</span>
+      <span class="x">✕</span>
+    </div>
+    <div class="tabcard">
+      <span class="fav r">a</span>
+      <span class="ttl">arxiv 2402.05678</span>
+      <span class="x">✕</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="tbtn" title="Back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+    <button class="tbtn" title="Forward" disabled style="opacity:.4"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+    <button class="tbtn" title="Reload"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg></button>
+    <button class="tbtn" title="Home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+    <div class="omni">
+      <span class="lock"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+      <input value="developer.chrome.com/docs/extensions/reference/api/sidePanel" />
+      <span class="pill">A</span>
+    </div>
+    <button class="tbtn" title="Bookmarks"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+    <button class="tbtn" title="Extensions"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h2a2 2 0 0 1 2 2v2c0 1.1.9 2 2 2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 0-2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2c0-1.1-.9-2-2-2H8a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2h2c1.1 0 2-.9 2-2V6a2 2 0 0 1 2-2z"/></svg></button>
+    <button class="tbtn pulse" id="extIcon" title="TabMosaic AI">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+    </button>
+    <button class="tbtn" title="More"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+  </div>
+
+  <!-- Bookmarks -->
+  <div class="bookmarks">
+    <span>📁 Work</span>
+    <span>Linear</span>
+    <span>Notion</span>
+    <span>Github</span>
+    <span>Gmail</span>
+    <span>Calendar</span>
+    <span>Docs</span>
+    <span>+12 more</span>
+  </div>
+
+  <!-- Page content (sample article) -->
+  <div class="content">
+    <div class="content-inner">
+      <div class="crumb">Chrome Extensions › API reference › sidePanel</div>
+      <h1>chrome.sidePanel</h1>
+      <div class="meta">
+        <span>chrome.sidePanel</span>
+        <span>MV3</span>
+        <span>Stable since Chrome 114</span>
+      </div>
+      <p>Use the <code>chrome.sidePanel</code> API to host content in the browser's side panel — a UI surface that lives alongside the web page, persistent across navigations, and available without the user opening a popup.</p>
+      <h2>Concepts</h2>
+      <p>The side panel sits to the right of the page on desktop layouts. It is a per-extension region: a single extension owns it, but the user can pin it open, close it, or change the side it appears on (left or right).</p>
+      <p>Unlike <code>chrome.action</code> popups, the side panel does not dismiss when the user clicks outside it. This makes it suitable for ongoing conversations, persistent tools, and — as in our case — a long-running agent.</p>
+      <h2>Manifest</h2>
+      <pre><span class="k">"side_panel":</span> {
+  "default_path": <span class="k">"sidepanel.html"</span>
+},
+<span class="k">"permissions":</span> [<span class="k">"sidePanel"</span>, <span class="k">"tabs"</span>, <span class="k">"tabGroups"</span>]</pre>
+      <h2>Open programmatically</h2>
+      <pre>chrome.sidePanel.open({ tabId: tab.id })
+  .then(() => console.log(<span class="k">'opened'</span>))</pre>
+      <p>The promise resolves once the panel has been displayed. Errors occur if the user has not enabled the extension in this tab, or if the panel is pinned closed by the user (configurable from <code>chrome://extensions</code>).</p>
+    </div>
+  </div>
+</div>
+
+<!-- Floating sidePanel -->
+<aside class="sidepanel" id="sidepanel">
+  <div class="sp-head">
+    <div class="logo">T</div>
+    <div>
+      <div class="title">TabMosaic</div>
+    </div>
+    <span class="chip" id="privacyChip">[ LOCAL ]</span>
+    <button class="close" id="spClose">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="sp-body">
+
+    <!-- View: progress -->
+    <div class="view" data-view="progress">
+      <div class="aha">Organizing your tabs…</div>
+      <div class="aha-sub">87 tabs · 3 windows · ~1s remaining</div>
+      <div class="prog" style="margin-top:16px">
+        <div class="ok">Reading open tabs</div>
+        <div class="ok">Computing embeddings</div>
+        <div class="run">Clustering by topic</div>
+        <div class="pend">Naming groups</div>
+        <div class="pend">Suspending inactive</div>
+        <div class="pend">Closing duplicates</div>
+      </div>
+    </div>
+
+    <!-- View: result (the aha moment) -->
+    <div class="view active" data-view="result">
+      <div class="aha">87 tabs · 8 groups.</div>
+      <div class="aha-sub">Saved 1.2 GB · 12 duplicates closed</div>
+
+      <div class="sp-stat">
+        <div class="cell"><div class="v">87</div><div class="l">TABS</div></div>
+        <div class="cell"><div class="v">28</div><div class="l">SUSPENDED</div></div>
+        <div class="cell"><div class="v">8</div><div class="l">GROUPS</div></div>
+        <div class="cell"><div class="v">1.2G</div><div class="l">SAVED</div></div>
+      </div>
+
+      <div class="section-label">GROUPS</div>
+      <div class="group-line"><span class="dot g-0"></span>AI Tab Manager Research <span class="ct">14</span></div>
+      <div class="group-line"><span class="dot g-5"></span>News <span class="ct">12</span></div>
+      <div class="group-line"><span class="dot g-2"></span>Design refs <span class="ct">11</span></div>
+      <div class="group-line"><span class="dot g-3"></span>Docs <span class="ct">8</span></div>
+      <div class="group-line"><span class="dot g-7"></span>Other <span class="ct">7</span></div>
+      <div class="group-line"><span class="dot g-1"></span>Open PRs <span class="ct">6</span></div>
+      <div class="group-line"><span class="dot g-4"></span>Shopping <span class="ct">5</span></div>
+      <div class="group-line"><span class="dot g-6"></span>Video <span class="ct">3</span></div>
+
+      <div class="section-label">TRY ASKING</div>
+      <div class="prompts">
+        <button class="prompt">把 GitHub PR 单独分组</button>
+        <button class="prompt">Suspend tabs I haven't touched in 2 hours</button>
+        <button class="prompt">按项目重新分类</button>
+        <button class="prompt">Summarize this page in 3 bullets</button>
+      </div>
+    </div>
+
+    <!-- View: chat -->
+    <div class="view" data-view="chat">
+      <div class="aha">Ask your tabs.</div>
+      <div class="aha-sub">Searches 2,184 indexed pages locally</div>
+
+      <div style="margin:16px 0;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:8px">
+          <div style="width:24px;height:24px;border-radius:6px;background:var(--n-150);display:grid;place-items:center;font-size:11px;flex:0 0 auto">U</div>
+          <div style="font-size:12.5px;background:var(--n-50);border:1px solid var(--line);padding:8px 12px;border-radius:8px 8px 8px 0">把 GitHub PR 单独分组</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="width:24px;height:24px;border-radius:6px;background:var(--n-900);color:#FFF;display:grid;place-items:center;font-size:11px;flex:0 0 auto">T</div>
+          <div style="font-size:12.5px;background:var(--n-900);color:#FFF;padding:8px 12px;border-radius:8px 8px 0 8px">
+            Found <b>6 tabs</b> matching <code style="font-family:var(--font-mono);font-size:11px;background:rgba(255,255,255,.15);padding:1px 4px;border-radius:3px">github.com/*/pull/*</code>.<br>
+            Created group <b>Open PRs</b> + added a rule so future PRs auto-join.
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.15);font-size:11px;opacity:.75">[ LOCAL ]  ·  1.2s  ·  3 sources cited</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sp-foot">
+    <div class="chat-input">
+      <textarea placeholder="Ask your tabs…">把 GitHub PR 单独分组</textarea>
+      <button class="send"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="chat-input-hint">⏎ send · ⇧⏎ newline · [ LOCAL ] default</div>
+  </div>
+</aside>
+
+<div class="toast" id="toast">
+  <span>Tab closed.</span>
+  <span class="undo">⌘Z UNDO</span>
+</div>
+
+<div class="hint">
+  Click the black <b>T</b> icon → ⌘K · ⌘D · ⌘. · ⌘Z
+</div>
+
+<button class="theme-btn" id="themeBtn" title="Toggle theme">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+
+<script>
+const $ = q => document.querySelector(q);
+const $$ = q => Array.from(document.querySelectorAll(q));
+
+// Group chip switch
+$$('.group-chip').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    $$('.group-chip').forEach(c=>c.classList.remove('open'));
+    chip.classList.add('open');
+  });
+});
+
+// Extension icon → open sidePanel with progress then result
+const sp = $('#sidepanel');
+$('#extIcon').addEventListener('click',()=>{
+  sp.classList.add('open');
+  switchView('progress');
+  // simulate work
+  setTimeout(()=>switchView('result'), 1600);
+});
+$('#spClose').addEventListener('click',()=>sp.classList.remove('open'));
+
+// View switching
+function switchView(name){
+  $$('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelector(`.view[data-view="${name}"]`)?.classList.add('active');
+}
+
+// Prompt buttons → switch to chat
+$$('.prompt').forEach(p=>{
+  p.addEventListener('click',()=>{
+    switchView('chat');
+    $('textarea').value = p.textContent;
+  });
+});
+
+// Tab close → toast
+$$('.x').forEach(x=>{
+  x.addEventListener('click',e=>{
+    e.stopPropagation();
+    const card = x.closest('.tabcard');
+    card.style.transition = 'all 200ms';
+    card.style.transform = 'translateY(-8px)';
+    card.style.opacity = '0';
+    setTimeout(()=>card.style.display='none', 200);
+    showToast();
+  });
+});
+
+// Toast
+let toastTimer;
+function showToast(){
+  const t = $('#toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+// Theme toggle
+$('#themeBtn').addEventListener('click',()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+});
+
+// ⌘K → toggle result view
+window.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey) && e.key==='.'){e.preventDefault();$('#extIcon').click()}
+  if((e.metaKey||e.ctrlKey) && e.key==='z'){e.preventDefault();showToast()}
+  if(e.key==='Escape'){sp.classList.remove('open')}
+});
+</script>
+</body>
+</html>

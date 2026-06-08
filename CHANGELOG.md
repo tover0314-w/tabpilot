@@ -1,0 +1,478 @@
+# Changelog
+
+## v0.32 — 2026-06-09
+
+Added:
+
+- Added `.env.example` for DeepSeek/OpenAI-compatible local configuration.
+- Added `tools/deepseek_smoke_test.js` to validate `.env.local` provider settings.
+- The provider smoke test defaults to `/models` only and does not send tab data.
+- Optional `--classify-fixture` mode sends synthetic tabs only and validates the provider does not invent tab IDs.
+
+Safety:
+
+- `.env.local` is ignored by git and excluded from the extension zip.
+- The smoke script never prints the API key.
+- The default provider test does not read browser tabs, page text, full URLs, or local extension state.
+
+## v0.31 — 2026-06-09
+
+Added:
+
+- Added Dashboard `Test AI Connection` for the optional DeepSeek/OpenAI-compatible provider.
+- The test calls the configured `/models` endpoint to verify base URL, API key, and model availability.
+- Smoke tests verify the connection test sends no tab data, full URLs, page text, or request body.
+- Added local `.gitignore` coverage for `.env` / `.env.*`.
+
+Safety:
+
+- The connection test is user-triggered.
+- It does not read tabs, page bodies, browsing history, or local summaries.
+- It does not change groups, close tabs, upload diagnostics, or add permissions.
+
+## v0.30 — 2026-06-09
+
+Added:
+
+- Added `05_PROJECT/07_STORE_SUBMISSION_DRAFT.md` with non-final Chrome Web Store submission, permission justification, remote-code, data-use, Limited Use, privacy-policy, and listing-copy drafts.
+- Marked store/privacy materials as `CONFIRM` and `DO NOT SUBMIT YET`.
+- Updated sources with official Chrome Web Store policy, privacy, Limited Use, disclosure, and privacy-dashboard references.
+
+Safety:
+
+- Documentation-only change.
+- No final Chrome Web Store disclosure was approved.
+- No extension permission, data-sharing behavior, telemetry, AI provider behavior, billing, account, or cloud-storage behavior changed.
+
+## v0.29 — 2026-06-09
+
+Added:
+
+- Added a local-only duplicate close safety audit for beta validation.
+- The audit records only counts and whitelisted event types for safe duplicate close, manual review close, and Restore Closed outcomes.
+- Dashboard diagnostics now include aggregate duplicate safety counts such as auto-closed tabs, manual review closes, restore requests, restored tabs, and failed restores.
+- Smoke tests verify the audit does not include URLs, hostnames, tab titles, or arbitrary duplicate labels.
+
+Safety:
+
+- The audit stays in `chrome.storage.local`, is cleared by `Clear Local Data`, and appears only in user-copied diagnostics after redaction.
+- No telemetry backend, automatic upload, browsing analytics, new permission, URL, tab title, hostname, page text, rule pattern, group name, or API key was added.
+
+## v0.28 — 2026-06-09
+
+Added:
+
+- Added a local-only redacted error log ring buffer for extension failures.
+- Dashboard diagnostics now include recent redacted error summaries and an error count.
+- Clear Local Data now removes the local error log.
+- Smoke tests verify local error entries and exported diagnostics redact URLs, hostnames, emails, bearer tokens, API keys, tab titles, page text, rule patterns, and group names.
+
+Safety:
+
+- Error logs are stored only in `chrome.storage.local`.
+- No telemetry backend, automatic upload, browsing analytics, new permission, URL, tab title, page text, hostname, rule pattern, group name, or API key was added.
+
+## v0.27 — 2026-06-09
+
+Changed:
+
+- Expanded the copied beta feedback template with explicit classification quality labeling.
+- The template now asks testers to record total tabs, clearly right groups, acceptable-but-needs-adjustment groups, Review/Misc tabs, clearly wrong groups, dangerous close mistakes, Undo/Restore behavior, and rules TabMosaic should remember.
+- Added smoke coverage for the English and Chinese 70/20/10/0 quality target copy.
+
+Safety:
+
+- Feedback remains user-triggered, clipboard-only, and local.
+- No telemetry, automatic upload, browsing analytics, new permission, or product-scope behavior was added.
+
+## v0.26 — 2026-06-09
+
+Changed:
+
+- Added manual QA steps for Dashboard beta diagnostics and feedback template copy flow.
+- The runbook now explicitly fails QA if copied diagnostics or feedback include URLs, tab titles, hostnames, page text, rule patterns, group names, or API keys.
+- Added result log fields for beta diagnostics and feedback template validation.
+
+Safety:
+
+- Documentation-only change.
+- No extension permission, cloud upload, analytics, auto-close, or product scope behavior changed.
+
+## v0.25 — 2026-06-09
+
+Added:
+
+- Added Dashboard `Copy Feedback Template` for beta testers.
+- The copied Markdown template includes manual feedback prompts plus the redacted diagnostic snapshot.
+- Feedback template supports English and Chinese UI language.
+- Smoke tests verify the feedback template does not include URLs, tab titles, hostnames, rule patterns, group names, page text, or API keys.
+
+Safety:
+
+- Feedback template is user-triggered and copied locally.
+- No form backend, analytics event, automatic upload, or new permission was added.
+
+## v0.24 — 2026-06-09
+
+Added:
+
+- Added Dashboard `Beta Diagnostics` action to copy a redacted local QA snapshot for bug reports.
+- Added `extension/diagnostics.js` with a tested sanitizer for diagnostic snapshots.
+- Diagnostic snapshots include version, locale, manifest permissions, run counts, duplicate counts, rule count, AI enabled/provider/model, and privacy flags.
+- Smoke tests now verify diagnostics exclude URLs, tab titles, hostnames, rule patterns, group names, page text, and API keys.
+
+Safety:
+
+- Diagnostics are user-triggered and copied locally to the clipboard.
+- No analytics, network upload, new permission, URL, tab title, page text, or API key is added.
+
+## v0.23 — 2026-06-08
+
+Added:
+
+- Added localized Dashboard Settings permission explanations.
+- The UI now explains why `tabs`, `tabGroups`, `sidePanel`, `storage`, `scripting`, `activeTab`, and the DeepSeek host permission are present.
+- Added explicit in-app note that TabMosaic does not request all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
+
+Safety:
+
+- No permissions were added or broadened.
+- The explanation mirrors the existing manifest and current privacy defaults.
+
+## v0.22 — 2026-06-08
+
+Added:
+
+- Added Chinese Chat Refine command parsing for current-tab move, domain rule creation, and group rename examples.
+- Added Chinese Chat Refine preview answer/action/risk copy when the user types Chinese.
+- Added Chinese group color inference for common group names such as 阅读、文档笔记、设计、研究、会议、开发。
+- Updated smoke coverage for Chinese Chat Refine examples.
+
+Safety:
+
+- Chinese Chat Refine stays local.
+- It previews before Apply, does not read page body content, does not call AI, and does not close tabs.
+
+## v0.21 — 2026-06-08
+
+Added:
+
+- Added first-pass English/Chinese Chrome extension localization using native `_locales`.
+- Added `extension/i18n.js` for static HTML and runtime UI messages.
+- Localized manifest name, description, and action title through `__MSG_*__`.
+- Updated side panel and dashboard UI copy to use locale messages.
+- Packaging now includes `_locales` and `i18n.js`.
+- Smoke tests now verify locale parity and UI i18n references.
+
+Verification:
+
+- `node tools/extension_smoke_test.js`
+- `node --check extension/i18n.js && node --check extension/sidepanel.js && node --check extension/dashboard.js`
+
+## v0.20 — 2026-06-08
+
+Added:
+
+- Added Dashboard `Clear Local Data` in Settings.
+- Added background `CLEAR_LOCAL_DATA` action to remove local run state, Undo/Restore snapshots, first-run privacy acceptance, AI settings/API key, user rules, and chat draft.
+- Added smoke coverage for local data deletion.
+
+Safety:
+
+- Clear Local Data asks for browser confirmation.
+- It does not close tabs, move tabs, delete browser history, delete cookies, or touch cloud account data.
+- After clearing, first-run privacy onboarding appears again before the next organize.
+
+Verification:
+
+- `node tools/extension_smoke_test.js`
+- `node --check extension/background.js && node --check extension/dashboard.js && node --check extension/sidepanel.js`
+
+## v0.19 — 2026-06-08
+
+Added:
+
+- Added generated Chrome extension icon assets under `extension/icons/`.
+- Added manifest `icons` and action `default_icon`.
+- Added no-dependency asset generator at `tools/generate_extension_assets.js`.
+- Added extension packaging script at `tools/package_extension.js`.
+- Generated beta zip at `dist/tabmosaic-ai-extension-v0.1.0.zip`.
+- Smoke test now verifies manifest icon references and icon files.
+
+Verification:
+
+- `node tools/generate_extension_assets.js`
+- `node tools/package_extension.js`
+- `node tools/extension_smoke_test.js`
+
+## v0.18 — 2026-06-08
+
+Changed:
+
+- Chrome runtime smoke test now fast-skips branded Google Chrome when CLI unpacked extension loading is blocked.
+- Added `CHROME_PATH` guidance for running runtime QA with Chrome for Testing or Chromium.
+- Kept `ALLOW_GOOGLE_CHROME_CLI_EXTENSION=1` override for forced probing.
+
+## v0.17 — 2026-06-08
+
+Added:
+
+- Added P0 manual QA runbook at `05_PROJECT/06_QA_RUNBOOK.md`.
+- Added QA seed tabs helper at `tools/qa_seed_tabs.js`.
+- Seed tabs helper prints test URLs by default and opens Chrome only with `--open`.
+- Updated README, INDEX, Test Plan, and Launch Checklist with manual QA entry points.
+
+Verification:
+
+- `node tools/qa_seed_tabs.js`
+- `node tools/extension_smoke_test.js`
+
+## v0.16 — 2026-06-08
+
+Added:
+
+- Added no-dependency extension smoke test script at `tools/extension_smoke_test.js`.
+- Smoke tests cover manifest permissions, one-click action constraints, Chat Refine parser, user-rule priority, duplicate safety policy, and AI output validation.
+- Added optional Chrome runtime smoke test at `tools/chrome_runtime_smoke_test.js`.
+- Runtime smoke test attempts to launch a temporary Chrome profile, load the unpacked extension, organize real test tabs, apply Chat Refine, and apply Dashboard group updates.
+
+Verification:
+
+- `node tools/extension_smoke_test.js`
+- `node tools/chrome_runtime_smoke_test.js` may print `SKIP` on Google Chrome builds that do not allow CLI unpacked extension loading.
+
+## v0.15 — 2026-06-08
+
+Added:
+
+- Added Dashboard apply-back-to-browser first slice.
+- Smart Group cards now support editing group title and color.
+- Each group card has an explicit `Apply` button.
+- Dashboard group apply updates the real Chrome native tab group.
+- Dashboard group apply saves an Undo snapshot before updating.
+
+Safety:
+
+- This slice only changes group title/color.
+- It does not move tabs.
+- It does not close tabs.
+- It does not read page body content.
+
+## v0.14 — 2026-06-08
+
+Added:
+
+- Added local sidebar Chat Refine preview/apply flow.
+- Supports first local commands:
+  - `GitHub PR to Code Review`
+  - `docs.google.com to Docs & Notes`
+  - `current tab to Reading`
+  - `rename Misc to Reading`
+- Chat Refine creates local user rules in `chrome.storage.local`.
+- User rules now apply before AI and built-in classification on future organize runs.
+- Added Dashboard `Rules & Memory` section with Enable, Disable, and Delete actions.
+- Added local rule hit counts and last-used updates.
+
+Safety:
+
+- Chat Refine does not call AI in this slice.
+- Chat Refine does not read page body content.
+- Chat Refine never closes tabs.
+- Browser changes require an explicit `Apply` click after preview.
+
+## v0.13 — 2026-06-08
+
+Added:
+
+- Added manual duplicate review actions in the side panel.
+- Review-only duplicate groups now show their candidate tabs with title, hostname/path, window id, and protection state.
+- Added `Keep All` for marking a review group as intentionally kept.
+- Added per-tab `Close` for review candidates, with a browser confirmation prompt before closing.
+- Manually closed review tabs are added to the local Restore Closed snapshot.
+- Dashboard Duplicate Center now shows review status such as `kept` or `pending`.
+
+Safety:
+
+- Review candidates are still never auto-closed.
+- Active, pinned, audible, internal, incognito, and non-restorable tabs cannot be closed from review.
+- If Chrome fails to close a reviewed tab, the temporary restore record is removed.
+
+## v0.12 — 2026-06-08
+
+Added:
+
+- Added optional DeepSeek/OpenAI-compatible AI tab classification.
+- Added local AI settings form in Dashboard Settings.
+- Stores API key locally in `chrome.storage.local`.
+- Uses `https://api.deepseek.com` and `deepseek-v4-flash` by default.
+- AI classification sends title, hostname, path, window id, and tab state only.
+- Organize falls back to local built-in rules if AI is not configured or fails.
+
+Permissions:
+
+- Added narrow host permission for `https://api.deepseek.com/*`.
+- Still does not request `<all_urls>`, history, bookmarks, cookies, webRequest, or browsingData.
+
+## v0.11 — 2026-06-08
+
+Added:
+
+- Added `dashboard.html` and `dashboard.js` as a local extension dashboard.
+- Added `Open Dashboard` action in the side panel.
+- Dashboard reads the latest local organize result from `chrome.storage.local`.
+- Dashboard shows current workspace metrics, Smart Groups, Duplicate Center, and settings snapshot.
+
+Notes:
+
+- Dashboard is read-only in this slice.
+- Drag/drop group editing and apply-back-to-browser remain future work.
+
+## v0.10 — 2026-06-08
+
+Added:
+
+- Added `Summarize Current Tab` action in the side panel.
+- Added `activeTab` + `scripting.executeScript` extraction for visible readable page content.
+- Added local extractive summary, key points, suggested group, and suggested action.
+
+Privacy:
+
+- Page body is read only after the user clicks `Summarize Current Tab`.
+- No AI call is made and no page content is uploaded in this slice.
+- Summary action is disabled during first-run privacy onboarding.
+
+## v0.9 — 2026-06-08
+
+Added:
+
+- Added first-run privacy onboarding gate.
+- First toolbar click now opens the side panel and shows privacy basics before any organize, grouping, or closing occurs.
+- Added `Start Organizing` action that stores local acceptance and then runs organize.
+
+Safety:
+
+- Before acceptance, no tabs are moved, grouped, or closed.
+
+## v0.8 — 2026-06-08
+
+Added:
+
+- Added automatic safe duplicate closing for exact and tracking-parameter duplicates.
+- Added local closed-tab restore snapshots with full URL stored only for restore.
+- Added `Restore Closed` side panel action.
+- Restore reopens closed duplicate tabs and groups them into their original group when possible, or `Restored Duplicates` otherwise.
+
+Safety:
+
+- Active, pinned, audible, incognito, internal, and non-restorable tabs are never closed.
+- Hash/query-different candidates remain review-only.
+
+## v0.7 — 2026-06-08
+
+Added:
+
+- Added duplicate candidate detection without closing tabs.
+- Detects exact duplicates, tracking-parameter duplicates, and same-page candidates that should stay in Review.
+- Added duplicate candidate summary and list to the side panel.
+
+Safety:
+
+- This slice still does not call `chrome.tabs.remove`; no tabs are closed.
+
+## v0.6 — 2026-06-08
+
+Added:
+
+- Implemented first native Chrome tab group application in `extension/background.js`.
+- Added built-in classification rules for GitHub, Chrome docs, docs/notes, communication, meetings, design, product/tasks, finance, dev tools, analytics, learning, research, articles, and misc.
+- Added group plan validation and per-group apply fallback so one Chrome grouping failure does not stop the whole run.
+- Added basic Undo that restores previous group state for still-open tabs.
+- Updated side panel to show created native groups and expose an Undo button.
+
+Notes:
+
+- This slice moves tabs into native groups but still never closes tabs.
+- AI classification and duplicate closing remain future slices.
+
+## v0.5 — 2026-06-08
+
+Added:
+
+- Added first runnable Chrome Extension slice under `extension/`.
+- Added MV3 `manifest.json`, background service worker, side panel HTML/CSS/JS, and local loading instructions.
+- Implemented action click → side panel open → all normal windows tab scan.
+- Side panel now shows window count, tab count, exact duplicate group count, top hosts, and protected-tab counts.
+
+Notes:
+
+- No tabs are moved or closed in this slice.
+- Current machine has Node but no `npm`, so this first slice is a no-build MV3 implementation. React/TypeScript/Tailwind project setup should follow once package tooling is available.
+
+## v0.4 — 2026-06-08
+
+Added:
+
+- Imported UI design delivery from `TabPilot-AI-UI.zip`.
+- Added `03_UX/06_UI_DESIGN_SYSTEM.md` as the Monochrome Forge design system and component specification.
+- Added `03_UX/UI_PROTOTYPES/` with 7 interactive HTML prototype pages and prototype README.
+- Archived the original zip under `06_REFERENCES/ARCHIVES/`.
+
+Changed:
+
+- Normalized imported UI copy from TabPilot to TabMosaic.
+- Replaced imported BYOK UI labels with API KEY labels to match the DeepSeek/OpenAI-compatible provider strategy.
+
+## v0.3 — 2026-06-08
+
+Changed:
+
+- Product working name changed from TabPilot AI to TabMosaic AI due to same-category TabPilot conflict and `tabpilot.ai` usage.
+- First target audience changed to office / knowledge workers, with indie developers retained as an early adopter subsegment.
+- P0 language scope changed to English + Chinese first, multilingual later.
+- P0 organize scope changed from current window to all normal windows in the current browser.
+- Sidebar auto-open on action click confirmed.
+- MVP AI provider strategy changed to DeepSeek API first with OpenAI-compatible provider abstraction.
+- Remaining P0 defaults decided: privacy-minimal metadata by default, no default page body reading, safe duplicate auto-close with restore, no P0 account system.
+
+## v0.2 — 2026-06-08
+
+Added:
+
+- Root-level `AGENTS.md` for future AI coding/product/design agents.
+- Lowercase `agents.md` compatibility pointer.
+- README and INDEX references for agent workflow.
+- `00_START_HERE/01_READ_ME_FIRST.md` now points future collaborators to `AGENTS.md` before making product or implementation changes.
+
+Purpose:
+
+- Preserve the harness philosophy: document-first, confirmation-gated, traceable, privacy-aware, and reversible-by-default.
+- Make sure future agents do not silently decide high-impact product, privacy, billing, or automation behavior.
+
+## v0.1 — 2026-06-08
+
+Initial product harness generated.
+
+Included:
+
+- PRD
+- Product strategy
+- Aha moment
+- Feature specs
+- Sidebar Agent
+- Dashboard
+- Tab chat
+- Current page summary
+- Rules and memory
+- Workspaces
+- Paywall and billing
+- Privacy controls
+- UX flows and wireframes
+- Technical architecture
+- Chrome extension API notes
+- AI prompts and schemas
+- Storage and sync
+- Security and privacy implementation
+- Analytics events
+- Test plan
+- Roadmap, sprint plan, backlog, risks, launch checklist
+- Sources, assumptions, and research TODOs

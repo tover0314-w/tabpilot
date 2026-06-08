@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TabMosaic AI — Preview Index</title>
+<meta name="description" content="TabMosaic AI design preview — index of all 7 HTML screens." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#FAFAFA;color:#0A0A0A;font-family:"Inter",-apple-system,"PingFang SC",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+[data-theme="dark"] html,[data-theme="dark"] body{background:#0B0B0B;color:#F4F4F4}
+:root{
+  --n-0:#FFF;--n-50:#FAFAFA;--n-100:#F4F4F4;--n-150:#ECECEC;--n-200:#E0E0E0;
+  --n-300:#CCC;--n-400:#999;--n-500:#767;--n-600:#555;--n-700:#333;--n-800:#1A1A1A;--n-900:#0A0A0A;
+  --g-0:#CCC;--g-1:#999;--g-2:#888;--g-3:#808080;--g-4:#6E6E6E;--g-5:#555;--g-6:#767;--g-7:#333;
+  --font-display:"Fraunces",Georgia,serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --shadow-2:0 1px 2px 0 rgba(0,0,0,.04),0 4px 8px -2px rgba(0,0,0,.06);
+  --shadow-3:0 8px 24px -8px rgba(0,0,0,.12);
+}
+[data-theme="dark"]{--n-0:#141414;--n-50:#0B0B0B;--n-100:#171717;--n-150:#1F1F1F;--n-200:#262626;--n-300:#3A3A3A;--n-400:#555;--n-500:#767;--n-600:#999;--n-700:#CCC;--n-800:#E0E0E0;--n-900:#F4F4F4}
+
+.wrap{max-width:1280px;margin:0 auto;padding:48px 32px 96px}
+
+.hero{margin-bottom:48px}
+.hero .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#767;margin-bottom:8px}
+.hero h1{font-family:var(--font-display);font-size:56px;font-weight:500;letter-spacing:-.03em;line-height:1;margin:0 0 12px;max-width:780px}
+.hero h1 em{font-style:italic;color:#555}
+[data-theme="dark"] .hero h1 em{color:#999}
+.hero p{font-size:16px;line-height:1.6;color:#555;max-width:680px;margin:0}
+[data-theme="dark"] .hero p{color:#BBB}
+.hero .meta{display:flex;gap:24px;margin-top:24px;font-family:var(--font-mono);font-size:11px;color:#767;letter-spacing:.04em}
+.hero .meta b{color:#0A0A0A;font-weight:500}
+[data-theme="dark"] .hero .meta b{color:#F4F4F4}
+
+.section{margin-top:56px}
+.section-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#767;margin-bottom:16px;display:flex;align-items:baseline;gap:12px}
+.section-label .ct{color:#999;letter-spacing:0;text-transform:none;font-style:italic}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.grid{grid-template-columns:1fr}}
+
+.card{
+  display:block;background:#FFF;border:1px solid #E0E0E0;border-radius:14px;overflow:hidden;
+  text-decoration:none;color:inherit;
+  transition:all 240ms cubic-bezier(.16,1,.3,1);
+  position:relative;
+}
+[data-theme="dark"] .card{background:#141414;border-color:#262626}
+.card:hover{border-color:#0A0A0A;transform:translateY(-2px);box-shadow:var(--shadow-3)}
+.card:hover .arrow{transform:translateX(4px)}
+.card-preview{height:200px;background:#FAFAFA;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+[data-theme="dark"] .card-preview{background:#0B0B0B;border-color:#262626}
+.card-body{padding:16px 18px}
+.card-num{font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;background:#F4F4F4;padding:2px 6px;border-radius:3px;color:#555;display:inline-block;margin-bottom:8px}
+[data-theme="dark"] .card-num{background:#1F1F1F;color:#999}
+.card-name{font-family:var(--font-display);font-size:20px;font-weight:500;letter-spacing:-.02em;margin:0 0 4px;line-height:1.2}
+.card-desc{font-size:12.5px;color:#555;line-height:1.5;margin:0 0 12px}
+[data-theme="dark"] .card-desc{color:#BBB}
+.card-foot{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:10.5px;color:#767;letter-spacing:.04em}
+.card-foot .arrow{transition:transform 200ms;display:inline-block}
+
+/* mini-mock previews per card */
+.mock{width:100%;height:100%;position:relative}
+
+/* mock for 01 browser */
+.mock-browser{padding:18px 12px;display:flex;flex-direction:column;gap:6px}
+.mock-browser .mt{height:6px;background:#E0E0E0;border-radius:2px;width:30%;margin:0 auto 8px}
+.mock-browser .mstrip{display:flex;gap:3px;height:18px;align-items:flex-end}
+.mock-browser .mchip{height:14px;background:#FFF;border:1px solid #E0E0E0;border-radius:3px 3px 0 0;flex:1}
+.mock-browser .mchip.active{background:#0A0A0A;border-color:#0A0A0A}
+.mock-browser .mtab{height:12px;background:#F4F4F4;border:1px solid #E0E0E0;border-radius:2px;width:80px}
+.mock-browser .mtool{height:14px;background:#FFF;border:1px solid #E0E0E0;border-radius:7px;flex:1}
+.mock-browser .mpage{height:60px;background:#FFF;border:1px solid #E0E0E0;border-radius:4px;display:flex;flex-direction:column;gap:4px;padding:8px}
+.mock-browser .mpage .l1{height:8px;background:#0A0A0A;border-radius:1px;width:60%}
+.mock-browser .mpage .l2{height:3px;background:#E0E0E0;border-radius:1px;width:90%}
+.mock-browser .mpage .l3{height:3px;background:#E0E0E0;border-radius:1px;width:75%}
+.mock-browser .msp{position:absolute;right:8px;top:24px;bottom:24px;width:50px;background:#FFF;border:1px solid #E0E0E0;border-radius:4px;padding:6px;display:flex;flex-direction:column;gap:3px}
+.mock-browser .msp i{height:5px;background:#E0E0E0;border-radius:1px;width:100%}
+.mock-browser .msp i:first-child{background:#0A0A0A;width:60%}
+
+/* mock for 02 dashboard */
+.mock-dash{padding:14px 12px;display:flex;flex-direction:column;gap:6px}
+.mock-dash .mtop{height:18px;background:#FFF;border:1px solid #E0E0E0;border-radius:3px;display:flex;align-items:center;padding:0 6px;gap:4px}
+.mock-dash .mtop i{width:18px;height:6px;background:#E0E0E0;border-radius:1px}
+.mock-dash .mtop i:first-child{background:#0A0A0A;width:32px}
+.mock-dash .mbody{display:grid;grid-template-columns:60px 1fr;gap:6px;flex:1}
+.mock-dash .mbody aside{background:#FFF;border:1px solid #E0E0E0;border-radius:3px;padding:4px;display:flex;flex-direction:column;gap:3px}
+.mock-dash .mbody aside i{height:4px;background:#E0E0E0;border-radius:1px;width:100%}
+.mock-dash .mbody aside i:first-child{background:#0A0A0A;width:80%}
+.mock-dash .mbody main{background:#FFF;border:1px solid #E0E0E0;border-radius:3px;padding:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;align-content:start}
+.mock-dash .mbody main .card{height:30px;background:#FAFAFA;border:1px solid #E0E0E0;border-radius:3px}
+.mock-dash .mbody main .card.big{grid-column:span 2;height:50px}
+
+/* mock for 03 sidebar */
+.mock-side{height:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:14px;background:#FAFAFA}
+[data-theme="dark"] .mock-side{background:#0B0B0B}
+.mock-side .sp{background:#FFF;border:1px solid #E0E0E0;border-radius:4px;display:flex;flex-direction:column;overflow:hidden}
+.mock-side .sp-head{height:14px;background:#F4F4F4;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;padding:0 4px;gap:3px}
+[data-theme="dark"] .sp{background:#141414;border-color:#262626}
+[data-theme="dark"] .sp-head{background:#171717;border-color:#262626}
+.mock-side .sp-head i{width:7px;height:7px;background:#0A0A0A;border-radius:2px}
+.mock-side .sp-head .ttl{height:4px;background:#E0E0E0;border-radius:1px;flex:1;max-width:30px}
+.mock-side .sp-body{flex:1;padding:4px;display:flex;flex-direction:column;gap:3px}
+.mock-side .sp-body i{height:4px;background:#E0E0E0;border-radius:1px;width:100%}
+.mock-side .sp-body i:nth-child(1){background:#0A0A0A;width:60%}
+.mock-side .sp-body i:nth-child(2){width:80%}
+.mock-side .sp-body i:nth-child(3){width:50%}
+.mock-side .sp-body i:nth-child(4){width:70%}
+
+/* mock for 04 tab states */
+.mock-tabs{padding:14px;display:flex;flex-direction:column;gap:4px;background:#FAFAFA}
+[data-theme="dark"] .mock-tabs{background:#0B0B0B}
+.mock-tabs .row{display:flex;gap:3px;align-items:center}
+.mock-tabs .row .t{height:18px;background:#FFF;border:1px solid #E0E0E0;border-radius:3px;display:flex;align-items:center;padding:0 5px;gap:3px;min-width:60px}
+[data-theme="dark"] .t{background:#171717;border-color:#262626}
+.mock-tabs .row .t .f{width:7px;height:7px;background:#999;border-radius:1px;flex:0 0 auto}
+.mock-tabs .row .t .tt{height:4px;background:#E0E0E0;border-radius:1px;flex:1}
+.mock-tabs .row .t.active{background:#0A0A0A;border-color:#0A0A0A}
+.mock-tabs .row .t.active .tt{background:rgba(255,255,255,.3)}
+.mock-tabs .row .t.suspended{opacity:.4;border-style:dashed}
+.mock-tabs .row .t.suspended .tt{text-decoration:line-through}
+.mock-tabs .row .t.pinned .pin{position:absolute;top:-1px;right:-1px;width:3px;height:3px;background:#FFF;border:1px solid #0A0A0A;border-radius:50%}
+.mock-tabs .row .t .aud{position:relative;width:5px;height:5px;border-radius:50%;background:#FFF;border:1px solid #0A0A0A}
+.mock-tabs .row .t .aud::after{content:"";position:absolute;inset:1px;background:#0A0A0A;border-radius:50%}
+
+/* mock for 05 onboarding */
+.mock-onb{padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.mock-onb .g{width:24px;height:24px;background:#0A0A0A;border-radius:4px;display:grid;place-items:center;color:#FFF;font-family:var(--font-display);font-size:14px}
+.mock-onb .h{height:10px;background:#0A0A0A;border-radius:1px;width:70%}
+.mock-onb .h2{height:4px;background:#E0E0E0;border-radius:1px;width:90%}
+.mock-onb .h3{height:4px;background:#E0E0E0;border-radius:1px;width:60%}
+.mock-onb .btn{height:18px;background:#0A0A0A;border-radius:3px;width:60px;margin-top:6px}
+
+/* mock for 06 permissions */
+.mock-perm{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:6px;height:100%}
+.mock-perm .pm{background:#FFF;border:1px solid #E0E0E0;border-radius:4px;padding:8px;display:flex;flex-direction:column;gap:3px;position:relative;overflow:hidden}
+[data-theme="dark"] .pm{background:#141414;border-color:#262626}
+.mock-perm .pm::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.4);backdrop-filter:blur(2px)}
+[data-theme="dark"] .pm::after{background:rgba(11,11,11,.5)}
+.mock-perm .pm .ic{width:14px;height:14px;background:#0A0A0A;border-radius:3px;position:relative;z-index:-1}
+.mock-perm .pm .l1{height:5px;background:#0A0A0A;border-radius:1px;width:60%;position:relative;z-index:-1}
+.mock-perm .pm .l2{height:3px;background:#E0E0E0;border-radius:1px;width:90%;position:relative;z-index:-1}
+.mock-perm .pm .l3{height:3px;background:#E0E0E0;border-radius:1px;width:50%;position:relative;z-index:-1}
+.mock-perm .pm .btn2{height:10px;background:#0A0A0A;border-radius:2px;width:30px;align-self:flex-end;margin-top:auto;position:relative;z-index:-1}
+
+/* mock for 07 command palette */
+.mock-palette{height:100%;display:flex;align-items:flex-start;justify-content:center;padding:24px 0}
+.mock-palette .pal{width:75%;background:#FFF;border:1px solid #E0E0E0;border-radius:6px;overflow:hidden;box-shadow:0 8px 24px -8px rgba(0,0,0,.2)}
+[data-theme="dark"] .pal{background:#141414;border-color:#262626}
+.mock-palette .ph{height:22px;background:#FAFAFA;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;padding:0 6px;gap:4px}
+[data-theme="dark"] .ph{background:#171717;border-color:#262626}
+.mock-palette .ph .l{width:9px;height:9px;background:#0A0A0A;border-radius:2px}
+.mock-palette .ph .q{height:6px;background:#E0E0E0;border-radius:1px;flex:1;max-width:80px}
+.mock-palette .pb{padding:6px;display:flex;flex-direction:column;gap:4px}
+.mock-palette .pb .lab{height:3px;background:#999;border-radius:1px;width:30px}
+.mock-palette .pb .it{height:12px;background:#F4F4F4;border-radius:2px;width:100%;display:flex;align-items:center;padding:0 4px;gap:3px}
+.mock-palette .pb .it.active{background:#0A0A0A}
+.mock-palette .pb .it .f{width:6px;height:6px;background:#999;border-radius:1px;flex:0 0 auto}
+.mock-palette .pb .it .tt{height:3px;background:#E0E0E0;border-radius:1px;flex:1;max-width:50px}
+.mock-palette .pb .it.active .tt{background:rgba(255,255,255,.4)}
+
+.theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;background:#0A0A0A;color:#FFF;display:grid;place-items:center;box-shadow:var(--shadow-3);border:0;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">TABPILOT AI · PREVIEW INDEX</div>
+    <h1>Seven screens, one <em>Monochrome</em> forge.</h1>
+    <p>A complete, clickable preview of the TabMosaic AI interface — every P0 surface from the product harness, in pure black, white, and gray. Open any card to interact.</p>
+    <div class="meta">
+      <span><b>7</b> HTML files</span>
+      <span><b>1</b> design system</span>
+      <span><b>0</b> colors used</span>
+      <span><b>~900</b> lines each</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Main surfaces <span class="ct">the 2 you use daily</span></div>
+    <div class="grid">
+
+      <a class="card" href="screens/01-browser.html">
+        <div class="card-preview"><div class="mock mock-browser">
+          <div class="mt"></div>
+          <div class="mstrip">
+            <div class="mchip active"></div>
+            <div class="mchip"></div>
+            <div class="mchip"></div>
+            <div class="mchip"></div>
+            <div class="mchip"></div>
+            <div class="mchip"></div>
+          </div>
+          <div class="mtab"></div>
+          <div class="mtool"></div>
+          <div class="mpage">
+            <div class="l1"></div>
+            <div class="l2"></div>
+            <div class="l3"></div>
+          </div>
+          <div class="msp"><i></i><i></i><i></i><i></i><i></i></div>
+        </div></div>
+        <div class="card-body">
+          <span class="card-num">01</span>
+          <h3 class="card-name">Browser · the aha moment</h3>
+          <p class="card-desc">Full Chrome chrome with the tab strip reorganized. SidePanel slides out when you click the toolbar icon.</p>
+          <div class="card-foot"><span>PRIMARY ENTRY · CLICK EXT ICON</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="screens/02-dashboard.html">
+        <div class="card-preview"><div class="mock mock-dash">
+          <div class="mtop">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="mbody">
+            <aside>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </aside>
+            <main>
+              <div class="card big"></div>
+              <div class="card"></div>
+              <div class="card"></div>
+              <div class="card big"></div>
+              <div class="card"></div>
+              <div class="card"></div>
+            </main>
+          </div>
+        </div></div>
+        <div class="card-body">
+          <span class="card-num">02</span>
+          <h3 class="card-name">Dashboard · 8 pages</h3>
+          <p class="card-desc">Top nav with Home, Smart Groups, Workspaces, Tab Knowledge, Rules, Duplicates, Billing, Settings — all clickable.</p>
+          <div class="card-foot"><span>8 PAGES · TOP NAV ROUTES</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="screens/07-command-palette.html">
+        <div class="card-preview"><div class="mock mock-palette">
+          <div class="pal">
+            <div class="ph"><div class="l"></div><div class="q"></div></div>
+            <div class="pb">
+              <div class="lab"></div>
+              <div class="it"><div class="f"></div><div class="tt"></div></div>
+              <div class="it active"><div class="f"></div><div class="tt"></div></div>
+              <div class="it"><div class="f"></div><div class="tt"></div></div>
+              <div class="lab"></div>
+              <div class="it"><div class="f"></div><div class="tt"></div></div>
+              <div class="it"><div class="f"></div><div class="tt"></div></div>
+              <div class="it"><div class="f"></div><div class="tt"></div></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="card-body">
+          <span class="card-num">03</span>
+          <h3 class="card-name">Command palette · ⌘K</h3>
+          <p class="card-desc">Single key, four sections (Recent / Groups / Tabs / Commands). Fuzzy search. Keyboard-first.</p>
+          <div class="card-foot"><span>⌘K · 4 SECTIONS · 16 ENTRIES</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Component states <span class="ct">design specs</span></div>
+    <div class="grid">
+
+      <a class="card" href="screens/03-sidebar-states.html">
+        <div class="card-preview"><div class="mock mock-side">
+          <div class="sp"><div class="sp-head"><i></i><div class="ttl"></div></div><div class="sp-body"><i></i><i></i><i></i><i></i></div></div>
+          <div class="sp"><div class="sp-head"><i></i><div class="ttl"></div></div><div class="sp-body"><i></i><i></i><i></i><i></i></div></div>
+          <div class="sp"><div class="sp-head"><i></i><div class="ttl"></div></div><div class="sp-body"><i></i><i></i><i></i><i></i></div></div>
+        </div></div>
+        <div class="card-body">
+          <span class="card-num">04</span>
+          <h3 class="card-name">Sidebar · 6 states</h3>
+          <p class="card-desc">Result · Progress · Summary · Chat · Empty · Error. The state machine of the sidePanel.</p>
+          <div class="card-foot"><span>6 STATES · 380PX</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="screens/04-tab-states.html">
+        <div class="card-preview"><div class="mock mock-tabs">
+          <div class="row"><div class="t active"><div class="f"></div><div class="tt"></div></div></div>
+          <div class="row"><div class="t pinned" style="position:relative"><div class="f"></div><div class="tt"></div><div class="pin"></div></div></div>
+          <div class="row"><div class="t"><div class="f"></div><div class="tt"></div><div class="aud"></div></div></div>
+          <div class="row"><div class="t suspended"><div class="f"></div><div class="tt"></div></div></div>
+          <div class="row"><div class="t"><div class="f"></div><div class="tt"></div></div></div>
+        </div></div>
+        <div class="card-body">
+          <span class="card-num">05</span>
+          <h3 class="card-name">Tab card · 10 states</h3>
+          <p class="card-desc">Active / Pinned / Audible / Suspended / Loading / Closed / Incognito / Protected / Chrome internal / Hover. Color-free.</p>
+          <div class="card-foot"><span>10 STATES · ANNOTATED</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="screens/05-onboarding.html">
+        <div class="card-preview"><div class="mock mock-onb">
+          <div class="g">T</div>
+          <div class="h"></div>
+          <div class="h2"></div>
+          <div class="h3"></div>
+          <div class="btn"></div>
+        </div></div>
+        <div class="card-body">
+          <span class="card-num">06</span>
+          <h3 class="card-name">Onboarding · 4 frames</h3>
+          <p class="card-desc">Welcome → Privacy detail → Aha moment → Post-run toast. The whole first-run story on one page.</p>
+          <div class="card-foot"><span>4 FRAMES · WELCOME → AHA</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="screens/06-permissions.html">
+        <div class="card-preview"><div class="mock mock-perm">
+          <div class="pm"><div class="ic"></div><div class="l1"></div><div class="l2"></div><div class="l3"></div><div class="btn2"></div></div>
+          <div class="pm"><div class="ic"></div><div class="l1"></div><div class="l2"></div><div class="l3"></div><div class="btn2"></div></div>
+          <div class="pm"><div class="ic"></div><div class="l1"></div><div class="l2"></div><div class="l3"></div><div class="btn2"></div></div>
+          <div class="pm"><div class="ic"></div><div class="l1"></div><div class="l2"></div><div class="l3"></div><div class="btn2"></div></div>
+        </div></div>
+        <div class="card-body">
+          <span class="card-num">07</span>
+          <h3 class="card-name">Permissions · 6 flows</h3>
+          <p class="card-desc">Read page · Multi-tab · Sensitive site · AI provider · Incognito · Chrome Web Store listing. Always the most private default.</p>
+          <div class="card-foot"><span>6 FLOWS · 5 DEFAULTS TO [ LOCAL ]</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:80px;padding-top:32px;border-top:1px solid #E0E0E0">
+    <p style="font-family:var(--font-mono);font-size:11px;color:#767;letter-spacing:.04em;text-align:center">
+      TABPILOT · MONOCHROME FORGE · v0.4.2 · [ LOCAL ] DEFAULT
+    </p>
+  </div>
+
+</div>
+
+<button class="theme-btn" id="themeBtn" title="Toggle theme">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+
+<script>
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+});
+</script>
+</body>
+</html>

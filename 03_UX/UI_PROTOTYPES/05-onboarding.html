@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TabMosaic AI — Onboarding</title>
+<meta name="description" content="TabMosaic AI onboarding — first run, privacy, the aha moment." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   TabMosaic AI — Onboarding
+   4 frames: welcome · privacy · aha moment · post-run toast
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+ul,ol{list-style:none;margin:0;padding:0}
+a{color:inherit;text-decoration:none}
+:root{
+  --n-0:#FFF;--n-50:#FAFAFA;--n-100:#F4F4F4;--n-150:#ECECEC;--n-200:#E0E0E0;
+  --n-300:#CCC;--n-400:#999;--n-500:#767;--n-600:#555;--n-700:#333;--n-800:#1A1A1A;--n-900:#0A0A0A;
+  --g-0:#CCC;--g-1:#999;--g-2:#888;--g-3:#808080;--g-4:#6E6E6E;--g-5:#555;--g-6:#767;--g-7:#333;
+  --font-display:"Fraunces",Georgia,serif;
+  --font-sans:"Inter",-apple-system,"PingFang SC",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --shadow-1:0 1px 0 0 var(--n-200);
+  --shadow-2:0 1px 2px 0 rgba(0,0,0,.04),0 4px 8px -2px rgba(0,0,0,.06);
+  --shadow-3:0 8px 24px -8px rgba(0,0,0,.12);
+  --shadow-modal:0 24px 80px -16px rgba(0,0,0,.18);
+}
+[data-theme="dark"]{--n-0:#141414;--n-50:#0B0B0B;--n-100:#171717;--n-150:#1F1F1F;--n-200:#262626;--n-300:#3A3A3A;--n-400:#555;--n-500:#767;--n-600:#999;--n-700:#CCC;--n-800:#E0E0E0;--n-900:#F4F4F4;background:#0B0B0B}
+body{background:#FAFAFA;color:#0A0A0A;font-family:var(--font-sans);font-size:13px;-webkit-font-smoothing:antialiased;padding:32px}
+[data-theme="dark"] body{background:#0B0B0B;color:#F4F4F4}
+
+.head{max-width:1280px;margin:0 auto 24px}
+.head h1{font-family:var(--font-display);font-size:32px;font-weight:500;letter-spacing:-.02em;margin:0 0 6px}
+.head p{color:#767;font-size:13px;margin:0}
+
+.grid{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+
+.frame{background:#FFF;border:1px solid #E0E0E0;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;min-height:540px;position:relative}
+[data-theme="dark"] .frame{background:#141414;border-color:#262626}
+.frame-tag{position:absolute;top:12px;right:12px;z-index:2;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;background:#0A0A0A;color:#FFF;padding:3px 8px;border-radius:3px}
+.frame-tag.dark{background:#FFF;color:#0A0A0A}
+.frame-head{padding:14px 18px;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;gap:10px}
+[data-theme="dark"] .frame-head{border-color:#262626}
+.frame-head .num{font-family:var(--font-mono);font-size:10px;color:#767;letter-spacing:.04em;background:#F4F4F4;padding:2px 6px;border-radius:3px}
+[data-theme="dark"] .frame-head .num{background:#1F1F1F}
+.frame-head .name{font-size:13px;font-weight:600;letter-spacing:-.01em}
+.frame-head .desc{font-size:11.5px;color:#767;margin-left:auto;font-family:var(--font-mono)}
+.frame-body{flex:1;display:flex;flex-direction:column;position:relative}
+
+/* === Modal-style welcome === */
+.welcome{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 32px;text-align:center;
+}
+.welcome .glyph{
+  width:56px;height:56px;border-radius:12px;background:#0A0A0A;color:#FFF;
+  display:grid;place-items:center;font-family:var(--font-display);font-size:32px;font-weight:600;
+  margin-bottom:18px;
+}
+.welcome h1{font-family:var(--font-display);font-size:38px;font-weight:500;letter-spacing:-.025em;line-height:1.1;margin:0 0 8px;max-width:380px}
+.welcome .sub{font-size:14px;color:#555;line-height:1.55;margin:0 0 28px;max-width:380px}
+.welcome .pri{font-family:var(--font-display);font-size:18px;line-height:1.45;color:#0A0A0A;max-width:480px;margin:0 0 20px}
+.welcome .pri em{font-style:italic;color:#555}
+.welcome ul{text-align:left;font-size:13px;color:#333;line-height:1.7;max-width:420px;margin:0 0 28px}
+.welcome ul li{display:flex;gap:10px;padding:2px 0}
+.welcome ul li::before{content:"01"/content:"";font-family:var(--font-mono);font-size:11px;color:#999;width:24px;flex:0 0 auto;display:none}
+.welcome ul li::before{content:"·";color:#0A0A0A;font-weight:600;width:14px;flex:0 0 auto}
+.welcome ul li b{font-weight:500}
+.welcome .ctas{display:flex;gap:10px}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  height:40px;padding:0 18px;border-radius:6px;font-size:13px;font-weight:500;
+  border:1px solid #E0E0E0;background:#FFF;color:#0A0A0A;cursor:pointer;
+  transition:all 150ms cubic-bezier(.16,1,.3,1);
+}
+.btn:hover{background:#F4F4F4;border-color:#999}
+.btn-primary{background:#0A0A0A;color:#FFF;border-color:#0A0A0A}
+.btn-primary:hover{background:#1F1F1F;color:#FFF;border-color:#1F1F1F}
+.btn-ghost{background:transparent;border-color:transparent;color:#555}
+.btn-ghost:hover{background:#F4F4F4;color:#0A0A0A}
+.btn .kbd{font-family:var(--font-mono);font-size:10px;opacity:.6;margin-left:6px;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px}
+.btn-primary .kbd{background:rgba(255,255,255,.15);opacity:.9}
+
+.chip{
+  display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;
+  border:1px solid #CCC;border-radius:3px;color:#555;background:#FAFAFA;
+  text-transform:uppercase;
+}
+.chip-solid{background:#0A0A0A;color:#FFF;border-color:#0A0A0A}
+
+/* === Privacy modal === */
+.modal-overlay{
+  position:absolute;inset:0;background:rgba(255,255,255,.7);
+  display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);
+}
+[data-theme="dark"] .modal-overlay{background:rgba(11,11,11,.7)}
+.modal{
+  background:#FFF;border:1px solid #E0E0E0;border-radius:14px;
+  width:100%;max-width:520px;box-shadow:var(--shadow-modal);
+  overflow:hidden;
+}
+[data-theme="dark"] .modal{background:#141414;border-color:#262626}
+.modal-head{padding:18px 22px;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;gap:12px}
+[data-theme="dark"] .modal-head{border-color:#262626}
+.modal-head .icon{width:32px;height:32px;border-radius:7px;background:#0A0A0A;color:#FFF;display:grid;place-items:center;font-family:var(--font-mono);font-size:14px;flex:0 0 auto}
+.modal-head h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0}
+.modal-body{padding:20px 22px}
+.modal-body .lead{font-family:var(--font-display);font-size:18px;line-height:1.45;margin:0 0 12px}
+.modal-body p{font-size:13px;line-height:1.6;color:#555;margin:0 0 16px}
+.priv-row{
+  display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;
+  padding:12px 0;border-bottom:1px solid #F4F4F4;
+}
+[data-theme="dark"] .priv-row{border-color:#1F1F1F}
+.priv-row:last-child{border-bottom:0}
+.priv-row .ic{font-family:var(--font-mono);color:#767;font-size:14px;text-align:center}
+.priv-row .lbl{font-size:13px;font-weight:500}
+.priv-row .hint{font-size:11.5px;color:#767;margin-top:2px}
+.priv-row .val{font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;background:#F4F4F4;padding:3px 6px;border-radius:3px;color:#555}
+[data-theme="dark"] .priv-row .val{background:#1F1F1F}
+.toggle{width:34px;height:20px;background:#E0E0E0;border-radius:11px;position:relative;cursor:pointer;transition:background 150ms;flex:0 0 auto}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;background:#FFF;border-radius:50%;transition:transform 150ms;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.toggle.on{background:#0A0A0A}
+.toggle.on::after{transform:translateX(14px)}
+.modal-foot{padding:14px 22px;border-top:1px solid #E0E0E0;display:flex;justify-content:space-between;align-items:center;background:#FAFAFA;gap:10px}
+[data-theme="dark"] .modal-foot{border-color:#262626;background:#0B0B0B}
+
+/* === Aha moment — full browser === */
+.aha-frame{flex:1;background:#FAFAFA;display:grid;grid-template-rows:auto auto auto 1fr;overflow:hidden;position:relative}
+[data-theme="dark"] .aha-frame{background:#0B0B0B}
+.aha-titlebar{height:24px;background:#F4F4F4;display:flex;align-items:center;padding:0 10px;gap:6px;border-bottom:1px solid #E0E0E0}
+[data-theme="dark"] .aha-titlebar{background:#171717;border-color:#262626}
+.aha-titlebar .tl{display:flex;gap:5px}
+.aha-titlebar .tl i{width:9px;height:9px;border-radius:50%;background:#E0E0E0;display:block}
+.aha-titlebar .tl i:nth-child(1){background:#FF5F57}
+.aha-titlebar .tl i:nth-child(2){background:#FEBC2E}
+.aha-titlebar .tl i:nth-child(3){background:#28C840}
+.aha-strip{background:#F4F4F4;display:flex;gap:1px;padding:5px 5px 0;height:54px;border-bottom:1px solid #E0E0E0;overflow:hidden;align-items:flex-end}
+[data-theme="dark"] .aha-strip{background:#171717;border-color:#262626}
+.aha-chip{display:flex;align-items:center;gap:5px;height:24px;padding:0 8px 0 6px;background:#FFF;border:1px solid #E0E0E0;border-bottom:0;border-radius:6px 6px 0 0;font-size:10.5px;font-weight:500;flex:0 0 auto;color:#555;position:relative;top:1px}
+.aha-chip.open{background:#FAFAFA;color:#0A0A0A;font-weight:600}
+.aha-chip .d{width:5px;height:5px;border-radius:50%;background:#999}
+.aha-chip .d.g-0{background:var(--g-0)}.aha-chip .d.g-1{background:var(--g-1)}.aha-chip .d.g-2{background:var(--g-2)}.aha-chip .d.g-3{background:var(--g-3)}.aha-chip .d.g-4{background:var(--g-4)}.aha-chip .d.g-5{background:var(--g-5)}.aha-chip .d.g-6{background:var(--g-6)}.aha-chip .d.g-7{background:var(--g-7)}
+.aha-chip .ct{font-family:var(--font-mono);font-size:9px;background:#F4F4F4;padding:0 3px;border-radius:2px;color:#999;line-height:11px}
+.aha-row{height:32px;background:#FAFAFA;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;padding:0 8px;gap:4px;overflow:hidden}
+[data-theme="dark"] .aha-row{background:#0B0B0B;border-color:#262626}
+.aha-tab{display:flex;align-items:center;gap:5px;height:22px;padding:0 7px;background:#F4F4F4;border:1px solid #E0E0E0;border-radius:4px;font-size:10.5px;flex:0 0 auto;max-width:160px;position:relative}
+.aha-tab.active{background:#0A0A0A;color:#FFF;border-color:#0A0A0A}
+.aha-tab .f{width:10px;height:10px;border-radius:2px;background:#999;flex:0 0 auto}
+.aha-content{display:grid;grid-template-columns:1fr 320px;overflow:hidden}
+.aha-page{padding:24px 28px;background:#FFF;overflow:hidden}
+[data-theme="dark"] .aha-page{background:#0A0A0A}
+.aha-page h3{font-family:var(--font-display);font-size:22px;font-weight:500;letter-spacing:-.02em;margin:0 0 4px;line-height:1.15}
+.aha-page .crumb{font-family:var(--font-mono);font-size:10px;color:#999;margin-bottom:14px;letter-spacing:.04em}
+.aha-page p{font-size:12px;line-height:1.6;color:#555;margin:0 0 10px}
+.aha-page code{font-family:var(--font-mono);font-size:11px;background:#F4F4F4;padding:1px 5px;border-radius:3px}
+.aha-page pre{font-family:var(--font-mono);font-size:11px;background:#F4F4F4;padding:12px 14px;border-radius:6px;line-height:1.55;margin:0;overflow:hidden}
+[data-theme="dark"] .aha-page pre{background:#171717}
+
+.aha-sp{background:#FFF;border-left:1px solid #E0E0E0;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+[data-theme="dark"] .aha-sp{background:#0A0A0B;border-color:#262626}
+.aha-sp h4{font-family:var(--font-display);font-size:18px;font-weight:500;letter-spacing:-.02em;margin:0;line-height:1.2}
+.aha-sp .sub{font-size:11px;color:#767;margin:-6px 0 4px}
+.aha-stat{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.aha-stat .cell{padding:8px 10px;background:#FAFAFA;border:1px solid #E0E0E0;border-radius:5px}
+[data-theme="dark"] .aha-stat .cell{background:#171717;border-color:#262626}
+.aha-stat .v{font-family:var(--font-display);font-size:18px;font-weight:500;line-height:1}
+.aha-stat .l{font-family:var(--font-mono);font-size:9px;color:#767;letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+.aha-sp .groupline{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px}
+.aha-sp .groupline .ct{margin-left:auto;font-family:var(--font-mono);font-size:9px;color:#999}
+
+/* === Post-run toast overlay === */
+.toast-frame{flex:1;background:linear-gradient(180deg,#FAFAFA,#ECECEC);display:flex;align-items:flex-end;justify-content:center;padding:24px;position:relative}
+[data-theme="dark"] .toast-frame{background:linear-gradient(180deg,#0B0B0B,#1F1F1F)}
+.toast-frame .ghost{position:absolute;inset:24px 24px 80px;background:#FFF;border:1px solid #E0E0E0;border-radius:14px;display:grid;grid-template-rows:auto 1fr}
+[data-theme="dark"] .toast-frame .ghost{background:#141414;border-color:#262626}
+.toast-frame .ghost-bar{height:32px;background:#F4F4F4;border-bottom:1px solid #E0E0E0;display:flex;align-items:center;padding:0 12px;gap:6px}
+[data-theme="dark"] .toast-frame .ghost-bar{background:#171717;border-color:#262626}
+.toast-frame .ghost-bar i{width:8px;height:8px;border-radius:50%;background:#E0E0E0;display:block}
+.toast-frame .ghost-body{padding:18px}
+.toast-frame .ghost-body h4{font-family:var(--font-display);font-size:18px;margin:0 0 4px;font-weight:500}
+.toast-frame .ghost-body p{font-size:11px;color:#999;margin:0;line-height:1.5}
+.toast{
+  position:relative;z-index:2;
+  background:#0A0A0A;color:#FFF;padding:12px 16px;border-radius:10px;
+  display:flex;align-items:center;gap:16px;box-shadow:var(--shadow-modal);
+  font-size:13px;animation:slideIn .4s cubic-bezier(.16,1,.3,1);
+}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast .icon{width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;flex:0 0 auto}
+.toast .body{display:flex;flex-direction:column;gap:2px}
+.toast .title{font-weight:500}
+.toast .meta{font-family:var(--font-mono);font-size:10.5px;opacity:.7;letter-spacing:.04em}
+.toast .undo{font-family:var(--font-mono);font-size:10.5px;background:rgba(255,255,255,.12);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:6px;letter-spacing:.04em}
+
+.theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;background:#0A0A0A;color:#FFF;display:grid;place-items:center;box-shadow:var(--shadow-3);border:0;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>Onboarding</h1>
+  <p>4 frames — first run, privacy detail, the aha moment, post-run toast. All reachable without leaving the browser.</p>
+</div>
+
+<div class="grid">
+
+  <!-- 01 WELCOME -->
+  <div class="frame">
+    <div class="frame-tag dark">01 · WELCOME</div>
+    <div class="frame-head">
+      <span class="num">01</span>
+      <span class="name">First-run welcome</span>
+      <span class="desc">shown once, in-tab overlay</span>
+    </div>
+    <div class="frame-body">
+      <div class="welcome">
+        <div class="glyph">T</div>
+        <h1>Your tabs, organized locally.</h1>
+        <div class="pri">TabMosaic groups, suspends, and summarizes your tabs <em>on your device</em>. Nothing leaves your Mac unless you say so.</div>
+        <ul>
+          <li><span><b>Auto-group</b> 87 tabs into 8 topics in ~1 second</b></span></li>
+          <li><span><b>Suspend</b> tabs you haven't touched in 30 min — save ~1.2 GB</b></span></li>
+          <li><span><b>Ask</b> questions across all your open tabs, with citations</b></span></li>
+        </ul>
+        <div class="ctas">
+          <button class="btn btn-primary">Get started <span class="kbd">⏎</span></button>
+          <button class="btn">View on Chrome Web Store</button>
+        </div>
+        <div style="margin-top:18px;font-family:var(--font-mono);font-size:10.5px;color:#999;letter-spacing:.04em">[ LOCAL ] default · 5.2 MB · no account required</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 PRIVACY -->
+  <div class="frame">
+    <div class="frame-tag">02 · PRIVACY</div>
+    <div class="frame-head">
+      <span class="num">02</span>
+      <span class="name">Privacy & data detail</span>
+      <span class="desc">5 toggles, defaults to local</span>
+    </div>
+    <div class="frame-body">
+      <div class="modal-overlay">
+        <div class="modal">
+          <div class="modal-head">
+            <div class="icon">⌥</div>
+            <div>
+              <h2>What TabMosaic is allowed to read</h2>
+            </div>
+          </div>
+          <div class="modal-body">
+            <p class="lead">Five things, all off by default except #1 and #3.</p>
+            <div class="priv-row">
+              <div class="ic">◐</div>
+              <div><div class="lbl">Page titles and URLs</div><div class="hint">To group tabs. URLs stay on-device in LOCAL mode.</div></div>
+              <div class="val">[ ON · REQUIRED ]</div>
+            </div>
+            <div class="priv-row">
+              <div class="ic">◑</div>
+              <div><div class="lbl">Page content (text only)</div><div class="hint">For Summary and Chat. PDFs and chrome:// are skipped automatically.</div></div>
+              <div class="toggle on" data-toggle></div>
+            </div>
+            <div class="priv-row">
+              <div class="ic">◓</div>
+              <div><div class="lbl">Tab activity timing</div><div class="hint">For "suspend after 30 min" rules.</div></div>
+              <div class="toggle on" data-toggle></div>
+            </div>
+            <div class="priv-row">
+              <div class="ic">◔</div>
+              <div><div class="lbl">Send URLs to AI</div><div class="hint">Even in CLOUD mode, URLs go to the AI provider unless off.</div></div>
+              <div class="toggle" data-toggle></div>
+            </div>
+            <div class="priv-row">
+              <div class="ic">⊘</div>
+              <div><div class="lbl">Allow in Incognito</div><div class="hint">Off by default. When off, sidePanel does not open for incognito tabs.</div></div>
+              <div class="toggle" data-toggle></div>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <span class="chip">[ LOCAL ]</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost">Skip for now</button>
+              <button class="btn btn-primary">Allow 2 of 5</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 AHA MOMENT -->
+  <div class="frame">
+    <div class="frame-tag">03 · AHA</div>
+    <div class="frame-head">
+      <span class="num">03</span>
+      <span class="name">The aha moment</span>
+      <span class="desc">1.4 seconds after install</span>
+    </div>
+    <div class="frame-body">
+      <div class="aha-frame">
+        <div class="aha-titlebar">
+          <div class="tl"><i></i><i></i><i></i></div>
+        </div>
+        <div class="aha-strip">
+          <div class="aha-chip open"><span class="d g-0"></span>Research <span class="ct">14</span></div>
+          <div class="aha-chip"><span class="d g-5"></span>News <span class="ct">12</span></div>
+          <div class="aha-chip"><span class="d g-2"></span>Design <span class="ct">11</span></div>
+          <div class="aha-chip"><span class="d g-3"></span>Docs <span class="ct">8</span></div>
+          <div class="aha-chip"><span class="d g-7"></span>Other <span class="ct">7</span></div>
+          <div class="aha-chip"><span class="d g-1"></span>PRs <span class="ct">6</span></div>
+          <div class="aha-chip"><span class="d g-4"></span>Shop <span class="ct">5</span></div>
+          <div class="aha-chip"><span class="d g-6"></span>Video <span class="ct">3</span></div>
+        </div>
+        <div class="aha-row">
+          <div class="aha-tab active"><span class="f" style="background:linear-gradient(135deg,#999,#555)"></span>chrome.sidePanel API</div>
+          <div class="aha-tab"><span class="f" style="background:linear-gradient(135deg,#888,#333)"></span>arxiv 2401.01234</div>
+          <div class="aha-tab"><span class="f" style="background:linear-gradient(135deg,#888,#333)"></span>blog.superhuman.com</div>
+          <div class="aha-tab"><span class="f" style="background:linear-gradient(135deg,#AAA,#555)"></span>podcast: tab fatigue</div>
+        </div>
+        <div class="aha-content">
+          <div class="aha-page">
+            <div class="crumb">CHROME EXTENSIONS › API REFERENCE › SIDEPANEL</div>
+            <h3>chrome.sidePanel</h3>
+            <p>Host persistent UI alongside the page. Stable since <code>Chrome 114</code>.</p>
+            <pre>chrome.sidePanel.open({ tabId: tab.id })</pre>
+          </div>
+          <div class="aha-sp">
+            <h4>87 tabs · 8 groups.</h4>
+            <div class="sub">Saved 1.2 GB · 12 dups closed</div>
+            <div class="aha-stat">
+              <div class="cell"><div class="v">87</div><div class="l">TABS</div></div>
+              <div class="cell"><div class="v">28</div><div class="l">SUSPENDED</div></div>
+              <div class="cell"><div class="v">8</div><div class="l">GROUPS</div></div>
+              <div class="cell"><div class="v">1.2G</div><div class="l">SAVED</div></div>
+            </div>
+            <div class="groupline"><span style="width:5px;height:5px;border-radius:50%;background:var(--g-0)"></span>Research <span class="ct">14</span></div>
+            <div class="groupline"><span style="width:5px;height:5px;border-radius:50%;background:var(--g-5)"></span>News <span class="ct">12</span></div>
+            <div class="groupline"><span style="width:5px;height:5px;border-radius:50%;background:var(--g-2)"></span>Design refs <span class="ct">11</span></div>
+            <div style="margin-top:auto;padding:10px 12px;background:#0A0A0A;color:#FFF;border-radius:7px;font-size:11.5px;line-height:1.5">
+              <b>This is your tabs, organized.</b><br>
+              <span style="opacity:.7;font-family:var(--font-mono);font-size:10px">[ LOCAL ] · 1.4s · on-device</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 POST-RUN TOAST -->
+  <div class="frame">
+    <div class="frame-tag">04 · TOAST</div>
+    <div class="frame-head">
+      <span class="num">04</span>
+      <span class="name">Post-run toast</span>
+      <span class="desc">bottom-center, 1.8s auto-dismiss</span>
+    </div>
+    <div class="frame-body">
+      <div class="toast-frame">
+        <div class="ghost">
+          <div class="ghost-bar"><i></i><i></i><i></i></div>
+          <div class="ghost-body">
+            <h4>87 tabs · 8 groups.</h4>
+            <p>— a quiet moment after the work is done —</p>
+          </div>
+        </div>
+        <div class="toast">
+          <div class="icon">✓</div>
+          <div class="body">
+            <div class="title">Organized 87 tabs · saved 1.2 GB</div>
+            <div class="meta">[ LOCAL ] · 1.4s · 12 dups closed</div>
+          </div>
+          <div class="undo">⌘Z &nbsp;UNDO</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<button class="theme-btn" id="themeBtn" title="Toggle theme">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+
+<script>
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+});
+document.querySelectorAll('[data-toggle]').forEach(t=>{
+  t.addEventListener('click',()=>t.classList.toggle('on'));
+});
+</script>
+</body>
+</html>

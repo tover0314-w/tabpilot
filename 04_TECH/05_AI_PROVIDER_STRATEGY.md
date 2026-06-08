@@ -1,0 +1,112 @@
+# AI Provider 策略
+
+## 1. 目标
+
+支持不同隐私和成本偏好的用户：
+
+- 不调用 AI：本地规则。
+- DeepSeek API：MVP 简单测试和默认开发 provider。
+- User-provided OpenAI-compatible API：用户自己的 API key 和 base URL。
+- Hosted AI：Pro 用户最顺滑体验。
+- Local LLM：高级用户隐私优先。
+- Chrome built-in AI：后续可用时优先本地。
+
+## 2. Provider 类型
+
+| Provider | P0/P1 | 优点 | 缺点 |
+|---|---|---|---|
+| Rules only | P0 | 免费、快、隐私好 | 智能有限 |
+| DeepSeek API via OpenAI-compatible client | P0 | 成本低、实现快、适合 MVP 验证 | 仍需外部 API 和网络 |
+| User-provided OpenAI-compatible API | P0/P1 | 成本由用户承担，可兼容 OpenAI/DeepSeek/其他兼容服务 | 配置门槛高 |
+| Hosted AI | P1/Pro | 体验最好 | 你承担成本和合规 |
+| Local LLM endpoint | P1 | 隐私好 | 用户门槛高 |
+| Chrome built-in AI | P1/P2 | 本地、低成本 | 设备/版本限制 |
+
+## 3. Provider Interface
+
+```ts
+export interface AIProvider {
+  id: string;
+  name: string;
+  classifyTabs(input: ClassificationInput): Promise<ClassificationOutput>;
+  summarizeTab(input: SummaryInput): Promise<TabSummary>;
+  chat(input: ChatInput): Promise<ChatOutput>;
+}
+```
+
+P0 Provider 默认参数：
+
+```text
+defaultProvider: deepseek
+protocol: OpenAI-compatible chat/completions
+configurable: apiKey, baseUrl, model
+defaultBaseUrl: https://api.deepseek.com
+defaultModel: deepseek-v4-flash
+```
+
+实现状态：
+
+- `extension/` 已接入可选 DeepSeek/OpenAI-compatible 分类。
+- API key 仅保存到 `chrome.storage.local`。
+- 分类输入只包含 title、hostname、path、window id 和 tab state，不发送页面正文或完整 URL。
+- API 不可用时自动 fallback 到 built-in rules。
+- Dashboard 已接入 user-triggered `Test AI Connection`，只调用配置的 `/models` endpoint 检查 base URL、API key 和 model 是否可用，不发送 tab data、page text、full URL 或 request body。
+
+## 4. Hosted AI Gateway
+
+职责：
+
+- API key 不暴露给客户端。
+- Rate limit。
+- Usage metering。
+- Prompt versioning。
+- JSON validation。
+- Fallback。
+- Cost tracking。
+- PII redaction。
+
+## 5. 成本控制
+
+- 先跑规则，减少 AI 输入。
+- hostname/path 分类缓存。
+- 同一 URL 摘要缓存。
+- 对于 80+ tabs 先聚类 metadata，再少量 AI。
+- Group summary 优先使用已有 tab summaries。
+- Pro credits 限额。
+
+## 6. 隐私控制
+
+默认发送：
+
+```text
+title
+hostname
+path
+pinned/active/audible status
+```
+
+可选发送：
+
+```text
+full URL
+page content
+stored summaries
+```
+
+绝不发送：
+
+```text
+cookies
+passwords
+form inputs
+localStorage/sessionStorage
+hidden DOM
+```
+
+## 7. 决定
+
+- MVP 先用 DeepSeek API 做简单测试。
+- Provider client 保留 OpenAI-compatible 协议，避免锁死 DeepSeek。
+- P0 不做 hosted AI gateway 和账号系统。
+- Hosted AI、credits、cloud sync、账号系统进入 P1/Pro。
+- Local LLM 和 Chrome built-in AI 作为后续增强。

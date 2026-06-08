@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TabMosaic AI — Sidebar States</title>
+<meta name="description" content="TabMosaic AI sidebar — 6 states: result, progress, summary, chat, empty, error." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   TabMosaic AI — Sidebar States
+   One page showing 6 sidebar states side by side
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,textarea,select{font:inherit;color:inherit}
+ul,ol{list-style:none;margin:0;padding:0}
+a{color:inherit;text-decoration:none}
+
+:root{
+  --n-0:#FFF;--n-50:#FAFAFA;--n-100:#F4F4F4;--n-150:#ECECEC;--n-200:#E0E0E0;
+  --n-300:#CCC;--n-400:#999;--n-500:#767;--n-600:#555;--n-700:#333;--n-800:#1A1A1A;--n-900:#0A0A0A;--n-1000:#000;
+  --accent:#0A0A0A;--accent-h:#1F1F1F;
+  --g-0:#CCC;--g-1:#999;--g-2:#888;--g-3:#808080;--g-4:#6E6E6E;--g-5:#555;--g-6:#767;--g-7:#333;
+  --font-display:"Fraunces","Source Serif Pro","Songti SC",Georgia,serif;
+  --font-sans:"Inter",-apple-system,"PingFang SC","SF Pro Text",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",ui-monospace,monospace;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;
+  --r-sm:4px;--r-md:6px;--r-lg:10px;--r-xl:14px;--r-pill:999px;
+  --shadow-1:0 1px 0 0 var(--n-200);
+  --shadow-2:0 1px 2px 0 rgba(0,0,0,.04),0 4px 8px -2px rgba(0,0,0,.06);
+  --shadow-3:0 8px 24px -8px rgba(0,0,0,.12);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --bg:var(--n-50);--panel:var(--n-0);--line:var(--n-200);--line-2:var(--n-300);
+}
+[data-theme="dark"]{--bg:#0B0B0B;--panel:#141414;--line:#262626;--line-2:#3A3A3A;--n-0:#141414;--n-50:#0B0B0B;--n-100:#171717;--n-150:#1F1F1F;--n-200:#262626;--n-300:#3A3A3A;--n-400:#555;--n-500:#767;--n-600:#999;--n-700:#CCC;--n-800:#E0E0E0;--n-900:#F4F4F4;--n-1000:#FFF;--accent:#F4F4F4}
+body{background:var(--bg);color:var(--n-900);font-family:var(--font-sans);font-size:13px;-webkit-font-smoothing:antialiased;padding:32px}
+
+.head{max-width:1280px;margin:0 auto 24px}
+.head h1{font-family:var(--font-display);font-size:32px;font-weight:500;letter-spacing:-.02em;margin:0 0 6px}
+.head p{color:var(--n-500);font-size:13px;margin:0}
+
+.grid{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media (max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.card-head{padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.card-head .num{font-family:var(--font-mono);font-size:10px;color:var(--n-500);letter-spacing:.04em;background:var(--n-100);padding:2px 6px;border-radius:3px}
+.card-head .name{font-size:13px;font-weight:600;letter-spacing:-.01em}
+.card-head .desc{font-size:11px;color:var(--n-500);margin-left:auto}
+.card-body{padding:0}
+.sidebar{
+  display:flex;flex-direction:column;
+  height:520px;
+  background:var(--panel);
+}
+.sp-head{
+  height:44px;display:flex;align-items:center;padding:0 12px;gap:8px;
+  border-bottom:1px solid var(--line);flex:0 0 auto;
+}
+.sp-head .logo{width:22px;height:22px;background:var(--n-900);border-radius:5px;display:grid;place-items:center;color:#FFF;font-family:var(--font-display);font-size:12px;font-weight:600}
+.sp-head .title{font-size:12.5px;font-weight:600}
+.sp-head .chip{margin-left:auto;display:inline-flex;align-items:center;gap:4px;height:18px;padding:0 6px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;border:1px solid var(--line-2);border-radius:3px;color:var(--n-600);background:var(--n-50);text-transform:uppercase}
+.sp-body{flex:1;overflow-y:auto;padding:14px}
+.sp-foot{padding:10px;border-top:1px solid var(--line);background:var(--panel);flex:0 0 auto}
+
+/* shared atoms */
+.aha{font-family:var(--font-display);font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1.2;margin:0 0 4px}
+.aha-sub{color:var(--n-500);font-size:11.5px;margin:0 0 14px}
+.section-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--n-400);margin:14px 0 6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--n-400);flex:0 0 auto}
+.dot.g-0{background:var(--g-0)}.dot.g-1{background:var(--g-1)}.dot.g-2{background:var(--g-2)}.dot.g-3{background:var(--g-3)}.dot.g-4{background:var(--g-4)}.dot.g-5{background:var(--g-5)}.dot.g-6{background:var(--g-6)}.dot.g-7{background:var(--g-7)}
+.group-line{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;font-size:11.5px}
+.group-line .ct{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--n-500)}
+.prompts{display:flex;flex-direction:column;gap:5px}
+.prompt{text-align:left;padding:7px 10px;font-size:11.5px;color:var(--n-700);background:var(--n-50);border:1px solid var(--line);border-radius:5px;cursor:pointer;transition:all 150ms cubic-bezier(.16,1,.3,1)}
+.prompt:hover{background:var(--n-0);border-color:var(--n-400);color:var(--n-900)}
+.prompt::before{content:"→ ";color:var(--n-400);font-family:var(--font-mono)}
+
+/* progress */
+.prog{display:flex;flex-direction:column;gap:5px;font-family:var(--font-mono);font-size:11px;color:var(--n-600);margin-top:14px}
+.prog .ok::before{content:"✓ ";color:var(--n-900);font-weight:600}
+.prog .run::before{content:"● ";color:var(--n-900);font-weight:600;animation:blink 1s steps(2) infinite}
+.prog .pend::before{content:"○ ";color:var(--n-400)}
+@keyframes blink{50%{opacity:.3}}
+
+/* summary */
+.sum-list{font-size:12px;line-height:1.55;color:var(--n-700);padding-left:0;list-style:none;margin:0}
+.sum-list li{padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px}
+.sum-list li:last-child{border-bottom:0}
+.sum-list li::before{content:"•";color:var(--n-400);font-family:var(--font-mono);flex:0 0 auto}
+.cite{font-family:var(--font-mono);font-size:10px;color:var(--n-500);background:var(--n-100);padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em;align-self:flex-start;flex:0 0 auto}
+
+/* chat */
+.msg{display:flex;gap:8px;margin-bottom:10px}
+.msg .av{width:22px;height:22px;border-radius:5px;background:var(--n-150);display:grid;place-items:center;font-size:10px;flex:0 0 auto}
+.msg .av.t{background:var(--n-900);color:#FFF}
+.msg .bubble{font-size:12px;background:var(--n-50);border:1px solid var(--line);padding:7px 10px;border-radius:7px 7px 7px 0;line-height:1.5}
+.msg.me .bubble{border-radius:7px 7px 0 7px}
+.msg.them .bubble{background:var(--n-900);color:#FFF;border-color:var(--n-900)}
+.msg .meta{font-family:var(--font-mono);font-size:9.5px;color:var(--n-400);margin-top:4px;letter-spacing:.04em}
+
+/* empty */
+.empty{text-align:center;padding:32px 16px}
+.empty .glyph{font-family:var(--font-display);font-size:48px;font-weight:500;line-height:1;letter-spacing:-.02em;margin-bottom:8px}
+.empty h3{font-size:14px;margin:0 0 4px;font-weight:600}
+.empty p{font-size:11.5px;color:var(--n-500);margin:0 0 14px;line-height:1.5}
+
+/* error */
+.err{text-align:left;padding:14px;background:var(--n-50);border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
+.err .glyph{color:var(--n-900);font-size:18px;margin-bottom:4px;font-family:var(--font-mono)}
+.err h4{font-size:12.5px;margin:0 0 4px;font-weight:600}
+.err p{font-size:11.5px;color:var(--n-600);margin:0 0 10px;line-height:1.5}
+.err .code{font-family:var(--font-mono);font-size:10.5px;background:var(--panel);border:1px solid var(--line);padding:4px 6px;border-radius:3px;color:var(--n-700);display:block;margin-bottom:10px}
+.err .row{display:flex;gap:6px}
+.btn{padding:5px 10px;border:1px solid var(--line-2);background:var(--panel);color:var(--n-700);border-radius:4px;font-size:11px;cursor:pointer;transition:all 150ms}
+.btn:hover{background:var(--n-100);color:var(--n-900)}
+.btn-primary{background:var(--n-900);color:#FFF;border-color:var(--n-900)}
+.btn-primary:hover{background:var(--n-700);color:#FFF}
+
+/* chat input */
+.chat-input{display:flex;align-items:flex-end;gap:5px;padding:7px;border:1px solid var(--line-2);border-radius:7px;background:var(--panel)}
+.chat-input textarea{flex:1;border:0;outline:0;background:none;resize:none;font-size:12px;line-height:1.45;min-height:18px;max-height:60px;font-family:inherit}
+.send{width:26px;height:26px;border-radius:5px;background:var(--n-900);color:#FFF;display:grid;place-items:center;flex:0 0 auto;cursor:pointer}
+.send[disabled]{opacity:.4;cursor:not-allowed}
+.chat-hint{font-family:var(--font-mono);font-size:9.5px;color:var(--n-400);margin-top:5px;text-align:center;letter-spacing:.04em}
+
+.theme-btn{position:fixed;bottom:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;background:var(--n-900);color:#FFF;display:grid;place-items:center;box-shadow:var(--shadow-3);border:0;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>Sidebar states</h1>
+  <p>6 states · clicking the toolbar icon transitions through them. 380 × fluid · fixed footer (chat input).</p>
+</div>
+
+<div class="grid">
+
+  <!-- ===== 1. RESULT ===== -->
+  <div class="card">
+    <div class="card-head">
+      <span class="num">01</span>
+      <span class="name">Result</span>
+      <span class="desc">the aha moment</span>
+    </div>
+    <div class="card-body">
+      <div class="sidebar">
+        <div class="sp-head">
+          <div class="logo">T</div>
+          <div class="title">TabMosaic</div>
+          <span class="chip">[ LOCAL ]</span>
+        </div>
+        <div class="sp-body">
+          <div class="aha">87 tabs · 8 groups.</div>
+          <div class="aha-sub">Saved 1.2 GB · 12 duplicates closed</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div style="padding:8px 10px;background:var(--n-50);border:1px solid var(--line);border-radius:6px">
+              <div style="font-family:var(--font-display);font-size:20px;font-weight:500;line-height:1">87</div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--n-500);letter-spacing:.04em">TABS</div>
+            </div>
+            <div style="padding:8px 10px;background:var(--n-50);border:1px solid var(--line);border-radius:6px">
+              <div style="font-family:var(--font-display);font-size:20px;font-weight:500;line-height:1">28</div>
+              <div style="font-family:var(--font-mono);font-size:9px;color:var(--n-500);letter-spacing:.04em">SUSPENDED</div>
+            </div>
+          </div>
+
+          <div class="section-label">GROUPS</div>
+          <div class="group-line"><span class="dot g-0"></span>Research <span class="ct">14</span></div>
+          <div class="group-line"><span class="dot g-5"></span>News <span class="ct">12</span></div>
+          <div class="group-line"><span class="dot g-2"></span>Design refs <span class="ct">11</span></div>
+          <div class="group-line"><span class="dot g-3"></span>Docs <span class="ct">8</span></div>
+          <div class="group-line"><span class="dot g-1"></span>Open PRs <span class="ct">6</span></div>
+          <div class="group-line"><span class="dot g-4"></span>Shopping <span class="ct">5</span></div>
+          <div class="group-line"><span class="dot g-6"></span>Video <span class="ct">3</span></div>
+
+          <div class="section-label">TRY ASKING</div>
+          <div class="prompts">
+            <button class="prompt">把 GitHub PR 单独分组</button>
+            <button class="prompt">Suspend tabs I haven't touched in 2h</button>
+            <button class="prompt">按项目重新分类</button>
+          </div>
+        </div>
+        <div class="sp-foot">
+          <div class="chat-input">
+            <textarea placeholder="Ask your tabs…"></textarea>
+            <button class="send" disabled>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="chat-hint">⏎ send · [ LOCAL ] default</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. PROGRESS ===== -->
+  <div class="card">
+    <div class="card-head">
+      <span class="num">02</span>
+      <span class="name">Progress</span>
+      <span class="desc">character-based, no spinner</span>
+    </div>
+    <div class="card-body">
+      <div class="sidebar">
+        <div class="sp-head">
+          <div class="logo">T</div>
+          <div class="title">TabMosaic</div>
+          <span class="chip">[ LOCAL ]</span>
+        </div>
+        <div class="sp-body">
+          <div class="aha">Organizing your tabs…</div>
+          <div class="aha-sub">87 tabs · 3 windows · ~1s remaining</div>
+          <div class="prog">
+            <div class="ok">Reading open tabs</div>
+            <div class="ok">Computing embeddings</div>
+            <div class="run">Clustering by topic</div>
+            <div class="pend">Naming groups</div>
+            <div class="pend">Suspending inactive</div>
+            <div class="pend">Closing duplicates</div>
+          </div>
+          <div style="margin-top:18px;padding:10px;background:var(--n-50);border:1px solid var(--line);border-radius:6px;font-size:11.5px;color:var(--n-600);line-height:1.5">
+            <span style="font-family:var(--font-mono);color:var(--n-500)">[ LOCAL ]</span> Embedding 87 pages on-device. No network. Cancel anytime with <span style="font-family:var(--font-mono);background:var(--n-100);padding:1px 4px;border-radius:3px">Esc</span>.
+          </div>
+        </div>
+        <div class="sp-foot">
+          <div class="chat-input" style="opacity:.5;pointer-events:none">
+            <textarea disabled placeholder="Busy organizing…"></textarea>
+            <button class="send" disabled>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="chat-hint">busy · esc to cancel</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. SUMMARY ===== -->
+  <div class="card">
+    <div class="card-head">
+      <span class="num">03</span>
+      <span class="name">Page Summary</span>
+      <span class="desc">on current tab</span>
+    </div>
+    <div class="card-body">
+      <div class="sidebar">
+        <div class="sp-head">
+          <div class="logo">T</div>
+          <div class="title">chrome.sidePanel API</div>
+          <span class="chip">[ LOCAL ]</span>
+        </div>
+        <div class="sp-body">
+          <div class="aha">In 3 bullets</div>
+          <div class="aha-sub">Read time saved ≈ 4 min · 1,820 words</div>
+          <ul class="sum-list">
+            <li><span class="cite">01</span><span>The <code style="font-family:var(--font-mono);font-size:11px;background:var(--n-100);padding:1px 4px;border-radius:3px">chrome.sidePanel</code> API hosts persistent UI alongside the page, distinct from <code style="font-family:var(--font-mono);font-size:11px;background:var(--n-100);padding:1px 4px;border-radius:3px">chrome.action</code> popups.</span></li>
+            <li><span class="cite">02</span><span>Requires MV3 + the <code style="font-family:var(--font-mono);font-size:11px;background:var(--n-100);padding:1px 4px;border-radius:3px">sidePanel</code> permission. Stable since Chrome 114.</span></li>
+            <li><span class="cite">03</span><span>Open with <code style="font-family:var(--font-mono);font-size:11px;background:var(--n-100);padding:1px 4px;border-radius:3px">chrome.sidePanel.open({tabId})</code> — promise resolves once displayed.</span></li>
+          </ul>
+          <div class="section-label">KEY SECTIONS</div>
+          <div class="group-line"><span class="dot g-0"></span>Concepts <span class="ct">3 min</span></div>
+          <div class="group-line"><span class="dot g-1"></span>Manifest <span class="ct">1 min</span></div>
+          <div class="group-line"><span class="dot g-2"></span>Open programmatically <span class="ct">1 min</span></div>
+          <div class="section-label">ACTIONS</div>
+          <div class="prompts">
+            <button class="prompt">Save to Tab Knowledge</button>
+            <button class="prompt">Add citation to chat</button>
+            <button class="prompt">Translate to 中文</button>
+          </div>
+        </div>
+        <div class="sp-foot">
+          <div class="chat-input">
+            <textarea placeholder="Ask about this page…"></textarea>
+            <button class="send">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="chat-hint">⏎ send · [ LOCAL ] default</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 4. CHAT ===== -->
+  <div class="card">
+    <div class="card-head">
+      <span class="num">04</span>
+      <span class="name">Chat</span>
+      <span class="desc">ask your tabs</span>
+    </div>
+    <div class="card-body">
+      <div class="sidebar">
+        <div class="sp-head">
+          <div class="logo">T</div>
+          <div class="title">TabMosaic</div>
+          <span class="chip">[ LOCAL ]</span>
+        </div>
+        <div class="sp-body">
+          <div class="aha">Ask your tabs.</div>
+          <div class="aha-sub">Searches 2,184 indexed pages locally</div>
+
+          <div class="msg me">
+            <div class="av">U</div>
+            <div>
+              <div class="bubble">把 GitHub PR 单独分组</div>
+            </div>
+          </div>
+          <div class="msg them">
+            <div class="av t">T</div>
+            <div>
+              <div class="bubble">Found <b>6 tabs</b> matching <code style="font-family:var(--font-mono);font-size:10.5px;background:rgba(255,255,255,.15);padding:1px 4px;border-radius:3px">github.com/*/pull/*</code>.<br>Created group <b>Open PRs</b> + a rule so future PRs auto-join.</div>
+              <div class="meta" style="color:rgba(255,255,255,.5)">[ LOCAL ] · 1.2s · 3 sources cited</div>
+            </div>
+          </div>
+          <div class="msg me">
+            <div class="av">U</div>
+            <div>
+              <div class="bubble">Suspend all but the 2 oldest</div>
+            </div>
+          </div>
+          <div class="msg them">
+            <div class="av t">T</div>
+            <div>
+              <div class="bubble">Done. Suspended 4 of 6, kept <b>PR #4821</b> and <b>PR #4823</b> open. Saved ~340MB.</div>
+              <div class="meta" style="color:rgba(255,255,255,.5)">[ LOCAL ] · 0.4s</div>
+            </div>
+          </div>
+        </div>
+        <div class="sp-foot">
+          <div class="chat-input">
+            <textarea placeholder="Ask your tabs…">把今天读过的文章总结成 5 个 take-away</textarea>
+            <button class="send">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="chat-hint">⏎ send · ⇧⏎ newline · [ LOCAL ] default</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5. EMPTY ===== -->
+  <div class="card">
+    <div class="card-head">
+      <span class="num">05</span>
+      <span class="name">Empty</span>
+      <span class="desc">no tabs / first-run</span>
+    </div>
+    <div class="card-body">
+      <div class="sidebar">
+        <div class="sp-head">
+          <div class="logo">T</div>
+          <div class="title">TabMosaic</div>
+          <span class="chip">[ LOCAL ]</span>
+        </div>
+        <div class="sp-body">
+          <div class="empty">
+            <div class="glyph">∅</div>
+            <h3>Nothing to organize.</h3>
+            <p>You have only 3 tabs open. TabMosaic learns best with a fuller window — open a few more, or just chat with what you have.</p>
+            <button class="btn btn-primary">+ Open chat</button>
+          </div>
+        </div>
+        <div class="sp-foot">
+          <div class="chat-input">
+            <textarea placeholder="Ask your tabs…"></textarea>
+            <button class="send">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="chat-hint">⏎ send · [ LOCAL ] default</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 6. ERROR ===== -->
+  <div class="card">
+    <div class="card-head">
+      <span class="num">06</span>
+      <span class="name">Error</span>
+      <span class="desc">permission / model fail</span>
+    </div>
+    <div class="card-body">
+      <div class="sidebar">
+        <div class="sp-head">
+          <div class="logo">T</div>
+          <div class="title">TabMosaic</div>
+          <span class="chip" style="border-color:var(--n-400);color:var(--n-700)">[ NO ACCESS ]</span>
+        </div>
+        <div class="sp-body">
+          <div class="err">
+            <div class="glyph">⊘</div>
+            <h4>Can't read this tab</h4>
+            <p>It's a <code style="font-family:var(--font-mono);font-size:11px;background:var(--n-100);padding:1px 4px;border-radius:3px">chrome://</code> page, a PDF, or marked as <b>protected</b> by your site-skip list.</p>
+            <span class="code">chrome://extensions</span>
+            <div class="row">
+              <button class="btn">Edit skip list</button>
+              <button class="btn">Retry</button>
+            </div>
+          </div>
+          <div class="err">
+            <div class="glyph">⊗</div>
+            <h4>Local model didn't load</h4>
+            <p>The on-device model file is missing or outdated. Re-download (≈ 1.4 GB) or switch to <b>[ API KEY ]</b>.</p>
+            <div class="row">
+              <button class="btn btn-primary">Re-download</button>
+              <button class="btn">Use API Key</button>
+            </div>
+          </div>
+        </div>
+        <div class="sp-foot">
+          <div class="chat-input" style="opacity:.5">
+            <textarea disabled placeholder="Resolve the error above to continue…"></textarea>
+            <button class="send" disabled>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="chat-hint">blocked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<button class="theme-btn" id="themeBtn" title="Toggle theme">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+
+<script>
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur==='dark'?'light':'dark');
+});
+</script>
+</body>
+</html>
