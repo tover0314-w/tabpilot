@@ -5,6 +5,7 @@
 Current no-dependency smoke test:
 
 ```bash
+node tools/preflight.js
 node tools/secret_scan.js
 node tools/extension_smoke_test.js
 ```
@@ -34,6 +35,8 @@ Coverage:
 Optional provider smoke test:
 
 ```bash
+node tools/preflight.js --deepseek
+node tools/preflight.js --deepseek-fixture
 node tools/deepseek_smoke_test.js
 node tools/deepseek_smoke_test.js --classify-fixture
 ```
@@ -44,6 +47,13 @@ Expected:
 - default mode reads .env.local and calls /models only
 - no real browser tab data is sent
 - --classify-fixture sends synthetic tabs only and rejects invented tabIds
+```
+
+Optional runtime smoke test:
+
+```bash
+node tools/preflight.js --runtime
+node tools/chrome_runtime_smoke_test.js
 ```
 
 Package check:

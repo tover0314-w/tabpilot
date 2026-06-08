@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.36 — 2026-06-09
+
+Added:
+
+- Added `tools/preflight.js` as a unified local verification entry point.
+- Preflight runs secret scan, JavaScript syntax checks, extension smoke test, package generation, and zip env-file exclusion check.
+- Optional `--deepseek`, `--deepseek-fixture`, and `--runtime` flags run provider or Chrome runtime checks explicitly.
+
+Safety:
+
+- Default preflight does not call DeepSeek, read real browser tabs, or launch Chrome.
+- DeepSeek fixture mode uses synthetic tabs only.
+- No product behavior, permissions, AI payload defaults, analytics, or storage behavior changed.
+
 ## v0.35 — 2026-06-09
 
 Added:

@@ -54,6 +54,12 @@ tools/             无依赖本地验证脚本，例如 extension smoke test
 当前不依赖 npm。可从仓库根目录运行：
 
 ```bash
+node tools/preflight.js
+```
+
+它会运行 secret scan、JS 语法检查、extension smoke test、打包和 zip env 排除检查。默认不调用 DeepSeek，也不启动真实 Chrome runtime。
+
+```bash
 node tools/extension_smoke_test.js
 ```
 
@@ -70,6 +76,8 @@ node tools/secret_scan.js
 可选 DeepSeek/OpenAI-compatible provider 检查：
 
 ```bash
+node tools/preflight.js --deepseek
+node tools/preflight.js --deepseek-fixture
 node tools/deepseek_smoke_test.js
 node tools/deepseek_smoke_test.js --classify-fixture
 ```
@@ -94,6 +102,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip
 可选真实 Chrome runtime smoke test：
 
 ```bash
+node tools/preflight.js --runtime
 node tools/chrome_runtime_smoke_test.js
 ```
 
