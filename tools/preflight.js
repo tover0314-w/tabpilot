@@ -1,11 +1,7 @@
 const childProcess = require("child_process");
-const fs = require("fs");
 const path = require("path");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
-const DIST_ZIP = path.join(ROOT_DIR, "dist", "tabmosaic-ai-extension-v0.1.0.zip");
-const DIST_CHECKSUM = path.join(ROOT_DIR, "dist", "tabmosaic-ai-extension-v0.1.0.sha256");
-const DIST_PACKAGE_MANIFEST = path.join(ROOT_DIR, "dist", "tabmosaic-ai-extension-v0.1.0.package.json");
 const SHOULD_RUN_DEEPSEEK = process.argv.includes("--deepseek");
 const SHOULD_RUN_DEEPSEEK_FIXTURE = process.argv.includes("--deepseek-fixture");
 const SHOULD_RUN_RUNTIME = process.argv.includes("--runtime");
@@ -24,6 +20,7 @@ const syntaxTargets = [
   "tools/deepseek_smoke_test.js",
   "tools/secret_scan.js",
   "tools/issue_form_smoke_test.js",
+  "tools/verify_release_package.js",
   "tools/preflight.js"
 ];
 
@@ -54,8 +51,7 @@ function main() {
   }
 
   runStep("Package extension", process.execPath, ["tools/package_extension.js"]);
-  verifyPackageExcludesEnv();
-  verifyPackageMetadata();
+  runStep("Verify release package", process.execPath, ["tools/verify_release_package.js"]);
 
   console.log("PASS preflight completed");
 }
@@ -74,54 +70,4 @@ function runStep(label, command, args) {
   if (result.status !== 0) {
     process.exit(result.status || 1);
   }
-}
-
-function verifyPackageExcludesEnv() {
-  console.log("\n==> Verify package excludes env files");
-
-  if (!fs.existsSync(DIST_ZIP)) {
-    throw new Error(`Missing package: ${path.relative(ROOT_DIR, DIST_ZIP)}`);
-  }
-
-  const result = childProcess.spawnSync("unzip", ["-l", DIST_ZIP], {
-    cwd: ROOT_DIR,
-    encoding: "utf8"
-  });
-
-  if (result.error) {
-    throw result.error;
-  }
-
-  if (result.status !== 0) {
-    throw new Error(result.stderr || "unzip failed");
-  }
-
-  if (/\.env($|\.)/.test(result.stdout)) {
-    throw new Error("Package unexpectedly contains env files");
-  }
-
-  console.log("PASS package excludes env files");
-}
-
-function verifyPackageMetadata() {
-  console.log("\n==> Verify package metadata");
-
-  for (const filePath of [DIST_CHECKSUM, DIST_PACKAGE_MANIFEST]) {
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`Missing package metadata: ${path.relative(ROOT_DIR, filePath)}`);
-    }
-  }
-
-  const manifest = JSON.parse(fs.readFileSync(DIST_PACKAGE_MANIFEST, "utf8"));
-  const checksumText = fs.readFileSync(DIST_CHECKSUM, "utf8");
-
-  if (!manifest.sha256 || !checksumText.includes(manifest.sha256)) {
-    throw new Error("Package checksum metadata mismatch");
-  }
-
-  if (manifest.safety?.includesEnvFiles !== false) {
-    throw new Error("Package manifest must state that env files are excluded");
-  }
-
-  console.log("PASS package metadata present");
 }

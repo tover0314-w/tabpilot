@@ -41,6 +41,7 @@ jobs:
           node --check tools/deepseek_smoke_test.js
           node --check tools/secret_scan.js
           node --check tools/issue_form_smoke_test.js
+          node --check tools/verify_release_package.js
           node --check tools/preflight.js
 
       - name: Extension smoke test
@@ -52,21 +53,14 @@ jobs:
       - name: Package extension
         run: node tools/package_extension.js
 
-      - name: Verify package excludes env files
-        shell: bash
-        run: |
-          if unzip -l dist/tabmosaic-ai-extension-v0.1.0.zip | grep -E '\.env($|\.)'; then
-            echo "Package unexpectedly contains env files"
-            exit 1
-          fi
-          test -f dist/tabmosaic-ai-extension-v0.1.0.sha256
-          test -f dist/tabmosaic-ai-extension-v0.1.0.package.json
+      - name: Verify release package
+        run: node tools/verify_release_package.js
 
       - name: Upload extension package artifact
         uses: actions/upload-artifact@v4
         with:
           name: tabmosaic-ai-extension
           path: |
-            dist/tabmosaic-ai-extension-v0.1.0.zip
-            dist/tabmosaic-ai-extension-v0.1.0.sha256
-            dist/tabmosaic-ai-extension-v0.1.0.package.json
+            dist/tabmosaic-ai-extension-v*.zip
+            dist/tabmosaic-ai-extension-v*.sha256
+            dist/tabmosaic-ai-extension-v*.package.json

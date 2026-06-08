@@ -9,6 +9,7 @@ node tools/preflight.js
 node tools/secret_scan.js
 node tools/extension_smoke_test.js
 node tools/issue_form_smoke_test.js
+node tools/verify_release_package.js
 ```
 
 Coverage:
@@ -16,6 +17,7 @@ Coverage:
 ```text
 - secret scan for tracked env files and real-looking API keys
 - issue form smoke test for beta feedback structure, privacy redlines, and required safety acknowledgements
+- release package verification against the current manifest version
 - manifest permission guardrails
 - no default_popup one-click action constraint
 - English/Chinese locale parity and UI i18n key references
@@ -63,6 +65,7 @@ Package check:
 ```bash
 node tools/generate_extension_assets.js
 node tools/package_extension.js
+node tools/verify_release_package.js
 unzip -l dist/tabmosaic-ai-extension-v0.1.0.zip
 ```
 
@@ -76,6 +79,7 @@ Expected:
 - default_popup is not present
 - dist/tabmosaic-ai-extension-v0.1.0.sha256 exists
 - dist/tabmosaic-ai-extension-v0.1.0.package.json exists and states env files are excluded
+- release package verifier passes for the current manifest version
 ```
 
 GitHub Actions CI:
@@ -93,8 +97,7 @@ Coverage:
 - extension smoke test
 - issue form smoke test
 - extension package generation
-- extension zip excludes env files
-- package checksum and package manifest generation
+- release package verification, including env exclusion, checksum, package manifest, and required zip entries
 - package artifact upload
 ```
 

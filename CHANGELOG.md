@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.41 — 2026-06-09
+
+Added:
+
+- Added `tools/verify_release_package.js` to validate release zip, checksum, package manifest, required zip entries, and package safety flags using the current manifest version.
+- Preflight now delegates release package checks to the shared verifier.
+- CI now uses the shared release package verifier and uploads version-patterned release artifacts instead of hardcoded `0.1.0` paths.
+- Updated README, extension README, INDEX, and Test Plan with the release package verifier.
+
+Safety:
+
+- Build and release validation change only.
+- No product behavior, extension permissions, AI payload, privacy defaults, analytics, storage behavior, or automatic upload path changed.
+
 ## v0.40 — 2026-06-09
 
 Added:

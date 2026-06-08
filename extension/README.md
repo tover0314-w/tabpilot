@@ -82,6 +82,7 @@ From the repository root:
 ```bash
 node tools/generate_extension_assets.js
 node tools/package_extension.js
+node tools/verify_release_package.js
 ```
 
 Output:
@@ -101,6 +102,8 @@ node tools/extension_smoke_test.js
 ```
 
 It checks manifest permissions, English/Chinese localization, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, and local data deletion.
+
+Release package verification checks the generated zip, checksum, package manifest, required package entries, and env-file exclusion against the current manifest version.
 
 Optional runtime smoke test:
 

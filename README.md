@@ -73,6 +73,12 @@ node tools/issue_form_smoke_test.js
 
 它会检查 GitHub 私测 issue forms 的基础结构、隐私提交红线和 required safety acknowledgements，避免反馈入口要求或鼓励测试者提交敏感浏览数据。
 
+```bash
+node tools/verify_release_package.js
+```
+
+它会按 `extension/manifest.json` 的当前版本检查生成的 zip、sha256 和 package manifest，避免版本升级后本地/CI 还卡在旧包名。
+
 提交前 secret scan：
 
 ```bash
@@ -92,7 +98,7 @@ node tools/deepseek_smoke_test.js --classify-fixture
 
 默认只读取 `.env.local` 并调用 `/models`，不发送 tabs。`--classify-fixture` 只发送合成测试 tabs，不读取真实浏览器数据。
 
-GitHub Actions 会在 push / PR 时自动运行 secret scan、语法检查、extension smoke test、issue form smoke test、打包、zip env 排除检查，并上传扩展 zip artifact。DeepSeek provider smoke 不在 CI 中运行，因为它需要本地 secret。
+GitHub Actions 会在 push / PR 时自动运行 secret scan、语法检查、extension smoke test、issue form smoke test、打包、release package 校验，并上传扩展 zip artifact。DeepSeek provider smoke 不在 CI 中运行，因为它需要本地 secret。
 
 私测反馈可以走 GitHub issue forms：
 
