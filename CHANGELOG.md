@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.34 — 2026-06-09
+
+Added:
+
+- Added GitHub Actions CI at `.github/workflows/ci.yml`.
+- CI runs JavaScript syntax checks, extension smoke tests, package generation, and zip env-file exclusion checks.
+- CI uploads the generated extension zip as an artifact.
+
+Safety:
+
+- CI does not run DeepSeek provider smoke because it requires a local secret.
+- CI verifies no unexpected `.env` files are tracked.
+- No product behavior, permissions, analytics, AI payload, or privacy defaults changed.
+
 ## v0.33 — 2026-06-09
 
 Added:

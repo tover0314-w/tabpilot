@@ -68,6 +68,8 @@ node tools/deepseek_smoke_test.js --classify-fixture
 
 默认只读取 `.env.local` 并调用 `/models`，不发送 tabs。`--classify-fixture` 只发送合成测试 tabs，不读取真实浏览器数据。
 
+GitHub Actions 会在 push / PR 时自动运行语法检查、extension smoke test、打包、zip env 排除检查，并上传扩展 zip artifact。DeepSeek provider smoke 不在 CI 中运行，因为它需要本地 secret。
+
 生成图标和打包 beta zip：
 
 ```bash

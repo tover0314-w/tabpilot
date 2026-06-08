@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  extension:
+    name: Extension smoke and package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Verify no local secrets are tracked
+        shell: bash
+        run: |
+          tracked_env_files="$(git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -v '^\.env.example$' || true)"
+          if [ -n "$tracked_env_files" ]; then
+            echo "Unexpected tracked env files:"
+            echo "$tracked_env_files"
+            exit 1
+          fi
+
+      - name: Syntax check
+        run: |
+          node --check extension/background.js
+          node --check extension/i18n.js
+          node --check extension/diagnostics.js
+          node --check extension/sidepanel.js
+          node --check extension/dashboard.js
+          node --check tools/extension_smoke_test.js
+          node --check tools/package_extension.js
+          node --check tools/chrome_runtime_smoke_test.js
+          node --check tools/qa_seed_tabs.js
+          node --check tools/generate_extension_assets.js
+          node --check tools/deepseek_smoke_test.js
+
+      - name: Extension smoke test
+        run: node tools/extension_smoke_test.js
+
+      - name: Package extension
+        run: node tools/package_extension.js
+
+      - name: Verify package excludes env files
+        shell: bash
+        run: |
+          if unzip -l dist/tabmosaic-ai-extension-v0.1.0.zip | grep -E '\.env($|\.)'; then
+            echo "Package unexpectedly contains env files"
+            exit 1
+          fi
+
+      - name: Upload extension package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tabmosaic-ai-extension
+          path: dist/tabmosaic-ai-extension-v0.1.0.zip

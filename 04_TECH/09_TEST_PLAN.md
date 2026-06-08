@@ -62,6 +62,25 @@ Expected:
 - default_popup is not present
 ```
 
+GitHub Actions CI:
+
+```text
+.github/workflows/ci.yml
+```
+
+Coverage:
+
+```text
+- no unexpected tracked env files
+- JavaScript syntax checks
+- extension smoke test
+- extension package generation
+- extension zip excludes env files
+- package artifact upload
+```
+
+DeepSeek provider smoke is intentionally local-only because it requires a secret API key.
+
 Optional Chrome runtime smoke test:
 
 ```bash
