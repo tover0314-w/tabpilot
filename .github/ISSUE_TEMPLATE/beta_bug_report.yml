@@ -1,0 +1,108 @@
+name: Beta bug report
+description: Report a private beta bug without sharing sensitive browsing data.
+title: "[Beta Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing TabMosaic AI.
+
+        Privacy guardrails:
+        - Do not paste API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+        - If you use Dashboard -> Settings -> Copy Diagnostic Snapshot or Copy Feedback Template, review and remove anything sensitive before submitting.
+        - Redacted diagnostics are copied locally only; GitHub submission is always manual.
+  - type: input
+    id: extension_version
+    attributes:
+      label: Extension version
+      description: Use the version shown in the extension package manifest or chrome://extensions.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: package_evidence
+    attributes:
+      label: Package or commit evidence
+      description: Paste the package manifest commit, SHA256 prefix, or local commit hash. Do not paste secrets.
+      placeholder: "commit 070a1ce or sha256 prefix abc123..."
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Chrome version, OS, install method.
+      placeholder: "Chrome 126, macOS, Load unpacked from extension/"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Product area
+      options:
+        - One-click organize
+        - Native tab groups
+        - Sidebar
+        - Duplicate close or restore
+        - Undo
+        - Dashboard
+        - Current-tab summary
+        - AI provider setup
+        - Localization
+        - Privacy or permissions
+        - Packaging or install
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe what you expected without including real URLs, titles, or page text.
+      placeholder: "Clicking the toolbar icon should open the side panel and create native tab groups."
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Describe what happened. Use generic names like "work docs tab" instead of real page titles.
+      placeholder: "The side panel opened, but no native tab groups appeared."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Keep reproduction steps generic and privacy-safe.
+      placeholder: |
+        1. Load unpacked extension.
+        2. Open three generic docs tabs and one duplicate.
+        3. Click the extension icon.
+    validations:
+      required: true
+  - type: textarea
+    id: safety_impact
+    attributes:
+      label: Safety impact
+      description: Call out any destructive or privacy-sensitive behavior.
+      placeholder: "No tabs were incorrectly closed / one protected tab appeared to close / page content was read unexpectedly."
+    validations:
+      required: true
+  - type: textarea
+    id: redacted_diagnostics
+    attributes:
+      label: Redacted diagnostics
+      description: Optional. Paste reviewed output from Copy Diagnostic Snapshot or Copy Feedback Template only after removing anything sensitive.
+      render: text
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy_check
+    attributes:
+      label: Privacy check
+      options:
+        - label: I did not include API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+          required: true
+        - label: I reviewed any copied diagnostic or feedback text before submitting.
+          required: true

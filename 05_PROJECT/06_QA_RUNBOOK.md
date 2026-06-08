@@ -200,12 +200,21 @@ Expected:
 - Neither output includes URLs, tab titles, page text, hostnames, emails, bearer tokens, rule patterns, group names, or API keys.
 ```
 
+Optional GitHub feedback check:
+
+```text
+- Open the beta bug report and beta product feedback issue forms.
+- Confirm both forms warn against API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, private screenshots, and private rule patterns.
+- Confirm both forms ask the tester to review copied diagnostics or feedback text before submitting.
+```
+
 Fail if:
 
 ```text
 - Any copied output contains a real URL, tab title, hostname, email, bearer token, API key, page text, or private rule pattern.
 - Copying triggers a network request or asks for a new Chrome permission.
 - The template implies automatic upload or analytics collection.
+- GitHub issue forms ask testers to include sensitive browsing data or secrets.
 ```
 
 ## 11. Privacy Check

@@ -15,6 +15,7 @@
 - `extension/i18n.js`：extension page 静态和动态 UI 文案本地化 helper。
 - `dist/`：本地生成的扩展 zip 包输出目录。
 - `.github/workflows/ci.yml`：GitHub Actions CI，运行 extension smoke、打包和 zip env 排除检查。
+- `.github/ISSUE_TEMPLATE/`：私测 bug report 和产品反馈 issue forms，要求提交前移除敏感浏览数据和 secrets。
 - `tools/generate_extension_assets.js`：无依赖 PNG icon 生成脚本。
 - `tools/package_extension.js`：本地扩展打包脚本，输出 beta zip。
 - `tools/preflight.js`：统一本地预检入口，运行 secret scan、语法检查、smoke、打包和 zip env 检查。

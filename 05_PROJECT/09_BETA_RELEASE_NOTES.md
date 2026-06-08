@@ -157,3 +157,12 @@ Dashboard -> Settings -> Copy Feedback Template
 ```
 
 The copied template includes manual quality labels and a redacted diagnostic snapshot. It does not upload automatically.
+
+After reviewing the copied text, testers can file one of the repository issue forms:
+
+```text
+.github/ISSUE_TEMPLATE/beta_bug_report.yml
+.github/ISSUE_TEMPLATE/beta_feedback.yml
+```
+
+Do not paste API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns into GitHub issues.

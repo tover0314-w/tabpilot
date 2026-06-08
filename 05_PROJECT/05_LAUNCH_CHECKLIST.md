@@ -53,6 +53,7 @@
 - [ ] 20-50 位 beta 用户。
 - [x] 本地脱敏诊断快照。
 - [x] 本地反馈模板（copy-only first slice）。
+- [x] GitHub 私测 issue forms（bug / feedback，带隐私提交红线）。
 - [x] 错误日志（local redacted first slice，无上传）。
 - [x] 分类质量标注（反馈模板 first slice，人工填写）。
 - [x] 误关恢复监控（local count-only safety audit first slice，无上传）。

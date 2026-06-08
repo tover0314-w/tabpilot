@@ -1,0 +1,111 @@
+name: Beta product feedback
+description: Share private beta classification, UX, and MVP feedback safely.
+title: "[Beta Feedback]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for classification quality, sidebar/dashboard UX, and MVP feedback.
+
+        Privacy guardrails:
+        - Do not paste API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+        - Describe sites and tabs generically, for example "project docs", "ticket tracker", or "meeting notes".
+        - If you use Dashboard -> Settings -> Copy Feedback Template, review and remove anything sensitive before submitting.
+  - type: input
+    id: extension_version
+    attributes:
+      label: Extension version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Chrome version, OS, install method.
+      placeholder: "Chrome 126, macOS, Load unpacked from extension/"
+    validations:
+      required: true
+  - type: input
+    id: workload_shape
+    attributes:
+      label: Workload shape
+      description: Approximate number of windows/tabs and work style. Keep it generic.
+      placeholder: "2 windows, about 35 tabs, docs + tickets + meetings"
+    validations:
+      required: true
+  - type: dropdown
+    id: quality_score
+    attributes:
+      label: Classification quality
+      description: "Use the MVP target: 70% clearly right, 20% acceptable, 10% Review/Misc, 0 dangerous close mistakes."
+      options:
+        - Hit or exceeded target
+        - Close, but needs tuning
+        - Useful, but too much Review/Misc
+        - Not useful yet
+        - Safety issue found
+    validations:
+      required: true
+  - type: textarea
+    id: quality_notes
+    attributes:
+      label: Classification notes
+      description: Summarize right/wrong group patterns without naming real pages.
+      placeholder: |
+        Clearly right:
+        Acceptable but needs adjustment:
+        Review/Misc:
+        Clearly wrong:
+        Dangerous close mistakes:
+    validations:
+      required: true
+  - type: textarea
+    id: sidebar_feedback
+    attributes:
+      label: Sidebar feedback
+      description: Was the result explanation, Undo/Restore, duplicate review, summary, or Chat Refine understandable?
+      placeholder: "Undo was clear; Duplicate Review needed clearer wording."
+    validations:
+      required: false
+  - type: textarea
+    id: dashboard_feedback
+    attributes:
+      label: Dashboard feedback
+      description: Feedback on Smart Groups, Duplicate Center, Rules & Memory, Settings, or Apply behavior.
+      placeholder: "Rules & Memory made sense, but I wanted to move tabs from the Dashboard."
+    validations:
+      required: false
+  - type: textarea
+    id: rules_memory
+    attributes:
+      label: Rules or memory suggestions
+      description: Use generic patterns only. Do not paste private names, exact domains, or real rule patterns if sensitive.
+      placeholder: "Future ticket tracker tabs should go to Product & Tasks."
+    validations:
+      required: false
+  - type: textarea
+    id: mvp_gap
+    attributes:
+      label: Biggest MVP gap
+      description: What would make this usable in daily office work?
+      placeholder: "I need workspace saving before I would use it every day."
+    validations:
+      required: false
+  - type: textarea
+    id: redacted_feedback_template
+    attributes:
+      label: Reviewed feedback template output
+      description: Optional. Paste reviewed output from Copy Feedback Template only after removing anything sensitive.
+      render: text
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy_check
+    attributes:
+      label: Privacy check
+      options:
+        - label: I did not include API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+          required: true
+        - label: I described tabs and sites generically unless the detail is public and safe to share.
+          required: true

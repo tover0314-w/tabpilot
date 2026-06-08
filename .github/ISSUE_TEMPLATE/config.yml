@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private beta release notes
+    url: https://github.com/tover0314-w/tabpilot/blob/main/05_PROJECT/09_BETA_RELEASE_NOTES.md
+    about: Read install, QA, privacy, and feedback guidance before filing.

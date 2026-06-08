@@ -48,6 +48,7 @@ dist/              本地生成的扩展 zip 包
 06_REFERENCES/     官方来源、假设、后续调研清单、原始交付归档
 extension/         当前可加载的 Chrome Extension 开发切片
 tools/             无依赖本地验证脚本，例如 extension smoke test
+.github/ISSUE_TEMPLATE/  私测 bug / 产品反馈表单，带隐私提交红线
 ```
 
 ## 本地验证
@@ -86,6 +87,15 @@ node tools/deepseek_smoke_test.js --classify-fixture
 默认只读取 `.env.local` 并调用 `/models`，不发送 tabs。`--classify-fixture` 只发送合成测试 tabs，不读取真实浏览器数据。
 
 GitHub Actions 会在 push / PR 时自动运行 secret scan、语法检查、extension smoke test、打包、zip env 排除检查，并上传扩展 zip artifact。DeepSeek provider smoke 不在 CI 中运行，因为它需要本地 secret。
+
+私测反馈可以走 GitHub issue forms：
+
+```text
+.github/ISSUE_TEMPLATE/beta_bug_report.yml
+.github/ISSUE_TEMPLATE/beta_feedback.yml
+```
+
+两个表单都要求测试者不要提交 API key、full URL、tab title、page text、email、bearer token、私有截图或私有 rule pattern。Dashboard 复制出来的 diagnostics / feedback template 也必须先人工检查再提交。
 
 生成图标和打包 beta zip：
 

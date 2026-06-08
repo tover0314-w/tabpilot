@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.39 — 2026-06-09
+
+Added:
+
+- Added privacy-safe GitHub issue forms for private beta bug reports and product feedback.
+- Bug and feedback forms warn testers not to submit API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, private screenshots, or private rule patterns.
+- Updated beta release notes, QA runbook, launch checklist, README, and INDEX with the issue form feedback path.
+
+Safety:
+
+- Documentation and repository workflow change only.
+- Issue forms require manual review before submitting copied diagnostics or feedback text.
+- No product behavior, permissions, AI payload, analytics, storage behavior, or automatic upload path changed.
+
 ## v0.38 — 2026-06-09
 
 Added:
