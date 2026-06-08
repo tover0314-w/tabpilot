@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.35 — 2026-06-09
+
+Added:
+
+- Added `tools/secret_scan.js` to scan git tracked files for unexpected `.env` files and real-looking API keys.
+- Wired the secret scanner into GitHub Actions CI.
+- Documented local secret scanning in README, INDEX, and Test Plan.
+
+Safety:
+
+- The scanner ignores local untracked `.env.local` but fails if it is ever tracked.
+- The scanner allows known fake test keys while blocking realistic `sk-...` secrets.
+- No product behavior, permissions, AI payload, analytics, or storage behavior changed.
+
 ## v0.34 — 2026-06-09
 
 Added:

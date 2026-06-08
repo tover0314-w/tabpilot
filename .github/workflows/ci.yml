@@ -23,15 +23,8 @@ jobs:
         with:
           node-version: 24
 
-      - name: Verify no local secrets are tracked
-        shell: bash
-        run: |
-          tracked_env_files="$(git ls-files | grep -E '(^|/)\.env(\.|$)' | grep -v '^\.env.example$' || true)"
-          if [ -n "$tracked_env_files" ]; then
-            echo "Unexpected tracked env files:"
-            echo "$tracked_env_files"
-            exit 1
-          fi
+      - name: Secret scan
+        run: node tools/secret_scan.js
 
       - name: Syntax check
         run: |
@@ -46,6 +39,7 @@ jobs:
           node --check tools/qa_seed_tabs.js
           node --check tools/generate_extension_assets.js
           node --check tools/deepseek_smoke_test.js
+          node --check tools/secret_scan.js
 
       - name: Extension smoke test
         run: node tools/extension_smoke_test.js

@@ -5,12 +5,14 @@
 Current no-dependency smoke test:
 
 ```bash
+node tools/secret_scan.js
 node tools/extension_smoke_test.js
 ```
 
 Coverage:
 
 ```text
+- secret scan for tracked env files and real-looking API keys
 - manifest permission guardrails
 - no default_popup one-click action constraint
 - English/Chinese locale parity and UI i18n key references
@@ -72,6 +74,7 @@ Coverage:
 
 ```text
 - no unexpected tracked env files
+- tracked secret scan
 - JavaScript syntax checks
 - extension smoke test
 - extension package generation

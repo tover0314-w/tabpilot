@@ -17,6 +17,7 @@
 - `.github/workflows/ci.yml`：GitHub Actions CI，运行 extension smoke、打包和 zip env 排除检查。
 - `tools/generate_extension_assets.js`：无依赖 PNG icon 生成脚本。
 - `tools/package_extension.js`：本地扩展打包脚本，输出 beta zip。
+- `tools/secret_scan.js`：扫描 git tracked files，防止 `.env` 或真实 API key 进入提交和 CI。
 - `tools/extension_smoke_test.js`：无依赖 Node smoke test，覆盖 manifest、localization、permission explanation、redacted diagnostics、Chat Refine、rules、dedupe safety、AI output validation 和 local data deletion。
 - `tools/chrome_runtime_smoke_test.js`：可选 Chrome runtime smoke test，使用临时 profile 尝试加载 unpacked extension 并验证真实 native tab groups。
 - `tools/deepseek_smoke_test.js`：读取 `.env.local` 的 DeepSeek/OpenAI-compatible provider smoke test，默认只检查 `/models`，可选合成 tabs 分类。

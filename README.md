@@ -59,6 +59,14 @@ node tools/extension_smoke_test.js
 
 它会检查 manifest 权限、英文/中文本地化、权限解释、脱敏本地错误日志、本地误关恢复安全审计计数、脱敏 beta 诊断快照和反馈模板、Chat Refine parser、用户规则优先级、重复项安全策略、AI 输出校验、AI 连接测试不发送 tab 数据，以及本地数据清除。
 
+提交前 secret scan：
+
+```bash
+node tools/secret_scan.js
+```
+
+它只扫描 git tracked files，用于防止 `.env.local` 或真实 `sk-...` key 被误提交。
+
 可选 DeepSeek/OpenAI-compatible provider 检查：
 
 ```bash
@@ -68,7 +76,7 @@ node tools/deepseek_smoke_test.js --classify-fixture
 
 默认只读取 `.env.local` 并调用 `/models`，不发送 tabs。`--classify-fixture` 只发送合成测试 tabs，不读取真实浏览器数据。
 
-GitHub Actions 会在 push / PR 时自动运行语法检查、extension smoke test、打包、zip env 排除检查，并上传扩展 zip artifact。DeepSeek provider smoke 不在 CI 中运行，因为它需要本地 secret。
+GitHub Actions 会在 push / PR 时自动运行 secret scan、语法检查、extension smoke test、打包、zip env 排除检查，并上传扩展 zip artifact。DeepSeek provider smoke 不在 CI 中运行，因为它需要本地 secret。
 
 生成图标和打包 beta zip：
 
