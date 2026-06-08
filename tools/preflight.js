@@ -23,6 +23,7 @@ const syntaxTargets = [
   "tools/generate_extension_assets.js",
   "tools/deepseek_smoke_test.js",
   "tools/secret_scan.js",
+  "tools/issue_form_smoke_test.js",
   "tools/preflight.js"
 ];
 
@@ -36,6 +37,7 @@ function main() {
   }
 
   runStep("Extension smoke", process.execPath, ["tools/extension_smoke_test.js"]);
+  runStep("Issue form smoke", process.execPath, ["tools/issue_form_smoke_test.js"]);
 
   if (SHOULD_RUN_DEEPSEEK || SHOULD_RUN_DEEPSEEK_FIXTURE) {
     const args = ["tools/deepseek_smoke_test.js"];

@@ -8,12 +8,14 @@ Current no-dependency smoke test:
 node tools/preflight.js
 node tools/secret_scan.js
 node tools/extension_smoke_test.js
+node tools/issue_form_smoke_test.js
 ```
 
 Coverage:
 
 ```text
 - secret scan for tracked env files and real-looking API keys
+- issue form smoke test for beta feedback structure, privacy redlines, and required safety acknowledgements
 - manifest permission guardrails
 - no default_popup one-click action constraint
 - English/Chinese locale parity and UI i18n key references
@@ -89,6 +91,7 @@ Coverage:
 - tracked secret scan
 - JavaScript syntax checks
 - extension smoke test
+- issue form smoke test
 - extension package generation
 - extension zip excludes env files
 - package checksum and package manifest generation
@@ -311,6 +314,7 @@ node tools/qa_seed_tabs.js --open
 - 确认 Beta Feedback Template 要求人工标注 70/20/10/0 分类质量目标和误关情况。
 - 确认本地错误日志只保存脱敏错误摘要，且不包含 URL、hostname、email、bearer token、API key、tab title 或 page text。
 - 确认本地误关恢复安全审计只保存数量和白名单事件类型，且不包含 URL、hostname、duplicate label、tab title 或 page text。
+- 确认 GitHub 私测 issue forms 要求提交前移除 API key、bearer token、cookie、full URL、tab title、page text、email、私有截图和私有 rule pattern。
 
 ## 5. 性能测试
 

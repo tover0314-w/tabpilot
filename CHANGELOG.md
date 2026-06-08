@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.40 — 2026-06-09
+
+Added:
+
+- Added `tools/issue_form_smoke_test.js` to validate private beta GitHub issue forms.
+- Preflight and CI now check issue form structure, privacy redlines, required safety acknowledgements, and text rendering for pasted diagnostics or feedback.
+- Updated README, INDEX, and Test Plan with the issue form smoke test.
+
+Safety:
+
+- Validation-only workflow change.
+- No product behavior, permissions, AI payload, analytics, storage behavior, or automatic upload path changed.
+
 ## v0.39 — 2026-06-09
 
 Added:

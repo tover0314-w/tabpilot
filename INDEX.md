@@ -20,6 +20,7 @@
 - `tools/package_extension.js`：本地扩展打包脚本，输出 beta zip。
 - `tools/preflight.js`：统一本地预检入口，运行 secret scan、语法检查、smoke、打包和 zip env 检查。
 - `tools/secret_scan.js`：扫描 git tracked files，防止 `.env` 或真实 API key 进入提交和 CI。
+- `tools/issue_form_smoke_test.js`：检查私测 issue forms 的结构、隐私红线和 required safety acknowledgements。
 - `tools/extension_smoke_test.js`：无依赖 Node smoke test，覆盖 manifest、localization、permission explanation、redacted diagnostics、Chat Refine、rules、dedupe safety、AI output validation 和 local data deletion。
 - `tools/chrome_runtime_smoke_test.js`：可选 Chrome runtime smoke test，使用临时 profile 尝试加载 unpacked extension 并验证真实 native tab groups。
 - `tools/deepseek_smoke_test.js`：读取 `.env.local` 的 DeepSeek/OpenAI-compatible provider smoke test，默认只检查 `/models`，可选合成 tabs 分类。

@@ -40,10 +40,14 @@ jobs:
           node --check tools/generate_extension_assets.js
           node --check tools/deepseek_smoke_test.js
           node --check tools/secret_scan.js
+          node --check tools/issue_form_smoke_test.js
           node --check tools/preflight.js
 
       - name: Extension smoke test
         run: node tools/extension_smoke_test.js
+
+      - name: Issue form smoke test
+        run: node tools/issue_form_smoke_test.js
 
       - name: Package extension
         run: node tools/package_extension.js
