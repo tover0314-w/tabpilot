@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.33 — 2026-06-09
+
+Added:
+
+- Added `05_PROJECT/08_QA_EVIDENCE.md` to record private-beta verification evidence without secrets or real browsing data.
+- Recorded local DeepSeek `/models` verification and synthetic classification fixture results.
+- Recorded extension smoke test and package env-exclusion results.
+
+Safety:
+
+- QA evidence does not include API keys, real browser tab data, full URLs from the user's browser, or screenshots.
+- `.env.local` remains ignored and excluded from the extension zip.
+
 ## v0.32 — 2026-06-09
 
 Added:

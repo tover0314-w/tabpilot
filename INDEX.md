@@ -81,6 +81,7 @@
 - `05_LAUNCH_CHECKLIST.md`：发布清单。
 - `06_QA_RUNBOOK.md`：P0 手动 QA 流程、预期结果和记录模板。
 - `07_STORE_SUBMISSION_DRAFT.md`：Chrome Web Store single purpose、权限、隐私政策和上架文案草案，提交前必须确认。
+- `08_QA_EVIDENCE.md`：私测 MVP 本地验证证据记录，不包含 secrets 或真实浏览器数据。
 
 ## 06_REFERENCES
 

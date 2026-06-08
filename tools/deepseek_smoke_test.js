@@ -141,23 +141,21 @@ async function classifySyntheticFixture({ baseUrl, apiKey, model }) {
         {
           role: "system",
           content:
-            "You classify browser tabs into task-oriented Chrome tab groups. Return only valid JSON. Do not invent tabIds."
+            "You classify browser tabs into task-oriented groups. Return only valid JSON with a groups array. Do not invent tabIds."
         },
         {
           role: "user",
           content: JSON.stringify({
-            task: "Classify these synthetic test tabs. They are not real browsing data.",
             schema: {
               groups: [
                 {
                   name: "string",
-                  color: "grey|blue|red|yellow|green|pink|purple|cyan",
-                  confidence: 0.0,
+                  color: "blue",
+                  confidence: 0.9,
                   reason: "short string",
                   tabIds: [101]
                 }
-              ],
-              reviewTabIds: [101]
+              ]
             },
             tabs: fixtureTabs
           })

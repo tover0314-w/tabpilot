@@ -43,6 +43,7 @@ dist/              本地生成的扩展 zip 包
 04_TECH/           Chrome 扩展架构、API、数据模型、AI prompt、存储、安全、测试
 05_PROJECT/        路线图、sprint、backlog、风险、发布清单
 05_PROJECT/07_STORE_SUBMISSION_DRAFT.md  Chrome Web Store / 隐私政策草案，DO NOT SUBMIT YET
+05_PROJECT/08_QA_EVIDENCE.md  私测 MVP 本地验证证据，不包含 secrets 或真实浏览器数据
 06_REFERENCES/     官方来源、假设、后续调研清单、原始交付归档
 extension/         当前可加载的 Chrome Extension 开发切片
 tools/             无依赖本地验证脚本，例如 extension smoke test
