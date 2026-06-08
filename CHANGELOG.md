@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.37 — 2026-06-09
+
+Added:
+
+- Added `05_PROJECT/09_BETA_RELEASE_NOTES.md` for the v0.1.0 private beta.
+- Release notes include install steps, included capabilities, privacy defaults, verified evidence, known limits, launch confirmation gates, and feedback path.
+- Updated README, INDEX, and launch checklist with the beta release notes entry.
+
+Safety:
+
+- Documentation-only change.
+- Release notes are marked private beta only, not public Chrome Web Store submission.
+- No product behavior, permissions, AI payload, analytics, or storage behavior changed.
+
 ## v0.36 — 2026-06-09
 
 Added:

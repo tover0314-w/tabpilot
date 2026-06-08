@@ -49,6 +49,7 @@
 
 ## Beta
 
+- [x] v0.1.0 私测 release notes。
 - [ ] 20-50 位 beta 用户。
 - [x] 本地脱敏诊断快照。
 - [x] 本地反馈模板（copy-only first slice）。
