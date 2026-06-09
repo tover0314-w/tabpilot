@@ -108,6 +108,9 @@ Run:
 
 ```bash
 node tools/preflight.js
+node tools/open_manual_qa_profile.js --dry-run
+node tools/open_manual_qa_profile.js --self-test
+node tools/open_manual_qa_profile.js
 node tools/qa_seed_tabs.js
 node tools/qa_seed_tabs.js --open
 ```
@@ -117,6 +120,8 @@ Then follow:
 ```text
 05_PROJECT/06_QA_RUNBOOK.md
 ```
+
+Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with synthetic tabs and does not touch the user's real Chrome profile.
 
 Minimum manual checks:
 

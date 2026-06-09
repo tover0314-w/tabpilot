@@ -36,6 +36,7 @@
 - [x] tests（smoke first slice）。
 - [x] smoke tests。
 - [x] automated runtime smoke（temporary Chrome for Testing profile + synthetic tabs）。
+- [x] disposable manual QA profile launcher。
 - [x] QA seed tabs。
 
 ## Privacy / Compliance

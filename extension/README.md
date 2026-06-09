@@ -130,6 +130,15 @@ To run automated runtime QA, use Chrome for Testing or Chromium:
 CHROME_PATH="/path/to/chrome-or-chromium" node tools/chrome_runtime_smoke_test.js
 ```
 
+Optional disposable manual QA browser:
+
+```bash
+node tools/open_manual_qa_profile.js --dry-run
+node tools/open_manual_qa_profile.js
+```
+
+This opens a temporary Chrome for Testing / Chromium profile with synthetic QA tabs, sidepanel, and dashboard pages. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
+
 Optional DeepSeek/OpenAI-compatible request-format provider smoke test:
 
 ```bash

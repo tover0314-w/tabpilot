@@ -165,6 +165,16 @@ node tools/qa_seed_tabs.js
 node tools/qa_seed_tabs.js --open
 ```
 
+更安全的手动 QA 前置路径是打开一个一次性 QA profile：
+
+```bash
+node tools/open_manual_qa_profile.js --dry-run
+node tools/open_manual_qa_profile.js --self-test
+node tools/open_manual_qa_profile.js
+```
+
+它会加载 extension、打开合成 QA tabs 和 sidepanel/dashboard 页面，只使用 `artifacts/manual-qa-profiles/` 下的一次性 Chrome profile，不读取你的真实 Chrome profile、真实 tabs 或 `.env.local`。`--self-test` 会打开后自动关闭并清理。
+
 ## 立即阅读建议
 
 1. `AGENTS.md`

@@ -80,35 +80,42 @@ const shouldOpen = process.argv.includes("--open");
 const shouldListJson = process.argv.includes("--json");
 const urls = URL_SETS.flatMap((set) => set.urls);
 
-if (shouldListJson) {
-  console.log(JSON.stringify(URL_SETS, null, 2));
-  process.exit(0);
-}
+if (require.main === module) {
+  if (shouldListJson) {
+    console.log(JSON.stringify(URL_SETS, null, 2));
+    process.exit(0);
+  }
 
-if (!shouldOpen) {
-  console.log("QA seed URLs. Re-run with --open to open them in Google Chrome.");
-  console.log("");
-
-  for (const set of URL_SETS) {
-    console.log(`# ${set.name} -> ${set.expectedGroup}`);
-    for (const url of set.urls) {
-      console.log(url);
-    }
+  if (!shouldOpen) {
+    console.log("QA seed URLs. Re-run with --open to open them in Google Chrome.");
     console.log("");
+
+    for (const set of URL_SETS) {
+      console.log(`# ${set.name} -> ${set.expectedGroup}`);
+      for (const url of set.urls) {
+        console.log(url);
+      }
+      console.log("");
+    }
+
+    console.log(`Total URLs: ${urls.length}`);
+    process.exit(0);
   }
 
-  console.log(`Total URLs: ${urls.length}`);
-  process.exit(0);
-}
+  for (const url of urls) {
+    const result = childProcess.spawnSync("open", ["-a", "Google Chrome", url], {
+      stdio: "inherit"
+    });
 
-for (const url of urls) {
-  const result = childProcess.spawnSync("open", ["-a", "Google Chrome", url], {
-    stdio: "inherit"
-  });
-
-  if (result.status !== 0) {
-    process.exit(result.status || 1);
+    if (result.status !== 0) {
+      process.exit(result.status || 1);
+    }
   }
+
+  console.log(`Opened ${urls.length} QA tabs in Google Chrome.`);
 }
 
-console.log(`Opened ${urls.length} QA tabs in Google Chrome.`);
+module.exports = {
+  URL_SETS,
+  urls
+};

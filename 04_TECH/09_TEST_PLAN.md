@@ -65,9 +65,13 @@ Optional runtime smoke test:
 ```bash
 node tools/preflight.js --runtime
 node tools/chrome_runtime_smoke_test.js
+node tools/open_manual_qa_profile.js --dry-run
+node tools/open_manual_qa_profile.js --self-test
 ```
 
 The runtime script uses a temporary browser profile and synthetic tabs. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome.
+
+The manual QA profile launcher opens a disposable browser only when run without `--dry-run`; dry-run validates browser discovery, profile paths, extension path, and synthetic tab count without opening Chrome. Self-test opens the disposable browser, verifies setup, then closes and removes the temporary profile automatically.
 
 Optional UI screenshot capture:
 
@@ -137,6 +141,8 @@ Optional Chrome runtime smoke test:
 
 ```bash
 node tools/chrome_runtime_smoke_test.js
+node tools/open_manual_qa_profile.js --dry-run
+node tools/open_manual_qa_profile.js --self-test
 ```
 
 Expected outcomes:

@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.53 — 2026-06-09
+
+Changed:
+
+- Added `tools/open_manual_qa_profile.js` for disposable manual QA in a temporary Chrome for Testing / Chromium profile.
+- Added `--dry-run` and `--self-test` modes for the disposable manual QA launcher.
+- Updated `tools/qa_seed_tabs.js` so seed URL sets can be reused by QA tooling.
+- Added the manual QA launcher to preflight syntax checks.
+- Updated README, INDEX, extension README, Test Plan, QA Runbook, Launch Checklist, Beta Release Notes, and Private Beta Handoff.
+
+Safety:
+
+- The manual QA launcher uses synthetic QA URLs and an ignored `artifacts/manual-qa-profiles/` profile.
+- It does not read the user's real Chrome profile, real browser tabs, `.env.local`, or page content.
+- No extension behavior, permissions, AI payload, analytics, storage, cloud upload, package contents, or product scope changed.
+
 ## v0.52 — 2026-06-09
 
 Changed:

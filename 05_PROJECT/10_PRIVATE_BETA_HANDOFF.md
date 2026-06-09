@@ -115,7 +115,17 @@ Chrome steps:
 
 ## Manual QA Path
 
-Before using a real work profile, run synthetic QA:
+Before using a real work profile, open a disposable manual QA profile:
+
+```bash
+node tools/open_manual_qa_profile.js --dry-run
+node tools/open_manual_qa_profile.js --self-test
+node tools/open_manual_qa_profile.js
+```
+
+This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`. `--self-test` opens the disposable browser, verifies setup, then closes and removes the temporary profile automatically.
+
+For the real-profile path, print or open synthetic QA tabs:
 
 ```bash
 node tools/qa_seed_tabs.js

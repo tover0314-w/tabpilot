@@ -1,6 +1,6 @@
 # QA Runbook
 
-This runbook is for local P0 validation before private beta. It uses a real Chrome profile, so run it only when you are ready to let the extension organize the currently open normal windows.
+This runbook is for local P0 validation before private beta. Start with the disposable QA profile path when possible. The real Chrome profile path should be run only when you are ready to let the extension organize the currently open normal windows.
 
 ## 1. Preflight
 
@@ -21,7 +21,38 @@ node tools/chrome_runtime_smoke_test.js
 
 `SKIP` is acceptable for the optional runtime test on Google Chrome builds that do not expose CLI-loaded unpacked extensions.
 
-## 2. Load The Extension
+## 2. Safer Disposable QA Profile
+
+Before touching a real Chrome profile, open a disposable QA browser:
+
+```bash
+node tools/open_manual_qa_profile.js --dry-run
+node tools/open_manual_qa_profile.js --self-test
+node tools/open_manual_qa_profile.js
+```
+
+Expected:
+
+```text
+- A temporary Chrome for Testing / Chromium profile opens.
+- TabMosaic AI is loaded from a copied unpacked extension directory.
+- Synthetic QA tabs are opened.
+- Sidepanel and Dashboard extension pages are opened.
+- The script prints profileDir, extensionId, sidepanel URL, dashboard URL, and cleanup command.
+- `--self-test` opens the disposable browser, verifies setup, then closes and removes the temporary profile automatically.
+```
+
+Safety:
+
+```text
+- Does not read the user's real Chrome profile.
+- Does not read real browser tabs.
+- Does not read .env.local.
+- Opens synthetic QA URLs only.
+- Stores the temporary profile under ignored artifacts/manual-qa-profiles/.
+```
+
+## 3. Load The Extension In A Real Profile
 
 1. Open `chrome://extensions`.
 2. Enable Developer mode.
@@ -37,7 +68,7 @@ Manifest V3 extension loads without errors.
 No default popup is shown when clicking the toolbar icon.
 ```
 
-## 3. Seed QA Tabs
+## 4. Seed QA Tabs
 
 To print the URLs first:
 
@@ -72,7 +103,7 @@ Manual setup additions:
 - Keep one active duplicate tab selected to verify active protection.
 ```
 
-## 4. First Run
+## 5. First Run
 
 1. Click the TabMosaic AI toolbar icon.
 2. The side panel should open.
@@ -100,7 +131,7 @@ Fail if:
 - The extension reads page content before a summary/chat action.
 ```
 
-## 5. Undo And Restore
+## 6. Undo And Restore
 
 1. Click `Undo`.
 2. Confirm groups are restored as much as possible.
@@ -114,7 +145,7 @@ Expected:
 - Restored duplicate tabs are grouped when possible.
 ```
 
-## 6. Duplicate Review
+## 7. Duplicate Review
 
 1. In `Duplicate Candidates`, find a review-only hash/query group.
 2. Click `Keep All` for one group.
@@ -129,7 +160,7 @@ Expected:
 - Manually closed review tabs can be restored with Restore Closed.
 ```
 
-## 7. Chat Refine
+## 8. Chat Refine
 
 Try:
 
@@ -151,7 +182,7 @@ Expected:
 - Future organize runs apply user rules before AI/built-in rules.
 ```
 
-## 8. Current Tab Summary
+## 9. Current Tab Summary
 
 1. Select a normal web page.
 2. Click `Summarize Current Tab`.
@@ -164,7 +195,7 @@ Expected:
 - No cloud AI request is made in this slice.
 ```
 
-## 9. Dashboard
+## 10. Dashboard
 
 1. Click `Open Dashboard`.
 2. Review Smart Groups, Duplicate Center, Rules & Memory, and Settings.
@@ -186,7 +217,7 @@ Expected:
 - Clear AI Key asks for confirmation, removes only the local API key, disables AI classification, keeps rules and recent results, and does not move or close tabs.
 ```
 
-## 10. Optional UI Screenshot Preview
+## 11. Optional UI Screenshot Preview
 
 Run before or after manual QA when a visual snapshot is useful:
 
@@ -208,7 +239,7 @@ Expected:
 
 This is not a substitute for real Chrome manual QA because it does not prove native tab groups were created in the browser top bar.
 
-## 11. Beta Diagnostics And Feedback
+## 12. Beta Diagnostics And Feedback
 
 1. Open Dashboard -> Settings.
 2. Click `Copy Diagnostic Snapshot`.
@@ -243,7 +274,7 @@ Fail if:
 - GitHub issue forms ask testers to include sensitive browsing data or secrets.
 ```
 
-## 12. Privacy Check
+## 13. Privacy Check
 
 Expected:
 
@@ -255,7 +286,7 @@ Expected:
 - No <all_urls>, history, bookmarks, cookies, webRequest, or browsingData permission is requested.
 ```
 
-## 13. Result Log Template
+## 14. Result Log Template
 
 ```text
 Date:

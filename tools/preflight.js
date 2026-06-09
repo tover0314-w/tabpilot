@@ -16,6 +16,7 @@ const syntaxTargets = [
   "tools/extension_smoke_test.js",
   "tools/package_extension.js",
   "tools/chrome_runtime_smoke_test.js",
+  "tools/open_manual_qa_profile.js",
   "tools/qa_seed_tabs.js",
   "tools/generate_extension_assets.js",
   "tools/capture_ui_screenshots.js",
