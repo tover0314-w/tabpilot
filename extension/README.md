@@ -27,6 +27,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
 - Dashboard can save a local DeepSeek API key for AI tab classification through an OpenAI-compatible request format.
 - Dashboard can test the AI provider connection without sending tab data.
+- Dashboard can clear only the locally saved AI key, disabling AI classification while keeping local rules and recent results.
 - Dashboard Settings explains each Chrome permission and what data it supports.
 - Dashboard Settings can copy a redacted local diagnostic snapshot for beta bug reports.
 - Dashboard diagnostics include recent local error summaries after redaction.
@@ -49,6 +50,8 @@ Current tab summaries do not call AI yet and do not upload page content.
 AI classification sends tab title, hostname, path, and tab state only. It does not send page body or full URL.
 
 AI connection testing calls the configured `/models` endpoint only. It does not send tab data, page text, full URLs, or a request body.
+
+Clear AI Key does not close tabs, move tabs, clear local rules, clear recent results, or call the AI provider.
 
 Clear Local Data does not close tabs, move tabs, delete browser history, delete cookies, or touch cloud account data.
 
@@ -101,7 +104,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English/Chinese localization, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, and local data deletion.
+It checks manifest permissions, English/Chinese localization, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 

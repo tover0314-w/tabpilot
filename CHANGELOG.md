@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.49 — 2026-06-09
+
+Changed:
+
+- Added Dashboard `Clear AI Key` for removing only the locally saved AI API key.
+- The action disables AI classification, keeps local rules and recent results, asks for confirmation, and does not move or close tabs.
+- Added English/Chinese copy and smoke coverage for the scoped AI key clearing flow.
+- Updated privacy controls, test plan, QA runbook, and extension README.
+- Refreshed QA evidence with 17 smoke tests, DeepSeek `/models`, synthetic classification fixture, preflight, release verifier, and current package checksum.
+
+Safety:
+
+- No permission, AI payload, analytics, storage backend, cloud storage, or automatic upload behavior changed.
+- The new control is local-only and does not call the AI provider.
+
 ## v0.48 — 2026-06-09
 
 Changed:

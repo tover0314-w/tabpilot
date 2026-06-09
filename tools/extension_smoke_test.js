@@ -239,6 +239,31 @@ test("dashboard rule deletion requires confirmation", () => {
   assert(zh.deleteRuleConfirm.message.includes("不会移动或关闭标签页"), "Chinese delete confirmation should state tab safety");
 });
 
+test("dashboard can clear AI key without clearing other local data", () => {
+  const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+  const functionStart = dashboardJs.indexOf("async function clearAIKey()");
+  const functionEnd = dashboardJs.indexOf("async function clearLocalData()");
+  const clearAIKeyBody = dashboardJs.slice(functionStart, functionEnd);
+
+  assert(dashboardHtml.includes('id="clearAIKeyButton"'), "Dashboard should expose a Clear AI Key button");
+  assert(dashboardHtml.includes('data-i18n="clearAIKey"'), "Clear AI Key button should use locale copy");
+  assert(functionStart >= 0, "Dashboard should implement clearAIKey");
+  assert(functionEnd > functionStart, "clearAIKey should be scoped before clearLocalData");
+  assert(clearAIKeyBody.includes('window.confirm(msg("clearAIKeyConfirm"))'), "Clear AI Key should require confirmation");
+  assert(clearAIKeyBody.includes("chrome.storage.local.get(AI_SETTINGS_KEY)"), "Clear AI Key should load existing AI settings");
+  assert(clearAIKeyBody.includes("chrome.storage.local.set({ [AI_SETTINGS_KEY]: next })"), "Clear AI Key should update only AI settings");
+  assert(clearAIKeyBody.includes("enabled: false"), "Clear AI Key should disable AI classification");
+  assert(clearAIKeyBody.includes('apiKey: ""'), "Clear AI Key should remove the local API key");
+  assert(!clearAIKeyBody.includes("CLEAR_LOCAL_DATA"), "Clear AI Key must not clear all local data");
+  assert(!clearAIKeyBody.includes("chrome.runtime.sendMessage"), "Clear AI Key must not call background actions");
+  assert(!clearAIKeyBody.includes("chrome.tabs"), "Clear AI Key must not touch browser tabs");
+  assert(en.clearAIKeyConfirm?.message.includes("does not move or close tabs"), "English AI key clear confirmation should state tab safety");
+  assert(zh.clearAIKeyConfirm?.message.includes("不会移动或关闭标签页"), "Chinese AI key clear confirmation should state tab safety");
+});
+
 test("local error log entries redact URLs hosts and secrets", () => {
   const entry = context.buildErrorLogEntry(
     "SUMMARIZE_CURRENT_TAB",

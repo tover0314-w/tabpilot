@@ -170,6 +170,7 @@ Expected:
 2. Review Smart Groups, Duplicate Center, Rules & Memory, and Settings.
 3. Edit a Smart Group title/color and click `Apply`.
 4. Optional: enter a DeepSeek API key and click `Test AI Connection`.
+5. Optional: click `Clear AI Key`, confirm, and verify only the AI key is removed.
 
 Expected:
 
@@ -182,6 +183,7 @@ Expected:
 - Dashboard apply does not move tabs or close tabs in this slice.
 - Test AI Connection checks /models and does not send tab data, page text, or full URLs.
 - Non-DeepSeek AI base URLs are rejected before any network request in this private beta.
+- Clear AI Key asks for confirmation, removes only the local API key, disables AI classification, keeps rules and recent results, and does not move or close tabs.
 ```
 
 ## 10. Beta Diagnostics And Feedback

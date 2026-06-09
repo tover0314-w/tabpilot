@@ -29,6 +29,7 @@ const aiModelInput = document.querySelector("#aiModelInput");
 const aiKeyInput = document.querySelector("#aiKeyInput");
 const aiSettingsStatus = document.querySelector("#aiSettingsStatus");
 const testAIButton = document.querySelector("#testAIButton");
+const clearAIKeyButton = document.querySelector("#clearAIKeyButton");
 const copyDiagnosticsButton = document.querySelector("#copyDiagnosticsButton");
 const copyFeedbackButton = document.querySelector("#copyFeedbackButton");
 const diagnosticsStatus = document.querySelector("#diagnosticsStatus");
@@ -40,6 +41,7 @@ applyI18n();
 refreshButton.addEventListener("click", loadDashboard);
 aiSettingsForm.addEventListener("submit", saveAISettings);
 testAIButton.addEventListener("click", testAIConnection);
+clearAIKeyButton.addEventListener("click", clearAIKey);
 dashboardRules.addEventListener("click", handleRuleAction);
 dashboardGroups.addEventListener("click", handleGroupAction);
 copyDiagnosticsButton.addEventListener("click", copyDiagnosticSnapshot);
@@ -208,6 +210,39 @@ async function testAIConnection() {
   } finally {
     testAIButton.disabled = false;
     testAIButton.textContent = msg("testAIConnection");
+  }
+}
+
+async function clearAIKey() {
+  const confirmed = window.confirm(msg("clearAIKeyConfirm"));
+
+  if (!confirmed) return;
+
+  clearAIKeyButton.disabled = true;
+  clearAIKeyButton.textContent = msg("clearing");
+  aiSettingsStatus.textContent = "";
+
+  try {
+    const result = await chrome.storage.local.get(AI_SETTINGS_KEY);
+    const previous = {
+      ...DEFAULT_AI_SETTINGS,
+      ...(result[AI_SETTINGS_KEY] || {})
+    };
+    const next = {
+      ...previous,
+      enabled: false,
+      apiKey: ""
+    };
+
+    await chrome.storage.local.set({ [AI_SETTINGS_KEY]: next });
+    aiKeyInput.value = "";
+    await loadAISettings();
+    aiSettingsStatus.textContent = msg("aiKeyCleared");
+  } catch (error) {
+    aiSettingsStatus.textContent = `${msg("couldNotClearAIKey")} ${error?.message || ""}`.trim();
+  } finally {
+    clearAIKeyButton.disabled = false;
+    clearAIKeyButton.textContent = msg("clearAIKey");
   }
 }
 

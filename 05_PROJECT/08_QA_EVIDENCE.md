@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source commit verified: `76bdeb4` (`Clarify AI host limit in dashboard`)
+Source state verified: v0.49 changes in this commit
 
 ### Unified Preflight
 
@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 93 tracked files
-16 smoke tests passed
+17 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS release package verified for v0.1.0
 PASS preflight completed
@@ -40,6 +40,7 @@ Command:
 
 ```bash
 node tools/deepseek_smoke_test.js
+node tools/deepseek_smoke_test.js --classify-fixture
 ```
 
 Result:
@@ -51,14 +52,22 @@ configuredModel=deepseek-v4-flash
 modelAvailable=yes
 modelCount=2
 SKIP synthetic classification fixture; pass --classify-fixture to test chat/completions with fake tabs.
+PASS DeepSeek/OpenAI-compatible /models reachable
+baseUrl=https://api.deepseek.com
+configuredModel=deepseek-v4-flash
+modelAvailable=yes
+modelCount=2
+PASS synthetic classification fixture completed
+fixtureGroupCount=2
+fixtureAssignedTabs=3
 ```
 
 Evidence notes:
 
 - `.env.local` was used locally but not printed.
 - The default `/models` check sends no tab data.
+- The synthetic classification fixture used fake tabs only and did not use real browser data.
 - The extension private beta only permits `https://api.deepseek.com/*`; other OpenAI-compatible hosts require later permission confirmation.
-- `--classify-fixture` remains available when a synthetic `chat/completions` check is needed.
 
 ### Extension Smoke Test
 
@@ -71,7 +80,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-16 smoke tests passed
+17 smoke tests passed
 ```
 
 Covered:
@@ -90,6 +99,7 @@ Covered:
 - AI classification request minimization: no full URL, restore URL, query token, or page text in provider payload.
 - AI connection test without tab data.
 - Dashboard rule deletion confirmation.
+- Dashboard scoped AI key clearing.
 - Local data deletion.
 
 ### Extension Package
@@ -108,7 +118,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=241dbc6a412854847617796e311a169cbbe8d2d5a6e37a82142967d92c100d51
+sha256=0f67bd3b4cf1bca7ba69cf8a650246350350c0fb65ce52d77836859ff4c34fb5
 ```
 
 Evidence notes:

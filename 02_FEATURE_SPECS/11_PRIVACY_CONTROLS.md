@@ -58,6 +58,7 @@ Dashboard Settings includes:
 - DeepSeek AI settings using an OpenAI-compatible request format
 - Permissions & Data Use
 - Beta Diagnostics
+- Clear AI Key
 - Clear Local Data
 ```
 
@@ -70,6 +71,8 @@ The same Dashboard section can copy a beta feedback Markdown template. The templ
 Local error summaries are kept in a capped `chrome.storage.local` ring buffer and are included in copied diagnostics only after redaction. They must not include URLs, hostnames, emails, bearer tokens, API keys, tab titles, page text, rule patterns, or group names. This is not telemetry and has no upload path.
 
 Duplicate close safety audit entries are kept locally as count-only events for beta validation. They may record whitelisted event types such as `auto_safe_close`, `manual_review_close`, and `restore_closed_tabs`, plus counts for requested, closed, restored, failed, and skipped tabs. They must not include URLs, hostnames, tab titles, page text, duplicate labels, rule patterns, group names, or API keys. This is not browsing analytics and has no upload path.
+
+`Clear AI Key` removes only the locally saved AI API key, disables AI classification, and keeps local rules, recent organize results, Undo/Restore snapshots, privacy acceptance, chat drafts, diagnostics, and duplicate safety audit counts. It asks for browser confirmation and does not move or close tabs, call the AI provider, delete browser history, or delete cookies.
 
 ## 6. Sensitive Sites
 
@@ -151,7 +154,7 @@ When 页面正文读取首次发生
 Then 系统请求确认
 
 Given 用户进入 privacy settings
-Then 用户可以查看权限解释、配置本地 API、删除本地数据
+Then 用户可以查看权限解释、配置本地 API、单独清除本地 AI key、删除本地数据
 
 Given 用户点击 Copy Diagnostic Snapshot
 When 诊断快照被复制
@@ -163,6 +166,13 @@ Given 用户点击 Copy Feedback Template
 When 反馈模板被复制
 Then 模板只包含手动填写项和脱敏诊断快照
 And 不自动上传任何数据
+
+Given 用户点击 Clear AI Key
+When 用户确认
+Then 本地 AI key 被删除，AI 分类被停用
+And 本地 rules、最近整理结果、Undo/Restore snapshot、对话草稿、诊断和安全审计仍保留
+And 不关闭、不移动任何 tabs
+And 不调用 AI provider
 
 Given 用户点击 Clear Local Data
 When 用户确认

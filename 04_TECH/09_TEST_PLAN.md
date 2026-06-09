@@ -38,6 +38,7 @@ Coverage:
 - AI host guardrail keeps background validation, Dashboard validation, Dashboard permission copy, and manifest host permissions aligned
 - Dashboard AI settings copy explains the private-beta DeepSeek host limit
 - Dashboard local rule deletion requires confirmation and does not move or close tabs
+- Dashboard Clear AI Key removes only the local API key, disables AI classification, keeps other local data, and does not move or close tabs
 - Dashboard Clear Local Data removes local rules, AI key/settings, run state, Undo/Restore snapshots, privacy acceptance, chat draft, and local error log
 ```
 
@@ -274,6 +275,19 @@ Safety:
 不支持非 `https://api.deepseek.com` host；其他 OpenAI-compatible host 需要后续权限确认。
 ```
 
+### AI Key Deletion
+
+```text
+用户打开 Dashboard Settings
+→ 点击 Clear AI Key
+→ browser confirm 出现
+→ 确认后删除本地 API key 并停用 AI classification
+→ 保留 local rules、最近整理结果、Undo/Restore snapshot、chat draft、diagnostics、安全审计和 first-run privacy acceptance
+→ 不调用 AI provider
+→ 不关闭 tabs
+→ 不移动 tabs
+```
+
 ### Local Data Deletion
 
 ```text
@@ -317,6 +331,7 @@ node tools/qa_seed_tabs.js --open
 - 确认 password/form 不被提取。
 - 确认敏感域名二次确认。
 - 确认日志不包含 URL/page text。
+- 确认 Clear AI Key 只删除本地 API key 并停用 AI，且保留 rules、最近结果、snapshots 和 privacy acceptance。
 - 确认 Clear Local Data 删除本地 API key、rules、snapshots 和 privacy acceptance。
 - 确认 Dashboard 权限解释列出的权限与 manifest 一致，且未暗示已申请不存在的权限。
 - 确认 Beta Diagnostics 是用户触发、本地复制、不自动上传，且不包含敏感浏览内容或 API key。
@@ -347,4 +362,5 @@ node tools/qa_seed_tabs.js --open
 - user rules 是否优先于 AI/built-in。
 - undo 是否有效。
 - dashboard title/color apply 是否同步浏览器。
+- Clear AI Key 是否只清本地 API key 且不移动/关闭 tabs。
 - Clear Local Data 是否只清本地数据且不移动/关闭 tabs。
