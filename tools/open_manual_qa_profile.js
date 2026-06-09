@@ -367,6 +367,15 @@ function renderChecklistHtml(details) {
         background: var(--panel);
         color: var(--text);
       }
+      .notes-label {
+        display: block;
+        margin-top: 14px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
       textarea {
         width: 100%;
         min-height: 160px;
@@ -376,6 +385,10 @@ function renderChecklistHtml(details) {
         border-radius: 7px;
         color: var(--text);
         font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      textarea[data-qa-notes] {
+        min-height: 110px;
+        background: #fbfbfb;
       }
       .status {
         margin-top: 10px;
@@ -399,6 +412,8 @@ function renderChecklistHtml(details) {
           <button class="secondary" type="button" data-reset-checklist>Reset Checks</button>
         </div>
         <p class="status" data-status>Checklist state is saved in this disposable profile only.</p>
+        <label class="notes-label" for="qaNotes">Local QA Notes</label>
+        <textarea id="qaNotes" data-qa-notes aria-label="Local QA notes" placeholder="Issues, observations, and decision gates triggered. Do not paste secrets or real browsing data."></textarea>
         <textarea data-report readonly aria-label="QA result markdown"></textarea>
       </header>
       <section>
@@ -416,10 +431,18 @@ function renderChecklistHtml(details) {
     </main>
     <script>
       const storageKey = "tabmosaic.manualQaChecklist.v1";
+      const notesStorageKey = storageKey + ".notes";
       const checkboxes = Array.from(document.querySelectorAll("input[type='checkbox']"));
+      const notes = document.querySelector("[data-qa-notes]");
       const report = document.querySelector("[data-report]");
       const status = document.querySelector("[data-status]");
       const saved = loadSavedState();
+
+      notes.value = localStorage.getItem(notesStorageKey) || "";
+      notes.addEventListener("input", () => {
+        localStorage.setItem(notesStorageKey, notes.value);
+        renderReport();
+      });
 
       checkboxes.forEach((checkbox) => {
         checkbox.checked = Boolean(saved[checkbox.dataset.checkId]);
@@ -438,6 +461,8 @@ function renderChecklistHtml(details) {
           checkbox.checked = false;
         });
         localStorage.removeItem(storageKey);
+        localStorage.removeItem(notesStorageKey);
+        notes.value = "";
         renderReport("Checklist reset.");
       });
 
@@ -492,10 +517,17 @@ function renderChecklistHtml(details) {
         lines.push(
           "",
           "## Notes",
-          "",
-          "- Issues:",
-          "- Decision gates triggered:",
-          "",
+          ""
+        );
+
+        const qaNotes = notes.value.trim();
+        if (qaNotes) {
+          lines.push(qaNotes, "");
+        } else {
+          lines.push("- Issues:", "- Decision gates triggered:", "");
+        }
+
+        lines.push(
           "Do not paste API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, private screenshots, or private rule patterns into public issues."
         );
 
@@ -658,6 +690,8 @@ function assertChecklistHtml(checklistPath) {
     "TabMosaic Manual QA Checklist",
     "data-copy-report",
     "data-reset-checklist",
+    "data-qa-notes",
+    "Local QA Notes",
     "tabmosaic.manualQaChecklist.v1",
     "AI Verification",
     "Dashboard Latest Result",

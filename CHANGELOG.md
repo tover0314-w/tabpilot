@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.68 — 2026-06-09
+
+Changed:
+
+- Added local QA notes to the disposable Manual QA Checklist.
+- Copied Markdown QA reports now include the tester's local notes, while reset clears both checklist state and notes.
+- Extended smoke coverage and QA docs so the notes field stays part of the private-beta manual QA workflow.
+
+Safety:
+
+- QA tooling and documentation update only; no extension runtime behavior, permissions, AI payloads, storage defaults, cloud upload, analytics, or automatic tab-closing policy changed.
+- Notes are stored only in the disposable QA profile localStorage and are never uploaded by the tool.
+
 ## v0.67 — 2026-06-09
 
 Changed:

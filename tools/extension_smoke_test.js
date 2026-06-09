@@ -324,6 +324,8 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
     "Clicking a tab title focuses the existing browser tab/window.",
     "Same-window Move sends a tab into an existing native group and does not close tabs.",
     "Dashboard Latest Result Details and Settings Snapshot show AI status and AI groups.",
+    "Local QA Notes",
+    "data-qa-notes",
     "Copy Diagnostic Snapshot excludes URLs",
     "Does not read your real Chrome profile, real browser tabs, or .env.local"
   ]) {
