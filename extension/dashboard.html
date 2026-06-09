@@ -7,180 +7,305 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="dashboard-body">
-    <main class="dashboard-shell">
-      <aside class="dashboard-sidebar">
-        <p class="eyebrow">TabMosaic AI</p>
-        <h1 data-i18n="dashboardHeading">Dashboard</h1>
-        <nav class="dashboard-nav" aria-label="Dashboard sections" data-i18n-aria-label="dashboardSections">
-          <a href="#smart-groups" data-i18n="smartGroups">Smart Groups</a>
-          <a href="#duplicates" data-i18n="duplicates">Duplicates</a>
-          <a href="#rules" data-i18n="rules">Rules</a>
-          <a href="#settings" data-i18n="settings">Settings</a>
-        </nav>
+    <header class="dashboard-topbar">
+      <div class="dashboard-brand">
+        <div class="dashboard-brand-mark" aria-hidden="true">T</div>
+        <span>TabMosaic</span>
+      </div>
+      <div class="dashboard-topbar-spacer"></div>
+      <div class="dashboard-privacy">
+        <span aria-hidden="true">🔒</span>
+        <span data-i18n="dataStaysLocal">Data stays local</span>
+      </div>
+      <button
+        id="refreshButton"
+        class="dashboard-icon-button"
+        type="button"
+        aria-label="Refresh"
+        data-i18n-aria-label="refresh"
+        title="Refresh"
+        data-i18n-title="refresh"
+      >
+        <span aria-hidden="true">↻</span>
+      </button>
+    </header>
+
+    <div class="dashboard-workbench">
+      <aside class="dashboard-rail">
+        <section class="dashboard-nav-section">
+          <p class="dashboard-nav-label" data-i18n="dashboardNavLabel">Navigation</p>
+          <button class="dashboard-nav-item active" type="button" data-page="workspace">
+            <span class="dashboard-nav-icon" aria-hidden="true">⊟</span>
+            <span data-i18n="projectSpace">Project Space</span>
+          </button>
+          <button class="dashboard-nav-item" type="button" data-page="rules">
+            <span class="dashboard-nav-icon" aria-hidden="true">⊕</span>
+            <span data-i18n="autoOrganize">Auto Organize</span>
+            <span id="rulesCountBadge" class="dashboard-count">0</span>
+          </button>
+          <button class="dashboard-nav-item" type="button" data-page="settings">
+            <span class="dashboard-nav-icon" aria-hidden="true">⚙</span>
+            <span data-i18n="settings">Settings</span>
+          </button>
+        </section>
+
+        <section class="dashboard-nav-section">
+          <p class="dashboard-nav-label" data-i18n="currentProject">Current Project</p>
+          <div class="dashboard-workspace-card">
+            <div id="sidebarWorkspaceLabel" class="dashboard-workspace-label">current</div>
+            <div id="sidebarWorkspaceName" class="dashboard-workspace-name" data-i18n="currentWorkspace">Current Workspace</div>
+            <div id="sidebarWorkspaceMetric" class="dashboard-workspace-meta">—</div>
+            <button class="dashboard-switch-button" type="button" disabled data-i18n="workspaceHistoryP1">
+              Workspace history · P1
+            </button>
+          </div>
+        </section>
+
+        <section class="dashboard-nav-section">
+          <div class="dashboard-cta-block">
+            <button id="organizeNowButton" class="dashboard-cta primary" type="button" data-i18n="organizeBrowser">
+              Organize Browser
+            </button>
+            <button class="dashboard-cta" type="button" disabled data-i18n="manualGroupP1">
+              Manual Group · P1
+            </button>
+          </div>
+        </section>
+
+        <div class="dashboard-privacy-note">
+          <span aria-hidden="true">🔒</span>
+          <div>
+            <div class="dashboard-privacy-title" data-i18n="dataStaysLocal">Data stays local</div>
+            <div class="dashboard-privacy-copy" data-i18n="noWebsiteUpload">No website data is uploaded by default.</div>
+          </div>
+        </div>
       </aside>
 
-      <section class="dashboard-main">
-        <header class="dashboard-header">
-          <div>
-            <p class="eyebrow" data-i18n="currentWorkspace">Current Workspace</p>
-            <h2 id="workspaceTitle" data-i18n="latestOrganizeResult">Latest organize result</h2>
-          </div>
-          <button id="refreshButton" class="secondary-button" type="button" data-i18n="refresh">Refresh</button>
-        </header>
+      <main class="dashboard-stage">
+        <section class="dashboard-page active" data-page="workspace">
+          <header class="dashboard-page-head">
+            <div>
+              <h1 id="workspaceTitle" class="dashboard-page-title" data-i18n="latestOrganizeResult">Latest organize result</h1>
+              <p id="workspaceSubtitle" class="dashboard-page-sub" data-i18n="openSidePanelToPopulateDashboard">
+                Open the side panel and organize tabs to populate the dashboard.
+              </p>
+            </div>
+            <div class="dashboard-head-actions" aria-label="Workspace actions">
+              <button class="dashboard-button" type="button" disabled data-i18n="chatWithWorkspaceP1">Chat · P1</button>
+              <button class="dashboard-button primary" type="button" disabled data-i18n="saveWorkspaceP1">Save Workspace · P1</button>
+            </div>
+          </header>
 
-        <section class="dashboard-metrics" id="dashboardMetrics"></section>
+          <section class="dashboard-metrics" id="dashboardMetrics" aria-label="Workspace metrics"></section>
 
-        <section id="smart-groups" class="dashboard-section">
-          <div class="section-title" data-i18n="smartGroups">Smart Groups</div>
-          <div id="dashboardGroups" class="dashboard-grid"></div>
-        </section>
-
-        <section id="duplicates" class="dashboard-section">
-          <div class="section-title" data-i18n="duplicateCenter">Duplicate Center</div>
-          <div id="dashboardDuplicates" class="dashboard-list"></div>
-        </section>
-
-        <section id="rules" class="dashboard-section">
-          <div class="section-title" data-i18n="rulesMemory">Rules & Memory</div>
-          <div id="dashboardRules" class="dashboard-list"></div>
-        </section>
-
-        <section id="settings" class="dashboard-section">
-          <div class="section-title" data-i18n="settingsSnapshot">Settings Snapshot</div>
-          <div class="settings-card" id="settingsSnapshot">
-            <div class="row"><span data-i18n="aiProvider">AI provider</span><strong data-i18n="localRules">Local rules</strong></div>
-            <div class="row"><span data-i18n="pageBodyReading">Page body reading</span><strong data-i18n="userTriggered">User triggered</strong></div>
-            <div class="row"><span data-i18n="incognito">Incognito</span><strong data-i18n="off">Off</strong></div>
-            <div class="row"><span data-i18n="cloudSync">Cloud sync</span><strong data-i18n="off">Off</strong></div>
+          <div class="dashboard-page-actions">
+            <button id="workspaceRefreshButton" class="dashboard-button" type="button" data-i18n="refresh">Refresh</button>
+            <button class="dashboard-button" type="button" disabled data-i18n="autoClassifyP1">Auto classify · P1</button>
+            <button class="dashboard-button primary" type="button" disabled data-i18n="newGroupP1">New group · P1</button>
           </div>
 
-          <section class="settings-form permission-explainer">
-            <div>
-              <h3 data-i18n="permissionsDataUse">Permissions & Data Use</h3>
-              <p data-i18n="permissionsIntro">
-                TabMosaic uses a small permission set for one-click grouping, undo, restore, dashboard state, and user-triggered current-page summary.
-              </p>
-            </div>
-            <div class="permission-list">
-              <div class="row permission-row">
-                <span>
-                  <b>tabs</b>
-                  <small data-i18n="permissionTabsCopy">Reads tab title, hostname, path, and state so it can organize all normal windows and restore safe duplicates.</small>
-                </span>
-                <strong data-i18n="required">Required</strong>
-              </div>
-              <div class="row permission-row">
-                <span>
-                  <b>tabGroups</b>
-                  <small data-i18n="permissionTabGroupsCopy">Creates and updates real Chrome native tab groups.</small>
-                </span>
-                <strong data-i18n="required">Required</strong>
-              </div>
-              <div class="row permission-row">
-                <span>
-                  <b>sidePanel</b>
-                  <small data-i18n="permissionSidePanelCopy">Opens the sidebar control center after the toolbar click.</small>
-                </span>
-                <strong data-i18n="required">Required</strong>
-              </div>
-              <div class="row permission-row">
-                <span>
-                  <b>storage</b>
-                  <small data-i18n="permissionStorageCopy">Stores local settings, rules, Undo/Restore snapshots, and the optional local API key.</small>
-                </span>
-                <strong data-i18n="localOnly">Local only</strong>
-              </div>
-              <div class="row permission-row">
-                <span>
-                  <b>scripting + activeTab</b>
-                  <small data-i18n="permissionScriptingCopy">Reads visible text only from the active page after you click Summarize Current Tab.</small>
-                </span>
-                <strong data-i18n="userTriggered">User triggered</strong>
-              </div>
-              <div class="row permission-row">
-                <span>
-                  <b>https://api.deepseek.com/*</b>
-                  <small data-i18n="permissionDeepSeekCopy">Used only when you enable DeepSeek classification and save your own API key.</small>
-                </span>
-                <strong data-i18n="optional">Optional</strong>
+          <div class="dashboard-filter-chips" aria-label="Group filters">
+            <button class="dashboard-chip active" type="button" data-filter="all">
+              <span data-i18n="allGroups">All</span>
+              <span id="allGroupsCount" class="dashboard-chip-count">0</span>
+            </button>
+            <button class="dashboard-chip" type="button" data-filter="ai">
+              <span data-i18n="aiGroups">AI groups</span>
+              <span id="aiGroupsCount" class="dashboard-chip-count">0</span>
+            </button>
+            <button class="dashboard-chip" type="button" data-filter="rules">
+              <span data-i18n="ruleGroups">Rule groups</span>
+              <span id="ruleGroupsCount" class="dashboard-chip-count">0</span>
+            </button>
+            <span class="dashboard-sort-label" data-i18n="sortByRecent">Sort: recent</span>
+          </div>
+
+          <section id="smart-groups" class="dashboard-section">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="section-title" data-i18n="smartGroups">Smart Groups</p>
+                <p class="dashboard-section-copy" data-i18n="dashboardSmartGroupsCopy">
+                  Groups mirror the latest native Chrome tab groups and can apply title/color changes back to the browser.
+                </p>
               </div>
             </div>
-            <p class="permission-note" data-i18n="permissionsNotRequested">
-              Not requested: all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
-            </p>
+            <div id="dashboardGroups" class="dashboard-group-grid"></div>
           </section>
 
-          <form id="aiSettingsForm" class="settings-form">
-            <label class="checkbox-row">
-              <input id="aiEnabledInput" type="checkbox" />
-              <span data-i18n="useDeepSeek">Use DeepSeek for AI classification</span>
-            </label>
-
-            <label>
-              <span data-i18n="baseUrl">Base URL</span>
-              <input id="aiBaseUrlInput" type="url" value="https://api.deepseek.com" />
-              <small data-i18n="aiBaseUrlBetaLimit">
-                Private beta only supports api.deepseek.com. Other OpenAI-compatible hosts need a later permission confirmation.
-              </small>
-            </label>
-
-            <label>
-              <span data-i18n="model">Model</span>
-              <input id="aiModelInput" type="text" value="deepseek-v4-flash" />
-            </label>
-
-            <label>
-              <span data-i18n="apiKey">API key</span>
-              <input
-                id="aiKeyInput"
-                type="password"
-                placeholder="Stored locally in chrome.storage.local"
-                data-i18n-placeholder="apiKeyStoredPlaceholder"
-                autocomplete="off"
-              />
-            </label>
-
-            <div class="settings-actions">
-              <button class="primary-button" type="submit" data-i18n="saveAISettings">Save AI Settings</button>
-              <button id="testAIButton" class="secondary-button" type="button" data-i18n="testAIConnection">
-                Test AI Connection
-              </button>
-              <button id="clearAIKeyButton" class="secondary-button" type="button" data-i18n="clearAIKey">
-                Clear AI Key
-              </button>
+          <section id="duplicates" class="dashboard-section">
+            <div class="dashboard-section-head">
+              <div>
+                <p class="section-title" data-i18n="duplicateCenter">Duplicate Center</p>
+                <p class="dashboard-section-copy" data-i18n="dashboardDuplicateCopy">
+                  Safe duplicates and review candidates from the latest organize run.
+                </p>
+              </div>
             </div>
-            <p id="aiSettingsStatus" class="settings-status" role="status"></p>
-          </form>
-
-          <section class="settings-form diagnostics-zone">
-            <div>
-              <h3 data-i18n="diagnosticsTitle">Beta Diagnostics</h3>
-              <p data-i18n="diagnosticsDescription">
-                Copies a redacted local QA snapshot and recent local error summary for bug reports. It excludes URLs, hostnames, tab titles, page text, and API keys.
-              </p>
-            </div>
-            <button id="copyDiagnosticsButton" class="secondary-button" type="button" data-i18n="copyDiagnostics">
-              Copy Diagnostic Snapshot
-            </button>
-            <button id="copyFeedbackButton" class="secondary-button" type="button" data-i18n="copyFeedbackTemplate">
-              Copy Feedback Template
-            </button>
-            <p id="diagnosticsStatus" class="settings-status" role="status"></p>
-          </section>
-
-          <section class="settings-form danger-zone">
-            <div>
-              <h3 data-i18n="localData">Local Data</h3>
-              <p data-i18n="localDataDescription">
-                Clears local rules, API key, recent results, Undo/Restore snapshots, chat drafts, and first-run privacy acceptance.
-              </p>
-            </div>
-            <button id="clearDataButton" class="danger-button" type="button" data-i18n="clearLocalData">Clear Local Data</button>
-            <p id="clearDataStatus" class="settings-status" role="status"></p>
+            <div id="dashboardDuplicates" class="dashboard-list"></div>
           </section>
         </section>
-      </section>
-    </main>
+
+        <section class="dashboard-page" data-page="rules">
+          <header class="dashboard-page-head">
+            <div>
+              <h1 class="dashboard-page-title" data-i18n="autoOrganize">Auto Organize</h1>
+              <p id="rulesSubtitle" class="dashboard-page-sub" data-i18n="rulesMemoryCopy">
+                Local correction rules created from chat refine and dashboard edits.
+              </p>
+            </div>
+            <button class="dashboard-button primary" type="button" disabled data-i18n="newRuleP1">New rule · P1</button>
+          </header>
+          <section id="rules" class="dashboard-section">
+            <p class="section-title" data-i18n="rulesMemory">Rules & Memory</p>
+            <div id="dashboardRules" class="dashboard-list dashboard-rules-list"></div>
+          </section>
+        </section>
+
+        <section class="dashboard-page" data-page="settings">
+          <header class="dashboard-page-head">
+            <div>
+              <h1 class="dashboard-page-title" data-i18n="settings">Settings</h1>
+              <p class="dashboard-page-sub" data-i18n="settingsPageCopy">Privacy, permissions, local AI key, diagnostics, and local data controls.</p>
+            </div>
+          </header>
+
+          <section id="settings" class="dashboard-section">
+            <p class="section-title" data-i18n="settingsSnapshot">Settings Snapshot</p>
+            <div class="settings-card dashboard-settings-card" id="settingsSnapshot">
+              <div class="row"><span data-i18n="aiProvider">AI provider</span><strong data-i18n="localRules">Local rules</strong></div>
+              <div class="row"><span data-i18n="pageBodyReading">Page body reading</span><strong data-i18n="userTriggered">User triggered</strong></div>
+              <div class="row"><span data-i18n="incognito">Incognito</span><strong data-i18n="off">Off</strong></div>
+              <div class="row"><span data-i18n="cloudSync">Cloud sync</span><strong data-i18n="off">Off</strong></div>
+            </div>
+
+            <section class="settings-form permission-explainer">
+              <div>
+                <h3 data-i18n="permissionsDataUse">Permissions & Data Use</h3>
+                <p data-i18n="permissionsIntro">
+                  TabMosaic uses a small permission set for one-click grouping, undo, restore, dashboard state, and user-triggered current-page summary.
+                </p>
+              </div>
+              <div class="permission-list">
+                <div class="row permission-row">
+                  <span>
+                    <b>tabs</b>
+                    <small data-i18n="permissionTabsCopy">Reads tab title, hostname, path, and state so it can organize all normal windows and restore safe duplicates.</small>
+                  </span>
+                  <strong data-i18n="required">Required</strong>
+                </div>
+                <div class="row permission-row">
+                  <span>
+                    <b>tabGroups</b>
+                    <small data-i18n="permissionTabGroupsCopy">Creates and updates real Chrome native tab groups.</small>
+                  </span>
+                  <strong data-i18n="required">Required</strong>
+                </div>
+                <div class="row permission-row">
+                  <span>
+                    <b>sidePanel</b>
+                    <small data-i18n="permissionSidePanelCopy">Opens the sidebar control center after the toolbar click.</small>
+                  </span>
+                  <strong data-i18n="required">Required</strong>
+                </div>
+                <div class="row permission-row">
+                  <span>
+                    <b>storage</b>
+                    <small data-i18n="permissionStorageCopy">Stores local settings, rules, Undo/Restore snapshots, and the optional local API key.</small>
+                  </span>
+                  <strong data-i18n="localOnly">Local only</strong>
+                </div>
+                <div class="row permission-row">
+                  <span>
+                    <b>scripting + activeTab</b>
+                    <small data-i18n="permissionScriptingCopy">Reads visible text only from the active page after you click Summarize Current Tab.</small>
+                  </span>
+                  <strong data-i18n="userTriggered">User triggered</strong>
+                </div>
+                <div class="row permission-row">
+                  <span>
+                    <b>https://api.deepseek.com/*</b>
+                    <small data-i18n="permissionDeepSeekCopy">Used only when you enable DeepSeek classification and save your own API key.</small>
+                  </span>
+                  <strong data-i18n="optional">Optional</strong>
+                </div>
+              </div>
+              <p class="permission-note" data-i18n="permissionsNotRequested">
+                Not requested: all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
+              </p>
+            </section>
+
+            <form id="aiSettingsForm" class="settings-form">
+              <label class="checkbox-row">
+                <input id="aiEnabledInput" type="checkbox" />
+                <span data-i18n="useDeepSeek">Use DeepSeek for AI classification</span>
+              </label>
+
+              <label>
+                <span data-i18n="baseUrl">Base URL</span>
+                <input id="aiBaseUrlInput" type="url" value="https://api.deepseek.com" />
+                <small data-i18n="aiBaseUrlBetaLimit">
+                  Private beta only supports api.deepseek.com. Other OpenAI-compatible hosts need a later permission confirmation.
+                </small>
+              </label>
+
+              <label>
+                <span data-i18n="model">Model</span>
+                <input id="aiModelInput" type="text" value="deepseek-v4-flash" />
+              </label>
+
+              <label>
+                <span data-i18n="apiKey">API key</span>
+                <input
+                  id="aiKeyInput"
+                  type="password"
+                  placeholder="Stored locally in chrome.storage.local"
+                  data-i18n-placeholder="apiKeyStoredPlaceholder"
+                  autocomplete="off"
+                />
+              </label>
+
+              <div class="settings-actions">
+                <button class="primary-button" type="submit" data-i18n="saveAISettings">Save AI Settings</button>
+                <button id="testAIButton" class="secondary-button" type="button" data-i18n="testAIConnection">
+                  Test AI Connection
+                </button>
+                <button id="clearAIKeyButton" class="secondary-button" type="button" data-i18n="clearAIKey">
+                  Clear AI Key
+                </button>
+              </div>
+              <p id="aiSettingsStatus" class="settings-status" role="status"></p>
+            </form>
+
+            <section class="settings-form diagnostics-zone">
+              <div>
+                <h3 data-i18n="diagnosticsTitle">Beta Diagnostics</h3>
+                <p data-i18n="diagnosticsDescription">
+                  Copies a redacted local QA snapshot and recent local error summary for bug reports. It excludes URLs, hostnames, tab titles, page text, and API keys.
+                </p>
+              </div>
+              <button id="copyDiagnosticsButton" class="secondary-button" type="button" data-i18n="copyDiagnostics">
+                Copy Diagnostic Snapshot
+              </button>
+              <button id="copyFeedbackButton" class="secondary-button" type="button" data-i18n="copyFeedbackTemplate">
+                Copy Feedback Template
+              </button>
+              <p id="diagnosticsStatus" class="settings-status" role="status"></p>
+            </section>
+
+            <section class="settings-form danger-zone">
+              <div>
+                <h3 data-i18n="localData">Local Data</h3>
+                <p data-i18n="localDataDescription">
+                  Clears local rules, API key, recent results, Undo/Restore snapshots, chat drafts, and first-run privacy acceptance.
+                </p>
+              </div>
+              <button id="clearDataButton" class="danger-button" type="button" data-i18n="clearLocalData">Clear Local Data</button>
+              <p id="clearDataStatus" class="settings-status" role="status"></p>
+            </section>
+          </section>
+        </section>
+      </main>
+    </div>
 
     <script type="module" src="dashboard.js"></script>
   </body>

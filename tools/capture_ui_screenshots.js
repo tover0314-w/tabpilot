@@ -8,6 +8,7 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const EXTENSION_DIR = path.join(ROOT_DIR, "extension");
 const OUT_DIR = path.join(ROOT_DIR, "artifacts", "ui-screenshots");
 const DEFAULT_VIEWPORT = { width: 1366, height: 980 };
+const DASHBOARD_MOBILE_VIEWPORT = { width: 390, height: 1200 };
 const SIDEPANEL_VIEWPORT = { width: 390, height: 2200 };
 
 const MOCK_RUN = {
@@ -46,6 +47,7 @@ const MOCK_RUN = {
       name: "Product Planning",
       color: "blue",
       tabCount: 8,
+      tabIds: [301, 302, 303, 304, 305, 306, 307, 308],
       reason: "AI matched roadmap, PRD, and planning docs"
     },
     {
@@ -53,6 +55,7 @@ const MOCK_RUN = {
       name: "Code Review",
       color: "green",
       tabCount: 7,
+      tabIds: [309, 310, 311, 312, 313, 314, 315],
       reason: "User rule: GitHub PR to Code Review"
     },
     {
@@ -60,6 +63,7 @@ const MOCK_RUN = {
       name: "Customer Research",
       color: "purple",
       tabCount: 6,
+      tabIds: [316, 317, 318, 319, 320, 321],
       reason: "AI clustered interviews and market notes"
     },
     {
@@ -67,6 +71,7 @@ const MOCK_RUN = {
       name: "Design References",
       color: "pink",
       tabCount: 5,
+      tabIds: [322, 323, 324, 325, 326],
       reason: "Figma and visual inspiration tabs"
     },
     {
@@ -74,6 +79,7 @@ const MOCK_RUN = {
       name: "Chrome Extension Docs",
       color: "cyan",
       tabCount: 4,
+      tabIds: [327, 328, 329, 330],
       reason: "Built-in docs rule"
     },
     {
@@ -81,6 +87,7 @@ const MOCK_RUN = {
       name: "Articles to Read",
       color: "yellow",
       tabCount: 3,
+      tabIds: [331, 332, 333],
       reason: "Reading queue"
     }
   ],
@@ -111,30 +118,39 @@ const MOCK_RUN = {
   ],
   snapshot: {
     tabs: [
-      {
-        id: 301,
-        windowId: 1,
-        title: "PR #24 - Add sidebar control center",
-        hostname: "github.com",
-        path: "/tover0314-w/tabpilot/pull/24",
-        urlScheme: "https",
-        active: false,
-        pinned: false,
-        audible: false,
-        protectedReasons: []
-      },
-      {
-        id: 302,
-        windowId: 2,
-        title: "PR #24 checks - GitHub Actions",
-        hostname: "github.com",
-        path: "/tover0314-w/tabpilot/actions/runs/24",
-        urlScheme: "https",
-        active: true,
-        pinned: false,
-        audible: false,
-        protectedReasons: ["active"]
-      }
+      mockTab(301, 1, "Q3 planning doc", "docs.google.com", "/document/d/mock-planning", { groupId: 101, active: true }),
+      mockTab(302, 1, "Product roadmap", "notion.so", "/workspace/roadmap", { groupId: 101 }),
+      mockTab(303, 1, "MVP private beta checklist", "linear.app", "/acme/project/tabmosaic", { groupId: 101 }),
+      mockTab(304, 1, "Pricing notes draft", "docs.google.com", "/document/d/mock-pricing", { groupId: 101, discarded: true }),
+      mockTab(305, 1, "Customer interview notes", "coda.io", "/doc/interviews", { groupId: 101 }),
+      mockTab(306, 1, "Office workflow research", "notion.so", "/workspace/research", { groupId: 101 }),
+      mockTab(307, 1, "Launch checklist", "docs.google.com", "/spreadsheet/d/mock-launch", { groupId: 101 }),
+      mockTab(308, 1, "Competitor positioning", "docs.google.com", "/document/d/mock-competitors", { groupId: 101 }),
+      mockTab(309, 2, "PR #24 - Add sidebar control center", "github.com", "/tover0314-w/tabpilot/pull/24", { groupId: 102 }),
+      mockTab(310, 2, "PR #26 - Privacy copy", "github.com", "/tover0314-w/tabpilot/pull/26", { groupId: 102 }),
+      mockTab(311, 2, "PR #29 - Dashboard apply", "github.com", "/tover0314-w/tabpilot/pull/29", { groupId: 102 }),
+      mockTab(312, 2, "GitHub Actions checks", "github.com", "/tover0314-w/tabpilot/actions", { groupId: 102, audible: true }),
+      mockTab(313, 2, "Issue triage", "github.com", "/tover0314-w/tabpilot/issues", { groupId: 102 }),
+      mockTab(314, 2, "Review comment thread", "github.com", "/tover0314-w/tabpilot/pull/31", { groupId: 102 }),
+      mockTab(315, 2, "Release branch compare", "github.com", "/tover0314-w/tabpilot/compare", { groupId: 102 }),
+      mockTab(316, 3, "Knowledge worker survey", "forms.gle", "/mock-survey", { groupId: 103 }),
+      mockTab(317, 3, "Tab fatigue interview notes", "notion.so", "/workspace/interviews", { groupId: 103 }),
+      mockTab(318, 3, "Chrome productivity reviews", "chromewebstore.google.com", "/detail/mock", { groupId: 103 }),
+      mockTab(319, 3, "AI tab manager article", "example.com", "/article/ai-tabs", { groupId: 103 }),
+      mockTab(320, 3, "Desk research board", "miro.com", "/app/board/mock", { groupId: 103 }),
+      mockTab(321, 3, "Research synthesis", "docs.google.com", "/document/d/mock-synthesis", { groupId: 103 }),
+      mockTab(322, 1, "TabMosaic dashboard design", "figma.com", "/file/mock", { groupId: 104 }),
+      mockTab(323, 1, "Monochrome dashboard cards", "dribbble.com", "/shots/mock-cards", { groupId: 104 }),
+      mockTab(324, 1, "Sidebar pattern reference", "mobbin.com", "/patterns/sidebar", { groupId: 104 }),
+      mockTab(325, 1, "Command palette examples", "raycast.com", "/design", { groupId: 104 }),
+      mockTab(326, 1, "Typography sample", "typewolf.com", "/site-of-the-day", { groupId: 104 }),
+      mockTab(327, 2, "chrome.sidePanel API", "developer.chrome.com", "/docs/extensions/reference/api/sidePanel", { groupId: 105 }),
+      mockTab(328, 2, "chrome.tabs API", "developer.chrome.com", "/docs/extensions/reference/api/tabs", { groupId: 105 }),
+      mockTab(329, 2, "chrome.tabGroups API", "developer.chrome.com", "/docs/extensions/reference/api/tabGroups", { groupId: 105 }),
+      mockTab(330, 2, "MV3 service worker lifecycle", "developer.chrome.com", "/docs/extensions/develop/concepts/service-workers", { groupId: 105 }),
+      mockTab(331, 3, "How teams manage context switching", "example.com", "/blog/context-switching", { groupId: 106 }),
+      mockTab(332, 3, "Browser extension growth notes", "example.com", "/article/extension-growth", { groupId: 106 }),
+      mockTab(333, 3, "Tab overload and focus", "example.com", "/research/tab-overload", { groupId: 106, discarded: true })
     ]
   }
 };
@@ -167,6 +183,24 @@ const MOCK_AI_SETTINGS = {
   model: "deepseek-v4-flash",
   apiKey: "mock-redacted-key"
 };
+
+function mockTab(id, windowId, title, hostname, path, overrides = {}) {
+  return {
+    id,
+    windowId,
+    title,
+    hostname,
+    path,
+    urlScheme: "https",
+    active: false,
+    pinned: false,
+    audible: false,
+    discarded: false,
+    protectedReasons: [],
+    groupId: -1,
+    ...overrides
+  };
+}
 
 main().catch((error) => {
   console.error(error.stack || error.message);
@@ -206,12 +240,20 @@ async function main() {
         language: "en"
       },
       {
+        name: "dashboard-mobile.png",
+        path: "/dashboard.html",
+        viewport: DASHBOARD_MOBILE_VIEWPORT,
+        fullPage: false,
+        language: "en"
+      },
+      {
         name: "dashboard-ai-settings.png",
         path: "/dashboard.html",
         viewport: DEFAULT_VIEWPORT,
         fullPage: false,
         language: "en",
         beforeScreenshot: async (page) => {
+          await page.locator('.dashboard-nav-item[data-page="settings"]').click();
           await page.locator("#aiSettingsForm").scrollIntoViewIfNeeded();
         }
       }

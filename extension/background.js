@@ -1042,9 +1042,13 @@ function buildDisplayGroupsFromSnapshot(snapshot, fallbackGroups = []) {
   }
 
   const tabCountByGroupId = new Map();
+  const tabIdsByGroupId = new Map();
   for (const tab of snapshot.tabs || []) {
     if (tab.groupId === NO_GROUP_ID) continue;
     tabCountByGroupId.set(tab.groupId, (tabCountByGroupId.get(tab.groupId) || 0) + 1);
+    const tabIds = tabIdsByGroupId.get(tab.groupId) || [];
+    tabIds.push(tab.id);
+    tabIdsByGroupId.set(tab.groupId, tabIds);
   }
 
   return snapshot.groups
@@ -1054,6 +1058,7 @@ function buildDisplayGroupsFromSnapshot(snapshot, fallbackGroups = []) {
       name: group.title || "Untitled Group",
       color: group.color || "grey",
       tabCount: tabCountByGroupId.get(group.id) || 0,
+      tabIds: tabIdsByGroupId.get(group.id) || [],
       reason: "Current Chrome group",
       confidence: 1
     }))
@@ -2614,6 +2619,7 @@ async function applyGroupPlan(groupPlan) {
         name: group.name,
         color: group.color,
         tabCount: group.tabIds.length,
+        tabIds: group.tabIds.slice(),
         reason: group.reason,
         confidence: group.confidence
       });

@@ -24,6 +24,7 @@ CONFIRMED BY IMPLEMENTATION:
 - local user rules and Rules & Memory
 - current-tab local extractive summary after user click, with sensitive-page confirmation
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
+- Dashboard HTML-prototype workbench layout with expanded local tab rows
 - Dashboard group title/color apply back to real native tab groups
 - optional DeepSeek AI classification through OpenAI-compatible request format
 - DeepSeek connection test without tab data
@@ -49,13 +50,13 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 20 extension smoke tests
+- 21 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke
 - Chat Refine in runtime smoke
 - Dashboard apply in runtime smoke
-- mock-data UI screenshot capture
+- mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
 - extension package generation
 - release package verification
 ```

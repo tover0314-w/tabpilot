@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.59 — 2026-06-09
+
+Changed:
+
+- Reworked Dashboard from a basic settings-style page into the HTML prototype workbench layout: top bar, left project rail, current workspace card, action block, filter chips, and two-column Smart Group cards.
+- Smart Group cards now render expanded local tab rows from the stored run snapshot and local group `tabIds`.
+- Dashboard keeps existing wired behaviors: organize CTA, title/color Apply back to native tab groups, Rules & Memory enable/disable/delete, AI settings, diagnostics, and local data controls.
+- Added a mobile Dashboard screenshot target and smoke coverage that guards the workbench prototype structure.
+- Updated extension README, Dashboard spec, Test Plan, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- Group `tabIds` are stored locally only for Dashboard UI mapping; no full URLs, restore URLs, page text, API keys, or cloud upload were added.
+- No extension permissions, AI provider hosts, AI request payload fields, analytics upload, cloud storage, automatic tab-closing policy, or product scope changed.
+
 ## v0.58 — 2026-06-09
 
 Changed:

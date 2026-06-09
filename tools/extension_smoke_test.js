@@ -202,6 +202,31 @@ test("dashboard permission explanation matches manifest permissions", () => {
   }
 });
 
+test("dashboard follows workbench HTML prototype structure", () => {
+  const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+
+  for (const selector of [
+    "dashboard-topbar",
+    "dashboard-workbench",
+    "dashboard-rail",
+    "dashboard-workspace-card",
+    "dashboard-filter-chips",
+    "dashboard-group-grid"
+  ]) {
+    assert(dashboardHtml.includes(selector), `Dashboard missing prototype shell class: ${selector}`);
+    assert(dashboardCss.includes(`.${selector}`), `Dashboard missing CSS for prototype class: ${selector}`);
+  }
+
+  assert(dashboardJs.includes("function renderGroupCard"), "Dashboard should render workbench group cards");
+  assert(dashboardJs.includes("function renderGroupTabs"), "Dashboard should render expanded group tab rows");
+  assert(dashboardJs.includes("getTabsForGroup"), "Dashboard should connect group cards to local tab rows");
+  assert(dashboardJs.includes("type: \"ORGANIZE_NOW\""), "Dashboard primary CTA should use existing organize action");
+  assert(!dashboardHtml.includes("dashboard-sidebar"), "Dashboard should not use the old basic sidebar layout");
+  assert(!dashboardHtml.includes("editable-group-card"), "Dashboard should not use the old settings-card group UI");
+});
+
 test("AI host guardrail matches manifest host permission", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");

@@ -22,8 +22,9 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Chat Refine supports first English/Chinese local commands for current-tab move, domain rule creation, and group rename.
 - User rules apply before AI and built-in rules on future organize runs.
 - Summarize Current Tab reads visible page text only after a user click, asks for an extra confirmation on sensitive pages, and generates a local extractive summary.
-- Open Dashboard shows a local dashboard page with latest workspace metrics, smart groups, duplicates, and settings snapshot.
+- Open Dashboard shows a local workbench page with a top bar, project rail, latest workspace metrics, expanded smart group cards, duplicate center, Rules & Memory, and settings.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
+- Dashboard Smart Groups show local tab rows from the latest sanitized run snapshot when group membership is available.
 - Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
 - Dashboard can save a local DeepSeek API key for AI tab classification through an OpenAI-compatible request format.
 - Dashboard can test the AI provider connection without sending tab data.
@@ -106,7 +107,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English/Chinese localization, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI key clearing, and local data deletion.
+It checks manifest permissions, English/Chinese localization, Dashboard workbench layout, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 
@@ -116,7 +117,7 @@ Optional UI screenshot capture:
 node tools/capture_ui_screenshots.js
 ```
 
-This renders the sidebar and dashboard with mock extension data. It does not read real browser tabs or `.env.local`. It requires Playwright locally; the Codex bundled runtime is auto-detected when available. Screenshots are written to `artifacts/ui-screenshots/`.
+This renders the sidebar and dashboard with mock extension data, including Dashboard desktop, mobile, and AI Settings screenshots. It does not read real browser tabs or `.env.local`. It requires Playwright locally; the Codex bundled runtime is auto-detected when available. Screenshots are written to `artifacts/ui-screenshots/`.
 
 Optional runtime smoke test:
 

@@ -31,6 +31,7 @@ Coverage:
 - AI output validation for invented/repeated tab IDs
 - AI classification request includes minimized metadata only and excludes full URL, restore URL, query token, and page text
 - AI classification status and suggested group count are visible in sidebar and dashboard
+- Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, workspace card, filter chips, and expanded group cards
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types
@@ -90,6 +91,7 @@ Expected:
 - renders sidebar completed state with English mock data
 - renders sidebar completed state with Chinese mock data
 - renders dashboard overview with mock workspace data
+- renders dashboard mobile overview with mock workspace data
 - renders dashboard AI settings with mock DeepSeek settings
 - does not read real browser tabs
 - does not read .env.local

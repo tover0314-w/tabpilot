@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.57 changes in this commit
+Source state verified: v0.59 changes in this commit
 
 ### Unified Preflight
 
@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 96 tracked files
-20 smoke tests passed
+21 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
 PASS UI screenshots captured
@@ -62,7 +62,7 @@ configuredModel=deepseek-v4-flash
 modelAvailable=yes
 modelCount=2
 PASS synthetic classification fixture completed
-fixtureGroupCount=3
+fixtureGroupCount=2
 fixtureAssignedTabs=3
 ```
 
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-20 smoke tests passed
+21 smoke tests passed
 ```
 
 Covered:
@@ -93,6 +93,7 @@ Covered:
 - Narrow permissions and no `default_popup`.
 - English/Chinese locale parity.
 - Permission explanation alignment.
+- Dashboard workbench HTML prototype structure guard.
 - AI host guardrail aligned with manifest host permission.
 - Redacted local error logs.
 - Count-only duplicate safety audit.
@@ -105,6 +106,7 @@ Covered:
 - AI output validation.
 - AI classification request minimization: no full URL, restore URL, query token, or page text in provider payload.
 - AI classification status visibility in sidebar and dashboard, including suggested AI group count.
+- Dashboard expanded Smart Group cards and local tab-row rendering from sanitized run data.
 - AI connection test without tab data.
 - Dashboard rule deletion confirmation.
 - Dashboard scoped AI key clearing.
@@ -150,7 +152,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=488f37bb7c98c2bdf14f9d4ee097e1a2f77e89ae0128f46cf780c75b3f9b14a1
+sha256=29d68240127b00408262d32192f9966417e61278730c94b1688c4e240e849c36
 ```
 
 Evidence notes:
@@ -176,12 +178,13 @@ PASS UI screenshots captured
 artifacts/ui-screenshots/sidepanel-result.png
 artifacts/ui-screenshots/sidepanel-result-zh.png
 artifacts/ui-screenshots/dashboard-overview.png
+artifacts/ui-screenshots/dashboard-mobile.png
 artifacts/ui-screenshots/dashboard-ai-settings.png
 ```
 
 Evidence notes:
 
-- Screenshots use mock extension data only.
+- Screenshots use mock extension data only, including Dashboard desktop, mobile, and AI Settings views.
 - The script does not read real browser tabs.
 - The script does not read `.env.local`.
 - `artifacts/` is ignored by git because screenshots are reproducible local evidence.

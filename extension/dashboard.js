@@ -14,9 +14,21 @@ const DEFAULT_AI_SETTINGS = {
   model: "deepseek-v4-flash",
   apiKey: ""
 };
+const GROUP_COLOR_CLASS = new Map(GROUP_COLORS.map((color, index) => [color, `g-${index}`]));
 
 const refreshButton = document.querySelector("#refreshButton");
+const workspaceRefreshButton = document.querySelector("#workspaceRefreshButton");
+const organizeNowButton = document.querySelector("#organizeNowButton");
 const workspaceTitle = document.querySelector("#workspaceTitle");
+const workspaceSubtitle = document.querySelector("#workspaceSubtitle");
+const sidebarWorkspaceLabel = document.querySelector("#sidebarWorkspaceLabel");
+const sidebarWorkspaceName = document.querySelector("#sidebarWorkspaceName");
+const sidebarWorkspaceMetric = document.querySelector("#sidebarWorkspaceMetric");
+const rulesCountBadge = document.querySelector("#rulesCountBadge");
+const rulesSubtitle = document.querySelector("#rulesSubtitle");
+const allGroupsCount = document.querySelector("#allGroupsCount");
+const aiGroupsCount = document.querySelector("#aiGroupsCount");
+const ruleGroupsCount = document.querySelector("#ruleGroupsCount");
 const dashboardMetrics = document.querySelector("#dashboardMetrics");
 const dashboardGroups = document.querySelector("#dashboardGroups");
 const dashboardDuplicates = document.querySelector("#dashboardDuplicates");
@@ -35,10 +47,13 @@ const copyFeedbackButton = document.querySelector("#copyFeedbackButton");
 const diagnosticsStatus = document.querySelector("#diagnosticsStatus");
 const clearDataButton = document.querySelector("#clearDataButton");
 const clearDataStatus = document.querySelector("#clearDataStatus");
+let latestRun = null;
 
 applyI18n();
 
 refreshButton.addEventListener("click", loadDashboard);
+workspaceRefreshButton.addEventListener("click", loadDashboard);
+organizeNowButton.addEventListener("click", organizeFromDashboard);
 aiSettingsForm.addEventListener("submit", saveAISettings);
 testAIButton.addEventListener("click", testAIConnection);
 clearAIKeyButton.addEventListener("click", clearAIKey);
@@ -47,6 +62,12 @@ dashboardGroups.addEventListener("click", handleGroupAction);
 copyDiagnosticsButton.addEventListener("click", copyDiagnosticSnapshot);
 copyFeedbackButton.addEventListener("click", copyFeedbackTemplate);
 clearDataButton.addEventListener("click", clearLocalData);
+document.querySelectorAll(".dashboard-nav-item").forEach((button) => {
+  button.addEventListener("click", () => setActiveDashboardPage(button.dataset.page));
+});
+document.querySelectorAll(".dashboard-chip").forEach((button) => {
+  button.addEventListener("click", () => setActiveGroupFilter(button.dataset.filter || "all"));
+});
 
 loadDashboard();
 loadAISettings();
@@ -57,24 +78,103 @@ async function loadDashboard() {
 }
 
 function renderDashboard(run, rules = []) {
+  latestRun = run || null;
+  renderWorkspaceSidebar(run, rules);
+
   if (!run || !["completed", "closed-restored", "undone"].includes(run.status)) {
     workspaceTitle.textContent = msg("noOrganizeResultYet");
+    workspaceSubtitle.textContent = msg("openSidePanelToPopulateDashboard");
     dashboardMetrics.innerHTML = "";
     dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(msg("openSidePanelToPopulateDashboard"))}</p>`;
     dashboardDuplicates.innerHTML = `<p class="empty">${escapeHtml(msg("noDuplicateDataYet"))}</p>`;
     renderRules(rules);
     renderSettingsSnapshot({});
+    renderGroupFilterCounts([], {});
     return;
   }
 
   workspaceTitle.textContent = run.completedAt
     ? msg("latestResultWithDate", [new Date(run.completedAt).toLocaleString()])
     : msg("latestResult");
+  workspaceSubtitle.textContent = formatWorkspaceSubtitle(run);
   renderMetrics(run.summary || {});
-  renderGroups(run.groups || []);
+  renderGroupFilterCounts(run.groups || [], run.summary || {});
+  renderGroups(run.groups || [], run);
   renderDuplicates(run.duplicateGroups || []);
   renderRules(rules);
   renderSettingsSnapshot(run.summary || {});
+}
+
+function setActiveDashboardPage(pageName) {
+  document.querySelectorAll(".dashboard-nav-item").forEach((button) => {
+    button.classList.toggle("active", button.dataset.page === pageName);
+  });
+  document.querySelectorAll(".dashboard-page").forEach((page) => {
+    page.classList.toggle("active", page.dataset.page === pageName);
+  });
+}
+
+function setActiveGroupFilter(filterName) {
+  document.querySelectorAll(".dashboard-chip").forEach((button) => {
+    button.classList.toggle("active", button.dataset.filter === filterName);
+  });
+}
+
+async function organizeFromDashboard() {
+  organizeNowButton.disabled = true;
+  organizeNowButton.textContent = msg("organizing");
+  workspaceTitle.textContent = msg("scanningTabs");
+  workspaceSubtitle.textContent = msg("scanningAllNormalWindows");
+
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "ORGANIZE_NOW" });
+    if (!response?.ok) {
+      workspaceSubtitle.textContent = response?.error || msg("scanDidNotFinish");
+      return;
+    }
+    renderDashboard(response.run, await loadRules());
+  } catch (error) {
+    workspaceSubtitle.textContent = error?.message || msg("scanDidNotFinish");
+  } finally {
+    organizeNowButton.disabled = false;
+    organizeNowButton.textContent = msg("organizeBrowser");
+  }
+}
+
+async function loadRules() {
+  const result = await chrome.storage.local.get(USER_RULES_KEY);
+  return Array.isArray(result[USER_RULES_KEY]) ? result[USER_RULES_KEY] : [];
+}
+
+function renderWorkspaceSidebar(run, rules = []) {
+  const summary = run?.summary || {};
+  const tabCount = summary.tabCount ?? run?.snapshot?.tabs?.length;
+  const windowCount = summary.windowCount ?? run?.snapshot?.windows?.length;
+  const groupCount = summary.groupsCreated ?? run?.groups?.length;
+
+  sidebarWorkspaceLabel.textContent = run?.source || "current";
+  sidebarWorkspaceName.textContent = msg("currentWorkspace");
+  sidebarWorkspaceMetric.textContent = run
+    ? msg("workspaceSidebarMetric", [
+        tabCount ?? "—",
+        groupCount ?? "—",
+        windowCount ?? "—"
+      ])
+    : msg("noOrganizeResultYet");
+  rulesCountBadge.textContent = String(rules.length);
+  rulesSubtitle.textContent = msg("rulesSubtitleWithCount", [
+    rules.filter((rule) => rule.enabled !== false).length,
+    rules.filter((rule) => rule.enabled === false).length
+  ]);
+}
+
+function formatWorkspaceSubtitle(run) {
+  const summary = run.summary || {};
+  const tabCount = summary.tabCount ?? run.snapshot?.tabs?.length ?? "—";
+  const windowCount = summary.windowCount ?? run.snapshot?.windows?.length ?? "—";
+  const groupCount = run.groups?.length ?? summary.groupsCreated ?? "—";
+  const completedAt = run.completedAt ? new Date(run.completedAt).toLocaleTimeString() : "—";
+  return msg("workspaceSubtitle", [tabCount, groupCount, windowCount, completedAt]);
 }
 
 async function handleRuleAction(event) {
@@ -399,36 +499,151 @@ function renderMetrics(summary) {
     .join("");
 }
 
-function renderGroups(groups) {
+function renderGroupFilterCounts(groups, summary) {
+  const aiGroupCount = Number(summary.aiGroupsSuggested || 0);
+  const ruleGroupCount = groups.filter((group) => isRuleGroup(group)).length;
+  allGroupsCount.textContent = String(groups.length);
+  aiGroupsCount.textContent = String(aiGroupCount);
+  ruleGroupsCount.textContent = String(ruleGroupCount);
+}
+
+function renderGroups(groups, run = latestRun) {
   if (!groups.length) {
     dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(msg("noNativeGroupsLatest"))}</p>`;
     return;
   }
 
   dashboardGroups.innerHTML = groups
-    .map(
-      (group) => `
-        <article class="dashboard-card editable-group-card" data-group-id="${escapeHtml(String(group.id))}">
-          <div>
-            <label>
-              <span>${escapeHtml(msg("groupName"))}</span>
-              <input data-group-title type="text" value="${escapeHtml(group.name)}" />
-            </label>
-            <p>${escapeHtml(group.reason || msg("builtInRule"))}</p>
-          </div>
-          <div class="group-edit-side">
-            <strong>${escapeHtml(String(group.tabCount))}</strong>
-            <select data-group-color>
-              ${GROUP_COLORS.map(
-                (color) => `<option value="${color}" ${color === group.color ? "selected" : ""}>${color}</option>`
-              ).join("")}
-            </select>
-            <button class="secondary-button" type="button" data-group-action="apply">${escapeHtml(msg("apply"))}</button>
-          </div>
-        </article>
-      `
-    )
+    .map((group, index) => renderGroupCard(group, run, index))
     .join("");
+}
+
+function renderGroupCard(group, run, index) {
+  const tabs = getTabsForGroup(group, run);
+  const colorClass = GROUP_COLOR_CLASS.get(group.color) || "g-0";
+  const sourceClass = isRuleGroup(group) ? "rule" : group.reason?.includes("manual") ? "manual" : "";
+
+  return `
+    <article class="dashboard-group-card ${index === 0 ? "active" : ""}" data-group-id="${escapeHtml(String(group.id))}">
+      <div class="dashboard-group-head">
+        <span class="dashboard-dot ${escapeHtml(colorClass)}" aria-hidden="true"></span>
+        <div class="dashboard-group-title-block">
+          <label class="sr-only" for="group-title-${escapeHtml(String(group.id))}">${escapeHtml(msg("groupName"))}</label>
+          <input
+            id="group-title-${escapeHtml(String(group.id))}"
+            class="dashboard-group-title-input"
+            data-group-title
+            type="text"
+            value="${escapeHtml(group.name)}"
+          />
+          <div class="dashboard-group-meta-line">
+            <span>${escapeHtml(msg("tabsCount", [group.tabCount ?? tabs.length]))}</span>
+            <span>${escapeHtml(formatTopHosts(tabs))}</span>
+          </div>
+        </div>
+        <div class="dashboard-group-actions">
+          <span class="dashboard-source-tag ${escapeHtml(sourceClass)}">${escapeHtml(formatGroupSource(group))}</span>
+          <select class="dashboard-color-select" data-group-color aria-label="${escapeHtml(msg("groupColor"))}">
+            ${GROUP_COLORS.map(
+              (color) => `<option value="${color}" ${color === group.color ? "selected" : ""}>${color}</option>`
+            ).join("")}
+          </select>
+          <button class="dashboard-apply-button" type="button" data-group-action="apply">${escapeHtml(msg("apply"))}</button>
+        </div>
+      </div>
+      <p class="dashboard-group-reason">${escapeHtml(group.reason || msg("builtInRule"))}</p>
+      <div class="dashboard-group-body">
+        ${renderGroupTabs(tabs, group)}
+      </div>
+    </article>
+  `;
+}
+
+function getTabsForGroup(group, run) {
+  const tabs = run?.snapshot?.tabs || [];
+  const groupTabIds = Array.isArray(group.tabIds) ? new Set(group.tabIds) : null;
+
+  if (groupTabIds?.size) {
+    return tabs.filter((tab) => groupTabIds.has(tab.id));
+  }
+
+  return tabs.filter((tab) => tab.groupId === group.id);
+}
+
+function renderGroupTabs(tabs, group) {
+  if (!tabs.length) {
+    return `
+      <div class="dashboard-more-row">
+        <span>${escapeHtml(msg("groupTabsPending"))}</span>
+      </div>
+    `;
+  }
+
+  const visibleTabs = tabs.slice(0, 4);
+  const hiddenCount = Math.max(0, tabs.length - visibleTabs.length);
+  const rows = visibleTabs.map(renderGroupTabRow).join("");
+  const moreRow = hiddenCount
+    ? `
+      <div class="dashboard-more-row">
+        <span>${escapeHtml(msg("moreTabs", [hiddenCount]))}</span>
+        <span>${escapeHtml(group.windowId ? msg("windowLabel", [group.windowId]) : msg("currentWorkspace"))}</span>
+      </div>
+    `
+    : `
+      <div class="dashboard-more-row compact">
+        <span>${escapeHtml(msg("noMoreTabs"))}</span>
+      </div>
+    `;
+
+  return `${rows}${moreRow}`;
+}
+
+function renderGroupTabRow(tab) {
+  const classes = [
+    "dashboard-tabrow",
+    tab.discarded ? "suspended" : "",
+    tab.audible ? "audible" : ""
+  ].filter(Boolean).join(" ");
+  const badges = [
+    tab.active ? msg("currentTab") : "",
+    tab.pinned ? msg("pinned") : "",
+    tab.audible ? msg("audible") : "",
+    tab.discarded ? msg("discarded") : ""
+  ].filter(Boolean);
+
+  return `
+    <div class="${escapeHtml(classes)}">
+      <span class="dashboard-favicon" aria-hidden="true">${escapeHtml(getFaviconLetter(tab))}</span>
+      <span class="dashboard-tab-title" title="${escapeHtml(tab.hostname || "")}">
+        ${escapeHtml(tab.title || msg("untitled"))}
+      </span>
+      <span class="dashboard-tab-host">${escapeHtml(tab.hostname || tab.path || "")}</span>
+      <span class="dashboard-tab-badges">
+        ${badges.map((badge) => `<span class="dashboard-tab-badge">${escapeHtml(badge)}</span>`).join("")}
+      </span>
+    </div>
+  `;
+}
+
+function getFaviconLetter(tab) {
+  const source = tab.hostname || tab.title || "t";
+  return source.replace(/^www\./, "").charAt(0).toLowerCase() || "t";
+}
+
+function formatTopHosts(tabs) {
+  const hosts = [...new Set(tabs.map((tab) => tab.hostname).filter(Boolean))].slice(0, 2);
+  return hosts.length ? hosts.join(" · ") : msg("noHostDataYet");
+}
+
+function formatGroupSource(group) {
+  if (isRuleGroup(group)) return msg("rules");
+  if (String(group.reason || "").toLowerCase().includes("ai")) return msg("aiStatus");
+  if (String(group.reason || "").toLowerCase().includes("manual")) return msg("manual");
+  return msg("localRules");
+}
+
+function isRuleGroup(group) {
+  return String(group.reason || "").toLowerCase().includes("user rule");
 }
 
 function renderDuplicates(duplicates) {
@@ -461,13 +676,20 @@ function renderRules(rules) {
     .map(
       (rule) => `
         <div class="rule-row">
+          <div class="rule-icon" aria-hidden="true">${escapeHtml(rule.enabled === false ? "pause" : "rule")}</div>
           <span>
             <b>${escapeHtml(rule.pattern)} → ${escapeHtml(rule.targetGroupName || msg("misc"))}</b>
-            <small>${escapeHtml(rule.type)} · ${escapeHtml(rule.createdFrom || "manual")} · ${escapeHtml(rule.enabled === false ? msg("off") : msg("on"))} · ${escapeHtml(msg("hits", [rule.hitCount || 0]))}</small>
+            <small>${escapeHtml(rule.type)} · ${escapeHtml(rule.createdFrom || msg("manual"))} · ${escapeHtml(msg("hits", [rule.hitCount || 0]))}</small>
           </span>
           <div class="rule-actions">
-            <button class="mini-button" type="button" data-rule-action="toggle" data-rule-id="${escapeHtml(rule.id)}">
-              ${escapeHtml(rule.enabled === false ? msg("enable") : msg("disable"))}
+            <button
+              class="dashboard-toggle ${rule.enabled === false ? "" : "on"}"
+              type="button"
+              data-rule-action="toggle"
+              data-rule-id="${escapeHtml(rule.id)}"
+              aria-label="${escapeHtml(rule.enabled === false ? msg("enable") : msg("disable"))}"
+            >
+              <span></span>
             </button>
             <button class="mini-button" type="button" data-rule-action="delete" data-rule-id="${escapeHtml(rule.id)}">
               ${escapeHtml(msg("delete"))}
