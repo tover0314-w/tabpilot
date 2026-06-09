@@ -111,6 +111,14 @@ async function main() {
     await createTarget(port, sidepanelUrl);
     await createTarget(port, dashboardUrl);
 
+    if (IS_SELF_TEST) {
+      const targets = await fetchJson(port, "/json/list").catch(() => []);
+      assertTargetOpened(targets, checklistUrl, "Manual QA checklist");
+      assertTargetOpened(targets, sidepanelUrl, "sidepanel page");
+      assertTargetOpened(targets, dashboardUrl, "dashboard page");
+      assertChecklistHtml(checklistPath);
+    }
+
     printPlan({
       chromePath,
       port,
@@ -165,8 +173,9 @@ function printPlan(details) {
   console.log("Next:");
   console.log("1. Start with the opened Manual QA Checklist tab.");
   console.log("2. In the opened browser, click the TabMosaic AI toolbar icon if needed.");
-  console.log("3. Close the QA browser when finished.");
-  console.log(`4. Cleanup after closing: rm -rf ${JSON.stringify(path.dirname(details.profileDir))}`);
+  console.log("3. Copy the QA result from the checklist before sharing feedback.");
+  console.log("4. Close the QA browser when finished.");
+  console.log(`5. Cleanup after closing: rm -rf ${JSON.stringify(path.dirname(details.profileDir))}`);
 
   if (IS_SELF_TEST) {
     console.log("");
@@ -314,6 +323,40 @@ function renderChecklistHtml(details) {
       .warning {
         border-color: #111111;
       }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      button {
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--text);
+        border-radius: 7px;
+        background: var(--text);
+        color: #ffffff;
+        cursor: pointer;
+        font: inherit;
+      }
+      button.secondary {
+        background: var(--panel);
+        color: var(--text);
+      }
+      textarea {
+        width: 100%;
+        min-height: 160px;
+        margin-top: 12px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        color: var(--text);
+        font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 12px;
+      }
     </style>
   </head>
   <body>
@@ -327,6 +370,12 @@ function renderChecklistHtml(details) {
           <span>Profile: <code>${escapeHtml(details.profileDir)}</code></span>
           <span>Extension copy: <code>${escapeHtml(details.extensionDir)}</code></span>
         </div>
+        <div class="toolbar">
+          <button type="button" data-copy-report>Copy QA Result</button>
+          <button class="secondary" type="button" data-reset-checklist>Reset Checks</button>
+        </div>
+        <p class="status" data-status>Checklist state is saved in this disposable profile only.</p>
+        <textarea data-report readonly aria-label="QA result markdown"></textarea>
       </header>
       <section>
         <h2>Quick Links</h2>
@@ -341,17 +390,113 @@ function renderChecklistHtml(details) {
         <p>This disposable QA pass does not replace a final real-profile manual QA pass, Chrome Web Store confirmation gates, privacy policy confirmation, or pricing/domain decisions.</p>
       </section>
     </main>
+    <script>
+      const storageKey = "tabmosaic.manualQaChecklist.v1";
+      const checkboxes = Array.from(document.querySelectorAll("input[type='checkbox']"));
+      const report = document.querySelector("[data-report]");
+      const status = document.querySelector("[data-status]");
+      const saved = loadSavedState();
+
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = Boolean(saved[checkbox.dataset.checkId]);
+        checkbox.addEventListener("change", () => {
+          const next = {};
+          checkboxes.forEach((item) => {
+            next[item.dataset.checkId] = item.checked;
+          });
+          localStorage.setItem(storageKey, JSON.stringify(next));
+          renderReport();
+        });
+      });
+
+      document.querySelector("[data-reset-checklist]").addEventListener("click", () => {
+        checkboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+        localStorage.removeItem(storageKey);
+        renderReport("Checklist reset.");
+      });
+
+      document.querySelector("[data-copy-report]").addEventListener("click", async () => {
+        renderReport();
+        try {
+          await navigator.clipboard.writeText(report.value);
+          status.textContent = "QA result copied. Review it before sharing.";
+        } catch {
+          report.focus();
+          report.select();
+          const copied = document.execCommand("copy");
+          status.textContent = copied
+            ? "QA result copied. Review it before sharing."
+            : "Clipboard blocked. Select and copy the report manually.";
+        }
+      });
+
+      function loadSavedState() {
+        try {
+          return JSON.parse(localStorage.getItem(storageKey) || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function renderReport(message) {
+        const lines = [
+          "# TabMosaic Manual QA Result",
+          "",
+          "- Date: " + new Date().toISOString(),
+          "- Extension ID: ${escapeJs(details.extensionId)}",
+          "- Profile: ${escapeJs(details.profileDir)}",
+          "- Synthetic tabs: ${urls.length}",
+          "",
+          "## Checklist"
+        ];
+
+        document.querySelectorAll("section").forEach((section) => {
+          const title = section.querySelector("h2")?.textContent || "";
+          const items = Array.from(section.querySelectorAll("li"));
+          if (!items.length) return;
+
+          lines.push("", "### " + title);
+          items.forEach((item) => {
+            const checked = item.querySelector("input")?.checked ? "x" : " ";
+            const text = item.querySelector("label")?.textContent || "";
+            lines.push("- [" + checked + "] " + text);
+          });
+        });
+
+        lines.push(
+          "",
+          "## Notes",
+          "",
+          "- Issues:",
+          "- Decision gates triggered:",
+          "",
+          "Do not paste API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, private screenshots, or private rule patterns into public issues."
+        );
+
+        report.value = lines.join("\\n");
+        status.textContent = message || "Checklist state is saved in this disposable profile only.";
+      }
+
+      renderReport();
+    </script>
   </body>
 </html>
 `;
 }
 
-function renderChecklistSection(section) {
+function renderChecklistSection(section, sectionIndex) {
   return `
       <section>
         <h2>${escapeHtml(section.title)}</h2>
         <ul>
-          ${section.items.map((item) => `<li><input type="checkbox" /> <span>${escapeHtml(item)}</span></li>`).join("")}
+          ${section.items
+            .map((item, itemIndex) => {
+              const id = `qa-${sectionIndex}-${itemIndex}`;
+              return `<li><input id="${id}" data-check-id="${id}" type="checkbox" /> <label for="${id}">${escapeHtml(item)}</label></li>`;
+            })
+            .join("")}
         </ul>
       </section>`;
 }
@@ -371,6 +516,16 @@ function escapeHtml(value) {
 
 function escapeAttribute(value) {
   return escapeHtml(value).replace(/`/g, "&#096;");
+}
+
+function escapeJs(value) {
+  return String(value)
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/"/g, '\\"')
+    .replace(/`/g, "\\`")
+    .replace(/\$/g, "\\$");
 }
 
 function findChromePath() {
@@ -464,6 +619,30 @@ async function waitForExtensionId(port, getChromeLog) {
 
 async function createTarget(port, targetUrl) {
   return fetchJson(port, `/json/new?${targetUrl}`, { method: "PUT" });
+}
+
+function assertTargetOpened(targets, expectedUrl, label) {
+  const opened = targets.some((target) => target.url === expectedUrl);
+  if (!opened) {
+    throw new Error(`${label} did not open`);
+  }
+}
+
+function assertChecklistHtml(checklistPath) {
+  const html = fs.readFileSync(checklistPath, "utf8");
+  const required = [
+    "TabMosaic Manual QA Checklist",
+    "data-copy-report",
+    "data-reset-checklist",
+    "tabmosaic.manualQaChecklist.v1",
+    "# TabMosaic Manual QA Result"
+  ];
+
+  for (const token of required) {
+    if (!html.includes(token)) {
+      throw new Error(`Manual QA checklist is missing ${token}`);
+    }
+  }
 }
 
 async function fetchJson(port, route, options = {}) {

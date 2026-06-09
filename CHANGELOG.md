@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.54 — 2026-06-09
+
+Changed:
+
+- Manual QA Checklist now saves checkbox state in the disposable QA profile.
+- Added Copy QA Result and Reset Checks controls to the local checklist page.
+- `open_manual_qa_profile.js --self-test` now verifies the checklist, sidepanel, dashboard, and report controls.
+- Updated README, extension README, Test Plan, QA Runbook, Beta Release Notes, and Private Beta Handoff.
+
+Safety:
+
+- Checklist state and generated QA report stay local to the disposable profile unless the tester explicitly copies it.
+- No extension behavior, permissions, AI payload, analytics, storage backend, cloud upload, package contents, or product scope changed.
+
 ## v0.53 — 2026-06-09
 
 Changed:

@@ -37,10 +37,12 @@ Expected:
 - A temporary Chrome for Testing / Chromium profile opens.
 - TabMosaic AI is loaded from a copied unpacked extension directory.
 - A local Manual QA Checklist tab is opened.
+- Checklist state is saved only in the disposable profile.
+- The checklist can copy a Markdown QA result for review before sharing.
 - Synthetic QA tabs are opened.
 - Sidepanel and Dashboard extension pages are opened.
 - The script prints profileDir, extensionId, checklist URL, sidepanel URL, dashboard URL, and cleanup command.
-- `--self-test` opens the disposable browser, verifies setup, then closes and removes the temporary profile automatically.
+- `--self-test` opens the disposable browser, verifies setup and checklist report controls, then closes and removes the temporary profile automatically.
 ```
 
 Safety:
@@ -50,6 +52,7 @@ Safety:
 - Does not read real browser tabs.
 - Does not read .env.local.
 - Opens synthetic QA URLs only.
+- Does not upload checklist results.
 - Stores the temporary profile under ignored artifacts/manual-qa-profiles/.
 ```
 
