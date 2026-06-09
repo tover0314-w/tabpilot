@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.68 manual QA notes update in this commit
+Source state verified: v0.69 runtime Restore Closed coverage in this commit
 
 ### Unified Preflight
 
@@ -24,7 +24,7 @@ Result:
 PASS secret scan checked 96 tracked files
 28 smoke tests passed
 PASS issue form smoke checked 2 forms
-PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move/tab focus
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS preflight completed
@@ -135,14 +135,15 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move/tab focus
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus
 ```
 
 Evidence notes:
 
 - The script used a temporary Chrome for Testing profile and a copied unpacked extension directory.
 - Test tabs were synthetic QA URLs only.
-- It verified organize, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, and Dashboard tab focus against real Chrome native tab groups.
+- It verified organize, safe duplicate close, Restore Closed, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, and Dashboard tab focus against real Chrome native tab groups.
+- Restore Closed used a local restore snapshot containing the synthetic duplicate URL and increased the open synthetic tab count in the temporary profile.
 - It did not read the user's real Chrome profile or real browser tabs.
 
 ### Disposable Manual QA Profile Self-Test

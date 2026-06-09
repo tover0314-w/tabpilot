@@ -84,7 +84,7 @@ node tools/open_manual_qa_profile.js --self-test
 
 The runtime script uses a temporary browser profile and synthetic tabs. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome.
 
-Runtime coverage includes one-click organize, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, and Dashboard tab focus.
+Runtime coverage includes one-click organize, safe duplicate close, Restore Closed, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, and Dashboard tab focus.
 
 The manual QA profile launcher opens a disposable browser only when run without `--dry-run`; dry-run validates browser discovery, profile paths, extension path, and synthetic tab count without opening Chrome. Self-test opens the disposable browser, verifies setup, opens a local checklist page, verifies local checklist report controls, verifies the checklist includes AI and sensitive-summary checks, then closes and removes the temporary profile automatically.
 
@@ -164,7 +164,7 @@ node tools/open_manual_qa_profile.js --self-test
 Expected outcomes:
 
 ```text
-PASS: Chrome/Chromium allowed CLI unpacked extension loading and the script verified organize, Chat Refine, and Dashboard Apply against real native tab groups.
+PASS: Chrome/Chromium allowed CLI unpacked extension loading and the script verified organize, safe duplicate close, Restore Closed, Chat Refine, Dashboard Apply, same-window tab move, and tab focus against real native tab groups.
 SKIP: The local Google Chrome build does not allow CLI unpacked extension loading. Use Chrome for Testing/Chromium for automated runtime QA, or run manual Load unpacked QA.
 FAIL: Runtime behavior regressed.
 ```

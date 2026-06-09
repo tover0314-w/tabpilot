@@ -136,7 +136,7 @@ Optional runtime smoke test:
 node tools/chrome_runtime_smoke_test.js
 ```
 
-This starts a temporary Chrome profile, loads the unpacked extension, opens synthetic test tabs, and verifies organize, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, and Dashboard tab focus against real Chrome native tab groups. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome. It may print `SKIP` on Google Chrome builds that do not allow CLI unpacked extension loading; manual `Load unpacked` QA is still required in that case.
+This starts a temporary Chrome profile, loads the unpacked extension, opens synthetic test tabs, and verifies organize, safe duplicate close, Restore Closed, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, and Dashboard tab focus against real Chrome native tab groups. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome. It may print `SKIP` on Google Chrome builds that do not allow CLI unpacked extension loading; manual `Load unpacked` QA is still required in that case.
 
 To run automated runtime QA, use Chrome for Testing or Chromium:
 

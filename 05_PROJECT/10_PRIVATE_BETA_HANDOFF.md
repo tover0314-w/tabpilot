@@ -60,6 +60,7 @@ Verified:
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke
+- safe duplicate close and Restore Closed in runtime smoke
 - Chat Refine in runtime smoke
 - Dashboard apply, same-window tab move, and tab focus in runtime smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings

@@ -87,6 +87,8 @@ async function main() {
       assert(organizeResult && organizeResult.ok, `Organize failed: ${JSON.stringify(organizeResult)}`);
       assertEqual(organizeResult.run.status, "completed", "Organize status");
       assert(organizeResult.run.summary.groupsCreated >= 3, "Expected at least three native groups");
+      assert(organizeResult.run.summary.safeDuplicatesClosed >= 1, "Expected a safe duplicate tab to be closed");
+      assert(organizeResult.run.summary.closedTabsRestoreAvailable, "Expected Restore Closed to be available after safe duplicate close");
 
       const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
       const groupTitles = groups.map((group) => group.title).sort();
@@ -158,7 +160,29 @@ async function main() {
       const activeTabs = await evaluate(cdp, `chrome.tabs.query({ active: true, windowId: ${movedTab.windowId} })`);
       assert(activeTabs.some((tab) => tab.id === movedTab.id), "Dashboard tab focus did not activate the requested tab");
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move/tab focus");
+      const tabsBeforeRestore = await evaluate(cdp, "chrome.tabs.query({})");
+      const restoreSnapshotState = await evaluate(cdp, `
+        chrome.storage.local.get("tabmosaic.lastClosedTabs")
+      `);
+      const restoreSnapshot = restoreSnapshotState["tabmosaic.lastClosedTabs"];
+      assert(
+        restoreSnapshot?.closedTabs?.some((tab) => String(tab.url || "").includes("example.com/tabmosaic-duplicate")),
+        "Restore snapshot did not include the synthetic duplicate URL"
+      );
+
+      const restoreClosed = await evaluate(cdp, `
+        chrome.runtime.sendMessage({ type: "RESTORE_CLOSED_DUPLICATES" })
+      `);
+      assert(restoreClosed && restoreClosed.ok, `Restore Closed failed: ${JSON.stringify(restoreClosed)}`);
+      assert(restoreClosed.run.summary.restoredClosedTabs >= 1, "Restore Closed did not restore any duplicate tabs");
+      assertEqual(restoreClosed.run.summary.closedTabsRestoreAvailable, false, "Restore Closed should clear restore availability");
+
+      const tabsAfterRestore = await evaluate(cdp, "chrome.tabs.query({})");
+      assert(
+        tabsAfterRestore.length >= tabsBeforeRestore.length + restoreClosed.run.summary.restoredClosedTabs,
+        "Restore Closed did not increase the open tab count"
+      );
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus");
     } finally {
       cdp.close();
     }

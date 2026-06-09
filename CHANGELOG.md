@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.69 — 2026-06-09
+
+Changed:
+
+- Extended Chrome runtime smoke coverage to verify safe duplicate auto-close and Restore Closed with synthetic duplicate tabs.
+- Runtime smoke now confirms Restore Closed clears restore availability, increases the open tab count, and reopens the synthetic duplicate URL.
+- Updated runtime evidence in README, extension README, Test Plan, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- Test/documentation update only; no extension runtime behavior, permissions, AI payloads, storage defaults, cloud upload, analytics, or tab-closing policy changed.
+- The added runtime check uses a temporary Chrome profile and synthetic URLs only.
+
 ## v0.68 — 2026-06-09
 
 Changed:
