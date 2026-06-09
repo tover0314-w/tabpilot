@@ -23,11 +23,11 @@
 - `tools/issue_form_smoke_test.js`：检查私测 issue forms 的结构、隐私红线和 required safety acknowledgements。
 - `tools/verify_release_package.js`：按 manifest 版本校验 release zip、checksum、package manifest 和包内安全内容。
 - `tools/capture_ui_screenshots.js`：可选 UI 截图脚本，用 mock extension 数据生成 sidebar / dashboard 预览图。
-- `tools/extension_smoke_test.js`：无依赖 Node smoke test，覆盖 manifest、localization、permission explanation、redacted diagnostics、Chat Refine、rules、dedupe safety、AI output validation 和 local data deletion。
+- `tools/extension_smoke_test.js`：无依赖 Node smoke test，覆盖 manifest、localization、permission explanation、redacted diagnostics、Chat Refine、rules、dedupe safety、sensitive summary confirmation、AI output validation、AI status visibility 和 local data deletion。
 - `tools/chrome_runtime_smoke_test.js`：可选 Chrome runtime smoke test，使用临时 profile 尝试加载 unpacked extension 并验证真实 native tab groups。
-- `tools/open_manual_qa_profile.js`：打开一次性手动 QA Chrome profile，加载 extension、本地 checklist、合成 QA tabs、sidepanel 和 dashboard，不触碰真实 Chrome profile。
+- `tools/open_manual_qa_profile.js`：打开一次性手动 QA Chrome profile，加载 extension、本地 checklist、合成 QA tabs、sidepanel 和 dashboard，不触碰真实 Chrome profile；checklist 覆盖 AI 状态、敏感页 summary 确认、Undo/Restore、Dashboard apply 和隐私输出。
 - `tools/deepseek_smoke_test.js`：读取 `.env.local` 的 DeepSeek/OpenAI-compatible request-format smoke test，默认只检查 `/models`，可选合成 tabs 分类。
-- `tools/qa_seed_tabs.js`：手动 QA seed tabs 脚本，默认打印 URLs，`--open` 才会打开 Chrome。
+- `tools/qa_seed_tabs.js`：手动 QA seed tabs 脚本，默认打印 URLs，`--open` 才会打开 Chrome；包含合成 billing 页面用于敏感 summary 确认。
 
 ## 00_START_HERE
 

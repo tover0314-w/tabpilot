@@ -73,6 +73,13 @@ const URL_SETS = [
       "https://example.com/tabmosaic/search?q=alpha",
       "https://example.com/tabmosaic/search?q=beta"
     ]
+  },
+  {
+    name: "Sensitive summary confirmation",
+    expectedGroup: "Summary privacy",
+    urls: [
+      "https://example.com/tabmosaic/billing-dashboard"
+    ]
   }
 ];
 

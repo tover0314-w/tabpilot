@@ -200,7 +200,19 @@ function renderChecklistHtml(details) {
         "Active, pinned, audible, internal, and incognito tabs are not closed.",
         "Exact/tracking duplicates close only when safe.",
         "Hash/query duplicate candidates stay in review.",
-        "No page body is read before Summarize Current Tab."
+        "No page body is read before Summarize Current Tab.",
+        "The synthetic billing-dashboard tab asks for confirmation before visible text is read."
+      ]
+    },
+    {
+      title: "AI Verification",
+      items: [
+        "If testing AI, use only a disposable DeepSeek key in this disposable profile.",
+        "Test AI Connection calls /models and does not send tab data.",
+        "A non-DeepSeek base URL is rejected before any network request.",
+        "After AI organize, Sidebar Browser Result shows AI status and AI groups.",
+        "Dashboard metrics and Settings Snapshot show AI status and AI groups.",
+        "AI classification falls back to local rules if the API fails."
       ]
     },
     {
@@ -635,6 +647,8 @@ function assertChecklistHtml(checklistPath) {
     "data-copy-report",
     "data-reset-checklist",
     "tabmosaic.manualQaChecklist.v1",
+    "AI Verification",
+    "billing-dashboard",
     "# TabMosaic Manual QA Result"
   ];
 

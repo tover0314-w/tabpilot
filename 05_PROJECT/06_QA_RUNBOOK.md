@@ -39,6 +39,7 @@ Expected:
 - A local Manual QA Checklist tab is opened.
 - Checklist state is saved only in the disposable profile.
 - The checklist can copy a Markdown QA result for review before sharing.
+- The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard apply, and privacy-output checks.
 - Synthetic QA tabs are opened.
 - Sidepanel and Dashboard extension pages are opened.
 - The script prints profileDir, extensionId, checklist URL, sidepanel URL, dashboard URL, and cleanup command.
@@ -97,6 +98,7 @@ Expected seed coverage:
 - exact duplicates -> safe close
 - tracking duplicates -> safe close
 - hash/query differences -> Duplicate Review
+- synthetic billing page -> sensitive summary confirmation
 ```
 
 Manual setup additions:

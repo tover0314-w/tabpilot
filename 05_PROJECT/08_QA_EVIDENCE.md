@@ -109,6 +109,7 @@ Covered:
 - Dashboard rule deletion confirmation.
 - Dashboard scoped AI key clearing.
 - Local data deletion.
+- Disposable manual QA checklist includes AI status and sensitive-summary confirmation checks.
 
 ### Chrome Runtime Smoke
 

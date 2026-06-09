@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.58 — 2026-06-09
+
+Changed:
+
+- Expanded the disposable Manual QA Checklist with AI Verification items.
+- Added a synthetic `billing-dashboard` QA tab for sensitive-summary confirmation testing without real sensitive sites.
+- The manual QA launcher self-test now verifies that AI and sensitive-summary checklist content is present.
+- Updated README, extension README, Test Plan, QA Runbook, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- Synthetic QA URL only; no real browser profile, real tabs, `.env.local`, page content, or AI provider call is used by the launcher.
+- No extension permissions, AI payload fields, provider hosts, analytics upload, cloud storage, or product scope changed.
+
 ## v0.57 — 2026-06-09
 
 Changed:

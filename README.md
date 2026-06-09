@@ -173,7 +173,7 @@ node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
 ```
 
-它会加载 extension，打开本地 Manual QA Checklist、合成 QA tabs、sidepanel 和 dashboard 页面，只使用 `artifacts/manual-qa-profiles/` 下的一次性 Chrome profile，不读取你的真实 Chrome profile、真实 tabs 或 `.env.local`。Checklist 勾选状态只保存在这个一次性 profile 里，并可复制一份 Markdown QA 结果。`--self-test` 会打开后自动关闭并清理。
+它会加载 extension，打开本地 Manual QA Checklist、合成 QA tabs、sidepanel 和 dashboard 页面，只使用 `artifacts/manual-qa-profiles/` 下的一次性 Chrome profile，不读取你的真实 Chrome profile、真实 tabs 或 `.env.local`。Checklist 覆盖一键整理、AI 状态、敏感页 summary 确认、Undo/Restore、Dashboard apply 和隐私输出；勾选状态只保存在这个一次性 profile 里，并可复制一份 Markdown QA 结果。`--self-test` 会打开后自动关闭并清理。
 
 ## 立即阅读建议
 
