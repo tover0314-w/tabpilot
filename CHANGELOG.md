@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.52 — 2026-06-09
+
+Changed:
+
+- Added `05_PROJECT/10_PRIVATE_BETA_HANDOFF.md` as the private beta handoff source of truth.
+- Refreshed beta release notes with current runtime, screenshot, package, and DeepSeek fixture evidence.
+- Updated README, INDEX, and Launch Checklist with the handoff entry point.
+
+Safety:
+
+- Documentation-only change.
+- No extension behavior, permissions, AI payload, analytics, storage, cloud upload, package contents, or product scope changed.
+
 ## v0.51 — 2026-06-09
 
 Changed:

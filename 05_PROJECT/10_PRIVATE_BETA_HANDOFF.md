@@ -1,0 +1,192 @@
+# Private Beta Handoff
+
+Date: 2026-06-09
+Status: READY FOR CONTROLLED LOCAL PRIVATE BETA
+Release package: `dist/tabmosaic-ai-extension-v0.1.0.zip`
+
+This handoff summarizes what is ready, what has been verified, what still needs manual validation, and which decisions must not be silently finalized.
+
+## What Is Ready
+
+CONFIRMED BY IMPLEMENTATION:
+
+```text
+- MV3 Chrome extension
+- one-click toolbar action without default_popup
+- side panel opens from the toolbar action
+- first-run privacy gate
+- all normal windows tab scan
+- Chrome native tab groups
+- safe exact/tracking duplicate close with Restore Closed
+- hash/query/same-page duplicate review
+- Undo grouping changes
+- Sidebar Chat Refine local preview/apply
+- local user rules and Rules & Memory
+- current-tab local extractive summary after user click
+- Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
+- Dashboard group title/color apply back to real native tab groups
+- optional DeepSeek AI classification through OpenAI-compatible request format
+- DeepSeek connection test without tab data
+- Dashboard Clear AI Key
+- Dashboard Clear Local Data
+- local redacted diagnostics and feedback template
+- GitHub private beta issue forms with privacy redlines
+```
+
+## Verified Evidence
+
+Current verified evidence is recorded in `05_PROJECT/08_QA_EVIDENCE.md`.
+
+Most complete local verification command:
+
+```bash
+node tools/preflight.js --runtime --screenshots
+```
+
+Verified:
+
+```text
+- secret scan
+- JavaScript syntax checks
+- 17 extension smoke tests
+- issue form smoke tests
+- Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
+- real native tab groups in runtime smoke
+- Chat Refine in runtime smoke
+- Dashboard apply in runtime smoke
+- mock-data UI screenshot capture
+- extension package generation
+- release package verification
+```
+
+DeepSeek provider verification:
+
+```bash
+node tools/deepseek_smoke_test.js
+node tools/deepseek_smoke_test.js --classify-fixture
+```
+
+Verified:
+
+```text
+- DeepSeek /models reachable
+- configured model available
+- synthetic classification fixture completes
+- no real browser tab data is used
+```
+
+## Not Yet Verified
+
+OPEN QUESTION / MANUAL QA REQUIRED:
+
+```text
+- P0 manual QA has not been run on the user's real day-to-day Chrome profile.
+- Chrome Web Store submission has not been attempted.
+- Private beta with 20-50 external users has not started.
+- Store screenshots and demo video are not final.
+```
+
+Manual QA source of truth:
+
+```text
+05_PROJECT/06_QA_RUNBOOK.md
+```
+
+## How To Install Locally
+
+Use the unpacked extension folder:
+
+```text
+/Users/bytedance/个人项目/aitab/extension
+```
+
+Chrome steps:
+
+```text
+1. Open chrome://extensions
+2. Enable Developer mode
+3. Click Load unpacked
+4. Select /Users/bytedance/个人项目/aitab/extension
+5. Pin TabMosaic AI if needed
+6. Click the extension icon
+7. Review the first-run privacy note
+8. Click Start Organizing
+```
+
+## Manual QA Path
+
+Before using a real work profile, run synthetic QA:
+
+```bash
+node tools/qa_seed_tabs.js
+node tools/qa_seed_tabs.js --open
+```
+
+Then follow:
+
+```text
+05_PROJECT/06_QA_RUNBOOK.md
+```
+
+Minimum pass criteria:
+
+```text
+- toolbar click opens side panel
+- top Chrome tab bar shows native tab groups
+- exact/tracking duplicates are safely closed only when eligible
+- active/pinned/audible tabs are not closed
+- hash/query candidates stay in review
+- Undo works
+- Restore Closed works
+- Chat Refine previews before Apply
+- Dashboard group title/color apply updates native tab groups
+- current-tab summary reads page body only after click
+- diagnostics and feedback template exclude sensitive data
+```
+
+## Safety Boundaries
+
+Do not change these without a confirmation gate:
+
+```text
+- no broad <all_urls> permission
+- no history/bookmarks/cookies/webRequest/browsingData permission
+- no incognito processing by default
+- no automatic page-body reading
+- no arbitrary OpenAI-compatible host permission
+- no cloud sync or account requirement in this beta
+- no analytics involving browsing activity
+- no automatic close of hash/query/semantic duplicates
+- no closing active/pinned/audible/internal/non-restorable tabs
+```
+
+## Decisions Still Needing Confirmation
+
+CONFIRM before public launch:
+
+```text
+- final product name and domain
+- public developer identity
+- support email
+- privacy policy URL
+- Chrome Web Store single-purpose wording
+- Chrome Web Store data-use and Limited Use disclosures
+- free vs Pro limits
+- Pro pricing
+- cloud storage defaults
+- hosted AI strategy
+- analytics policy
+- final store screenshots and demo video
+```
+
+## Current Beta Recommendation
+
+RECOMMENDED:
+
+```text
+- Run one full manual QA pass on a non-critical Chrome profile first.
+- If clean, run one full manual QA pass on the user's real Chrome profile.
+- Start with 5-10 trusted testers before inviting 20-50 users.
+- Keep GitHub issue forms as the first feedback path.
+- Do not submit to Chrome Web Store until confirmation gates are resolved.
+```

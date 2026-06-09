@@ -90,6 +90,7 @@
 - `07_STORE_SUBMISSION_DRAFT.md`：Chrome Web Store single purpose、权限、隐私政策和上架文案草案，提交前必须确认。
 - `08_QA_EVIDENCE.md`：私测 MVP 本地验证证据记录，不包含 secrets 或真实浏览器数据。
 - `09_BETA_RELEASE_NOTES.md`：v0.1.0 私测发布说明、安装步骤、验证证据和已知限制。
+- `10_PRIVATE_BETA_HANDOFF.md`：私测交接包，汇总已就绪内容、验证证据、人工 QA 路径、剩余缺口和确认门。
 
 ## 06_REFERENCES
 
