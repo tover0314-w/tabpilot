@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.67 — 2026-06-09
+
+Changed:
+
+- Updated the disposable Manual QA Checklist to match the current MVP Dashboard behavior: Latest Result benefit summary, Review duplicates, Undo, Smart Group filters, tab focus, same-window tab move, and title/color apply.
+- Replaced stale `Dashboard metrics` QA wording with `Dashboard Latest Result Details` where AI status is now surfaced.
+- Added smoke coverage that prevents the disposable checklist from losing current MVP workflow checks.
+- Updated README, extension README, QA Runbook, Private Beta Handoff, Test Plan, and QA Evidence.
+
+Safety:
+
+- QA tooling and documentation update only; no extension runtime behavior, permissions, AI payloads, storage defaults, cloud upload, analytics, or automatic tab-closing policy changed.
+- The disposable QA profile still uses synthetic tabs and does not read the user's real Chrome profile, real tabs, or `.env.local`.
+
 ## v0.66 — 2026-06-09
 
 Changed:

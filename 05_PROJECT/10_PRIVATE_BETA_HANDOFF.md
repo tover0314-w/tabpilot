@@ -56,14 +56,14 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 27 extension smoke tests
+- 28 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke
 - Chat Refine in runtime smoke
 - Dashboard apply, same-window tab move, and tab focus in runtime smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
-- disposable manual QA profile self-test with synthetic QA tabs
+- disposable manual QA profile self-test with synthetic QA tabs and current MVP Dashboard checklist coverage
 - extension package generation
 - release package verification
 ```
@@ -149,7 +149,7 @@ node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
 ```
 
-This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state is saved only in the disposable profile, and the page can copy a Markdown QA result for review before sharing. The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard apply, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`. `--self-test` opens the disposable browser, verifies setup and checklist report controls, then closes and removes the temporary profile automatically.
+This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state is saved only in the disposable profile, and the page can copy a Markdown QA result for review before sharing. The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Latest Result, Dashboard tab focus/move/apply, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`. `--self-test` opens the disposable browser, verifies setup and checklist report controls, then closes and removes the temporary profile automatically.
 
 For the real-profile path, print or open synthetic QA tabs:
 

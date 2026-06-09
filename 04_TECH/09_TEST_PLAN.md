@@ -38,6 +38,7 @@ Coverage:
 - Dashboard tab title focus activates the existing browser tab/window without storage writes or destructive tab actions
 - Dashboard same-window tab move UI calls the background action, limits target groups to the same window, and avoids tab close actions
 - Dashboard keeps unwired P1/prototype placeholders out of the default UI and folds advanced Settings content
+- Disposable manual QA checklist covers the current MVP flows: Latest Result, Review duplicates, Undo, Smart Groups filters, tab focus, same-window tab move, Dashboard apply, AI status, sensitive summary, and privacy outputs
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types

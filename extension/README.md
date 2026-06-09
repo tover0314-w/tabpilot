@@ -152,7 +152,7 @@ node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
 ```
 
-This opens a temporary Chrome for Testing / Chromium profile with a local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard pages. The checklist covers one-click organize, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard apply, and privacy outputs. Checklist state is saved only in the disposable profile, and the page can copy a Markdown QA result. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
+This opens a temporary Chrome for Testing / Chromium profile with a local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard pages. The checklist covers one-click organize, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Latest Result, Dashboard tab focus/move/apply, and privacy outputs. Checklist state is saved only in the disposable profile, and the page can copy a Markdown QA result. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 
 Optional DeepSeek/OpenAI-compatible request-format provider smoke test:
 

@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.66 evidence refresh in this commit
+Source state verified: v0.67 manual QA checklist update in this commit
 
 ### Unified Preflight
 
@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 96 tracked files
-27 smoke tests passed
+28 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move/tab focus
 PASS UI screenshots captured
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-27 smoke tests passed
+28 smoke tests passed
 ```
 
 Covered:
@@ -99,6 +99,7 @@ Covered:
 - Dashboard tab title focus guard: localized title button, background action, active-tab update, window focus, and no tab close action.
 - Dashboard same-window tab move guard: target group selection, background action, same-window enforcement, and no tab close action.
 - Dashboard simple MVP UI guard: no default P1 placeholders, advanced Settings folded.
+- Disposable manual QA checklist coverage guard: Latest Result, Review duplicates, Undo, Smart Groups filters, tab focus, same-window tab move, Dashboard apply, AI status, sensitive summary, and privacy outputs.
 - AI host guardrail aligned with manifest host permission.
 - Redacted local error logs.
 - Count-only duplicate safety audit.
@@ -119,7 +120,7 @@ Covered:
 - Dashboard rule deletion confirmation.
 - Dashboard scoped AI key clearing.
 - Local data deletion.
-- Disposable manual QA checklist includes AI status and sensitive-summary confirmation checks.
+- Disposable manual QA checklist includes current MVP Dashboard workflow checks, AI status, sensitive-summary confirmation, and privacy-output checks.
 
 ### Chrome Runtime Smoke
 
@@ -164,6 +165,7 @@ Evidence notes:
 
 - The script used Chrome for Testing with a disposable profile under `artifacts/manual-qa-profiles/`.
 - It loaded a copied unpacked extension, opened the local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard.
+- The checklist now covers Latest Result, Review duplicates, Undo, Smart Groups filters, tab focus, same-window tab move, Dashboard apply, AI status, sensitive-summary confirmation, and privacy outputs.
 - It did not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 - This proves the disposable manual QA tooling opens and cleans up correctly; it does not replace the remaining real-profile manual QA pass.
 

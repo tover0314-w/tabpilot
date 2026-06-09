@@ -39,7 +39,7 @@ Expected:
 - A local Manual QA Checklist tab is opened.
 - Checklist state is saved only in the disposable profile.
 - The checklist can copy a Markdown QA result for review before sharing.
-- The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard apply, and privacy-output checks.
+- The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Latest Result, Dashboard tab focus/move/apply, and privacy-output checks.
 - Synthetic QA tabs are opened.
 - Sidepanel and Dashboard extension pages are opened.
 - The script prints profileDir, extensionId, checklist URL, sidepanel URL, dashboard URL, and cleanup command.
@@ -207,19 +207,25 @@ Expected:
 
 1. Click `Open Dashboard`.
 2. Review Smart Groups, Duplicate Center, Rules & Memory, and Settings.
-3. Edit a Smart Group title/color and click `Apply`.
-4. Optional: enter a DeepSeek API key and click `Test AI Connection`.
-5. Optional: click `Clear AI Key`, confirm, and verify only the AI key is removed.
+3. Confirm `Latest Result` leads with the benefit summary, not a metrics wall.
+4. Click `Review duplicates` when review groups exist and confirm it jumps to Duplicate Center.
+5. Click a Smart Group tab title and confirm the existing browser tab/window is focused.
+6. Move one tab into another group in the same window.
+7. Edit a Smart Group title/color and click `Apply`.
+8. Optional: enter a DeepSeek API key and click `Test AI Connection`.
+9. Optional: click `Clear AI Key`, confirm, and verify only the AI key is removed.
 
 Expected:
 
 ```text
-- Dashboard shows the latest local organize result.
+- Dashboard shows the Latest Result benefit summary: tabs organized, duplicates removed, duplicate groups needing review, conservative memory relief, Review duplicates, Undo, and technical Details.
 - Rules & Memory can enable, disable, and delete local rules.
 - Deleting a local rule asks for confirmation and does not move or close tabs.
+- Clicking a tab title focuses the existing tab/window and does not create or close tabs.
+- Same-window tab move updates the target native tab group and does not close tabs.
 - Group title/color updates real Chrome native group.
 - Undo can restore group state after dashboard apply.
-- Dashboard apply does not move tabs or close tabs in this slice.
+- Dashboard does not create new groups manually, move tabs across windows, or close tabs from Smart Groups.
 - Test AI Connection checks /models and does not send tab data, page text, or full URLs.
 - Non-DeepSeek AI base URLs are rejected before any network request in this private beta.
 - Clear AI Key asks for confirmation, removes only the local API key, disables AI classification, keeps rules and recent results, and does not move or close tabs.

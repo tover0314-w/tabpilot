@@ -313,6 +313,24 @@ test("dashboard keeps MVP UI simple and folds advanced settings", () => {
   assert(en.privacyDefaults?.message && zh.privacyDefaults?.message, "Privacy defaults copy should be localized");
 });
 
+test("disposable manual QA checklist covers current MVP workflows", () => {
+  const manualQaTool = fs.readFileSync(path.join(ROOT_DIR, "tools", "open_manual_qa_profile.js"), "utf8");
+
+  for (const token of [
+    "Latest Result leads with Browser cleaned up",
+    "Review duplicates jumps to Duplicate Center",
+    "Undo from Latest Result restores group state",
+    "Smart Groups filters switch between All, AI groups, and Rule groups",
+    "Clicking a tab title focuses the existing browser tab/window.",
+    "Same-window Move sends a tab into an existing native group and does not close tabs.",
+    "Dashboard Latest Result Details and Settings Snapshot show AI status and AI groups.",
+    "Copy Diagnostic Snapshot excludes URLs",
+    "Does not read your real Chrome profile, real browser tabs, or .env.local"
+  ]) {
+    assert(manualQaTool.includes(token), `Manual QA checklist should include: ${token}`);
+  }
+});
+
 test("AI host guardrail matches manifest host permission", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
@@ -952,7 +970,7 @@ test("AI classification status is visible in sidebar and dashboard", () => {
   assert(sidepanelJs.includes('msg("aiStatus")'), "Sidepanel metrics should show AI status");
   assert(sidepanelJs.includes('msg("aiGroups")'), "Sidepanel metrics should show AI group count");
   assert(sidepanelJs.includes("summary?.aiGroupsSuggested"), "Sidepanel should read AI suggested group count");
-  assert(dashboardJs.includes('msg("aiStatus")'), "Dashboard metrics should show AI status");
+  assert(dashboardJs.includes('msg("aiStatus")'), "Dashboard result details should show AI status");
   assert(dashboardJs.includes('msg("aiGroups")'), "Dashboard should show AI group count");
   assert(dashboardJs.includes("summary.aiGroupsSuggested"), "Dashboard should read AI suggested group count");
   assert(dashboardJs.includes('status === "empty"'), "Dashboard should format empty AI output");

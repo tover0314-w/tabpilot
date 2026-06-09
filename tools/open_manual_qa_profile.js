@@ -211,8 +211,20 @@ function renderChecklistHtml(details) {
         "Test AI Connection calls /models and does not send tab data.",
         "A non-DeepSeek base URL is rejected before any network request.",
         "After AI organize, Sidebar Browser Result shows AI status and AI groups.",
-        "Dashboard metrics and Settings Snapshot show AI status and AI groups.",
+        "Dashboard Latest Result Details and Settings Snapshot show AI status and AI groups.",
         "AI classification falls back to local rules if the API fails."
+      ]
+    },
+    {
+      title: "Dashboard",
+      items: [
+        "Latest Result leads with Browser cleaned up, tabs organized, duplicates removed, duplicate groups needing review, and Memory relief.",
+        "Review duplicates jumps to Duplicate Center when review groups exist.",
+        "Undo from Latest Result restores group state when available.",
+        "Smart Groups filters switch between All, AI groups, and Rule groups.",
+        "Clicking a tab title focuses the existing browser tab/window.",
+        "Same-window Move sends a tab into an existing native group and does not close tabs.",
+        "Group title/color Apply updates real Chrome native groups."
       ]
     },
     {
@@ -221,7 +233,7 @@ function renderChecklistHtml(details) {
         "Undo restores group state for still-open tabs.",
         "Restore Closed reopens safely closed duplicate tabs.",
         "Chat Refine previews before Apply and does not close tabs.",
-        "Dashboard title/color Apply updates real Chrome native groups."
+        "Dashboard tab actions never close tabs."
       ]
     },
     {
@@ -648,6 +660,9 @@ function assertChecklistHtml(checklistPath) {
     "data-reset-checklist",
     "tabmosaic.manualQaChecklist.v1",
     "AI Verification",
+    "Dashboard Latest Result",
+    "Clicking a tab title focuses the existing browser tab/window.",
+    "Same-window Move sends a tab into an existing native group and does not close tabs.",
     "billing-dashboard",
     "# TabMosaic Manual QA Result"
   ];
