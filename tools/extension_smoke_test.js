@@ -202,6 +202,21 @@ test("dashboard permission explanation matches manifest permissions", () => {
   }
 });
 
+test("AI host guardrail matches manifest host permission", () => {
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const allowedHostPermission = "https://api.deepseek.com/*";
+  const allowedHost = new URL(allowedHostPermission.replace("*", "")).hostname;
+
+  assertDeepEqual(manifest.host_permissions, [allowedHostPermission], "Private beta should expose only the DeepSeek host permission");
+  assert(backgroundCode.includes(`const SUPPORTED_AI_HOSTNAME = "${allowedHost}"`), "Background AI host guardrail should match manifest");
+  assertEqual(context.normalizeAIBaseUrl(allowedHostPermission.replace("*", "")), "https://api.deepseek.com", "Background should normalize the manifest host");
+  assert(dashboardJs.includes(`url.hostname !== "${allowedHost}"`), "Dashboard AI host guardrail should match manifest");
+  assert(dashboardHtml.includes(`<b>${allowedHostPermission}</b>`), "Dashboard permission copy should show the same host permission");
+  assert(!dashboardJs.includes("api.openai.com"), "Dashboard must not silently allow OpenAI host without confirmation");
+  assert(!backgroundCode.includes("api.openai.com"), "Background must not silently allow OpenAI host without confirmation");
+});
+
 test("dashboard rule deletion requires confirmation", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));

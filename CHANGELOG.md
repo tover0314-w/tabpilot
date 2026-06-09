@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.45 — 2026-06-09
+
+Added:
+
+- Added smoke coverage tying the AI host guardrail to the manifest host permission.
+- The test now checks that background validation, Dashboard validation, Dashboard permission copy, and manifest host permissions all stay aligned on `https://api.deepseek.com/*`.
+- Updated Test Plan with the AI host guardrail coverage.
+
+Safety:
+
+- Test/documentation change only.
+- No product behavior, permissions, AI payload, analytics, storage behavior, or automatic upload path changed.
+
 ## v0.44 — 2026-06-09
 
 Changed:
