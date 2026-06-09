@@ -139,6 +139,7 @@
   "aiConnectionOk": { "message": "AI connection works. Model available: $1." },
   "aiConnectionModelMissing": { "message": "Connection works, but the configured model was not listed: $1." },
   "aiConnectionFailed": { "message": "AI connection test failed." },
+  "unsupportedAIBaseUrl": { "message": "Current beta only supports https://api.deepseek.com as the AI base URL. Other OpenAI-compatible hosts need a later permission confirmation." },
   "permissionsDataUse": { "message": "Permissions & Data Use" },
   "permissionsIntro": { "message": "TabMosaic uses a small permission set for one-click grouping, undo, restore, dashboard state, and user-triggered current-page summary." },
   "permissionTabsCopy": { "message": "Reads tab title, hostname, path, and state so it can organize all normal windows and restore safe duplicates." },

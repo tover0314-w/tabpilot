@@ -1184,7 +1184,7 @@ SETTINGS
 
 ### 后续待办(按优先级)
 
-- [ ] 基于 `03_UX/UI_PROTOTYPES/` 校准所有原型与最新 TabMosaic 决策(P0 整理所有普通窗口、英中双语、DeepSeek/OpenAI-compatible provider)
+- [ ] 基于 `03_UX/UI_PROTOTYPES/` 校准所有原型与最新 TabMosaic 决策(P0 整理所有普通窗口、英中双语、DeepSeek key + OpenAI-compatible request format)
 - [ ] Dashboard 静态设计稿(Smart Groups 看板、Group Detail、Workspaces、Rules、Billing、Settings)
 - [ ] Empty / Error 状态设计稿(汇总 9 种状态)
 - [ ] 整理流程动画(进度态)演示

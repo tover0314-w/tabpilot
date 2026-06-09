@@ -27,6 +27,7 @@ const DEFAULT_AI_SETTINGS = {
   model: "deepseek-v4-flash",
   apiKey: ""
 };
+const SUPPORTED_AI_HOSTNAME = "api.deepseek.com";
 const NO_GROUP_ID = -1;
 const SUPPORTED_GROUP_COLORS = new Set([
   "grey",
@@ -463,7 +464,27 @@ async function callOpenAICompatibleClassifier(settings, tabs) {
 }
 
 function normalizeAIBaseUrl(value) {
-  return String(value || DEFAULT_AI_SETTINGS.baseUrl).trim().replace(/\/+$/, "") || DEFAULT_AI_SETTINGS.baseUrl;
+  const rawValue = String(value || DEFAULT_AI_SETTINGS.baseUrl).trim() || DEFAULT_AI_SETTINGS.baseUrl;
+  let url;
+
+  try {
+    url = new URL(rawValue);
+  } catch {
+    throw new Error("Current beta supports only https://api.deepseek.com as the AI base URL.");
+  }
+
+  if (
+    url.protocol !== "https:" ||
+    url.hostname !== SUPPORTED_AI_HOSTNAME ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error("Current beta supports only https://api.deepseek.com as the AI base URL.");
+  }
+
+  return url.toString().replace(/\/+$/, "");
 }
 
 function validateAIClassification(output, snapshot) {

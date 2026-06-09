@@ -605,6 +605,23 @@ test("AI connection test does not send tab data", async () => {
   assertEqual(result.privacy.sentTabData, false, "AI connection must not send tab data");
   assertEqual(result.privacy.sentPageText, false, "AI connection must not send page text");
   assertEqual(result.privacy.sentFullUrls, false, "AI connection must not send full URLs");
+  assertEqual(context.normalizeAIBaseUrl("https://api.deepseek.com/v1/"), "https://api.deepseek.com/v1", "DeepSeek paths should remain supported");
+
+  try {
+    await context.testAIConnection({
+      baseUrl: "https://api.openai.com/v1",
+      model: "gpt-4.1-mini",
+      apiKey: "sk-secret"
+    });
+    assert(false, "Unsupported AI base URL should fail");
+  } catch (error) {
+    assert(
+      String(error?.message || "").includes("Current beta supports only https://api.deepseek.com"),
+      "Unsupported AI host should explain the current beta host limit"
+    );
+  }
+
+  assertEqual(fetchCalls.length, 1, "Unsupported AI host must not trigger another fetch");
 });
 
 test("clear local data removes sensitive local keys and resets run state", async () => {

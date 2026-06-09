@@ -23,7 +23,7 @@
 | D-015 | Multi-tab chat | P1 / Pro | DECIDED |
 | D-016 | Current tab chat | P0 | DECIDED |
 | D-017 | Pro 付费点 | Dashboard Pro、workspace history、multi-tab chat、AI memory、hosted AI credits | DECIDED |
-| D-018 | 免费版限制 | 基础一键整理免费；用户自配 DeepSeek/OpenAI-compatible key 不限；hosted AI 有免费额度 | DECIDED |
+| D-018 | 免费版限制 | 基础一键整理免费；用户自配 DeepSeek key 不限；hosted AI 有免费额度；任意 OpenAI-compatible host 另走权限确认 | DECIDED |
 | D-019 | 是否做账号系统 | P0 不做账号；Pro/hosted/cloud sync 阶段再做 | DECIDED |
 | D-020 | 是否支持所有窗口整理 | P0 默认支持当前浏览器所有普通窗口 | CONFIRMED |
 
@@ -47,7 +47,7 @@
 2. Free 是否限制一键整理次数？
    - 决定：基础一键整理免费；hosted AI 分类和多 tab summary 限制。
 3. 用户自配 API key 是否免费？
-   - 决定：免费支持用户自配 DeepSeek/OpenAI-compatible API key，Pro 提供 hosted AI 和 dashboard memory。
+   - 决定：免费支持用户自配 DeepSeek key，使用 OpenAI-compatible request format；任意 OpenAI-compatible host 需要后续 host-permission confirmation，Pro 提供 hosted AI 和 dashboard memory。
 4. 是否做 lifetime deal？
    - 决定：不放入 P0；可作为早期增长实验。
 

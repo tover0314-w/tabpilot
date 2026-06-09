@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.43 — 2026-06-09
+
+Changed:
+
+- Private-beta AI base URL validation now permits only `https://api.deepseek.com` hosts, matching the current manifest host permission.
+- DeepSeek requests still use the OpenAI-compatible request format, but arbitrary OpenAI-compatible hosts are deferred until a host-permission confirmation.
+- Added smoke coverage to verify unsupported AI hosts fail before fetch.
+- Updated AI provider strategy, privacy/paywall specs, Test Plan, beta release notes, Chrome Store draft, Backlog, launch docs, and extension README.
+
+Safety:
+
+- No broad host permission was added.
+- Unsupported AI hosts do not trigger network requests.
+- AI classification still sends only title, hostname, path, window ID, and tab state when explicitly enabled.
+
 ## v0.42 — 2026-06-09
 
 Changed:

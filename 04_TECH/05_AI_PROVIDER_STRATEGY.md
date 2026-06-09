@@ -6,7 +6,7 @@
 
 - 不调用 AI：本地规则。
 - DeepSeek API：MVP 简单测试和默认开发 provider。
-- User-provided OpenAI-compatible API：用户自己的 API key 和 base URL。
+- User-provided OpenAI-compatible API：用户自己的 API key 和 base URL。Private beta 暂不支持任意 host。
 - Hosted AI：Pro 用户最顺滑体验。
 - Local LLM：高级用户隐私优先。
 - Chrome built-in AI：后续可用时优先本地。
@@ -17,7 +17,7 @@
 |---|---|---|---|
 | Rules only | P0 | 免费、快、隐私好 | 智能有限 |
 | DeepSeek API via OpenAI-compatible client | P0 | 成本低、实现快、适合 MVP 验证 | 仍需外部 API 和网络 |
-| User-provided OpenAI-compatible API | P0/P1 | 成本由用户承担，可兼容 OpenAI/DeepSeek/其他兼容服务 | 配置门槛高 |
+| User-provided OpenAI-compatible API beyond DeepSeek | P1/CONFIRM | 成本由用户承担，可兼容 OpenAI/其他兼容服务 | 配置门槛高，且需要新增 host permission |
 | Hosted AI | P1/Pro | 体验最好 | 你承担成本和合规 |
 | Local LLM endpoint | P1 | 隐私好 | 用户门槛高 |
 | Chrome built-in AI | P1/P2 | 本地、低成本 | 设备/版本限制 |
@@ -39,18 +39,21 @@ P0 Provider 默认参数：
 ```text
 defaultProvider: deepseek
 protocol: OpenAI-compatible chat/completions
-configurable: apiKey, baseUrl, model
+configurable: apiKey, model
+privateBetaBaseUrl: https://api.deepseek.com
 defaultBaseUrl: https://api.deepseek.com
 defaultModel: deepseek-v4-flash
 ```
 
 实现状态：
 
-- `extension/` 已接入可选 DeepSeek/OpenAI-compatible 分类。
+- `extension/` 已接入可选 DeepSeek 分类，request format 保持 OpenAI-compatible。
+- Private beta 保留 OpenAI-compatible 协议抽象，但网络 host 限制在 `https://api.deepseek.com/*`，避免为了任意 provider 申请更宽 host permissions。
 - API key 仅保存到 `chrome.storage.local`。
 - 分类输入只包含 title、hostname、path、window id 和 tab state，不发送页面正文或完整 URL。
 - API 不可用时自动 fallback 到 built-in rules。
-- Dashboard 已接入 user-triggered `Test AI Connection`，只调用配置的 `/models` endpoint 检查 base URL、API key 和 model 是否可用，不发送 tab data、page text、full URL 或 request body。
+- Dashboard 已接入 user-triggered `Test AI Connection`，只调用 DeepSeek host 的 `/models` endpoint 检查 API key 和 model 是否可用，不发送 tab data、page text、full URL 或 request body。
+- Other OpenAI-compatible hosts are `CONFIRM` / P1 because they require an explicit host-permission decision.
 
 ## 4. Hosted AI Gateway
 
@@ -107,6 +110,7 @@ hidden DOM
 
 - MVP 先用 DeepSeek API 做简单测试。
 - Provider client 保留 OpenAI-compatible 协议，避免锁死 DeepSeek。
+- Private beta 不支持任意 OpenAI-compatible host；支持其他 host 前需要确认 Chrome host permissions。
 - P0 不做 hosted AI gateway 和账号系统。
 - Hosted AI、credits、cloud sync、账号系统进入 P1/Pro。
 - Local LLM 和 Chrome built-in AI 作为后续增强。

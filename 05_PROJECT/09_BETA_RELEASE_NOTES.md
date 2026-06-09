@@ -35,8 +35,8 @@ Click extension icon
 - Sidebar Chat Refine for safe local actions and local rule creation.
 - Current-tab summary only after user click.
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
-- Optional DeepSeek/OpenAI-compatible classification with user-provided API key.
-- AI connection test that calls `/models` only and sends no tab data.
+- Optional DeepSeek classification with a user-provided API key through an OpenAI-compatible request format.
+- AI connection test that calls DeepSeek `/models` only and sends no tab data.
 - Redacted local error summaries and count-only duplicate safety audit for beta diagnostics.
 
 ## Privacy Defaults
@@ -47,6 +47,7 @@ Click extension icon
 - No automatic page-body reading.
 - No cloud sync or account requirement.
 - Optional AI classification is off until the user enables it and saves a local API key.
+- Private beta AI network access is limited to `https://api.deepseek.com/*`; other OpenAI-compatible hosts require a later permission confirmation.
 - AI classification sends tab title, hostname, path, window ID, and tab state only; it does not send page text or full URL by default.
 - Full URLs may be stored locally only where needed to restore closed duplicate tabs.
 - Copied diagnostics and feedback exclude URLs, hostnames, tab titles, page text, rule patterns, group names, emails, bearer tokens, and API keys.

@@ -30,7 +30,7 @@
 - [x] tabs collection。
 - [x] tab groups apply。
 - [x] dedupe。
-- [x] AI provider（DeepSeek/OpenAI-compatible first slice）。
+- [x] AI provider（DeepSeek key + OpenAI-compatible request-format first slice）。
 - [x] content extraction（current tab, user-triggered first slice）。
 - [x] storage（local first slice）。
 - [x] tests（smoke first slice）。

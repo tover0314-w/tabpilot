@@ -139,6 +139,7 @@
   "aiConnectionOk": { "message": "AI 连接可用，模型存在：$1。" },
   "aiConnectionModelMissing": { "message": "连接可用，但模型列表里没有这个模型：$1。" },
   "aiConnectionFailed": { "message": "AI 连接测试失败。" },
+  "unsupportedAIBaseUrl": { "message": "当前 beta 只支持 https://api.deepseek.com 作为 AI Base URL。其他 OpenAI-compatible host 需要后续权限确认。" },
   "permissionsDataUse": { "message": "权限与数据用途" },
   "permissionsIntro": { "message": "TabMosaic 只使用一组较小的权限，用于一键分组、撤销、恢复、dashboard 状态，以及用户触发的当前页面总结。" },
   "permissionTabsCopy": { "message": "读取标签页标题、网站域名、路径和状态，用来整理所有普通窗口并恢复安全重复标签页。" },

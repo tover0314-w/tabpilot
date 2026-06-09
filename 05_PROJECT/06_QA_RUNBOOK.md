@@ -169,7 +169,7 @@ Expected:
 1. Click `Open Dashboard`.
 2. Review Smart Groups, Duplicate Center, Rules & Memory, and Settings.
 3. Edit a Smart Group title/color and click `Apply`.
-4. Optional: enter a DeepSeek/OpenAI-compatible API key and click `Test AI Connection`.
+4. Optional: enter a DeepSeek API key and click `Test AI Connection`.
 
 Expected:
 
@@ -181,6 +181,7 @@ Expected:
 - Undo can restore group state after dashboard apply.
 - Dashboard apply does not move tabs or close tabs in this slice.
 - Test AI Connection checks /models and does not send tab data, page text, or full URLs.
+- Non-DeepSeek AI base URLs are rejected before any network request in this private beta.
 ```
 
 ## 10. Beta Diagnostics And Feedback

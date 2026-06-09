@@ -23,7 +23,7 @@
 - 默认不读取密码字段。
 - 默认不上传 cookie、localStorage、sessionStorage。
 - 关闭 tabs 前保存 restore snapshot。
-- 用户可以禁用 hosted AI，改用自配 DeepSeek/OpenAI-compatible API key 或 local。
+- 用户可以禁用 hosted AI，改用自配 DeepSeek API key 或 local。任意 OpenAI-compatible host 属于后续 P1/CONFIRM，因为需要新增 host permission。
 
 ## 4. 首次使用文案
 
@@ -55,7 +55,7 @@ CONFIRMED BY IMPLEMENTATION:
 ```text
 Dashboard Settings includes:
 - Settings Snapshot
-- DeepSeek/OpenAI-compatible AI settings
+- DeepSeek AI settings using an OpenAI-compatible request format
 - Permissions & Data Use
 - Beta Diagnostics
 - Clear Local Data

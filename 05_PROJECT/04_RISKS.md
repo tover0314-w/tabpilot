@@ -32,7 +32,7 @@
 
 - 默认不读取正文。
 - 默认只发送最小 metadata。
-- 自配 DeepSeek/OpenAI-compatible API key 或 local mode。
+- 自配 DeepSeek API key 或 local mode；任意 OpenAI-compatible host 需要后续权限确认。
 - 明确隐私等级。
 - 敏感网站二次确认。
 - 不记录 URL/page text。

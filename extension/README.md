@@ -25,7 +25,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Open Dashboard shows a local dashboard page with latest workspace metrics, smart groups, duplicates, and settings snapshot.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
 - Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
-- Dashboard can save a local DeepSeek/OpenAI-compatible API key for AI tab classification.
+- Dashboard can save a local DeepSeek API key for AI tab classification through an OpenAI-compatible request format.
 - Dashboard can test the AI provider connection without sending tab data.
 - Dashboard Settings explains each Chrome permission and what data it supports.
 - Dashboard Settings can copy a redacted local diagnostic snapshot for beta bug reports.
@@ -119,7 +119,7 @@ To run automated runtime QA, use Chrome for Testing or Chromium:
 CHROME_PATH="/path/to/chrome-or-chromium" node tools/chrome_runtime_smoke_test.js
 ```
 
-Optional DeepSeek/OpenAI-compatible provider smoke test:
+Optional DeepSeek/OpenAI-compatible request-format provider smoke test:
 
 ```bash
 node tools/deepseek_smoke_test.js

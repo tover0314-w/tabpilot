@@ -94,7 +94,7 @@ P0 host permissions：
 ]
 ```
 
-用途：仅用于用户在 Dashboard 中开启 DeepSeek/OpenAI-compatible AI 分类后调用 DeepSeek API。
+用途：仅用于用户在 Dashboard 中开启 DeepSeek AI 分类后调用 DeepSeek API。请求格式保持 OpenAI-compatible；任意其他 host 需要后续 host-permission confirmation。
 
 ### 7.1 当前 UI 权限解释
 

@@ -64,7 +64,7 @@ Status: CONFIRM
 | `storage` | Required to store local settings, rules, Undo/Restore snapshots, redacted diagnostics, local safety audit counts, and the optional local AI API key. |
 | `scripting` | Required only for user-triggered current-tab summary; injects a content extractor into the active page after the user clicks Summarize Current Tab. |
 | `activeTab` | Required to limit page-content access to the active tab after a user gesture. |
-| `https://api.deepseek.com/*` | Optional host permission used only when the user enables DeepSeek/OpenAI-compatible AI classification and saves their own API key. |
+| `https://api.deepseek.com/*` | Optional host permission used only when the user enables DeepSeek AI classification and saves their own API key. The request format remains OpenAI-compatible, but other hosts are not supported in this private-beta package. |
 
 Permissions not requested:
 
@@ -85,7 +85,7 @@ Status: CONFIRM
 Recommended answer:
 
 ```text
-No, TabMosaic AI does not execute remotely hosted code. The extension package contains its executable JavaScript. If the user enables optional DeepSeek classification, the extension sends a structured API request to the configured OpenAI-compatible endpoint and validates the JSON response before applying tab-group changes.
+No, TabMosaic AI does not execute remotely hosted code. The extension package contains its executable JavaScript. If the user enables optional DeepSeek classification, the extension sends a structured API request to DeepSeek using an OpenAI-compatible request format and validates the JSON response before applying tab-group changes.
 ```
 
 Risk note:
@@ -108,7 +108,7 @@ Current local data handled:
 | Tab state | Protect active, pinned, audible, incognito, internal, and non-restorable tabs | Local current run snapshot | Sent to DeepSeek only if user enables optional AI classification |
 | Page text | Current-tab summary after user click | Not stored as a cloud record in current build | Not sent to AI/cloud in current build |
 | User rules | Apply future classification preferences | Local storage | Not shared |
-| Optional API key | User-provided DeepSeek/OpenAI-compatible classification | Local storage | Used only to call the configured provider |
+| Optional API key | User-provided DeepSeek classification | Local storage | Used only to call DeepSeek when AI classification is enabled |
 | Redacted diagnostics | User-triggered beta feedback | Clipboard only when user clicks copy | Shared only if user manually sends it |
 | Local error summaries | Debug beta issues | Local capped storage | Included only in redacted user-copied diagnostics |
 | Duplicate safety audit counts | Track close/restore outcomes for beta trust checks | Local capped storage | Included only as count-only user-copied diagnostics |
@@ -138,7 +138,7 @@ TabMosaic AI may process tab title, hostname, URL path, tab state, tab IDs, wind
 
 TabMosaic AI reads visible page text only when the user clicks Summarize Current Tab. The current build summarizes that content locally and does not automatically send page text to an AI provider.
 
-If the user enables optional AI classification, TabMosaic AI sends a structured classification request containing tab title, hostname, path, window ID, and tab state to the configured OpenAI-compatible provider. The current default provider is DeepSeek. Full URLs and page text are not sent for classification by default.
+If the user enables optional AI classification, TabMosaic AI sends a structured classification request containing tab title, hostname, path, window ID, and tab state to DeepSeek using an OpenAI-compatible request format. Full URLs and page text are not sent for classification by default.
 
 ## How We Use Data
 
@@ -154,7 +154,7 @@ Users can clear local TabMosaic data from Dashboard -> Settings -> Clear Local D
 
 TabMosaic AI does not sell user data and does not use user data for advertising.
 
-The extension shares data with an AI provider only if the user enables optional AI classification and provides an API key. In that case, the extension sends tab title, hostname, path, window ID, and tab state for classification. Users should review the provider's own terms and privacy policy before enabling it.
+The extension shares data with DeepSeek only if the user enables optional AI classification and provides an API key. In that case, the extension sends tab title, hostname, path, window ID, and tab state for classification. Users should review DeepSeek's own terms and privacy policy before enabling it.
 
 Redacted diagnostics and feedback templates are copied locally to the clipboard only after the user clicks the relevant Dashboard button. They are not uploaded automatically.
 
@@ -193,7 +193,7 @@ Current beta features:
 - Local rules from sidebar refinement
 - Current-tab summary after user click
 - Dashboard for Smart Groups, Duplicate Center, Rules & Memory, Settings, privacy controls, and beta diagnostics
-- Optional DeepSeek/OpenAI-compatible classification with the user's own API key
+- Optional DeepSeek classification with the user's own API key using an OpenAI-compatible request format
 
 Privacy-first defaults:
 - No all-URLs permission

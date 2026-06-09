@@ -62,14 +62,14 @@
 
 ## Sprint 4：AI Classification
 
-状态：已实现 optional DeepSeek/OpenAI-compatible classification、local dashboard settings、JSON output validation、fallback to local rules。
+状态：已实现 optional DeepSeek classification with OpenAI-compatible request format、local dashboard settings、JSON output validation、fallback to local rules。
 
 目标：AI 分类接近人工。
 
 任务：
 
 - AI provider interface。
-- DeepSeek/OpenAI-compatible provider settings。
+- DeepSeek provider settings using an OpenAI-compatible request format。
 - classification prompt。
 - JSON schema validation。
 - AI fallback。

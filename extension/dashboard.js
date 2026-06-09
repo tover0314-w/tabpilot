@@ -157,23 +157,28 @@ async function loadAISettings() {
 
 async function saveAISettings(event) {
   event.preventDefault();
-  const existing = await chrome.storage.local.get(AI_SETTINGS_KEY);
-  const previous = {
-    ...DEFAULT_AI_SETTINGS,
-    ...(existing[AI_SETTINGS_KEY] || {})
-  };
-  const next = {
-    ...previous,
-    enabled: Boolean(aiEnabledInput.checked),
-    provider: "deepseek",
-    baseUrl: normalizeBaseUrl(aiBaseUrlInput.value),
-    model: aiModelInput.value.trim() || DEFAULT_AI_SETTINGS.model,
-    apiKey: aiKeyInput.value.trim() || previous.apiKey
-  };
 
-  await chrome.storage.local.set({ [AI_SETTINGS_KEY]: next });
-  aiKeyInput.value = "";
-  await loadAISettings();
+  try {
+    const existing = await chrome.storage.local.get(AI_SETTINGS_KEY);
+    const previous = {
+      ...DEFAULT_AI_SETTINGS,
+      ...(existing[AI_SETTINGS_KEY] || {})
+    };
+    const next = {
+      ...previous,
+      enabled: Boolean(aiEnabledInput.checked),
+      provider: "deepseek",
+      baseUrl: normalizeBaseUrl(aiBaseUrlInput.value),
+      model: aiModelInput.value.trim() || DEFAULT_AI_SETTINGS.model,
+      apiKey: aiKeyInput.value.trim() || previous.apiKey
+    };
+
+    await chrome.storage.local.set({ [AI_SETTINGS_KEY]: next });
+    aiKeyInput.value = "";
+    await loadAISettings();
+  } catch (error) {
+    aiSettingsStatus.textContent = error?.message || msg("unsupportedAIBaseUrl");
+  }
 }
 
 async function testAIConnection() {
@@ -291,8 +296,27 @@ async function loadDiagnosticSnapshot() {
 }
 
 function normalizeBaseUrl(value) {
-  const trimmed = String(value || "").trim().replace(/\/+$/, "");
-  return trimmed || DEFAULT_AI_SETTINGS.baseUrl;
+  const rawValue = String(value || "").trim() || DEFAULT_AI_SETTINGS.baseUrl;
+  let url;
+
+  try {
+    url = new URL(rawValue);
+  } catch {
+    throw new Error(msg("unsupportedAIBaseUrl"));
+  }
+
+  if (
+    url.protocol !== "https:" ||
+    url.hostname !== "api.deepseek.com" ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error(msg("unsupportedAIBaseUrl"));
+  }
+
+  return url.toString().replace(/\/+$/, "");
 }
 
 function renderSettingsSnapshot(summary) {

@@ -8,7 +8,7 @@
 - [x] collect all normal window tabs。
 - [x] tab snapshot model。
 - [x] native tab group apply。
-- [x] AI classification（optional DeepSeek/OpenAI-compatible first slice）。
+- [x] AI classification（optional DeepSeek key + OpenAI-compatible request-format first slice）。
 - [x] rules engine（built-in rules first slice）。
 - [x] exact duplicate detection。
 - [x] tracking params duplicate detection。
@@ -32,6 +32,7 @@
 - [ ] workspace chat。
 - [ ] cloud sync。
 - [ ] hosted AI gateway。
+- [ ] user-provided OpenAI-compatible hosts beyond DeepSeek（requires host-permission confirmation）。
 - [ ] usage metering。
 - [ ] billing。
 - [ ] advanced domain-specific dedupe。

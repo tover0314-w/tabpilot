@@ -14,7 +14,7 @@
 - Undo/Restore。
 - Current tab summary 限量。
 - Dashboard V0 当前 workspace。
-- 用户自配 DeepSeek/OpenAI-compatible API key 支持。
+- 用户自配 DeepSeek API key 支持；任意 OpenAI-compatible host 需要后续 host-permission confirmation。
 
 ## 3. Pro 价值
 
@@ -108,7 +108,7 @@ Workspace chat: high credits
 ## 8. 已决定的 P0 商业化边界
 
 - 基础一键整理免费，不在首次 aha 前设置付费墙。
-- 用户自配 DeepSeek/OpenAI-compatible key 不限制使用量。
+- 用户自配 DeepSeek key 不限制使用量。
 - Hosted AI 有免费额度，超出后升级或改用自配 key。
 - Current tab summary 免费少量额度，具体数字在定价页前再定。
 - Multi-tab chat 默认 Pro only。
