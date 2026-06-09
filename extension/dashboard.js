@@ -15,6 +15,7 @@ const DEFAULT_AI_SETTINGS = {
   apiKey: ""
 };
 const GROUP_COLOR_CLASS = new Map(GROUP_COLORS.map((color, index) => [color, `g-${index}`]));
+const GROUP_FILTERS = new Set(["all", "ai", "rules"]);
 
 const refreshButton = document.querySelector("#refreshButton");
 const workspaceRefreshButton = document.querySelector("#workspaceRefreshButton");
@@ -48,6 +49,7 @@ const diagnosticsStatus = document.querySelector("#diagnosticsStatus");
 const clearDataButton = document.querySelector("#clearDataButton");
 const clearDataStatus = document.querySelector("#clearDataStatus");
 let latestRun = null;
+let activeGroupFilter = "all";
 
 applyI18n();
 
@@ -80,6 +82,7 @@ async function loadDashboard() {
 function renderDashboard(run, rules = []) {
   latestRun = run || null;
   renderWorkspaceSidebar(run, rules);
+  syncGroupFilterButtons();
 
   if (!run || !["completed", "closed-restored", "undone"].includes(run.status)) {
     workspaceTitle.textContent = msg("noOrganizeResultYet");
@@ -89,7 +92,7 @@ function renderDashboard(run, rules = []) {
     dashboardDuplicates.innerHTML = `<p class="empty">${escapeHtml(msg("noDuplicateDataYet"))}</p>`;
     renderRules(rules);
     renderSettingsSnapshot({});
-    renderGroupFilterCounts([], {});
+    renderGroupFilterCounts([]);
     return;
   }
 
@@ -98,7 +101,7 @@ function renderDashboard(run, rules = []) {
     : msg("latestResult");
   workspaceSubtitle.textContent = formatWorkspaceSubtitle(run);
   renderMetrics(run.summary || {});
-  renderGroupFilterCounts(run.groups || [], run.summary || {});
+  renderGroupFilterCounts(run.groups || []);
   renderGroups(run.groups || [], run);
   renderDuplicates(run.duplicateGroups || []);
   renderRules(rules);
@@ -115,8 +118,16 @@ function setActiveDashboardPage(pageName) {
 }
 
 function setActiveGroupFilter(filterName) {
+  activeGroupFilter = GROUP_FILTERS.has(filterName) ? filterName : "all";
+  syncGroupFilterButtons();
+  renderGroups(latestRun?.groups || [], latestRun);
+}
+
+function syncGroupFilterButtons() {
   document.querySelectorAll(".dashboard-chip").forEach((button) => {
-    button.classList.toggle("active", button.dataset.filter === filterName);
+    const isActive = button.dataset.filter === activeGroupFilter;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
   });
 }
 
@@ -532,8 +543,8 @@ function renderMetrics(summary) {
     .join("");
 }
 
-function renderGroupFilterCounts(groups, summary) {
-  const aiGroupCount = Number(summary.aiGroupsSuggested || 0);
+function renderGroupFilterCounts(groups) {
+  const aiGroupCount = groups.filter((group) => isAIGroup(group)).length;
   const ruleGroupCount = groups.filter((group) => isRuleGroup(group)).length;
   allGroupsCount.textContent = String(groups.length);
   aiGroupsCount.textContent = String(aiGroupCount);
@@ -546,9 +557,28 @@ function renderGroups(groups, run = latestRun) {
     return;
   }
 
-  dashboardGroups.innerHTML = groups
+  const filteredGroups = getFilteredGroups(groups, activeGroupFilter);
+
+  if (!filteredGroups.length) {
+    dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(msg("noGroupsForFilter"))}</p>`;
+    return;
+  }
+
+  dashboardGroups.innerHTML = filteredGroups
     .map((group, index) => renderGroupCard(group, run, index))
     .join("");
+}
+
+function getFilteredGroups(groups, filterName) {
+  if (filterName === "ai") {
+    return groups.filter((group) => isAIGroup(group));
+  }
+
+  if (filterName === "rules") {
+    return groups.filter((group) => isRuleGroup(group));
+  }
+
+  return groups;
 }
 
 function renderGroupCard(group, run, index) {
@@ -697,9 +727,13 @@ function formatTopHosts(tabs) {
 
 function formatGroupSource(group) {
   if (isRuleGroup(group)) return msg("rules");
-  if (String(group.reason || "").toLowerCase().includes("ai")) return msg("aiStatus");
+  if (isAIGroup(group)) return msg("aiStatus");
   if (String(group.reason || "").toLowerCase().includes("manual")) return msg("manual");
   return msg("localRules");
+}
+
+function isAIGroup(group) {
+  return String(group.reason || "").toLowerCase().includes("ai");
 }
 
 function isRuleGroup(group) {

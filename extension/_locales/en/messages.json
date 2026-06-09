@@ -198,6 +198,7 @@
   "aiNoUsableGroups": { "message": "No AI groups" },
   "aiNoEligibleTabs": { "message": "No eligible tabs" },
   "noNativeGroupsLatest": { "message": "No native groups were created in the latest run." },
+  "noGroupsForFilter": { "message": "No groups match this filter." },
   "groupName": { "message": "Group name" },
   "noDuplicateCandidatesLatest": { "message": "No duplicate candidates in the latest run." },
   "noLocalRulesYet": { "message": "No local rules yet. Create one from sidebar chat refine." },

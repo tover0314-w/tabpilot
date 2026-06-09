@@ -21,6 +21,7 @@ Wired now:
 
 ```text
 - workbench shell: topbar, project rail, workspace metrics, Smart Groups board
+- Smart Groups filter chips for All / AI groups / Rule groups
 - one-click organize from Dashboard
 - native group title/color Apply back to browser
 - expanded group cards using sanitized local run snapshot data

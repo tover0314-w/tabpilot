@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.63 — 2026-06-09
+
+Changed:
+
+- Wired Dashboard Smart Groups filter chips so `All`, `AI groups`, and `Rule groups` actually filter the board.
+- Added an empty state for filters with no matching groups and `aria-pressed` state for the chip buttons.
+- Added smoke coverage that prevents the filter chips from becoming visual-only again.
+- Updated extension README, Dashboard spec, Test Plan, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- UI filtering only; no browser tab changes, background actions, permissions, AI payloads, analytics upload, cloud storage, or tab-closing behavior changed.
+
 ## v0.62 — 2026-06-09
 
 Changed:

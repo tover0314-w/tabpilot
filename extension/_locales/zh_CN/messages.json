@@ -198,6 +198,7 @@
   "aiNoUsableGroups": { "message": "没有可用 AI 分组" },
   "aiNoEligibleTabs": { "message": "没有可分类标签页" },
   "noNativeGroupsLatest": { "message": "最近一次整理没有创建原生分组。" },
+  "noGroupsForFilter": { "message": "没有匹配这个筛选的分组。" },
   "groupName": { "message": "分组名称" },
   "noDuplicateCandidatesLatest": { "message": "最近一次整理没有重复候选。" },
   "noLocalRulesYet": { "message": "还没有本地规则。可以从侧边栏对话微调创建。" },

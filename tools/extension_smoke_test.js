@@ -249,6 +249,21 @@ test("dashboard can move tabs between existing groups without adding destructive
   assert(en.move?.message && zh.move?.message, "Dashboard tab move copy should be localized");
 });
 
+test("dashboard filter chips filter smart groups", () => {
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(dashboardJs.includes("let activeGroupFilter = \"all\""), "Dashboard should keep active group filter state");
+  assert(dashboardJs.includes("function getFilteredGroups"), "Dashboard should filter group data before rendering");
+  assert(dashboardJs.includes("filterName === \"ai\""), "Dashboard should support AI group filtering");
+  assert(dashboardJs.includes("filterName === \"rules\""), "Dashboard should support rule group filtering");
+  assert(dashboardJs.includes("groups.filter((group) => isAIGroup(group)).length"), "AI chip count should reflect rendered AI groups");
+  assert(dashboardJs.includes("button.setAttribute(\"aria-pressed\""), "Dashboard chips should expose pressed state");
+  assert(dashboardJs.includes("noGroupsForFilter"), "Dashboard should render an empty state for filters");
+  assert(en.noGroupsForFilter?.message && zh.noGroupsForFilter?.message, "Filter empty state should be localized");
+});
+
 test("dashboard keeps MVP UI simple and folds advanced settings", () => {
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
   const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
