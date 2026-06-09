@@ -63,6 +63,7 @@ Verified:
 - Chat Refine in runtime smoke
 - Dashboard apply, same-window tab move, and tab focus in runtime smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
+- disposable manual QA profile self-test with synthetic QA tabs
 - extension package generation
 - release package verification
 ```
@@ -81,6 +82,22 @@ Verified:
 - configured model available
 - synthetic classification fixture completes
 - no real browser tab data is used
+```
+
+Disposable manual QA tooling verification:
+
+```bash
+node tools/open_manual_qa_profile.js --self-test
+```
+
+Verified:
+
+```text
+- disposable Chrome for Testing profile opens
+- copied unpacked extension loads
+- local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard open
+- self-test closes and cleans up the disposable profile
+- no real browser profile, real tabs, or .env.local are read
 ```
 
 ## Not Yet Verified

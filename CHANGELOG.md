@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.66 — 2026-06-09
+
+Changed:
+
+- Refreshed private-beta evidence after running DeepSeek provider checks against the current `.env.local` configuration.
+- Recorded the successful synthetic DeepSeek classification fixture result and the disposable manual QA profile self-test.
+- Updated Private Beta Handoff to distinguish verified disposable-profile QA tooling from the still-required real-profile manual QA pass.
+
+Safety:
+
+- Evidence/documentation update only; no extension runtime behavior, permissions, AI payload shape, automatic tab-closing policy, storage behavior, or cloud upload changed.
+- The DeepSeek classification check used synthetic tabs only and did not read the user's real Chrome profile or real browser tabs.
+
 ## v0.65 — 2026-06-09
 
 Changed:

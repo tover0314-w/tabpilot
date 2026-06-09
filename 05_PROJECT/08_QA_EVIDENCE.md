@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.65 changes in this commit
+Source state verified: v0.66 evidence refresh in this commit
 
 ### Unified Preflight
 
@@ -62,7 +62,7 @@ configuredModel=deepseek-v4-flash
 modelAvailable=yes
 modelCount=2
 PASS synthetic classification fixture completed
-fixtureGroupCount=2
+fixtureGroupCount=3
 fixtureAssignedTabs=3
 ```
 
@@ -143,6 +143,29 @@ Evidence notes:
 - Test tabs were synthetic QA URLs only.
 - It verified organize, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, and Dashboard tab focus against real Chrome native tab groups.
 - It did not read the user's real Chrome profile or real browser tabs.
+
+### Disposable Manual QA Profile Self-Test
+
+Command:
+
+```bash
+node tools/open_manual_qa_profile.js --self-test
+```
+
+Result:
+
+```text
+PASS manual QA profile opened
+seedTabs=20
+PASS self-test closed and cleaned up disposable QA profile
+```
+
+Evidence notes:
+
+- The script used Chrome for Testing with a disposable profile under `artifacts/manual-qa-profiles/`.
+- It loaded a copied unpacked extension, opened the local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard.
+- It did not read the user's real Chrome profile, real browser tabs, or `.env.local`.
+- This proves the disposable manual QA tooling opens and cleans up correctly; it does not replace the remaining real-profile manual QA pass.
 
 ### Extension Package
 
