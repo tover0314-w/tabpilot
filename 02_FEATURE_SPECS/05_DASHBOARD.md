@@ -11,7 +11,37 @@ It shows latest workspace metrics, expanded Smart Group cards with local tab row
 Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
 Dashboard apply-back-to-browser first slice supports native group title/color updates with Undo.
 Dashboard drag/drop tab movement is still not implemented.
-Workspace history, manual group creation, new rule creation, group chat, and saved workspaces remain P1/Pro placeholders in the UI.
+Workspace history, manual group creation, new rule creation, group chat, saved workspaces, billing/usage, templates, and multi-tab chat are not wired and are not shown as primary default actions.
+Settings default view is intentionally simple: AI Classification and Privacy Defaults first; permissions, diagnostics, and local reset are folded under advanced sections.
+```
+
+### 0.1 Design Prototype Wiring Status
+
+Wired now:
+
+```text
+- workbench shell: topbar, project rail, workspace metrics, Smart Groups board
+- one-click organize from Dashboard
+- native group title/color Apply back to browser
+- expanded group cards using sanitized local run snapshot data
+- Duplicate Center summary
+- Rules & Memory enable/disable/delete with confirmation
+- DeepSeek API key save/test/clear
+- compact privacy defaults
+- advanced folded permissions, diagnostics, feedback template, and local data reset
+```
+
+Not wired yet:
+
+```text
+- drag/drop tabs between groups
+- manual new group creation
+- workspace history/save/restore
+- group/workspace chat
+- billing and usage UI
+- templates
+- multi-tab chat
+- dashboard-hosted cloud sync or account login
 ```
 
 ## 1. 定位

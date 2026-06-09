@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 96 tracked files
-21 smoke tests passed
+22 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
 PASS UI screenshots captured
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-21 smoke tests passed
+22 smoke tests passed
 ```
 
 Covered:
@@ -94,6 +94,7 @@ Covered:
 - English/Chinese locale parity.
 - Permission explanation alignment.
 - Dashboard workbench HTML prototype structure guard.
+- Dashboard simple MVP UI guard: no default P1 placeholders, advanced Settings folded.
 - AI host guardrail aligned with manifest host permission.
 - Redacted local error logs.
 - Count-only duplicate safety audit.
@@ -107,6 +108,7 @@ Covered:
 - AI classification request minimization: no full URL, restore URL, query token, or page text in provider payload.
 - AI classification status visibility in sidebar and dashboard, including suggested AI group count.
 - Dashboard expanded Smart Group cards and local tab-row rendering from sanitized run data.
+- Dashboard Settings first screen shows AI Classification and Privacy Defaults; permission, diagnostics, and local reset controls remain available under advanced folded sections.
 - AI connection test without tab data.
 - Dashboard rule deletion confirmation.
 - Dashboard scoped AI key clearing.
@@ -152,7 +154,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=29d68240127b00408262d32192f9966417e61278730c94b1688c4e240e849c36
+sha256=6ec7938e9bd1f1ed0633b800aea7a2ae58bd36d2826cfca7388290ab2ea4acb1
 ```
 
 Evidence notes:

@@ -25,6 +25,7 @@ CONFIRMED BY IMPLEMENTATION:
 - current-tab local extractive summary after user click, with sensitive-page confirmation
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
 - Dashboard HTML-prototype workbench layout with expanded local tab rows
+- Dashboard default UI hides unwired P1/prototype actions and folds advanced Settings content
 - Dashboard group title/color apply back to real native tab groups
 - optional DeepSeek AI classification through OpenAI-compatible request format
 - DeepSeek connection test without tab data
@@ -50,7 +51,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 21 extension smoke tests
+- 22 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke
@@ -86,6 +87,7 @@ OPEN QUESTION / MANUAL QA REQUIRED:
 - Chrome Web Store submission has not been attempted.
 - Private beta with 20-50 external users has not started.
 - Store screenshots and demo video are not final.
+- Design-prototype features are not all wired yet: drag/drop tab movement, manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 ```
 
 Manual QA source of truth:

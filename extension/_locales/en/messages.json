@@ -223,7 +223,7 @@
   "dashboardDuplicateCopy": { "message": "Safe duplicates and review candidates from the latest organize run." },
   "rulesMemoryCopy": { "message": "Local correction rules created from chat refine and dashboard edits." },
   "newRuleP1": { "message": "New rule · P1" },
-  "settingsPageCopy": { "message": "Privacy, permissions, local AI key, diagnostics, and local data controls." },
+  "settingsPageCopy": { "message": "AI classification and local privacy controls." },
   "organizing": { "message": "Organizing" },
   "workspaceSidebarMetric": { "message": "$1 tabs · $2 groups · $3 windows" },
   "rulesSubtitleWithCount": { "message": "$1 rules running · $2 paused" },
@@ -236,5 +236,11 @@
   "pinned": { "message": "Pinned" },
   "audible": { "message": "Audible" },
   "discarded": { "message": "Suspended" },
-  "manual": { "message": "Manual" }
+  "manual": { "message": "Manual" },
+  "aiClassification": { "message": "AI Classification" },
+  "aiClassificationCopy": { "message": "Use your local DeepSeek key for tab grouping. TabMosaic sends minimized tab metadata only." },
+  "privacyDefaults": { "message": "Privacy Defaults" },
+  "permissionsAdvancedCopy": { "message": "Required browser permissions and what they support." },
+  "diagnosticsAdvancedCopy": { "message": "Copy redacted local QA data only when you need to report a bug." },
+  "localDataAdvancedCopy": { "message": "Clear local state if you want to reset the extension on this device." }
 }

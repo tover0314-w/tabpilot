@@ -227,6 +227,22 @@ test("dashboard follows workbench HTML prototype structure", () => {
   assert(!dashboardHtml.includes("editable-group-card"), "Dashboard should not use the old settings-card group UI");
 });
 
+test("dashboard keeps MVP UI simple and folds advanced settings", () => {
+  const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(!dashboardHtml.includes("P1"), "Dashboard should not expose unwired P1 placeholders in the default UI");
+  assert(!dashboardHtml.includes("disabled data-i18n"), "Dashboard should avoid disabled placeholder buttons");
+  assert(dashboardHtml.includes('data-i18n="aiClassification"'), "Settings should lead with AI classification");
+  assert(dashboardHtml.includes('data-i18n="privacyDefaults"'), "Settings should show compact privacy defaults");
+  assert(dashboardHtml.includes('<details class="settings-advanced">'), "Advanced settings should be folded into details");
+  assert(dashboardCss.includes(".settings-advanced"), "Advanced settings should have dedicated collapsed styling");
+  assert(en.aiClassification?.message && zh.aiClassification?.message, "AI classification settings copy should be localized");
+  assert(en.privacyDefaults?.message && zh.privacyDefaults?.message, "Privacy defaults copy should be localized");
+});
+
 test("AI host guardrail matches manifest host permission", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");

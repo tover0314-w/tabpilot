@@ -223,7 +223,7 @@
   "dashboardDuplicateCopy": { "message": "最近一次整理中的安全重复项和待确认重复项。" },
   "rulesMemoryCopy": { "message": "由对话微调和 dashboard 调整生成的本地纠正规则。" },
   "newRuleP1": { "message": "新规则 · P1" },
-  "settingsPageCopy": { "message": "隐私、权限、本地 AI key、诊断和本地数据控制。" },
+  "settingsPageCopy": { "message": "AI 分类和本地隐私控制。" },
   "organizing": { "message": "整理中" },
   "workspaceSidebarMetric": { "message": "$1 个标签页 · $2 个分组 · $3 个窗口" },
   "rulesSubtitleWithCount": { "message": "$1 条规则在跑 · $2 条暂停" },
@@ -236,5 +236,11 @@
   "pinned": { "message": "固定" },
   "audible": { "message": "播放中" },
   "discarded": { "message": "休眠" },
-  "manual": { "message": "手动" }
+  "manual": { "message": "手动" },
+  "aiClassification": { "message": "AI 分类" },
+  "aiClassificationCopy": { "message": "用你本地保存的 DeepSeek key 做标签页分组。TabMosaic 只发送最小化标签页元数据。" },
+  "privacyDefaults": { "message": "隐私默认值" },
+  "permissionsAdvancedCopy": { "message": "浏览器必需权限，以及它们支持的功能。" },
+  "diagnosticsAdvancedCopy": { "message": "只有反馈 bug 时才复制已脱敏的本地 QA 数据。" },
+  "localDataAdvancedCopy": { "message": "需要重置这台设备上的扩展状态时使用。" }
 }

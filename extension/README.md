@@ -25,6 +25,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Open Dashboard shows a local workbench page with a top bar, project rail, latest workspace metrics, expanded smart group cards, duplicate center, Rules & Memory, and settings.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
 - Dashboard Smart Groups show local tab rows from the latest sanitized run snapshot when group membership is available.
+- Dashboard keeps unwired design-prototype features out of the default UI so users see only working MVP actions.
 - Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
 - Dashboard can save a local DeepSeek API key for AI tab classification through an OpenAI-compatible request format.
 - Dashboard can test the AI provider connection without sending tab data.
@@ -32,6 +33,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Side panel and Dashboard show whether AI classification was applied, fell back, or stayed on local rules.
 - Side panel and Dashboard show how many AI groups were suggested in the latest organize run.
 - Dashboard Settings explains each Chrome permission and what data it supports.
+- Dashboard Settings keeps AI Classification and Privacy Defaults visible first; permissions, diagnostics, and local reset live under advanced folded sections.
 - Dashboard Settings can copy a redacted local diagnostic snapshot for beta bug reports.
 - Dashboard diagnostics include recent local error summaries after redaction.
 - Dashboard diagnostics include local duplicate close safety audit counts for beta validation.
@@ -47,6 +49,8 @@ Hash/query/same-page review candidates are never auto-closed.
 Chat Refine does not call AI, read page body content, or close tabs in this slice.
 
 Dashboard apply currently edits group title/color only. It does not move or close tabs.
+
+Dashboard design-prototype features that are not wired yet: drag/drop tab movement, manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 
 Current tab summaries do not call AI yet, do not upload page content, and require an extra confirmation before reading sensitive pages.
 

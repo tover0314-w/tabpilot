@@ -32,6 +32,7 @@ Coverage:
 - AI classification request includes minimized metadata only and excludes full URL, restore URL, query token, and page text
 - AI classification status and suggested group count are visible in sidebar and dashboard
 - Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, workspace card, filter chips, and expanded group cards
+- Dashboard keeps unwired P1/prototype placeholders out of the default UI and folds advanced Settings content
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types

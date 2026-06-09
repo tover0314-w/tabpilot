@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.60 — 2026-06-09
+
+Changed:
+
+- Simplified Dashboard default UI so users see only wired MVP actions: organize, refresh, group title/color Apply, rules, AI settings, and privacy defaults.
+- Removed visible P1/prototype placeholder buttons from the Dashboard default view.
+- Simplified Dashboard Settings: AI Classification and Privacy Defaults are visible first; permissions, diagnostics, feedback template, and local data reset are folded under advanced sections.
+- Added smoke coverage that prevents unwired P1 placeholders from reappearing in the default Dashboard UI.
+- Updated extension README, Dashboard spec, Test Plan, Private Beta Handoff, and QA Evidence with the wired/not-wired design prototype boundary.
+
+Safety:
+
+- UI simplification only; existing wired diagnostics, permission explanations, local data reset, AI key actions, and Dashboard Apply remain available.
+- No extension permissions, AI provider hosts, AI payload fields, analytics upload, cloud storage, automatic tab-closing policy, or product scope changed.
+
 ## v0.59 — 2026-06-09
 
 Changed:
