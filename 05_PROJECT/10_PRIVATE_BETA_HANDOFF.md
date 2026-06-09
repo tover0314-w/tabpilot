@@ -27,6 +27,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard HTML-prototype workbench layout with expanded local tab rows
 - Dashboard default UI hides unwired P1/prototype actions and folds advanced Settings content
 - Dashboard group title/color apply back to real native tab groups
+- Dashboard same-window tab move into existing native tab groups
 - optional DeepSeek AI classification through OpenAI-compatible request format
 - DeepSeek connection test without tab data
 - AI classification timeout fallback to local rules
@@ -52,12 +53,12 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 23 extension smoke tests
+- 24 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke
 - Chat Refine in runtime smoke
-- Dashboard apply in runtime smoke
+- Dashboard apply and same-window tab move in runtime smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
 - extension package generation
 - release package verification

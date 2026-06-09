@@ -144,6 +144,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "APPLY_DASHBOARD_TAB_MOVE") {
+    applyDashboardTabMove(message)
+      .then((run) => sendResponse({ ok: true, run }))
+      .catch((error) => sendErrorResponse(sendResponse, "APPLY_DASHBOARD_TAB_MOVE", error));
+    return true;
+  }
+
   if (message.type === "TEST_AI_CONNECTION") {
     testAIConnection(message)
       .then((result) => sendResponse({ ok: true, result }))
@@ -717,6 +724,87 @@ async function applyDashboardGroupUpdate(message) {
         title,
         previousColor: group.color,
         color,
+        appliedAt: new Date().toISOString()
+      }
+    ]
+  };
+
+  await publishRun(run);
+  return run;
+}
+
+async function applyDashboardTabMove(message) {
+  const startedAt = new Date().toISOString();
+  const tabId = Number(message.tabId);
+  const targetGroupId = Number(message.targetGroupId);
+
+  if (!Number.isInteger(tabId) || !Number.isInteger(targetGroupId)) {
+    throw new Error("A valid tab and target group are required.");
+  }
+
+  const snapshot = await collectAllNormalWindowTabs();
+  const tab = (snapshot.tabs || []).find((item) => item.id === tabId);
+  const targetGroup = (snapshot.groups || []).find((group) => group.id === targetGroupId);
+
+  if (!tab || !canGroupTab(tab)) {
+    throw new Error("This tab is no longer available for grouping.");
+  }
+
+  if (!targetGroup) {
+    throw new Error("The target Chrome tab group is no longer available.");
+  }
+
+  if (tab.groupId === targetGroupId) {
+    throw new Error("This tab is already in that group.");
+  }
+
+  if (tab.windowId !== targetGroup.windowId) {
+    throw new Error("Dashboard can only move tabs between groups in the same window.");
+  }
+
+  await chrome.storage.local.set({ [LAST_UNDO_KEY]: buildUndoSnapshot(snapshot) });
+
+  try {
+    await chrome.tabs.group({
+      tabIds: [tabId],
+      groupId: targetGroupId
+    });
+  } catch (error) {
+    await chrome.storage.local.remove(LAST_UNDO_KEY);
+    throw error;
+  }
+
+  const previousRun = await getCurrentRun();
+  const latestSnapshot = await collectAllNormalWindowTabs();
+  const duplicateGroups = previousRun.duplicateGroups || detectDuplicateGroups(latestSnapshot.tabs);
+  const baseSummary = summarizeSnapshot(latestSnapshot, duplicateGroups);
+  const previousSummary = previousRun.summary || {};
+  const run = {
+    ...previousRun,
+    status: "completed",
+    source: "dashboard-apply",
+    startedAt,
+    completedAt: new Date().toISOString(),
+    message: `Moved one tab to ${targetGroup.title || "Untitled Group"} from Dashboard.`,
+    snapshot: sanitizeSnapshotForRun(latestSnapshot),
+    duplicateGroups,
+    summary: {
+      ...previousSummary,
+      ...baseSummary,
+      tabsMoved: Number(previousSummary.tabsMoved || 0) + 1,
+      undoAvailable: true,
+      dashboardApplies: Number(previousSummary.dashboardApplies || 0) + 1,
+      dashboardTabsMoved: Number(previousSummary.dashboardTabsMoved || 0) + 1
+    },
+    groups: buildDisplayGroupsFromSnapshot(latestSnapshot, previousRun.groups || []),
+    dashboardActions: [
+      ...(previousRun.dashboardActions || []),
+      {
+        type: "move_tab",
+        tabId,
+        previousGroupId: tab.groupId,
+        targetGroupId,
+        targetGroupTitle: targetGroup.title || "Untitled Group",
         appliedAt: new Date().toISOString()
       }
     ]

@@ -127,7 +127,28 @@ async function main() {
       const updatedGroups = await evaluate(cdp, "chrome.tabGroups.query({})");
       assert(updatedGroups.some((group) => group.title === "QA Review" && group.color === "green"), "Dashboard apply did not update native group");
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply");
+      const targetGroup = updatedGroups.find((group) => group.title === "QA Review" && group.color === "green");
+      assert(targetGroup, "Could not find QA Review target group after Dashboard apply");
+      const tabsAfterDashboardApply = await evaluate(cdp, "chrome.tabs.query({})");
+      const sourceTab = tabsAfterDashboardApply.find(
+        (tab) => tab.windowId === targetGroup.windowId && tab.groupId !== targetGroup.id && tab.groupId !== -1
+      );
+      assert(sourceTab, "Could not find a same-window tab in another group for Dashboard tab move");
+
+      const dashboardMove = await evaluate(cdp, `
+        chrome.runtime.sendMessage({
+          type: "APPLY_DASHBOARD_TAB_MOVE",
+          tabId: ${sourceTab.id},
+          targetGroupId: ${targetGroup.id}
+        })
+      `);
+      assert(dashboardMove && dashboardMove.ok, `Dashboard tab move failed: ${JSON.stringify(dashboardMove)}`);
+      assert(dashboardMove.run.summary.dashboardTabsMoved >= 1, "Dashboard tab move summary was not updated");
+
+      const movedTab = await evaluate(cdp, `chrome.tabs.get(${sourceTab.id})`);
+      assertEqual(movedTab.groupId, targetGroup.id, "Dashboard tab move did not update the native tab group");
+
+      console.log("PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move");
     } finally {
       cdp.close();
     }

@@ -211,7 +211,14 @@ async function handleRuleAction(event) {
 
 async function handleGroupAction(event) {
   const button = event.target.closest("[data-group-action]");
-  if (!button || button.dataset.groupAction !== "apply") return;
+  if (!button) return;
+
+  if (button.dataset.groupAction === "move-tab") {
+    await handleDashboardTabMove(button);
+    return;
+  }
+
+  if (button.dataset.groupAction !== "apply") return;
 
   const card = button.closest("[data-group-id]");
   if (!card) return;
@@ -232,6 +239,32 @@ async function handleGroupAction(event) {
     button.disabled = false;
     button.textContent = msg("apply");
     window.alert(response?.error || msg("couldNotApplyGroupUpdate"));
+    return;
+  }
+
+  await loadDashboard();
+}
+
+async function handleDashboardTabMove(button) {
+  const row = button.closest("[data-tab-id]");
+  const select = row?.querySelector("[data-tab-target-group]");
+  const targetGroupId = Number(select?.value);
+
+  if (!row || !Number.isInteger(targetGroupId)) return;
+
+  button.disabled = true;
+  button.textContent = msg("moving");
+
+  const response = await chrome.runtime.sendMessage({
+    type: "APPLY_DASHBOARD_TAB_MOVE",
+    tabId: Number(row.dataset.tabId),
+    targetGroupId
+  });
+
+  if (!response?.ok) {
+    button.disabled = false;
+    button.textContent = msg("move");
+    window.alert(response?.error || msg("couldNotMoveTab"));
     return;
   }
 
@@ -581,7 +614,7 @@ function renderGroupTabs(tabs, group) {
 
   const visibleTabs = tabs.slice(0, 4);
   const hiddenCount = Math.max(0, tabs.length - visibleTabs.length);
-  const rows = visibleTabs.map(renderGroupTabRow).join("");
+  const rows = visibleTabs.map((tab) => renderGroupTabRow(tab, group)).join("");
   const moreRow = hiddenCount
     ? `
       <div class="dashboard-more-row">
@@ -598,7 +631,7 @@ function renderGroupTabs(tabs, group) {
   return `${rows}${moreRow}`;
 }
 
-function renderGroupTabRow(tab) {
+function renderGroupTabRow(tab, currentGroup) {
   const classes = [
     "dashboard-tabrow",
     tab.discarded ? "suspended" : "",
@@ -612,7 +645,7 @@ function renderGroupTabRow(tab) {
   ].filter(Boolean);
 
   return `
-    <div class="${escapeHtml(classes)}">
+    <div class="${escapeHtml(classes)}" data-tab-id="${escapeHtml(String(tab.id))}">
       <span class="dashboard-favicon" aria-hidden="true">${escapeHtml(getFaviconLetter(tab))}</span>
       <span class="dashboard-tab-title" title="${escapeHtml(tab.hostname || "")}">
         ${escapeHtml(tab.title || msg("untitled"))}
@@ -621,7 +654,34 @@ function renderGroupTabRow(tab) {
       <span class="dashboard-tab-badges">
         ${badges.map((badge) => `<span class="dashboard-tab-badge">${escapeHtml(badge)}</span>`).join("")}
       </span>
+      ${renderTabMoveControl(tab, currentGroup)}
     </div>
+  `;
+}
+
+function renderTabMoveControl(tab, currentGroup) {
+  const groups = latestRun?.groups || [];
+  const options = groups.filter(
+    (group) =>
+      group.id !== currentGroup.id &&
+      Number(group.windowId) === Number(currentGroup.windowId) &&
+      Array.isArray(group.tabIds) &&
+      group.tabIds.length > 0
+  );
+
+  if (!options.length || tab.pinned) {
+    return "";
+  }
+
+  return `
+    <span class="dashboard-tab-move">
+      <select data-tab-target-group aria-label="${escapeHtml(msg("moveToGroup"))}">
+        ${options
+          .map((group) => `<option value="${escapeHtml(String(group.id))}">${escapeHtml(group.name)}</option>`)
+          .join("")}
+      </select>
+      <button class="mini-button" type="button" data-group-action="move-tab">${escapeHtml(msg("move"))}</button>
+    </span>
   `;
 }
 

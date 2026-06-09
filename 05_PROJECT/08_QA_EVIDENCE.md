@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.61 changes in this commit
+Source state verified: v0.62 changes in this commit
 
 ### Unified Preflight
 
@@ -22,9 +22,9 @@ Result:
 
 ```text
 PASS secret scan checked 96 tracked files
-23 smoke tests passed
+24 smoke tests passed
 PASS issue form smoke checked 2 forms
-PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
+PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS preflight completed
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-23 smoke tests passed
+24 smoke tests passed
 ```
 
 Covered:
@@ -94,6 +94,7 @@ Covered:
 - English/Chinese locale parity.
 - Permission explanation alignment.
 - Dashboard workbench HTML prototype structure guard.
+- Dashboard same-window tab move guard: target group selection, background action, same-window enforcement, and no tab close action.
 - Dashboard simple MVP UI guard: no default P1 placeholders, advanced Settings folded.
 - AI host guardrail aligned with manifest host permission.
 - Redacted local error logs.
@@ -130,14 +131,14 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
+PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move
 ```
 
 Evidence notes:
 
 - The script used a temporary Chrome for Testing profile and a copied unpacked extension directory.
 - Test tabs were synthetic QA URLs only.
-- It verified organize, Chat Refine, and Dashboard apply against real Chrome native tab groups.
+- It verified organize, Chat Refine, Dashboard title/color apply, and Dashboard same-window tab move against real Chrome native tab groups.
 - It did not read the user's real Chrome profile or real browser tabs.
 
 ### Extension Package
@@ -156,7 +157,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=1c516f5427c15a3ceaef9c22ab67ce6fecdcf3863ac18c32bbf14f3c942d2666
+sha256=a49d41c49c0fff129f9c36703d022065744296a24931d6a7fee3e7b56fe254fc
 ```
 
 Evidence notes:

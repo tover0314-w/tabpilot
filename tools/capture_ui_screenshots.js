@@ -44,6 +44,7 @@ const MOCK_RUN = {
   groups: [
     {
       id: 101,
+      windowId: 1,
       name: "Product Planning",
       color: "blue",
       tabCount: 8,
@@ -52,6 +53,7 @@ const MOCK_RUN = {
     },
     {
       id: 102,
+      windowId: 2,
       name: "Code Review",
       color: "green",
       tabCount: 7,
@@ -60,6 +62,7 @@ const MOCK_RUN = {
     },
     {
       id: 103,
+      windowId: 3,
       name: "Customer Research",
       color: "purple",
       tabCount: 6,
@@ -68,6 +71,7 @@ const MOCK_RUN = {
     },
     {
       id: 104,
+      windowId: 1,
       name: "Design References",
       color: "pink",
       tabCount: 5,
@@ -76,6 +80,7 @@ const MOCK_RUN = {
     },
     {
       id: 105,
+      windowId: 2,
       name: "Chrome Extension Docs",
       color: "cyan",
       tabCount: 4,
@@ -84,6 +89,7 @@ const MOCK_RUN = {
     },
     {
       id: 106,
+      windowId: 3,
       name: "Articles to Read",
       color: "yellow",
       tabCount: 3,

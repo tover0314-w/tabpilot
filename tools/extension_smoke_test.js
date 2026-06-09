@@ -231,6 +231,24 @@ test("dashboard follows workbench HTML prototype structure", () => {
   assert(!dashboardHtml.includes("editable-group-card"), "Dashboard should not use the old settings-card group UI");
 });
 
+test("dashboard can move tabs between existing groups without adding destructive actions", () => {
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(dashboardJs.includes('data-group-action="move-tab"'), "Dashboard tab rows should expose a move action");
+  assert(dashboardJs.includes("APPLY_DASHBOARD_TAB_MOVE"), "Dashboard should call the tab move background action");
+  assert(dashboardJs.includes("data-tab-target-group"), "Dashboard should render target group selection");
+  assert(dashboardJs.includes("Number(group.windowId) === Number(currentGroup.windowId)"), "Dashboard should limit move choices to the same window");
+  assert(dashboardCss.includes(".dashboard-tab-move"), "Dashboard tab move controls should have scoped styling");
+  assert(backgroundCode.includes("APPLY_DASHBOARD_TAB_MOVE"), "Background should handle Dashboard tab moves");
+  assert(backgroundCode.includes("groupId: targetGroupId"), "Background should move tabs into an existing native group");
+  assert(backgroundCode.includes("Dashboard can only move tabs between groups in the same window."), "Background should enforce same-window tab moves");
+  assert(!dashboardJs.includes("chrome.tabs.remove"), "Dashboard tab move UI must not close tabs");
+  assert(en.move?.message && zh.move?.message, "Dashboard tab move copy should be localized");
+});
+
 test("dashboard keeps MVP UI simple and folds advanced settings", () => {
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
   const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");

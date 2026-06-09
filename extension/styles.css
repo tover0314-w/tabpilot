@@ -1159,7 +1159,7 @@ p {
 
 .dashboard-tabrow {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) minmax(88px, 0.45fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) minmax(88px, 0.45fr) auto minmax(120px, auto);
   align-items: center;
   gap: 10px;
   min-height: 34px;
@@ -1222,6 +1222,32 @@ p {
   font-size: 9.5px;
   padding: 1px 5px;
   text-transform: uppercase;
+}
+
+.dashboard-tab-move {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: 0;
+  opacity: 0.72;
+  transition: opacity 120ms ease;
+}
+
+.dashboard-tabrow:hover .dashboard-tab-move,
+.dashboard-tabrow:focus-within .dashboard-tab-move {
+  opacity: 1;
+}
+
+.dashboard-tab-move select {
+  width: 104px;
+  min-height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-size: 10.5px;
 }
 
 .dashboard-more-row {
@@ -1584,8 +1610,13 @@ p {
   }
 
   .dashboard-tab-host,
-  .dashboard-tab-badges {
+  .dashboard-tab-badges,
+  .dashboard-tab-move {
     grid-column: 2;
+  }
+
+  .dashboard-tab-move {
+    justify-content: flex-start;
   }
 
   .rule-row {

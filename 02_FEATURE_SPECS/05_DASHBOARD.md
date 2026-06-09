@@ -9,8 +9,8 @@ P0 dashboard is an extension page.
 It follows the HTML prototype workbench layout: top bar, left project rail, current workspace card, action block, filter chips, Smart Groups board, Auto Organize rules page, and Settings page.
 It shows latest workspace metrics, expanded Smart Group cards with local tab rows, Duplicate Center, Settings Snapshot, AI Settings, and Rules & Memory.
 Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
-Dashboard apply-back-to-browser first slice supports native group title/color updates with Undo.
-Dashboard drag/drop tab movement is still not implemented.
+Dashboard apply-back-to-browser supports native group title/color updates and same-window tab moves into existing groups, with Undo.
+Dashboard drag/drop tab movement and manual new group creation are still not implemented.
 Workspace history, manual group creation, new rule creation, group chat, saved workspaces, billing/usage, templates, and multi-tab chat are not wired and are not shown as primary default actions.
 Settings default view is intentionally simple: AI Classification and Privacy Defaults first; permissions, diagnostics, and local reset are folded under advanced sections.
 ```
@@ -24,6 +24,7 @@ Wired now:
 - one-click organize from Dashboard
 - native group title/color Apply back to browser
 - expanded group cards using sanitized local run snapshot data
+- same-window tab move into an existing native group
 - Duplicate Center summary
 - Rules & Memory enable/disable/delete with confirmation
 - DeepSeek API key save/test/clear
@@ -35,6 +36,7 @@ Not wired yet:
 
 ```text
 - drag/drop tabs between groups
+- cross-window tab moves
 - manual new group creation
 - workspace history/save/restore
 - group/workspace chat

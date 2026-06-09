@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.62 — 2026-06-09
+
+Changed:
+
+- Added a compact Dashboard Smart Groups row control to move a tab into another existing group in the same window.
+- Added background `APPLY_DASHBOARD_TAB_MOVE` handling that applies the move to real Chrome native tab groups and keeps Undo available.
+- Added smoke coverage for the Dashboard tab move UI/guardrails and runtime coverage that verifies a real native tab group move in a temporary Chrome profile.
+- Updated extension README, Dashboard spec, Test Plan, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- Same-window existing-group move only; no drag/drop, new group creation, cross-window moves, tab closing, page text reading, cloud storage, analytics upload, or new permissions were added.
+- Backend validates the live tab and target group before applying the move.
+
 ## v0.61 — 2026-06-09
 
 Changed:

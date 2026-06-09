@@ -24,6 +24,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Summarize Current Tab reads visible page text only after a user click, asks for an extra confirmation on sensitive pages, and generates a local extractive summary.
 - Open Dashboard shows a local workbench page with a top bar, project rail, latest workspace metrics, expanded smart group cards, duplicate center, Rules & Memory, and settings.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
+- Dashboard Smart Groups can move a tab into another existing group in the same window, with Undo available.
 - Dashboard Smart Groups show local tab rows from the latest sanitized run snapshot when group membership is available.
 - Dashboard keeps unwired design-prototype features out of the default UI so users see only working MVP actions.
 - Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
@@ -49,7 +50,7 @@ Hash/query/same-page review candidates are never auto-closed.
 
 Chat Refine does not call AI, read page body content, or close tabs in this slice.
 
-Dashboard apply currently edits group title/color only. It does not move or close tabs.
+Dashboard apply currently edits group title/color and supports same-window tab moves into existing groups. It does not close tabs, create new groups manually, or move tabs across windows.
 
 Dashboard design-prototype features that are not wired yet: drag/drop tab movement, manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 
@@ -114,7 +115,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English/Chinese localization, Dashboard workbench layout, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
+It checks manifest permissions, English/Chinese localization, Dashboard workbench layout, Dashboard same-window tab move guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 
@@ -132,7 +133,7 @@ Optional runtime smoke test:
 node tools/chrome_runtime_smoke_test.js
 ```
 
-This starts a temporary Chrome profile, loads the unpacked extension, opens synthetic test tabs, and verifies organize, Chat Refine, and Dashboard apply against real Chrome native tab groups. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome. It may print `SKIP` on Google Chrome builds that do not allow CLI unpacked extension loading; manual `Load unpacked` QA is still required in that case.
+This starts a temporary Chrome profile, loads the unpacked extension, opens synthetic test tabs, and verifies organize, Chat Refine, Dashboard title/color apply, and Dashboard same-window tab move against real Chrome native tab groups. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome. It may print `SKIP` on Google Chrome builds that do not allow CLI unpacked extension loading; manual `Load unpacked` QA is still required in that case.
 
 To run automated runtime QA, use Chrome for Testing or Chromium:
 
