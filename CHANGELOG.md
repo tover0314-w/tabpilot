@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.47 — 2026-06-09
+
+Changed:
+
+- Dashboard AI Settings now explains that the private beta supports only `api.deepseek.com`.
+- Added English/Chinese copy and smoke coverage for the AI base URL host-limit hint.
+- Updated Test Plan with the Dashboard AI host-limit copy check.
+
+Safety:
+
+- UI copy and test change only.
+- No product behavior, permissions, AI payload, analytics, storage behavior, or automatic upload path changed.
+
 ## v0.46 — 2026-06-09
 
 Changed:

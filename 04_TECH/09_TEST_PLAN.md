@@ -36,6 +36,7 @@ Coverage:
 - AI connection test calls `/models` without sending tab data, full URLs, page text, or a request body
 - AI connection rejects unsupported OpenAI-compatible hosts before fetch; private beta permits only `https://api.deepseek.com`
 - AI host guardrail keeps background validation, Dashboard validation, Dashboard permission copy, and manifest host permissions aligned
+- Dashboard AI settings copy explains the private-beta DeepSeek host limit
 - Dashboard local rule deletion requires confirmation and does not move or close tabs
 - Dashboard Clear Local Data removes local rules, AI key/settings, run state, Undo/Restore snapshots, privacy acceptance, chat draft, and local error log
 ```

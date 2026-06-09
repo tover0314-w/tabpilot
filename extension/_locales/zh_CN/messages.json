@@ -128,6 +128,7 @@
   "cloudSync": { "message": "云同步" },
   "useDeepSeek": { "message": "使用 DeepSeek 进行 AI 分类" },
   "baseUrl": { "message": "Base URL" },
+  "aiBaseUrlBetaLimit": { "message": "当前 beta 只支持 api.deepseek.com。其他 OpenAI-compatible host 需要后续权限确认。" },
   "model": { "message": "模型" },
   "apiKey": { "message": "API key" },
   "apiKeyStoredPlaceholder": { "message": "仅保存在 chrome.storage.local" },

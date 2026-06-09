@@ -205,6 +205,8 @@ test("dashboard permission explanation matches manifest permissions", () => {
 test("AI host guardrail matches manifest host permission", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
   const allowedHostPermission = "https://api.deepseek.com/*";
   const allowedHost = new URL(allowedHostPermission.replace("*", "")).hostname;
 
@@ -213,6 +215,9 @@ test("AI host guardrail matches manifest host permission", () => {
   assertEqual(context.normalizeAIBaseUrl(allowedHostPermission.replace("*", "")), "https://api.deepseek.com", "Background should normalize the manifest host");
   assert(dashboardJs.includes(`url.hostname !== "${allowedHost}"`), "Dashboard AI host guardrail should match manifest");
   assert(dashboardHtml.includes(`<b>${allowedHostPermission}</b>`), "Dashboard permission copy should show the same host permission");
+  assert(dashboardHtml.includes('data-i18n="aiBaseUrlBetaLimit"'), "Dashboard AI settings should explain the private-beta host limit");
+  assert(en.aiBaseUrlBetaLimit?.message.includes(allowedHost), "English AI host limit copy should mention DeepSeek host");
+  assert(zh.aiBaseUrlBetaLimit?.message.includes(allowedHost), "Chinese AI host limit copy should mention DeepSeek host");
   assert(!dashboardJs.includes("api.openai.com"), "Dashboard must not silently allow OpenAI host without confirmation");
   assert(!backgroundCode.includes("api.openai.com"), "Background must not silently allow OpenAI host without confirmation");
 });

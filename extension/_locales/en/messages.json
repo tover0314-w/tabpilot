@@ -128,6 +128,7 @@
   "cloudSync": { "message": "Cloud sync" },
   "useDeepSeek": { "message": "Use DeepSeek for AI classification" },
   "baseUrl": { "message": "Base URL" },
+  "aiBaseUrlBetaLimit": { "message": "Private beta only supports api.deepseek.com. Other OpenAI-compatible hosts need a later permission confirmation." },
   "model": { "message": "Model" },
   "apiKey": { "message": "API key" },
   "apiKeyStoredPlaceholder": { "message": "Stored locally in chrome.storage.local" },
