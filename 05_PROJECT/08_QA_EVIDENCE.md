@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.63 changes in this commit
+Source state verified: v0.64 changes in this commit
 
 ### Unified Preflight
 
@@ -22,9 +22,9 @@ Result:
 
 ```text
 PASS secret scan checked 96 tracked files
-25 smoke tests passed
+26 smoke tests passed
 PASS issue form smoke checked 2 forms
-PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move
+PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move/tab focus
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS preflight completed
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-25 smoke tests passed
+26 smoke tests passed
 ```
 
 Covered:
@@ -95,6 +95,7 @@ Covered:
 - Permission explanation alignment.
 - Dashboard workbench HTML prototype structure guard.
 - Dashboard filter chips filter All / AI groups / Rule groups and expose localized empty state copy.
+- Dashboard tab title focus guard: localized title button, background action, active-tab update, window focus, and no tab close action.
 - Dashboard same-window tab move guard: target group selection, background action, same-window enforcement, and no tab close action.
 - Dashboard simple MVP UI guard: no default P1 placeholders, advanced Settings folded.
 - AI host guardrail aligned with manifest host permission.
@@ -132,14 +133,14 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move
+PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move/tab focus
 ```
 
 Evidence notes:
 
 - The script used a temporary Chrome for Testing profile and a copied unpacked extension directory.
 - Test tabs were synthetic QA URLs only.
-- It verified organize, Chat Refine, Dashboard title/color apply, and Dashboard same-window tab move against real Chrome native tab groups.
+- It verified organize, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, and Dashboard tab focus against real Chrome native tab groups.
 - It did not read the user's real Chrome profile or real browser tabs.
 
 ### Extension Package
@@ -158,7 +159,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=e7cb8f113e5c381c12a0541941d37cbc9c2175052d22cb06ca438256aec064ea
+sha256=91b85b278ad03298c66525399930467846932984f50b700cdb03449ddfdf7688
 ```
 
 Evidence notes:

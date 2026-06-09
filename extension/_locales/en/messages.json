@@ -87,6 +87,8 @@
   "protectedPrefix": { "message": "Protected: $1" },
   "close": { "message": "Close" },
   "untitled": { "message": "Untitled" },
+  "openTab": { "message": "Open tab" },
+  "couldNotOpenTab": { "message": "Could not open this tab." },
   "windowLabel": { "message": "window $1" },
   "currentTab": { "message": "Current tab" },
   "groupLabel": { "message": "Group" },

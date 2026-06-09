@@ -249,6 +249,22 @@ test("dashboard can move tabs between existing groups without adding destructive
   assert(en.move?.message && zh.move?.message, "Dashboard tab move copy should be localized");
 });
 
+test("dashboard tab titles focus existing browser tabs", () => {
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(dashboardJs.includes('data-group-action="focus-tab"'), "Dashboard tab titles should expose focus action");
+  assert(dashboardJs.includes("FOCUS_DASHBOARD_TAB"), "Dashboard should call the tab focus background action");
+  assert(dashboardCss.includes(".dashboard-tab-title-button"), "Dashboard tab title focus control should have scoped styling");
+  assert(backgroundCode.includes("FOCUS_DASHBOARD_TAB"), "Background should handle Dashboard tab focus");
+  assert(backgroundCode.includes("chrome.tabs.update(tabId, { active: true })"), "Background should activate the requested tab");
+  assert(backgroundCode.includes("chrome.windows.update(tab.windowId, { focused: true })"), "Background should focus the tab window");
+  assert(!dashboardJs.includes("chrome.tabs.remove"), "Dashboard tab focus UI must not close tabs");
+  assert(en.openTab?.message && zh.openTab?.message, "Dashboard tab focus copy should be localized");
+});
+
 test("dashboard filter chips filter smart groups", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));

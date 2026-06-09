@@ -34,6 +34,7 @@ Coverage:
 - AI classification status and suggested group count are visible in sidebar and dashboard
 - Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, workspace card, filter chips, and expanded group cards
 - Dashboard Smart Groups filter chips render All / AI groups / Rule groups views and localized empty states
+- Dashboard tab title focus activates the existing browser tab/window without storage writes or destructive tab actions
 - Dashboard same-window tab move UI calls the background action, limits target groups to the same window, and avoids tab close actions
 - Dashboard keeps unwired P1/prototype placeholders out of the default UI and folds advanced Settings content
 - Dashboard permission explanation remains aligned with manifest permissions
@@ -81,7 +82,7 @@ node tools/open_manual_qa_profile.js --self-test
 
 The runtime script uses a temporary browser profile and synthetic tabs. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome.
 
-Runtime coverage includes one-click organize, Chat Refine apply, Dashboard group title/color apply, and Dashboard same-window tab move into an existing native group.
+Runtime coverage includes one-click organize, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, and Dashboard tab focus.
 
 The manual QA profile launcher opens a disposable browser only when run without `--dry-run`; dry-run validates browser discovery, profile paths, extension path, and synthetic tab count without opening Chrome. Self-test opens the disposable browser, verifies setup, opens a local checklist page, verifies local checklist report controls, verifies the checklist includes AI and sensitive-summary checks, then closes and removes the temporary profile automatically.
 

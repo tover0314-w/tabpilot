@@ -87,6 +87,8 @@
   "protectedPrefix": { "message": "受保护：$1" },
   "close": { "message": "关闭" },
   "untitled": { "message": "未命名" },
+  "openTab": { "message": "打开标签页" },
+  "couldNotOpenTab": { "message": "无法打开这个标签页。" },
   "windowLabel": { "message": "窗口 $1" },
   "currentTab": { "message": "当前标签页" },
   "groupLabel": { "message": "分组" },

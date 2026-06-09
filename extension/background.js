@@ -151,6 +151,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "FOCUS_DASHBOARD_TAB") {
+    focusDashboardTab(message)
+      .then((result) => sendResponse({ ok: true, result }))
+      .catch((error) => sendErrorResponse(sendResponse, "FOCUS_DASHBOARD_TAB", error));
+    return true;
+  }
+
   if (message.type === "TEST_AI_CONNECTION") {
     testAIConnection(message)
       .then((result) => sendResponse({ ok: true, result }))
@@ -812,6 +819,31 @@ async function applyDashboardTabMove(message) {
 
   await publishRun(run);
   return run;
+}
+
+async function focusDashboardTab(message) {
+  const tabId = Number(message.tabId);
+
+  if (!Number.isInteger(tabId)) {
+    throw new Error("A valid tab id is required.");
+  }
+
+  const tab = await chrome.tabs.get(tabId);
+
+  if (!tab || tab.incognito) {
+    throw new Error("This tab is no longer available.");
+  }
+
+  await chrome.tabs.update(tabId, { active: true });
+
+  if (typeof tab.windowId === "number") {
+    await chrome.windows.update(tab.windowId, { focused: true });
+  }
+
+  return {
+    tabId,
+    windowId: tab.windowId
+  };
 }
 
 function buildChatRefineDraft(instruction, snapshot) {

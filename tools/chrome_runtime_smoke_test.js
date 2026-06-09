@@ -148,7 +148,17 @@ async function main() {
       const movedTab = await evaluate(cdp, `chrome.tabs.get(${sourceTab.id})`);
       assertEqual(movedTab.groupId, targetGroup.id, "Dashboard tab move did not update the native tab group");
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move");
+      const dashboardFocus = await evaluate(cdp, `
+        chrome.runtime.sendMessage({
+          type: "FOCUS_DASHBOARD_TAB",
+          tabId: ${movedTab.id}
+        })
+      `);
+      assert(dashboardFocus && dashboardFocus.ok, `Dashboard tab focus failed: ${JSON.stringify(dashboardFocus)}`);
+      const activeTabs = await evaluate(cdp, `chrome.tabs.query({ active: true, windowId: ${movedTab.windowId} })`);
+      assert(activeTabs.some((tab) => tab.id === movedTab.id), "Dashboard tab focus did not activate the requested tab");
+
+      console.log("PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move/tab focus");
     } finally {
       cdp.close();
     }

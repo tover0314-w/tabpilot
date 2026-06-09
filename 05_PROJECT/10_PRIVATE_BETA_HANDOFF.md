@@ -26,6 +26,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
 - Dashboard HTML-prototype workbench layout with expanded local tab rows
 - Dashboard Smart Groups filter chips for All / AI groups / Rule groups
+- Dashboard tab title focus back to the existing browser tab/window
 - Dashboard default UI hides unwired P1/prototype actions and folds advanced Settings content
 - Dashboard group title/color apply back to real native tab groups
 - Dashboard same-window tab move into existing native tab groups
@@ -54,12 +55,12 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 25 extension smoke tests
+- 26 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke
 - Chat Refine in runtime smoke
-- Dashboard apply and same-window tab move in runtime smoke
+- Dashboard apply, same-window tab move, and tab focus in runtime smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
 - extension package generation
 - release package verification

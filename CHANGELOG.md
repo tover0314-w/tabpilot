@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.64 — 2026-06-09
+
+Changed:
+
+- Made Dashboard Smart Groups tab titles actionable: clicking a tab title focuses the existing browser tab and its window.
+- Added background `FOCUS_DASHBOARD_TAB` handling and runtime coverage that verifies the requested tab becomes active in a temporary Chrome profile.
+- Added smoke coverage for Dashboard tab focus UI, localization, and non-destructive guardrails.
+- Updated extension README, Dashboard spec, Test Plan, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- Focus/open existing tab only; no tab closing, tab movement, grouping changes, page text reading, AI calls, storage writes, analytics upload, cloud storage, or new permissions were added.
+
 ## v0.63 — 2026-06-09
 
 Changed:

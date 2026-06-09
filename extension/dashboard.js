@@ -229,6 +229,11 @@ async function handleGroupAction(event) {
     return;
   }
 
+  if (button.dataset.groupAction === "focus-tab") {
+    await handleDashboardTabFocus(button);
+    return;
+  }
+
   if (button.dataset.groupAction !== "apply") return;
 
   const card = button.closest("[data-group-id]");
@@ -254,6 +259,20 @@ async function handleGroupAction(event) {
   }
 
   await loadDashboard();
+}
+
+async function handleDashboardTabFocus(button) {
+  const row = button.closest("[data-tab-id]");
+  if (!row) return;
+
+  const response = await chrome.runtime.sendMessage({
+    type: "FOCUS_DASHBOARD_TAB",
+    tabId: Number(row.dataset.tabId)
+  });
+
+  if (!response?.ok) {
+    window.alert(response?.error || msg("couldNotOpenTab"));
+  }
 }
 
 async function handleDashboardTabMove(button) {
@@ -673,12 +692,21 @@ function renderGroupTabRow(tab, currentGroup) {
     tab.audible ? msg("audible") : "",
     tab.discarded ? msg("discarded") : ""
   ].filter(Boolean);
+  const title = tab.title || msg("untitled");
 
   return `
     <div class="${escapeHtml(classes)}" data-tab-id="${escapeHtml(String(tab.id))}">
       <span class="dashboard-favicon" aria-hidden="true">${escapeHtml(getFaviconLetter(tab))}</span>
       <span class="dashboard-tab-title" title="${escapeHtml(tab.hostname || "")}">
-        ${escapeHtml(tab.title || msg("untitled"))}
+        <button
+          class="dashboard-tab-title-button"
+          type="button"
+          data-group-action="focus-tab"
+          title="${escapeHtml(msg("openTab"))}: ${escapeHtml(title)}"
+          aria-label="${escapeHtml(msg("openTab"))}: ${escapeHtml(title)}"
+        >
+          ${escapeHtml(title)}
+        </button>
       </span>
       <span class="dashboard-tab-host">${escapeHtml(tab.hostname || tab.path || "")}</span>
       <span class="dashboard-tab-badges">
