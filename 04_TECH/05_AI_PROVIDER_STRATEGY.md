@@ -53,6 +53,10 @@ defaultModel: deepseek-v4-flash
 - 分类输入只包含 title、hostname、path、window id 和 tab state，不发送页面正文或完整 URL。
 - API 不可用时自动 fallback 到 built-in rules。
 - Dashboard 已接入 user-triggered `Test AI Connection`，只调用 DeepSeek host 的 `/models` endpoint 检查 API key 和 model 是否可用，不发送 tab data、page text、full URL 或 request body。
+- `/models` connection test has an 8s timeout.
+- `chat/completions` classification has a 12s timeout.
+- Classification timeout or provider failure returns `fallback:*` status and one-click organize continues with local rules.
+- Timeout handling does not change host permission, request payload, full URL policy, page text policy, or cloud storage defaults.
 - Sidebar 和 Dashboard 已显示 latest run 的 AI 状态（DeepSeek applied / fallback / local rules）和 AI suggested group count，方便私测确认 AI 是否真的参与分类。
 - Other OpenAI-compatible hosts are `CONFIRM` / P1 because they require an explicit host-permission decision.
 

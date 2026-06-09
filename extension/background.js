@@ -28,6 +28,8 @@ const DEFAULT_AI_SETTINGS = {
   apiKey: ""
 };
 const SUPPORTED_AI_HOSTNAME = "api.deepseek.com";
+const AI_CONNECTION_TIMEOUT_MS = 8000;
+const AI_CLASSIFICATION_TIMEOUT_MS = 12000;
 const NO_GROUP_ID = -1;
 const SENSITIVE_SUMMARY_TERMS = [
   "admin",
@@ -407,12 +409,17 @@ async function testAIConnection(message = {}) {
 }
 
 async function fetchOpenAICompatibleModels(settings) {
-  const response = await fetch(`${normalizeAIBaseUrl(settings.baseUrl)}/models`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${settings.apiKey}`
-    }
-  });
+  const response = await fetchWithTimeout(
+    `${normalizeAIBaseUrl(settings.baseUrl)}/models`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${settings.apiKey}`
+      }
+    },
+    Number(settings.connectionTimeoutMs) || AI_CONNECTION_TIMEOUT_MS,
+    "AI connection test timed out"
+  );
 
   if (!response.ok) {
     throw new Error(`AI connection test failed (${response.status})`);
@@ -428,49 +435,55 @@ async function fetchOpenAICompatibleModels(settings) {
     .filter((model) => model.id);
 }
 
-async function callOpenAICompatibleClassifier(settings, tabs) {
+async function callOpenAICompatibleClassifier(settings, tabs, options = {}) {
   const baseUrl = normalizeAIBaseUrl(settings.baseUrl);
   const safeTabs = sanitizeTabsForAIClassification(tabs);
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${settings.apiKey}`
+  const timeoutMs = Number(options.timeoutMs || settings.classificationTimeoutMs || AI_CLASSIFICATION_TIMEOUT_MS);
+  const response = await fetchWithTimeout(
+    `${baseUrl}/chat/completions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${settings.apiKey}`
+      },
+      body: JSON.stringify({
+        model: settings.model || DEFAULT_AI_SETTINGS.model,
+        response_format: { type: "json_object" },
+        max_tokens: 1800,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You classify browser tabs into task-oriented Chrome tab groups. Return only valid JSON. Do not invent tabIds. Use concise group names. Prefer office-work categories over domain-only names."
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              task: "Classify these tabs into 4-10 useful work groups.",
+              allowedColors: Array.from(SUPPORTED_GROUP_COLORS),
+              schema: {
+                groups: [
+                  {
+                    name: "string",
+                    color: "grey|blue|red|yellow|green|pink|purple|cyan",
+                    confidence: 0.0,
+                    reason: "short string",
+                    tabIds: [123]
+                  }
+                ],
+                reviewTabIds: [123]
+              },
+              privacyNote: "Input contains title, hostname, path, and tab state only. No page body or full URL.",
+              tabs: safeTabs
+            })
+          }
+        ]
+      })
     },
-    body: JSON.stringify({
-      model: settings.model || DEFAULT_AI_SETTINGS.model,
-      response_format: { type: "json_object" },
-      max_tokens: 1800,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You classify browser tabs into task-oriented Chrome tab groups. Return only valid JSON. Do not invent tabIds. Use concise group names. Prefer office-work categories over domain-only names."
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            task: "Classify these tabs into 4-10 useful work groups.",
-            allowedColors: Array.from(SUPPORTED_GROUP_COLORS),
-            schema: {
-              groups: [
-                {
-                  name: "string",
-                  color: "grey|blue|red|yellow|green|pink|purple|cyan",
-                  confidence: 0.0,
-                  reason: "short string",
-                  tabIds: [123]
-                }
-              ],
-              reviewTabIds: [123]
-            },
-            privacyNote: "Input contains title, hostname, path, and tab state only. No page body or full URL.",
-            tabs: safeTabs
-          })
-        }
-      ]
-    })
-  });
+    timeoutMs,
+    "AI classification timed out"
+  );
 
   if (!response.ok) {
     throw new Error(`AI classification failed (${response.status})`);
@@ -484,6 +497,30 @@ async function callOpenAICompatibleClassifier(settings, tabs) {
   }
 
   return JSON.parse(content);
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs, timeoutMessage) {
+  const ms = Number(timeoutMs);
+  if (!Number.isFinite(ms) || ms <= 0) {
+    return fetch(url, options);
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), ms);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (controller.signal.aborted || error?.name === "AbortError") {
+      throw new Error(timeoutMessage || "AI request timed out");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function sanitizeTabsForAIClassification(tabs) {

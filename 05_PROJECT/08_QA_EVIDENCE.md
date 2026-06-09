@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.59 changes in this commit
+Source state verified: v0.61 changes in this commit
 
 ### Unified Preflight
 
@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 96 tracked files
-22 smoke tests passed
+23 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
 PASS UI screenshots captured
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-22 smoke tests passed
+23 smoke tests passed
 ```
 
 Covered:
@@ -106,6 +106,8 @@ Covered:
 - Duplicate safety policy.
 - AI output validation.
 - AI classification request minimization: no full URL, restore URL, query token, or page text in provider payload.
+- AI classification timeout aborts the provider request and falls back to local rules.
+- AI connection and classification fetches carry abort signals.
 - AI classification status visibility in sidebar and dashboard, including suggested AI group count.
 - Dashboard expanded Smart Group cards and local tab-row rendering from sanitized run data.
 - Dashboard Settings first screen shows AI Classification and Privacy Defaults; permission, diagnostics, and local reset controls remain available under advanced folded sections.
@@ -154,7 +156,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=6ec7938e9bd1f1ed0633b800aea7a2ae58bd36d2826cfca7388290ab2ea4acb1
+sha256=1c516f5427c15a3ceaef9c22ab67ce6fecdcf3863ac18c32bbf14f3c942d2666
 ```
 
 Evidence notes:

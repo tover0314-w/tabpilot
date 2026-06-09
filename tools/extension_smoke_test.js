@@ -25,6 +25,10 @@ const context = {
   RegExp,
   Math,
   fetch,
+  AbortController,
+  DOMException,
+  setTimeout,
+  clearTimeout,
   chrome: {
     action: { onClicked: { addListener() {} } },
     runtime: {
@@ -797,6 +801,7 @@ test("AI classification request sends minimized tab metadata only", async () => 
   assertEqual(fetchCalls.length, 1, "AI classification fetch call count");
   assertEqual(fetchCalls[0].url, "https://api.deepseek.com/chat/completions", "AI classification endpoint");
   assertEqual(fetchCalls[0].options.method, "POST", "AI classification should use POST");
+  assert(fetchCalls[0].options.signal, "AI classification fetch should carry an abort signal");
 
   const bodyText = fetchCalls[0].options.body || "";
   const body = JSON.parse(bodyText);
@@ -816,6 +821,59 @@ test("AI classification request sends minimized tab metadata only", async () => 
   assert(!bodyText.includes("token=abc"), "AI payload must not include URL query token");
   assert(!bodyText.includes("Confidential page body"), "AI payload must not include page text");
   assert(bodyText.includes("No page body or full URL"), "AI payload should include privacy note");
+});
+
+test("AI classification timeout falls back to local rules", async () => {
+  let aborted = false;
+  context.fetch = async (url, options = {}) =>
+    new Promise((resolve, reject) => {
+      options.signal?.addEventListener(
+        "abort",
+        () => {
+          aborted = true;
+          reject(new DOMException("Aborted", "AbortError"));
+        },
+        { once: true }
+      );
+    });
+  context.chrome.storage.local = {
+    async get(key) {
+      if (key === "tabmosaic.aiSettings") {
+        return {
+          "tabmosaic.aiSettings": {
+            enabled: true,
+            apiKey: "sk-secret",
+            baseUrl: "https://api.deepseek.com",
+            model: "deepseek-v4-flash",
+            classificationTimeoutMs: 1
+          }
+        };
+      }
+      return {};
+    },
+    async set() {},
+    async remove() {}
+  };
+
+  const result = await context.classifyTabsWithAIIfConfigured(
+    snapshot([
+      tab({
+        id: 51,
+        title: "Chrome docs",
+        url: "https://developer.chrome.com/docs/extensions/reference/api/tabs"
+      }),
+      tab({
+        id: 52,
+        title: "GitHub PR",
+        url: "https://github.com/acme/app/pull/42"
+      })
+    ])
+  );
+
+  assert(aborted, "AI classification fetch should be aborted on timeout");
+  assert(String(result.status).includes("AI classification timed out"), "Timeout should surface as fallback reason");
+  assertEqual(result.byTabId.size, 0, "Timed out AI classification should not assign tabs");
+  assertEqual(result.groupCount, 0, "Timed out AI classification should not count groups");
 });
 
 test("AI classification status is visible in sidebar and dashboard", () => {
@@ -871,6 +929,7 @@ test("AI connection test does not send tab data", async () => {
   assertEqual(fetchCalls.length, 1, "AI connection fetch call count");
   assertEqual(fetchCalls[0].url, "https://api.deepseek.com/models", "AI connection should call models endpoint");
   assertEqual(fetchCalls[0].options.method, "GET", "AI connection should use GET");
+  assert(fetchCalls[0].options.signal, "AI connection fetch should carry an abort signal");
   assert(!fetchCalls[0].options.body, "AI connection should not send request body");
   assertEqual(result.modelAvailable, true, "AI connection model availability");
   assertEqual(result.privacy.sentTabData, false, "AI connection must not send tab data");

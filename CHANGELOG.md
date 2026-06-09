@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.61 — 2026-06-09
+
+Changed:
+
+- Added timeout guardrails for DeepSeek/OpenAI-compatible `/models` and `chat/completions` requests.
+- AI classification timeout or provider failure now falls back to local rules instead of leaving one-click organize waiting on the provider.
+- Added smoke coverage that classification fetches carry an abort signal and that timeout fallback returns a safe local-rules result.
+- Updated extension README, AI Provider Strategy, One-Click Autopilot, Test Plan, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- Reliability-only change; no extension permissions, AI provider hosts, AI payload fields, analytics upload, cloud storage, automatic tab-closing policy, or product scope changed.
+- Timeout fallback keeps the existing minimized tab metadata boundary and existing `fallback:*` AI status reporting.
+
 ## v0.60 — 2026-06-09
 
 Changed:

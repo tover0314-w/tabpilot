@@ -30,6 +30,7 @@ Coverage:
 - current-tab summary confirms sensitive pages before visible text extraction
 - AI output validation for invented/repeated tab IDs
 - AI classification request includes minimized metadata only and excludes full URL, restore URL, query token, and page text
+- AI classification request carries an abort signal and falls back to local rules on timeout
 - AI classification status and suggested group count are visible in sidebar and dashboard
 - Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, workspace card, filter chips, and expanded group cards
 - Dashboard keeps unwired P1/prototype placeholders out of the default UI and folds advanced Settings content
@@ -41,6 +42,7 @@ Coverage:
 - Beta diagnostic snapshot and feedback template redact URLs, tab titles, hostnames, rules, group names, page text, and API keys
 - Beta feedback template includes English/Chinese classification quality labeling for the 70/20/10/0 target
 - AI connection test calls `/models` without sending tab data, full URLs, page text, or a request body
+- AI connection test carries an abort signal
 - AI connection rejects unsupported OpenAI-compatible hosts before fetch; private beta permits only `https://api.deepseek.com`
 - AI host guardrail keeps background validation, Dashboard validation, Dashboard permission copy, and manifest host permissions aligned
 - Dashboard AI settings copy explains the private-beta DeepSeek host limit

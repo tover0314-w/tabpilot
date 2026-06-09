@@ -32,6 +32,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Dashboard can clear only the locally saved AI key, disabling AI classification while keeping local rules and recent results.
 - Side panel and Dashboard show whether AI classification was applied, fell back, or stayed on local rules.
 - Side panel and Dashboard show how many AI groups were suggested in the latest organize run.
+- AI connection testing and AI classification use request timeouts; classification timeout or provider failure falls back to local rules.
 - Dashboard Settings explains each Chrome permission and what data it supports.
 - Dashboard Settings keeps AI Classification and Privacy Defaults visible first; permissions, diagnostics, and local reset live under advanced folded sections.
 - Dashboard Settings can copy a redacted local diagnostic snapshot for beta bug reports.
@@ -57,6 +58,8 @@ Current tab summaries do not call AI yet, do not upload page content, and requir
 AI classification sends tab title, hostname, path, and tab state only. It does not send page body or full URL.
 
 AI connection testing calls the configured `/models` endpoint only. It does not send tab data, page text, full URLs, or a request body.
+
+AI classification timeout fallback does not send additional data or change duplicate-close behavior; the browser is organized with local rules and the AI status explains the fallback.
 
 Clear AI Key does not close tabs, move tabs, clear local rules, clear recent results, or call the AI provider.
 
@@ -111,7 +114,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English/Chinese localization, Dashboard workbench layout, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI key clearing, and local data deletion.
+It checks manifest permissions, English/Chinese localization, Dashboard workbench layout, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 

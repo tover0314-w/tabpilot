@@ -122,6 +122,12 @@ And 用户可以 Undo
 - 可 fallback 到规则分类。
 - Sidebar 提示“已先用本地规则整理，AI 优化稍后可重试”。
 
+CONFIRMED BY IMPLEMENTATION:
+
+- DeepSeek/OpenAI-compatible classification request has a timeout guard.
+- On timeout, one-click organize continues with local rules and surfaces fallback status in Sidebar/Dashboard.
+- Timeout fallback does not change AI payload fields, host permissions, page text reading, or duplicate-close policy.
+
 ### 用户正在拖拽 tabs
 
 Chrome 可能暂时不允许移动 tabs。需要 retry/backoff。
