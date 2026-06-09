@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.71 CI beta readiness check in this commit
+Source state verified: v0.72 self-test guide in this commit
 
 ### Unified Preflight
 
@@ -21,7 +21,7 @@ node tools/preflight.js --runtime --screenshots
 Result:
 
 ```text
-PASS secret scan checked 97 tracked files
+PASS secret scan checked 98 tracked files
 28 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus
@@ -42,6 +42,7 @@ Evidence notes:
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
 - Beta readiness check confirms controlled local/private beta evidence is present while public Chrome Web Store launch remains blocked.
 - GitHub Actions runs the same beta readiness check after release package verification.
+- Beta readiness check requires the beginner self-test guide and its controlled-beta/public-launch boundary.
 
 ### DeepSeek / OpenAI-Compatible Provider
 

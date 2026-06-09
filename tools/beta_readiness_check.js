@@ -9,7 +9,8 @@ const requiredFiles = [
   "extension/manifest.json",
   "05_PROJECT/08_QA_EVIDENCE.md",
   "05_PROJECT/09_BETA_RELEASE_NOTES.md",
-  "05_PROJECT/10_PRIVATE_BETA_HANDOFF.md"
+  "05_PROJECT/10_PRIVATE_BETA_HANDOFF.md",
+  "05_PROJECT/11_SELF_TEST_GUIDE.md"
 ];
 
 main();
@@ -35,6 +36,7 @@ function main() {
   const qaEvidence = readText("05_PROJECT/08_QA_EVIDENCE.md", failures);
   const releaseNotes = readText("05_PROJECT/09_BETA_RELEASE_NOTES.md", failures);
   const handoff = readText("05_PROJECT/10_PRIVATE_BETA_HANDOFF.md", failures);
+  const selfTestGuide = readText("05_PROJECT/11_SELF_TEST_GUIDE.md", failures);
   const readme = readText("README.md", failures);
   const topVersion = getTopChangelogVersion(changelog);
   const packageBase = `tabmosaic-ai-extension-v${version}`;
@@ -86,12 +88,25 @@ function main() {
     failures
   );
   requireIncludes(
+    "05_PROJECT/11_SELF_TEST_GUIDE.md",
+    selfTestGuide,
+    [
+      "READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes",
+      "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
+      "node tools/open_manual_qa_profile.js",
+      "Local QA Notes",
+      "不要公开发布，不要提交 Chrome Web Store。"
+    ],
+    failures
+  );
+  requireIncludes(
     "README.md",
     readme,
     [
       "node tools/beta_readiness_check.js",
       "controlled local/private beta",
-      "not ready for public Chrome Web Store launch"
+      "not ready for public Chrome Web Store launch",
+      "05_PROJECT/11_SELF_TEST_GUIDE.md"
     ],
     failures
   );

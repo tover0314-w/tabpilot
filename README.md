@@ -46,6 +46,7 @@ dist/              本地生成的扩展 zip 包
 05_PROJECT/08_QA_EVIDENCE.md  私测 MVP 本地验证证据，不包含 secrets 或真实浏览器数据
 05_PROJECT/09_BETA_RELEASE_NOTES.md  v0.1.0 私测发布说明和安装/验证路径
 05_PROJECT/10_PRIVATE_BETA_HANDOFF.md  私测交接包：已就绪内容、验证证据、人工 QA 路径和确认门
+05_PROJECT/11_SELF_TEST_GUIDE.md  小白自测指南：从一次性 QA profile 到真实 Chrome profile
 06_REFERENCES/     官方来源、假设、后续调研清单、原始交付归档
 extension/         当前可加载的 Chrome Extension 开发切片
 tools/             无依赖本地验证脚本，例如 extension smoke test
@@ -159,7 +160,7 @@ node tools/preflight.js --screenshots
 artifacts/ui-screenshots/
 ```
 
-手动 QA 可按 `05_PROJECT/06_QA_RUNBOOK.md` 执行。可先打印测试 tabs：
+小白自测先看 `05_PROJECT/11_SELF_TEST_GUIDE.md`。完整手动 QA 可按 `05_PROJECT/06_QA_RUNBOOK.md` 执行。可先打印测试 tabs：
 
 ```bash
 node tools/qa_seed_tabs.js

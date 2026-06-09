@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.72 — 2026-06-09
+
+Changed:
+
+- Added `05_PROJECT/11_SELF_TEST_GUIDE.md`, a beginner-friendly self-test guide for disposable QA profile testing, optional DeepSeek testing, and real Chrome profile testing.
+- Linked the guide from README and INDEX.
+- Extended beta readiness check to require the self-test guide and its controlled-beta/public-launch boundary.
+
+Safety:
+
+- Documentation/readiness update only; no extension runtime behavior, permissions, AI payloads, storage defaults, cloud upload, analytics, or tab-closing policy changed.
+- The guide keeps the safest path first: disposable QA profile before any real Chrome profile testing.
+
 ## v0.71 — 2026-06-09
 
 Changed:
