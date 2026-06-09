@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.70 — 2026-06-09
+
+Changed:
+
+- Added `tools/beta_readiness_check.js` to turn the current launch-readiness judgment into a local, repeatable check.
+- Preflight now runs the beta readiness check after package verification.
+- Updated beta release notes, QA evidence, handoff, README, index, and test plan with the current controlled-beta/public-launch boundary.
+
+Safety:
+
+- Readiness tooling and documentation update only; no extension runtime behavior, permissions, AI payloads, storage defaults, cloud upload, analytics, or tab-closing policy changed.
+- The readiness check reads local docs and package metadata only; it does not call the network or touch browser profiles.
+
 ## v0.69 — 2026-06-09
 
 Changed:

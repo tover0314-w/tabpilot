@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.69 runtime Restore Closed coverage in this commit
+Source state verified: v0.70 beta readiness check in this commit
 
 ### Unified Preflight
 
@@ -21,12 +21,15 @@ node tools/preflight.js --runtime --screenshots
 Result:
 
 ```text
-PASS secret scan checked 96 tracked files
+PASS secret scan checked 97 tracked files
 28 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
+PASS controlled private beta readiness evidence checked
+READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes
+READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
 PASS preflight completed
 ```
 
@@ -37,6 +40,7 @@ Evidence notes:
 - `--screenshots` generated mock-data UI screenshots and did not read real browser tabs or `.env.local`.
 - Runtime smoke can still `SKIP` on branded Google Chrome CLI extension loading, but this run auto-detected Chrome for Testing through Playwright and passed.
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
+- Beta readiness check confirms controlled local/private beta evidence is present while public Chrome Web Store launch remains blocked.
 
 ### DeepSeek / OpenAI-Compatible Provider
 
@@ -197,6 +201,29 @@ Evidence notes:
 - Package manifest safety flags state `includesEnvFiles=false`, `includesSourceMaps=false`, and `includesNodeModules=false`.
 - Repeated package generation produced the same package checksum after unchanged icon writes and zip extra attributes were removed.
 - `dist/` is ignored because the zip is regenerable from source.
+
+### Beta Readiness Check
+
+Command:
+
+```bash
+node tools/beta_readiness_check.js
+```
+
+Result:
+
+```text
+PASS controlled private beta readiness evidence checked
+READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes
+READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
+PUBLIC_LAUNCH_BLOCKERS=real-profile manual QA, privacy policy URL, support email, final brand/domain, store disclosures, screenshots/demo video, beta user feedback
+```
+
+Evidence notes:
+
+- The check reads local docs, package checksum, and package manifest only.
+- It does not call the network, open Chrome, read real browser tabs, or read `.env.local`.
+- It intentionally keeps public launch marked not ready until the remaining confirmation gates and real-profile QA are complete.
 
 ### UI Screenshot Capture
 

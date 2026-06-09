@@ -10,6 +10,7 @@ node tools/secret_scan.js
 node tools/extension_smoke_test.js
 node tools/issue_form_smoke_test.js
 node tools/verify_release_package.js
+node tools/beta_readiness_check.js
 node --check tools/capture_ui_screenshots.js
 ```
 
@@ -19,6 +20,7 @@ Coverage:
 - secret scan for tracked env files and real-looking API keys
 - issue form smoke test for beta feedback structure, privacy redlines, and required safety acknowledgements
 - release package verification against the current manifest version
+- beta readiness check for QA evidence, handoff, release notes, package checksum, controlled-beta status, and public-launch blockers
 - manifest permission guardrails
 - no default_popup one-click action constraint
 - English/Chinese locale parity and UI i18n key references

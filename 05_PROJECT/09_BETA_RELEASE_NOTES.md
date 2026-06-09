@@ -59,14 +59,15 @@ Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 ```text
 node tools/preflight.js --runtime --screenshots
 PASS preflight completed
-PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus
 PASS UI screenshots captured
+PASS controlled private beta readiness evidence checked
 
 node tools/deepseek_smoke_test.js --classify-fixture
 PASS DeepSeek/OpenAI-compatible /models reachable
 modelAvailable=yes
 PASS synthetic classification fixture completed
-fixtureGroupCount=2
+fixtureGroupCount=3
 fixtureAssignedTabs=3
 ```
 
@@ -108,6 +109,7 @@ Run:
 
 ```bash
 node tools/preflight.js
+node tools/beta_readiness_check.js
 node tools/open_manual_qa_profile.js --dry-run
 node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
@@ -121,7 +123,7 @@ Then follow:
 05_PROJECT/06_QA_RUNBOOK.md
 ```
 
-Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with a local Manual QA Checklist, synthetic tabs, sidepanel, and dashboard. Checklist state stays in the disposable profile, and the checklist can copy a Markdown QA result. It does not touch the user's real Chrome profile.
+Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with a local Manual QA Checklist, synthetic tabs, sidepanel, and dashboard. Checklist state and local QA notes stay in the disposable profile, and the checklist can copy a Markdown QA result. It does not touch the user's real Chrome profile.
 
 Minimum manual checks:
 
@@ -140,7 +142,7 @@ Minimum manual checks:
 - Public Chrome Web Store submission is not approved yet.
 - P0 manual QA runbook has not been completed on the user's real Chrome profile.
 - Automated runtime smoke has passed with a temporary Chrome for Testing profile and synthetic tabs, but this does not replace real-profile manual QA.
-- Dashboard apply currently edits group title/color only; it does not move tabs from Dashboard.
+- Dashboard apply supports group title/color edits, tab focus, and same-window tab moves into existing groups; it does not support drag/drop, manual new groups, or cross-window tab moves.
 - Current-tab summary is local extractive summary, not cloud AI summary.
 - Multi-tab chat is P1/Pro and not part of this beta slice.
 - Hosted AI, accounts, billing, cloud sync, and analytics are not included.

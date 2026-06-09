@@ -60,7 +60,13 @@ tools/             无依赖本地验证脚本，例如 extension smoke test
 node tools/preflight.js
 ```
 
-它会运行 secret scan、JS 语法检查、extension smoke test、打包和 zip env 排除检查。默认不调用 DeepSeek，不启动真实 Chrome runtime，也不生成 UI 截图。
+它会运行 secret scan、JS 语法检查、extension smoke test、打包、zip env 排除检查和 beta readiness check。默认不调用 DeepSeek，不启动真实 Chrome runtime，也不生成 UI 截图。
+
+```bash
+node tools/beta_readiness_check.js
+```
+
+它会读取本地 QA evidence、private beta handoff、release notes、扩展包 checksum 和 package manifest，给出 controlled local/private beta 是否就绪、以及是否 not ready for public Chrome Web Store launch 的明确结论。这个检查不调用网络、不读取真实浏览器 profile、不读取 `.env.local`。
 
 ```bash
 node tools/extension_smoke_test.js

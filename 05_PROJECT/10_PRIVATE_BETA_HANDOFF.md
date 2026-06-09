@@ -67,6 +67,7 @@ Verified:
 - disposable manual QA profile self-test with synthetic QA tabs and current MVP Dashboard checklist coverage
 - extension package generation
 - release package verification
+- beta readiness check: controlled local/private beta ready, public Chrome Web Store launch not ready
 ```
 
 DeepSeek provider verification:

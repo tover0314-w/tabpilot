@@ -24,6 +24,7 @@ const syntaxTargets = [
   "tools/secret_scan.js",
   "tools/issue_form_smoke_test.js",
   "tools/verify_release_package.js",
+  "tools/beta_readiness_check.js",
   "tools/preflight.js"
 ];
 
@@ -61,6 +62,7 @@ function main() {
 
   runStep("Package extension", process.execPath, ["tools/package_extension.js"]);
   runStep("Verify release package", process.execPath, ["tools/verify_release_package.js"]);
+  runStep("Beta readiness check", process.execPath, ["tools/beta_readiness_check.js"]);
 
   console.log("PASS preflight completed");
 }
