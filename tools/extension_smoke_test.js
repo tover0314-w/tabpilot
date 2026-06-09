@@ -777,6 +777,30 @@ test("AI classification request sends minimized tab metadata only", async () => 
   assert(bodyText.includes("No page body or full URL"), "AI payload should include privacy note");
 });
 
+test("AI classification status is visible in sidebar and dashboard", () => {
+  const sidepanelJs = fs.readFileSync(path.join(EXTENSION_DIR, "sidepanel.js"), "utf8");
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const screenshotTool = fs.readFileSync(path.join(ROOT_DIR, "tools", "capture_ui_screenshots.js"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(sidepanelJs.includes('msg("aiStatus")'), "Sidepanel metrics should show AI status");
+  assert(sidepanelJs.includes('msg("aiGroups")'), "Sidepanel metrics should show AI group count");
+  assert(sidepanelJs.includes("summary?.aiGroupsSuggested"), "Sidepanel should read AI suggested group count");
+  assert(dashboardJs.includes('msg("aiStatus")'), "Dashboard metrics should show AI status");
+  assert(dashboardJs.includes('msg("aiGroups")'), "Dashboard should show AI group count");
+  assert(dashboardJs.includes("summary.aiGroupsSuggested"), "Dashboard should read AI suggested group count");
+  assert(dashboardJs.includes('status === "empty"'), "Dashboard should format empty AI output");
+  assert(sidepanelJs.includes('status === "empty"'), "Sidepanel should format empty AI output");
+  assert(screenshotTool.includes("aiGroupsSuggested: 3"), "Screenshot mock should render AI group count");
+  assert(en.aiStatus?.message, "English AI status label");
+  assert(en.aiGroups?.message, "English AI group label");
+  assert(en.aiNoUsableGroups?.message, "English empty AI copy");
+  assert(zh.aiStatus?.message, "Chinese AI status label");
+  assert(zh.aiGroups?.message, "Chinese AI group label");
+  assert(zh.aiNoUsableGroups?.message, "Chinese empty AI copy");
+});
+
 test("AI connection test does not send tab data", async () => {
   const fetchCalls = [];
   context.fetch = async (url, options = {}) => {

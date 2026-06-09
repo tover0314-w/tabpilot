@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.57 — 2026-06-09
+
+Changed:
+
+- Sidebar Browser Result now shows AI status and AI suggested group count.
+- Dashboard metrics and Settings Snapshot now show AI status and AI suggested group count.
+- Added English/Chinese copy and mock screenshot data for the AI status metrics.
+- Added smoke coverage that AI classification status is visible in both sidebar and dashboard.
+- Updated extension README, AI Provider Strategy, Test Plan, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- Display-only change based on existing local run summary fields.
+- No new AI calls, permissions, provider hosts, AI payload fields, analytics upload, cloud storage, or product scope changed.
+
 ## v0.56 — 2026-06-09
 
 Changed:

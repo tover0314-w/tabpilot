@@ -27,6 +27,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard group title/color apply back to real native tab groups
 - optional DeepSeek AI classification through OpenAI-compatible request format
 - DeepSeek connection test without tab data
+- AI classification status and suggested group count visible in Sidebar and Dashboard
 - Dashboard Clear AI Key
 - Dashboard Clear Local Data
 - local redacted diagnostics and feedback template
@@ -48,7 +49,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 19 extension smoke tests
+- 20 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke

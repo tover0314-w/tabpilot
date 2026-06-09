@@ -27,6 +27,7 @@ const MOCK_RUN = {
     undoAvailable: true,
     closedTabsRestoreAvailable: true,
     aiClassificationStatus: "applied",
+    aiGroupsSuggested: 3,
     protectedCounts: {
       active: 3,
       pinned: 2,

@@ -359,6 +359,7 @@ function renderSettingsSnapshot(summary) {
 
   settingsSnapshot.innerHTML = `
     <div class="row"><span>${escapeHtml(msg("aiProvider"))}</span><strong>${escapeHtml(formatAIStatus(aiStatus))}</strong></div>
+    <div class="row"><span>${escapeHtml(msg("aiGroups"))}</span><strong>${escapeHtml(String(summary.aiGroupsSuggested ?? "—"))}</strong></div>
     <div class="row"><span>${escapeHtml(msg("pageBodyReading"))}</span><strong>${escapeHtml(msg("userTriggered"))}</strong></div>
     <div class="row"><span>${escapeHtml(msg("incognito"))}</span><strong>${escapeHtml(msg("off"))}</strong></div>
     <div class="row"><span>${escapeHtml(msg("cloudSync"))}</span><strong>${escapeHtml(msg("off"))}</strong></div>
@@ -368,6 +369,8 @@ function renderSettingsSnapshot(summary) {
 function formatAIStatus(status) {
   if (status === "applied") return msg("deepSeekApplied");
   if (status === "not-configured") return msg("localRules");
+  if (status === "empty") return msg("aiNoUsableGroups");
+  if (status === "no-tabs") return msg("aiNoEligibleTabs");
   if (String(status).startsWith("fallback:")) return msg("fallbackToLocal");
   return status;
 }
@@ -379,7 +382,9 @@ function renderMetrics(summary) {
     [msg("groups"), summary.groupsCreated ?? "—"],
     [msg("moved"), summary.tabsMoved ?? "—"],
     [msg("closedDupes"), summary.safeDuplicatesClosed ?? "—"],
-    [msg("reviewDupes"), summary.reviewDuplicateGroups ?? "—"]
+    [msg("reviewDupes"), summary.reviewDuplicateGroups ?? "—"],
+    [msg("aiStatus"), formatAIStatus(summary.aiClassificationStatus || "not-configured")],
+    [msg("aiGroups"), summary.aiGroupsSuggested ?? "—"]
   ];
 
   dashboardMetrics.innerHTML = metrics

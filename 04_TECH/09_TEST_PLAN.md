@@ -30,6 +30,7 @@ Coverage:
 - current-tab summary confirms sensitive pages before visible text extraction
 - AI output validation for invented/repeated tab IDs
 - AI classification request includes minimized metadata only and excludes full URL, restore URL, query token, and page text
+- AI classification status and suggested group count are visible in sidebar and dashboard
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types

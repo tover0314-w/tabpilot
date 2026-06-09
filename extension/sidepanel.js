@@ -493,7 +493,9 @@ function renderMetrics(summary) {
     { label: msg("windows"), value: summary?.windowCount ?? "—" },
     { label: msg("tabs"), value: summary?.tabCount ?? "—" },
     { label: msg("groups"), value: summary?.groupsCreated ?? "—" },
-    { label: msg("closedDupes"), value: summary?.safeDuplicatesClosed ?? "—" }
+    { label: msg("closedDupes"), value: summary?.safeDuplicatesClosed ?? "—" },
+    { label: msg("aiStatus"), value: formatAIStatus(summary?.aiClassificationStatus || "not-configured") },
+    { label: msg("aiGroups"), value: summary?.aiGroupsSuggested ?? "—" }
   ];
 
   metricsGrid.innerHTML = metrics
@@ -506,6 +508,15 @@ function renderMetrics(summary) {
       `
     )
     .join("");
+}
+
+function formatAIStatus(status) {
+  if (status === "applied") return msg("deepSeekApplied");
+  if (status === "not-configured") return msg("localRules");
+  if (status === "empty") return msg("aiNoUsableGroups");
+  if (status === "no-tabs") return msg("aiNoEligibleTabs");
+  if (String(status).startsWith("fallback:")) return msg("fallbackToLocal");
+  return status;
 }
 
 function renderGroups(groups = []) {

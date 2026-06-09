@@ -28,6 +28,8 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Dashboard can save a local DeepSeek API key for AI tab classification through an OpenAI-compatible request format.
 - Dashboard can test the AI provider connection without sending tab data.
 - Dashboard can clear only the locally saved AI key, disabling AI classification while keeping local rules and recent results.
+- Side panel and Dashboard show whether AI classification was applied, fell back, or stayed on local rules.
+- Side panel and Dashboard show how many AI groups were suggested in the latest organize run.
 - Dashboard Settings explains each Chrome permission and what data it supports.
 - Dashboard Settings can copy a redacted local diagnostic snapshot for beta bug reports.
 - Dashboard diagnostics include recent local error summaries after redaction.
