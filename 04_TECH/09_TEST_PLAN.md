@@ -82,6 +82,7 @@ Expected:
 - dist/tabmosaic-ai-extension-v0.1.0.sha256 exists
 - dist/tabmosaic-ai-extension-v0.1.0.package.json exists and states env files are excluded
 - release package verifier passes for the current manifest version
+- release package verifier rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata
 ```
 
 GitHub Actions CI:
@@ -99,7 +100,7 @@ Coverage:
 - extension smoke test
 - issue form smoke test
 - extension package generation
-- release package verification, including env exclusion, checksum, package manifest, and required zip entries
+- release package verification, including forbidden-entry exclusion, checksum, package manifest, and required zip entries
 - package artifact upload
 ```
 

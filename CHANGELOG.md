@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.44 — 2026-06-09
+
+Changed:
+
+- Release package verifier now parses zip entries and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
+- Updated README, extension README, and Test Plan with the stricter package safety checks.
+
+Safety:
+
+- Release validation change only.
+- No product behavior, permissions, AI payload, analytics, storage behavior, or automatic upload path changed.
+
 ## v0.43 — 2026-06-09
 
 Changed:

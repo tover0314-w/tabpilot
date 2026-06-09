@@ -24,6 +24,13 @@ const REQUIRED_ZIP_ENTRIES = [
   "_locales/en/messages.json",
   "_locales/zh_CN/messages.json"
 ];
+const FORBIDDEN_ZIP_ENTRY_PATTERNS = [
+  { name: "env file", pattern: /(^|\/)\.env($|\.)/ },
+  { name: "node_modules", pattern: /(^|\/)node_modules($|\/)/ },
+  { name: "source map", pattern: /\.map$/ },
+  { name: "macOS metadata", pattern: /(^|\/)(\.DS_Store|__MACOSX)($|\/)/ },
+  { name: "git metadata", pattern: /(^|\/)\.git($|\/)/ }
+];
 
 main();
 
@@ -36,9 +43,9 @@ function main() {
   assertFile(expected.checksumPath, "checksum file");
   assertFile(expected.packageManifestPath, "package manifest");
 
-  const zipListing = listZip(expected.zipPath);
-  assertNoEnvFiles(zipListing);
-  assertRequiredEntries(zipListing);
+  const zipEntries = listZipEntries(expected.zipPath);
+  assertNoForbiddenEntries(zipEntries);
+  assertRequiredEntries(zipEntries);
   assertChecksum(expected);
   assertPackageManifest(expected, version);
 
@@ -73,7 +80,7 @@ function assertFile(filePath, label) {
   }
 }
 
-function listZip(zipPath) {
+function listZipEntries(zipPath) {
   const result = childProcess.spawnSync("unzip", ["-l", zipPath], {
     cwd: ROOT_DIR,
     encoding: "utf8"
@@ -87,18 +94,27 @@ function listZip(zipPath) {
     throw new Error(result.stderr || "unzip failed");
   }
 
-  return result.stdout;
+  return result.stdout
+    .split(/\r?\n/)
+    .map((line) => line.match(/^\s*\d+\s+\S+\s+\S+\s+(.+)$/)?.[1]?.trim())
+    .filter(Boolean);
 }
 
-function assertNoEnvFiles(zipListing) {
-  if (/\.env($|\.)/.test(zipListing)) {
-    throw new Error("Package unexpectedly contains env files");
+function assertNoForbiddenEntries(zipEntries) {
+  for (const entry of zipEntries) {
+    for (const forbidden of FORBIDDEN_ZIP_ENTRY_PATTERNS) {
+      if (forbidden.pattern.test(entry)) {
+        throw new Error(`Package unexpectedly contains ${forbidden.name}: ${entry}`);
+      }
+    }
   }
 }
 
-function assertRequiredEntries(zipListing) {
+function assertRequiredEntries(zipEntries) {
+  const entrySet = new Set(zipEntries);
+
   for (const entry of REQUIRED_ZIP_ENTRIES) {
-    if (!zipListing.includes(entry)) {
+    if (!entrySet.has(entry)) {
       throw new Error(`Package missing required entry: ${entry}`);
     }
   }

@@ -77,7 +77,7 @@ node tools/issue_form_smoke_test.js
 node tools/verify_release_package.js
 ```
 
-它会按 `extension/manifest.json` 的当前版本检查生成的 zip、sha256 和 package manifest，避免版本升级后本地/CI 还卡在旧包名。
+它会按 `extension/manifest.json` 的当前版本检查生成的 zip、sha256、package manifest、必需文件，以及 `.env`、source maps、`node_modules`、macOS/git metadata 等禁止项，避免版本升级后本地/CI 还卡在旧包名。
 
 提交前 secret scan：
 
