@@ -586,6 +586,86 @@ test("AI validation rejects invented ids and duplicate assignments", () => {
   assertEqual(byTabId.get(31).name, "Chrome Extension Docs", "AI validation should keep first valid group");
 });
 
+test("AI classification request sends minimized tab metadata only", async () => {
+  const fetchCalls = [];
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  groups: [
+                    {
+                      name: "Private Work",
+                      color: "blue",
+                      confidence: 0.9,
+                      reason: "Synthetic fixture",
+                      tabIds: [41]
+                    }
+                  ],
+                  reviewTabIds: []
+                })
+              }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const output = await context.callOpenAICompatibleClassifier(
+    {
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-v4-flash",
+      apiKey: "sk-secret"
+    },
+    [
+      {
+        tabId: 41,
+        title: "Private planning title",
+        hostname: "private.example",
+        path: "/secret",
+        fullUrl: "https://private.example/secret?token=abc",
+        restoreUrl: "https://private.example/secret?token=abc",
+        pageText: "Confidential page body",
+        windowId: 1,
+        active: true,
+        pinned: false,
+        audible: false,
+        discarded: false,
+        existingGroup: null
+      }
+    ]
+  );
+
+  assertEqual(fetchCalls.length, 1, "AI classification fetch call count");
+  assertEqual(fetchCalls[0].url, "https://api.deepseek.com/chat/completions", "AI classification endpoint");
+  assertEqual(fetchCalls[0].options.method, "POST", "AI classification should use POST");
+
+  const bodyText = fetchCalls[0].options.body || "";
+  const body = JSON.parse(bodyText);
+  const userContent = JSON.parse(body.messages[1].content);
+  const firstTab = userContent.tabs[0];
+
+  assertEqual(output.groups[0].tabIds[0], 41, "AI classifier output should parse JSON");
+  assertEqual(firstTab.tabId, 41, "AI payload should include tab id");
+  assertEqual(firstTab.title, "Private planning title", "AI payload should include title");
+  assertEqual(firstTab.hostname, "private.example", "AI payload should include hostname");
+  assertEqual(firstTab.path, "/secret", "AI payload should include path");
+  assertEqual(firstTab.active, true, "AI payload should include tab state");
+  assert(!("fullUrl" in firstTab), "AI payload must not include fullUrl field");
+  assert(!("restoreUrl" in firstTab), "AI payload must not include restoreUrl field");
+  assert(!("pageText" in firstTab), "AI payload must not include pageText field");
+  assert(!bodyText.includes("https://private.example/secret?token=abc"), "AI payload must not include full URL");
+  assert(!bodyText.includes("token=abc"), "AI payload must not include URL query token");
+  assert(!bodyText.includes("Confidential page body"), "AI payload must not include page text");
+  assert(bodyText.includes("No page body or full URL"), "AI payload should include privacy note");
+});
+
 test("AI connection test does not send tab data", async () => {
   const fetchCalls = [];
   context.fetch = async (url, options = {}) => {

@@ -27,6 +27,7 @@ Coverage:
 - hash/query duplicate review policy
 - protected duplicate tabs not auto-closed
 - AI output validation for invented/repeated tab IDs
+- AI classification request includes minimized metadata only and excludes full URL, restore URL, query token, and page text
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types

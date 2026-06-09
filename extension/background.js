@@ -408,6 +408,7 @@ async function fetchOpenAICompatibleModels(settings) {
 
 async function callOpenAICompatibleClassifier(settings, tabs) {
   const baseUrl = normalizeAIBaseUrl(settings.baseUrl);
+  const safeTabs = sanitizeTabsForAIClassification(tabs);
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -442,7 +443,7 @@ async function callOpenAICompatibleClassifier(settings, tabs) {
               reviewTabIds: [123]
             },
             privacyNote: "Input contains title, hostname, path, and tab state only. No page body or full URL.",
-            tabs
+            tabs: safeTabs
           })
         }
       ]
@@ -461,6 +462,21 @@ async function callOpenAICompatibleClassifier(settings, tabs) {
   }
 
   return JSON.parse(content);
+}
+
+function sanitizeTabsForAIClassification(tabs) {
+  return (Array.isArray(tabs) ? tabs : []).map((tab) => ({
+    tabId: tab.tabId,
+    title: String(tab.title || ""),
+    hostname: String(tab.hostname || ""),
+    path: String(tab.path || ""),
+    windowId: tab.windowId,
+    active: Boolean(tab.active),
+    pinned: Boolean(tab.pinned),
+    audible: Boolean(tab.audible),
+    discarded: Boolean(tab.discarded),
+    existingGroup: tab.existingGroup || null
+  }));
 }
 
 function normalizeAIBaseUrl(value) {

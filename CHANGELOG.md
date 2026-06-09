@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.46 — 2026-06-09
+
+Changed:
+
+- AI classifier client now sanitizes tab input before building the provider request body.
+- Added smoke coverage for AI classification request minimization.
+- The test verifies classifier payloads include only allowed tab metadata and exclude full URL, restore URL, query tokens, and page text.
+- Updated Test Plan with classifier payload minimization coverage.
+
+Safety:
+
+- Privacy hardening only.
+- The classifier payload is narrowed to title, hostname, path, window ID, and tab state.
+- No permissions, analytics, storage behavior, or automatic upload path changed.
+
 ## v0.45 — 2026-06-09
 
 Added:
