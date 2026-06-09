@@ -308,6 +308,46 @@ test("duplicate safety audit stores only counts and allowed types", () => {
   assert(!serialized.includes("Private planning doc"), "Duplicate safety audit must not include title");
 });
 
+test("current run snapshot strips restorable URLs and page text", () => {
+  const privateSnapshot = snapshot([
+    tab({
+      id: 21,
+      title: "Private planning doc",
+      url: "https://private.example/secret?token=abc#fragment",
+      groupId: 7,
+      groupTitle: "Secret Project"
+    })
+  ]);
+  privateSnapshot.tabs[0].url = "https://private.example/secret?token=abc#fragment";
+  privateSnapshot.tabs[0].fullUrl = "https://private.example/secret?token=abc#fragment";
+  privateSnapshot.tabs[0].pageText = "Confidential page body";
+
+  const runSnapshot = context.sanitizeSnapshotForRun(privateSnapshot);
+  const undoSnapshot = context.buildUndoSnapshot(privateSnapshot);
+  const runTab = runSnapshot.tabs[0];
+  const runSnapshotJson = JSON.stringify(runSnapshot);
+  const undoSnapshotJson = JSON.stringify(undoSnapshot);
+
+  assert(!("restoreUrl" in runTab), "Current run snapshot must not keep restoreUrl");
+  assert(!("url" in runTab), "Current run snapshot must not keep raw url");
+  assert(!("fullUrl" in runTab), "Current run snapshot must not keep fullUrl");
+  assert(!("pageText" in runTab), "Current run snapshot must not keep pageText");
+  assert(!("exactUrlHash" in runTab), "Current run snapshot must not keep exact URL hash");
+  assert(!("trackingUrlHash" in runTab), "Current run snapshot must not keep tracking URL hash");
+  assert(!("reviewUrlHash" in runTab), "Current run snapshot must not keep review URL hash");
+  assert(!runSnapshotJson.includes("https://private.example/secret"), "Current run snapshot must not include full URL");
+  assert(!runSnapshotJson.includes("token=abc"), "Current run snapshot must not include query token");
+  assert(!runSnapshotJson.includes("Confidential page body"), "Current run snapshot must not include page text");
+
+  assertDeepEqual(
+    Object.keys(undoSnapshot.tabs[0]).sort(),
+    ["groupId", "id", "index", "windowId"].sort(),
+    "Undo snapshot should keep only minimum fields needed to restore grouping"
+  );
+  assert(!undoSnapshotJson.includes("https://private.example/secret"), "Undo snapshot must not include full URL");
+  assert(!undoSnapshotJson.includes("Confidential page body"), "Undo snapshot must not include page text");
+});
+
 test("diagnostics and feedback template redact browsing content and secrets", async () => {
   const diagnostics = await import(pathToFileURL(DIAGNOSTICS_PATH).href);
   const snapshot = diagnostics.buildDiagnosticSnapshot({

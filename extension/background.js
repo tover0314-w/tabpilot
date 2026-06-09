@@ -2543,7 +2543,16 @@ function buildUndoSnapshot(snapshot) {
 function sanitizeSnapshotForRun(snapshot) {
   return {
     ...snapshot,
-    tabs: snapshot.tabs.map(({ restoreUrl, exactUrlHash, trackingUrlHash, reviewUrlHash, ...tab }) => tab)
+    tabs: snapshot.tabs.map(({
+      restoreUrl,
+      exactUrlHash,
+      trackingUrlHash,
+      reviewUrlHash,
+      url,
+      fullUrl,
+      pageText,
+      ...tab
+    }) => tab)
   };
 }
 

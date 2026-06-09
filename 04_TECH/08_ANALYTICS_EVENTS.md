@@ -4,6 +4,16 @@
 
 只收集产品改进所需的最小事件数据，不记录具体 URL、页面正文或用户敏感内容。
 
+## 1.1 Current Implementation Status
+
+DO NOT BUILD YET / CONFIRM:
+
+```text
+The private-beta extension currently has no remote analytics endpoint and no automatic telemetry upload.
+The event shapes below are future product/analytics design notes, not implemented behavior.
+Any analytics involving browsing activity must go through the confirmation gate before implementation.
+```
+
 ## 2. Core Events
 
 ### extension_installed

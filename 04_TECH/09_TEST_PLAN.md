@@ -32,6 +32,8 @@ Coverage:
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types
+- current run snapshot strips restore URLs, URL hashes, raw/full URLs, and page text before storing UI state
+- Undo snapshot stores only the minimum IDs, window, index, and group fields needed to restore grouping
 - Beta diagnostic snapshot and feedback template redact URLs, tab titles, hostnames, rules, group names, page text, and API keys
 - Beta feedback template includes English/Chinese classification quality labeling for the 70/20/10/0 target
 - AI connection test calls `/models` without sending tab data, full URLs, page text, or a request body

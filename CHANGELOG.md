@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.55 — 2026-06-09
+
+Changed:
+
+- Hardened `currentRun` snapshot sanitization so raw URLs, full URLs, restore URLs, URL hashes, and page text are stripped before sidebar/dashboard UI state is stored.
+- Added smoke coverage for current-run storage minimization and Undo snapshot minimization.
+- Clarified that Restore Closed snapshots are the local-only exception because they need minimum restorable metadata.
+- Updated Security/Privacy Implementation, Analytics Events, Test Plan, Launch Checklist, and QA Evidence.
+
+Safety:
+
+- Restore Closed behavior remains available and local-only.
+- No extension permissions, AI provider host, AI request format, automatic tab-closing policy, analytics upload, cloud storage, or product scope changed.
+
 ## v0.54 — 2026-06-09
 
 Changed:

@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.51 changes in this commit
+Source state verified: v0.55 changes in this commit
 
 ### Unified Preflight
 
@@ -21,8 +21,8 @@ node tools/preflight.js --runtime --screenshots
 Result:
 
 ```text
-PASS secret scan checked 94 tracked files
-17 smoke tests passed
+PASS secret scan checked 96 tracked files
+18 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
 PASS UI screenshots captured
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-17 smoke tests passed
+18 smoke tests passed
 ```
 
 Covered:
@@ -96,6 +96,8 @@ Covered:
 - AI host guardrail aligned with manifest host permission.
 - Redacted local error logs.
 - Count-only duplicate safety audit.
+- Current run snapshot privacy boundary: no restore URL, raw/full URL, URL hash, query token, or page text in stored UI state.
+- Undo snapshot minimization: only IDs, window, index, and group fields needed to restore grouping.
 - Redacted diagnostics and beta feedback template.
 - Chat Refine parser and user-rule priority.
 - Duplicate safety policy.
@@ -145,7 +147,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=a3bdee9be988e4be6aeacd8a394af3485f9a9ace4cfcbb4964c306837d097894
+sha256=c998357d0481caa894755bb4a13f1e2623afc4bcec757be3674e3767787534fd
 ```
 
 Evidence notes:

@@ -150,6 +150,10 @@ Dashboard Settings includes `Permissions & Data Use`, which explains the current
 
 Dashboard Settings also includes `Beta Diagnostics`, a user-triggered local clipboard copy of a redacted QA snapshot and beta feedback Markdown template. It is not analytics and does not upload data. The sanitizer excludes URLs, tab titles, hostnames, rule patterns, group names, page text, emails, bearer tokens, and API keys.
 
+The local `currentRun` state used by the sidebar/dashboard strips restore URLs, URL hashes, raw/full URLs, and page text before storing UI state. It may keep tab title, hostname, and path because those are the documented P0 metadata used for local grouping review. Undo snapshots keep only tab IDs, window IDs, indices, and previous group IDs.
+
+Restore Closed snapshots are the intentional local-only exception: they store the minimum restorable URL/title/window/index/group metadata needed to reopen safely closed duplicate tabs. They are never included in copied diagnostics or feedback templates, are cleared by `Restore Closed` / `Clear Local Data`, and have no upload path.
+
 The extension keeps a small local-only redacted error log ring buffer for beta debugging. Error entries are stored in `chrome.storage.local`, capped, cleared by `Clear Local Data`, and included in copied diagnostics only after redaction. There is no remote log endpoint or automatic telemetry path.
 
 The extension also keeps a local-only duplicate close safety audit for beta validation. It records only counts and whitelisted event types for safe duplicate close, manual review close, and Restore Closed outcomes. It is capped, cleared by `Clear Local Data`, included in copied diagnostics only after redaction, and has no remote endpoint or automatic telemetry path.
@@ -159,7 +163,8 @@ The extension also keeps a local-only duplicate close safety audit for beta vali
 - 确认 password/form fields 不被抽取。
 - 确认 active/pinned/audible 不被自动关闭。
 - 确认 incognito 不被自动处理。
-- 确认 logs 不含 URL/page text。
+- 确认 currentRun、logs、诊断、反馈模板、AI payload 不含完整 URL/page text。
+- 确认 Undo snapshot 只保存恢复分组所需的最小字段。
 - 确认 API key 不出现在客户端日志。
 - 确认 Clear Local Data 删除本地 API key 和 rules，但不关闭/移动 tabs。
 - 确认 Dashboard 权限解释与 manifest 当前权限一致。
