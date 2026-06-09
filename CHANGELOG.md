@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.65 — 2026-06-09
+
+Changed:
+
+- Confirmed and implemented the Dashboard `Latest result` simplification from a metrics wall into a user-benefit summary.
+- The Dashboard now leads with browser cleaned up, tabs organized into work groups, impact rows, Review duplicates, Undo, and a collapsed Details section for technical metrics.
+- Added confirmed English/Chinese copy for organize impact, duplicate cleanup, review-needed items, and conservative memory-relief wording.
+- Updated Dashboard spec, UX wireframe, copywriting, Decisions To Confirm, extension README, tests, and QA Evidence.
+
+Safety:
+
+- UI hierarchy change only; no extension permissions, AI payloads, analytics upload, cloud storage, automatic tab-closing policy, or data collection changed.
+- Exact memory-saved numbers remain explicitly blocked until verified memory measurement or tab sleep/discard behavior exists.
+
 ## v0.64 — 2026-06-09
 
 Changed:

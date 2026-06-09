@@ -73,16 +73,22 @@
 
 ## 4. Dashboard：Home
 
+CONFIRMED BY USER: Latest Result 使用简洁收益版，技术指标收进 Details。
+
 ```text
 ┌──────────────────────────────────────────────┐
-│ Sidebar nav          │ Current Workspace      │
-│ Home                 │ 73 tabs · 8 groups     │
-│ Smart Groups         │ 9 duplicates closed    │
-│ Workspaces           │ 4 need review          │
-│ Tab Knowledge        │                        │
-│ Rules & Memory       │ [Organize] [Chat]      │
-│ Duplicate Center     │ [Review] [Save]        │
-│ Billing              │                        │
+│ Sidebar nav          │ 浏览器已整理            │
+│ Project Space        │ 42 个标签页归入 6 个分组 │
+│ Auto Organize        │                        │
+│ Settings             │ 本次优化                │
+│                      │ 关闭 4 个重复标签页      │
+│                      │ 整理 31 个标签页         │
+│                      │ 2 组疑似重复待确认       │
+│                      │ 内存压力已降低            │
+│                      │                        │
+│                      │ [处理重复项] [撤销]      │
+│                      │                        │
+│                      │ Details: windows / AI   │
 └──────────────────────────────────────────────┘
 ```
 

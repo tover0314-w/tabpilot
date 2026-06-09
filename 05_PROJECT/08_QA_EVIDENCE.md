@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.64 changes in this commit
+Source state verified: v0.65 changes in this commit
 
 ### Unified Preflight
 
@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 96 tracked files
-26 smoke tests passed
+27 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply/tab move/tab focus
 PASS UI screenshots captured
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-26 smoke tests passed
+27 smoke tests passed
 ```
 
 Covered:
@@ -94,6 +94,7 @@ Covered:
 - English/Chinese locale parity.
 - Permission explanation alignment.
 - Dashboard workbench HTML prototype structure guard.
+- Dashboard Latest Result benefit summary replaces the old metrics wall; Review duplicates and Undo are primary actions, with technical metrics folded under Details.
 - Dashboard filter chips filter All / AI groups / Rule groups and expose localized empty state copy.
 - Dashboard tab title focus guard: localized title button, background action, active-tab update, window focus, and no tab close action.
 - Dashboard same-window tab move guard: target group selection, background action, same-window enforcement, and no tab close action.
@@ -159,7 +160,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=91b85b278ad03298c66525399930467846932984f50b700cdb03449ddfdf7688
+sha256=edcfdc7f0bbe9b42d7cb636da490e61381c38dce28ae6dbab0efb418fef1c783
 ```
 
 Evidence notes:

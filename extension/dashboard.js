@@ -61,6 +61,7 @@ testAIButton.addEventListener("click", testAIConnection);
 clearAIKeyButton.addEventListener("click", clearAIKey);
 dashboardRules.addEventListener("click", handleRuleAction);
 dashboardGroups.addEventListener("click", handleGroupAction);
+dashboardMetrics.addEventListener("click", handleResultSummaryAction);
 copyDiagnosticsButton.addEventListener("click", copyDiagnosticSnapshot);
 copyFeedbackButton.addEventListener("click", copyFeedbackTemplate);
 clearDataButton.addEventListener("click", clearLocalData);
@@ -99,8 +100,8 @@ function renderDashboard(run, rules = []) {
   workspaceTitle.textContent = run.completedAt
     ? msg("latestResultWithDate", [new Date(run.completedAt).toLocaleString()])
     : msg("latestResult");
-  workspaceSubtitle.textContent = formatWorkspaceSubtitle(run);
-  renderMetrics(run.summary || {});
+  workspaceSubtitle.textContent = formatBenefitSubtitle(run);
+  renderResultSummary(run);
   renderGroupFilterCounts(run.groups || []);
   renderGroups(run.groups || [], run);
   renderDuplicates(run.duplicateGroups || []);
@@ -152,6 +153,37 @@ async function organizeFromDashboard() {
   }
 }
 
+async function handleResultSummaryAction(event) {
+  const button = event.target.closest("[data-result-action]");
+  if (!button) return;
+
+  if (button.dataset.resultAction === "review-duplicates") {
+    document.querySelector("#duplicates")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  if (button.dataset.resultAction !== "undo") return;
+
+  button.disabled = true;
+  button.textContent = msg("undoing");
+
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "UNDO_LAST" });
+    if (!response?.ok) {
+      window.alert(response?.error || msg("couldNotUndo"));
+      button.disabled = false;
+      button.textContent = msg("undo");
+      return;
+    }
+
+    renderDashboard(response.run, await loadRules());
+  } catch (error) {
+    window.alert(error?.message || msg("couldNotUndo"));
+    button.disabled = false;
+    button.textContent = msg("undo");
+  }
+}
+
 async function loadRules() {
   const result = await chrome.storage.local.get(USER_RULES_KEY);
   return Array.isArray(result[USER_RULES_KEY]) ? result[USER_RULES_KEY] : [];
@@ -179,13 +211,11 @@ function renderWorkspaceSidebar(run, rules = []) {
   ]);
 }
 
-function formatWorkspaceSubtitle(run) {
+function formatBenefitSubtitle(run) {
   const summary = run.summary || {};
   const tabCount = summary.tabCount ?? run.snapshot?.tabs?.length ?? "—";
-  const windowCount = summary.windowCount ?? run.snapshot?.windows?.length ?? "—";
   const groupCount = run.groups?.length ?? summary.groupsCreated ?? "—";
-  const completedAt = run.completedAt ? new Date(run.completedAt).toLocaleTimeString() : "—";
-  return msg("workspaceSubtitle", [tabCount, groupCount, windowCount, completedAt]);
+  return msg("tabsOrganizedIntoGroups", [tabCount, groupCount]);
 }
 
 async function handleRuleAction(event) {
@@ -538,28 +568,68 @@ function formatAIStatus(status) {
   return status;
 }
 
-function renderMetrics(summary) {
-  const metrics = [
-    [msg("windows"), summary.windowCount ?? "—"],
-    [msg("tabs"), summary.tabCount ?? "—"],
-    [msg("groups"), summary.groupsCreated ?? "—"],
-    [msg("moved"), summary.tabsMoved ?? "—"],
-    [msg("closedDupes"), summary.safeDuplicatesClosed ?? "—"],
-    [msg("reviewDupes"), summary.reviewDuplicateGroups ?? "—"],
+function renderResultSummary(run) {
+  const summary = run.summary || {};
+  const tabCount = summary.tabCount ?? run.snapshot?.tabs?.length ?? "—";
+  const groupCount = run.groups?.length ?? summary.groupsCreated ?? "—";
+  const movedCount = summary.tabsMoved ?? 0;
+  const closedCount = summary.safeDuplicatesClosed ?? 0;
+  const reviewCount = summary.reviewDuplicateGroups ?? 0;
+  const details = [
+    [msg("windows"), summary.windowCount ?? run.snapshot?.windows?.length ?? "—"],
+    [msg("tabs"), tabCount],
+    [msg("groups"), groupCount],
     [msg("aiStatus"), formatAIStatus(summary.aiClassificationStatus || "not-configured")],
-    [msg("aiGroups"), summary.aiGroupsSuggested ?? "—"]
+    [msg("aiGroups"), summary.aiGroupsSuggested ?? "—"],
+    [msg("lastOrganized"), run.completedAt ? new Date(run.completedAt).toLocaleString() : "—"]
   ];
 
-  dashboardMetrics.innerHTML = metrics
-    .map(
-      ([label, value]) => `
-        <article class="metric-card dashboard-metric-card">
-          <span>${escapeHtml(label)}</span>
-          <strong>${escapeHtml(String(value))}</strong>
-        </article>
-      `
-    )
-    .join("");
+  dashboardMetrics.innerHTML = `
+    <article class="dashboard-result-summary">
+      <div class="dashboard-result-main">
+        <p class="dashboard-result-kicker">${escapeHtml(msg("latestOrganizeResult"))}</p>
+        <h2>${escapeHtml(msg("browserCleanedUp"))}</h2>
+        <p>${escapeHtml(msg("tabsOrganizedIntoGroups", [tabCount, groupCount]))}</p>
+      </div>
+      <div class="dashboard-impact-list" aria-label="${escapeHtml(msg("impact"))}">
+        ${renderImpactRow(msg("duplicateTabsRemoved"), closedCount)}
+        ${renderImpactRow(msg("tabsOrganized"), movedCount)}
+        ${renderImpactRow(msg("duplicateGroupsNeedReview"), reviewCount)}
+        <div class="dashboard-impact-row">
+          <span>${escapeHtml(msg("memoryRelief"))}</span>
+          <strong>${escapeHtml(msg("memoryReliefCopy"))}</strong>
+        </div>
+      </div>
+      <div class="dashboard-result-actions">
+        <button class="dashboard-button primary" type="button" data-result-action="review-duplicates" ${reviewCount > 0 ? "" : "disabled"}>${escapeHtml(msg("reviewDuplicates"))}</button>
+        <button class="dashboard-button" type="button" data-result-action="undo" ${summary.undoAvailable ? "" : "disabled"}>${escapeHtml(msg("undo"))}</button>
+      </div>
+      <details class="dashboard-result-details">
+        <summary>${escapeHtml(msg("details"))}</summary>
+        <div class="dashboard-result-detail-grid">
+          ${details
+            .map(
+              ([label, value]) => `
+                <div>
+                  <span>${escapeHtml(label)}</span>
+                  <strong>${escapeHtml(String(value))}</strong>
+                </div>
+              `
+            )
+            .join("")}
+        </div>
+      </details>
+    </article>
+  `;
+}
+
+function renderImpactRow(label, value) {
+  return `
+    <div class="dashboard-impact-row">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(String(value))}</strong>
+    </div>
+  `;
 }
 
 function renderGroupFilterCounts(groups) {

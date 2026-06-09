@@ -529,7 +529,7 @@ async function assertPageReady(page, pathname) {
     return;
   }
 
-  await page.waitForSelector("#dashboardMetrics .metric-card", { timeout: 5000 });
+  await page.waitForSelector("#dashboardMetrics .dashboard-result-summary", { timeout: 5000 });
   await page.waitForFunction(
     () => document.querySelector("#aiBaseUrlInput")?.value === "https://api.deepseek.com",
     null,

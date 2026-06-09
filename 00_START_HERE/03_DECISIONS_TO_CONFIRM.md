@@ -26,6 +26,7 @@
 | D-018 | 免费版限制 | 基础一键整理免费；用户自配 DeepSeek key 不限；hosted AI 有免费额度；任意 OpenAI-compatible host 另走权限确认 | DECIDED |
 | D-019 | 是否做账号系统 | P0 不做账号；Pro/hosted/cloud sync 阶段再做 | DECIDED |
 | D-020 | 是否支持所有窗口整理 | P0 默认支持当前浏览器所有普通窗口 | CONFIRMED |
+| D-021 | Dashboard Latest Result 信息层级 | 主卡片改为整理结果 + 优化收益 + 下一步动作；AI/windows/technical metrics 收进 Details；内存先用 Memory relief，不写精确 MB | CONFIRMED BY USER |
 
 ## 用户体验确认项
 
@@ -39,6 +40,8 @@
    - 决定：首发支持英文和中文；默认跟随浏览器语言，后续扩展多语言。
 5. 分类颜色是否 AI 决定？
    - 决定：AI/规则建议，用户可在 dashboard 修改，规则记忆。
+6. Dashboard Latest Result 是否从指标墙改成用户收益摘要？
+   - 决定：改成简洁收益版，主打整理结果、重复项处理、内存压力降低和下一步动作；技术指标收进 Details。
 
 ## 商业化确认项
 

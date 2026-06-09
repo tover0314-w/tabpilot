@@ -24,6 +24,7 @@ CONFIRMED BY IMPLEMENTATION:
 - local user rules and Rules & Memory
 - current-tab local extractive summary after user click, with sensitive-page confirmation
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
+- Dashboard Latest Result benefit summary with Review duplicates, Undo, conservative memory relief, and technical Details
 - Dashboard HTML-prototype workbench layout with expanded local tab rows
 - Dashboard Smart Groups filter chips for All / AI groups / Rule groups
 - Dashboard tab title focus back to the existing browser tab/window
@@ -55,7 +56,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 26 extension smoke tests
+- 27 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke

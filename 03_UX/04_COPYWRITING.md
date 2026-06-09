@@ -60,6 +60,49 @@ Customize privacy settings
 我还关闭了 9 个安全重复标签页，并保留了 4 个疑似重复标签页等待你确认。
 ```
 
+## Dashboard Latest Result
+
+CONFIRMED BY USER: 这组文案作为 Dashboard Latest Result 的 MVP 信息层级。
+
+English:
+
+```text
+Browser cleaned up
+42 tabs organized into 6 work groups
+
+Impact
+4 duplicate tabs removed
+31 tabs organized
+2 duplicate groups need review
+Memory relief: duplicate tabs closed
+
+Review duplicates
+Undo
+```
+
+中文：
+
+```text
+浏览器已整理
+42 个标签页归入 6 个工作分组
+
+本次优化
+关闭 4 个重复标签页
+整理 31 个标签页
+2 组疑似重复待确认
+内存压力已降低：重复标签页已关闭
+
+处理重复项
+撤销
+```
+
+Memory copy rule:
+
+```text
+MVP 只写 Memory relief / 内存压力已降低。
+不要写精确 MB，直到有可信的内存测量或主动 sleep/discard tabs 功能。
+```
+
 ## Duplicate 说明
 
 ```text

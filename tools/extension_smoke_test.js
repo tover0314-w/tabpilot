@@ -231,6 +231,23 @@ test("dashboard follows workbench HTML prototype structure", () => {
   assert(!dashboardHtml.includes("editable-group-card"), "Dashboard should not use the old settings-card group UI");
 });
 
+test("dashboard latest result shows user benefit summary instead of metrics wall", () => {
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(dashboardJs.includes("function renderResultSummary"), "Dashboard should render a benefit summary");
+  assert(dashboardJs.includes("memoryRelief"), "Dashboard summary should include conservative memory relief wording");
+  assert(dashboardJs.includes('data-result-action="review-duplicates"'), "Dashboard summary should expose Review duplicates action");
+  assert(dashboardJs.includes('data-result-action="undo"'), "Dashboard summary should expose Undo action");
+  assert(dashboardJs.includes("dashboard-result-details"), "Dashboard should move technical metrics into details");
+  assert(!dashboardJs.includes("function renderMetrics"), "Dashboard should not keep the old metrics wall renderer");
+  assert(dashboardCss.includes(".dashboard-result-summary"), "Dashboard benefit summary should have scoped styling");
+  assert(en.browserCleanedUp?.message && zh.browserCleanedUp?.message, "Benefit summary headline should be localized");
+  assert(en.memoryRelief?.message && zh.memoryRelief?.message, "Memory relief copy should be localized");
+});
+
 test("dashboard can move tabs between existing groups without adding destructive actions", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");

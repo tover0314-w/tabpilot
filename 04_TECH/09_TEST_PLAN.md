@@ -33,6 +33,7 @@ Coverage:
 - AI classification request carries an abort signal and falls back to local rules on timeout
 - AI classification status and suggested group count are visible in sidebar and dashboard
 - Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, workspace card, filter chips, and expanded group cards
+- Dashboard Latest Result shows a benefit summary instead of the old metrics wall; technical metrics live under Details
 - Dashboard Smart Groups filter chips render All / AI groups / Rule groups views and localized empty states
 - Dashboard tab title focus activates the existing browser tab/window without storage writes or destructive tab actions
 - Dashboard same-window tab move UI calls the background action, limits target groups to the same window, and avoids tab close actions

@@ -7,7 +7,7 @@ CONFIRMED BY IMPLEMENTATION:
 ```text
 P0 dashboard is an extension page.
 It follows the HTML prototype workbench layout: top bar, left project rail, current workspace card, action block, filter chips, Smart Groups board, Auto Organize rules page, and Settings page.
-It shows latest workspace metrics, expanded Smart Group cards with local tab rows, Duplicate Center, Settings Snapshot, AI Settings, and Rules & Memory.
+It shows a Latest Result benefit summary, expanded Smart Group cards with local tab rows, Duplicate Center, Settings Snapshot, AI Settings, and Rules & Memory.
 Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
 Dashboard apply-back-to-browser supports native group title/color updates and same-window tab moves into existing groups, with Undo.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.
@@ -21,7 +21,7 @@ Settings default view is intentionally simple: AI Classification and Privacy Def
 Wired now:
 
 ```text
-- workbench shell: topbar, project rail, workspace metrics, Smart Groups board
+- workbench shell: topbar, project rail, Latest Result benefit summary, Smart Groups board
 - Smart Groups filter chips for All / AI groups / Rule groups
 - one-click organize from Dashboard
 - native group title/color Apply back to browser
@@ -47,6 +47,63 @@ Not wired yet:
 - templates
 - multi-tab chat
 - dashboard-hosted cloud sync or account login
+```
+
+### 0.2 Latest Result Information Hierarchy
+
+CONFIRMED BY USER:
+
+```text
+Decision Gate: D-021 Dashboard Latest Result 信息层级
+Decision: replace the previous metrics wall with a simpler user-benefit summary.
+```
+
+Confirmed first screen:
+
+```text
+Browser cleaned up
+42 tabs organized into 6 work groups
+
+Impact
+- 4 duplicate tabs removed
+- 31 tabs organized
+- 2 duplicate groups need review
+- Memory relief: duplicate tabs closed
+
+[Review duplicates] [Undo]
+```
+
+Confirmed Chinese copy:
+
+```text
+浏览器已整理
+42 个标签页归入 6 个工作分组
+
+本次优化
+- 关闭 4 个重复标签页
+- 整理 31 个标签页
+- 2 组疑似重复待确认
+- 内存压力已降低：重复标签页已关闭
+
+[处理重复项] [撤销]
+```
+
+Details / secondary metrics:
+
+```text
+windows
+AI status
+AI groups suggested
+safe duplicates closed
+review duplicate groups
+technical run timestamp
+```
+
+Memory wording:
+
+```text
+CONFIRMED: Use "Memory relief" / "内存压力已降低" in MVP.
+Do not show exact MB saved until the product has a verified memory measurement or tab discard/sleep feature.
 ```
 
 ## 1. 定位

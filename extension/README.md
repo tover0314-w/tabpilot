@@ -22,7 +22,8 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Chat Refine supports first English/Chinese local commands for current-tab move, domain rule creation, and group rename.
 - User rules apply before AI and built-in rules on future organize runs.
 - Summarize Current Tab reads visible page text only after a user click, asks for an extra confirmation on sensitive pages, and generates a local extractive summary.
-- Open Dashboard shows a local workbench page with a top bar, project rail, latest workspace metrics, expanded smart group cards, duplicate center, Rules & Memory, and settings.
+- Open Dashboard shows a local workbench page with a top bar, project rail, Latest Result benefit summary, expanded smart group cards, duplicate center, Rules & Memory, and settings.
+- Dashboard Latest Result emphasizes tabs organized, duplicates removed, duplicates needing review, conservative memory relief, Review duplicates, Undo, and a collapsed Details section for technical metrics.
 - Dashboard Smart Groups filter chips can show all groups, AI-source groups, or rule-source groups.
 - Dashboard Smart Groups tab titles can focus the existing browser tab and window.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
@@ -117,7 +118,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English/Chinese localization, Dashboard workbench layout, Dashboard filter chips, Dashboard tab focus, Dashboard same-window tab move guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
+It checks manifest permissions, English/Chinese localization, Dashboard workbench layout, Dashboard Latest Result benefit summary, Dashboard filter chips, Dashboard tab focus, Dashboard same-window tab move guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 
