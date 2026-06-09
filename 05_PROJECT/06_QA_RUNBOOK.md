@@ -36,9 +36,10 @@ Expected:
 ```text
 - A temporary Chrome for Testing / Chromium profile opens.
 - TabMosaic AI is loaded from a copied unpacked extension directory.
+- A local Manual QA Checklist tab is opened.
 - Synthetic QA tabs are opened.
 - Sidepanel and Dashboard extension pages are opened.
-- The script prints profileDir, extensionId, sidepanel URL, dashboard URL, and cleanup command.
+- The script prints profileDir, extensionId, checklist URL, sidepanel URL, dashboard URL, and cleanup command.
 - `--self-test` opens the disposable browser, verifies setup, then closes and removes the temporary profile automatically.
 ```
 

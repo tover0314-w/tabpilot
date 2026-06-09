@@ -121,7 +121,7 @@ Then follow:
 05_PROJECT/06_QA_RUNBOOK.md
 ```
 
-Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with synthetic tabs and does not touch the user's real Chrome profile.
+Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with a local Manual QA Checklist, synthetic tabs, sidepanel, and dashboard. It does not touch the user's real Chrome profile.
 
 Minimum manual checks:
 

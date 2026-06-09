@@ -4,6 +4,7 @@ const { createRequire } = require("module");
 const net = require("net");
 const os = require("os");
 const path = require("path");
+const { pathToFileURL } = require("url");
 const { urls } = require("./qa_seed_tabs");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -46,6 +47,7 @@ async function main() {
       profileDir,
       extensionDir,
       extensionId: "<dry-run>",
+      checklistUrl: "file://<run-dir>/manual-qa-checklist.html",
       sidepanelUrl: "chrome-extension://<extension-id>/sidepanel.html",
       dashboardUrl: "chrome-extension://<extension-id>/dashboard.html",
       dryRun: true
@@ -87,7 +89,21 @@ async function main() {
     const extensionId = await waitForExtensionId(port, () => chromeLog);
     const sidepanelUrl = `chrome-extension://${extensionId}/sidepanel.html`;
     const dashboardUrl = `chrome-extension://${extensionId}/dashboard.html`;
+    const checklistPath = path.join(runDir, "manual-qa-checklist.html");
+    const checklistUrl = pathToFileURL(checklistPath).href;
 
+    fs.writeFileSync(
+      checklistPath,
+      renderChecklistHtml({
+        profileDir,
+        extensionDir,
+        extensionId,
+        sidepanelUrl,
+        dashboardUrl
+      })
+    );
+
+    await createTarget(port, checklistUrl);
     for (const url of urls) {
       await createTarget(port, url);
     }
@@ -101,6 +117,7 @@ async function main() {
       profileDir,
       extensionDir,
       extensionId,
+      checklistUrl,
       sidepanelUrl,
       dashboardUrl,
       dryRun: false
@@ -136,6 +153,7 @@ function printPlan(details) {
   console.log(`remoteDebuggingPort=${details.port}`);
   console.log(`extensionId=${details.extensionId}`);
   console.log(`seedTabs=${urls.length}`);
+  console.log(`checklist=${details.checklistUrl}`);
   console.log(`sidepanel=${details.sidepanelUrl}`);
   console.log(`dashboard=${details.dashboardUrl}`);
   console.log("");
@@ -145,8 +163,8 @@ function printPlan(details) {
   console.log("- Does not read your real Chrome profile, real browser tabs, or .env.local.");
   console.log("");
   console.log("Next:");
-  console.log("1. In the opened browser, click the TabMosaic AI toolbar icon if needed.");
-  console.log("2. Follow 05_PROJECT/06_QA_RUNBOOK.md.");
+  console.log("1. Start with the opened Manual QA Checklist tab.");
+  console.log("2. In the opened browser, click the TabMosaic AI toolbar icon if needed.");
   console.log("3. Close the QA browser when finished.");
   console.log(`4. Cleanup after closing: rm -rf ${JSON.stringify(path.dirname(details.profileDir))}`);
 
@@ -154,6 +172,205 @@ function printPlan(details) {
     console.log("");
     console.log("Self-test mode will close and clean up this profile automatically.");
   }
+}
+
+function renderChecklistHtml(details) {
+  const sections = [
+    {
+      title: "First Run",
+      items: [
+        "Click the TabMosaic AI toolbar icon.",
+        "Confirm the side panel opens.",
+        "If privacy onboarding appears, click Start Organizing.",
+        "Confirm the top Chrome tab bar shows real native tab groups."
+      ]
+    },
+    {
+      title: "Safety",
+      items: [
+        "Active, pinned, audible, internal, and incognito tabs are not closed.",
+        "Exact/tracking duplicates close only when safe.",
+        "Hash/query duplicate candidates stay in review.",
+        "No page body is read before Summarize Current Tab."
+      ]
+    },
+    {
+      title: "Controls",
+      items: [
+        "Undo restores group state for still-open tabs.",
+        "Restore Closed reopens safely closed duplicate tabs.",
+        "Chat Refine previews before Apply and does not close tabs.",
+        "Dashboard title/color Apply updates real Chrome native groups."
+      ]
+    },
+    {
+      title: "Privacy Outputs",
+      items: [
+        "Copy Diagnostic Snapshot excludes URLs, hostnames, tab titles, page text, rule patterns, group names, emails, bearer tokens, and API keys.",
+        "Copy Feedback Template is local clipboard only and requires review before submitting.",
+        "Clear AI Key removes only the local API key and keeps rules/results."
+      ]
+    }
+  ];
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TabMosaic Manual QA Checklist</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f7f7;
+        --panel: #ffffff;
+        --line: #d8d8d8;
+        --text: #161616;
+        --muted: #5f5f5f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+      header, section {
+        margin-bottom: 18px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+      .eyebrow {
+        margin: 0 0 6px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.15;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 16px;
+      }
+      p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+      a {
+        color: var(--text);
+        font-weight: 650;
+      }
+      ul {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      li {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        align-items: start;
+        line-height: 1.45;
+      }
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 1px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+      .meta {
+        display: grid;
+        gap: 6px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .warning {
+        border-color: #111111;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">TabMosaic AI</p>
+        <h1>Manual QA Checklist</h1>
+        <p>This page belongs to a disposable QA profile. It uses synthetic tabs and does not read your real Chrome profile, real tabs, or .env.local.</p>
+        <div class="meta">
+          <span>Extension ID: <code>${escapeHtml(details.extensionId)}</code></span>
+          <span>Profile: <code>${escapeHtml(details.profileDir)}</code></span>
+          <span>Extension copy: <code>${escapeHtml(details.extensionDir)}</code></span>
+        </div>
+      </header>
+      <section>
+        <h2>Quick Links</h2>
+        <div class="grid">
+          <p><a href="${escapeAttribute(details.sidepanelUrl)}">Open Sidepanel Page</a></p>
+          <p><a href="${escapeAttribute(details.dashboardUrl)}">Open Dashboard Page</a></p>
+        </div>
+      </section>
+      ${sections.map(renderChecklistSection).join("")}
+      <section class="warning">
+        <h2>Do Not Treat This As Public Launch Approval</h2>
+        <p>This disposable QA pass does not replace a final real-profile manual QA pass, Chrome Web Store confirmation gates, privacy policy confirmation, or pricing/domain decisions.</p>
+      </section>
+    </main>
+  </body>
+</html>
+`;
+}
+
+function renderChecklistSection(section) {
+  return `
+      <section>
+        <h2>${escapeHtml(section.title)}</h2>
+        <ul>
+          ${section.items.map((item) => `<li><input type="checkbox" /> <span>${escapeHtml(item)}</span></li>`).join("")}
+        </ul>
+      </section>`;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    };
+    return entities[char];
+  });
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value).replace(/`/g, "&#096;");
 }
 
 function findChromePath() {

@@ -6,6 +6,7 @@ Changed:
 
 - Added `tools/open_manual_qa_profile.js` for disposable manual QA in a temporary Chrome for Testing / Chromium profile.
 - Added `--dry-run` and `--self-test` modes for the disposable manual QA launcher.
+- The launcher now opens a local Manual QA Checklist tab alongside synthetic QA tabs, sidepanel, and dashboard.
 - Updated `tools/qa_seed_tabs.js` so seed URL sets can be reused by QA tooling.
 - Added the manual QA launcher to preflight syntax checks.
 - Updated README, INDEX, extension README, Test Plan, QA Runbook, Launch Checklist, Beta Release Notes, and Private Beta Handoff.
