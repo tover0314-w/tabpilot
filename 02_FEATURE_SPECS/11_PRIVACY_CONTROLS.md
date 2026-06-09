@@ -74,6 +74,8 @@ Duplicate close safety audit entries are kept locally as count-only events for b
 
 `Clear AI Key` removes only the locally saved AI API key, disables AI classification, and keeps local rules, recent organize results, Undo/Restore snapshots, privacy acceptance, chat drafts, diagnostics, and duplicate safety audit counts. It asks for browser confirmation and does not move or close tabs, call the AI provider, delete browser history, or delete cookies.
 
+Current-tab summary reads visible page text only after the user clicks Summarize Current Tab. For sensitive contexts such as bank, billing, health, medical, password, admin, Stripe, AWS, Cloudflare, internal, or localhost pages, the sidebar asks for an extra confirmation before the background script executes content extraction. If the user cancels, no page body is read.
+
 ## 6. Sensitive Sites
 
 内置敏感域名提示：
@@ -152,6 +154,11 @@ Then UI 明确说明用途
 Given 用户要求总结当前页面
 When 页面正文读取首次发生
 Then 系统请求确认
+
+Given 用户要求总结敏感页面
+When 页面域名、路径或标题命中敏感上下文
+Then 系统先提示二次确认
+And 用户取消时不读取页面正文
 
 Given 用户进入 privacy settings
 Then 用户可以查看权限解释、配置本地 API、单独清除本地 AI key、删除本地数据

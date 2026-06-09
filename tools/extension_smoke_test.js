@@ -348,6 +348,47 @@ test("current run snapshot strips restorable URLs and page text", () => {
   assert(!undoSnapshotJson.includes("Confidential page body"), "Undo snapshot must not include page text");
 });
 
+test("current tab summary confirms sensitive pages before extraction", () => {
+  const sidepanelJs = fs.readFileSync(path.join(EXTENSION_DIR, "sidepanel.js"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+  const sensitiveParsed = context.parseUrl("https://billing.stripe.com/customer/secret?token=abc");
+  const normalParsed = context.parseUrl("https://developer.chrome.com/docs/extensions/");
+  const sensitiveCheck = context.buildSummaryPrivacyCheck(
+    { id: 22, title: "Stripe billing dashboard" },
+    sensitiveParsed
+  );
+  const normalCheck = context.buildSummaryPrivacyCheck(
+    { id: 23, title: "Chrome extension docs" },
+    normalParsed
+  );
+  const blockedSummary = context.buildSensitiveSummaryConfirmation(
+    { id: 22, title: "Stripe billing dashboard" },
+    sensitiveParsed,
+    sensitiveCheck
+  );
+  const sensitiveSerialized = JSON.stringify({ sensitiveCheck, blockedSummary });
+
+  assertEqual(sensitiveCheck.requiresConfirmation, true, "Sensitive summary should require confirmation");
+  assertEqual(sensitiveCheck.tabId, 22, "Sensitive summary confirmation should bind to tab id");
+  assert(
+    sensitiveCheck.reason.includes("billing") || sensitiveCheck.reason.includes("stripe"),
+    "Sensitive summary should explain the sensitive reason"
+  );
+  assertEqual(normalCheck.requiresConfirmation, false, "Normal docs summary should not require confirmation");
+  assertEqual(blockedSummary.status, "needs-confirmation", "Sensitive summary should block extraction first");
+  assert(blockedSummary.keyPoints.includes("No page body was read."), "Blocked sensitive summary should state no body was read");
+  assert(!sensitiveSerialized.includes("https://billing.stripe.com/customer/secret"), "Sensitive confirmation must not expose full URL");
+  assert(!sensitiveSerialized.includes("token=abc"), "Sensitive confirmation must not expose query token");
+
+  assert(sidepanelJs.includes('"CHECK_SUMMARY_PRIVACY"'), "Sidepanel should check summary privacy before extraction");
+  assert(sidepanelJs.indexOf('"CHECK_SUMMARY_PRIVACY"') < sidepanelJs.indexOf('"SUMMARIZE_CURRENT_TAB"'), "Privacy check should run before summary request");
+  assert(sidepanelJs.includes('window.confirm(msg("sensitiveSummaryConfirm"'), "Sidepanel should confirm sensitive summaries");
+  assert(sidepanelJs.includes("confirmedSensitiveTabId"), "Sidepanel should pass the confirmed sensitive tab id");
+  assert(en.sensitiveSummaryConfirm?.message.includes("sensitive information"), "English sensitive summary confirmation copy");
+  assert(zh.sensitiveSummaryConfirm?.message.includes("敏感信息"), "Chinese sensitive summary confirmation copy");
+});
+
 test("diagnostics and feedback template redact browsing content and secrets", async () => {
   const diagnostics = await import(pathToFileURL(DIAGNOSTICS_PATH).href);
   const snapshot = diagnostics.buildDiagnosticSnapshot({

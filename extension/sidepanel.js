@@ -136,15 +136,78 @@ async function summarizeCurrentTab() {
   setBusy(true);
   renderSummary({
     status: "loading",
+    title: msg("checkingSummaryPrivacy"),
+    summary: msg("checkingSummaryPrivacyCopy")
+  });
+
+  const privacyResponse = await chrome.runtime.sendMessage({
+    type: "CHECK_SUMMARY_PRIVACY",
+    activeWindowId: latestRun?.activeWindowId
+  });
+
+  if (!privacyResponse?.ok) {
+    setBusy(false);
+    renderSummary({
+      status: "error",
+      title: msg("couldNotSummarizeTitle"),
+      summary: privacyResponse?.error || msg("pageCouldNotBeRead")
+    });
+    return;
+  }
+
+  const confirmedSensitiveTabId = confirmSensitiveSummaryIfNeeded(privacyResponse.result);
+
+  if (confirmedSensitiveTabId === false) {
+    setBusy(false);
+    renderSummary({
+      status: "unreadable",
+      title: msg("summaryCancelledTitle"),
+      summary: msg("summaryCancelledCopy")
+    });
+    return;
+  }
+
+  renderSummary({
+    status: "loading",
     title: msg("readingCurrentTab"),
     summary: msg("extractingVisibleText")
   });
 
-  const response = await chrome.runtime.sendMessage({
-    type: "SUMMARIZE_CURRENT_TAB",
-    activeWindowId: latestRun?.activeWindowId
-  });
+  const response = await requestCurrentTabSummary(confirmedSensitiveTabId);
   setBusy(false);
+
+  if (response?.ok && response.summary?.status === "needs-confirmation") {
+    const retryConfirmedTabId = confirmSensitiveSummaryIfNeeded(response.summary);
+
+    if (retryConfirmedTabId === false) {
+      renderSummary({
+        status: "unreadable",
+        title: msg("summaryCancelledTitle"),
+        summary: msg("summaryCancelledCopy")
+      });
+      return;
+    }
+
+    setBusy(true);
+    renderSummary({
+      status: "loading",
+      title: msg("readingCurrentTab"),
+      summary: msg("extractingVisibleText")
+    });
+
+    const retryResponse = await requestCurrentTabSummary(retryConfirmedTabId);
+    setBusy(false);
+    renderSummary(
+      retryResponse?.ok
+        ? retryResponse.summary
+        : {
+            status: "error",
+            title: msg("couldNotSummarizeTitle"),
+            summary: retryResponse?.error || msg("pageCouldNotBeRead")
+          }
+    );
+    return;
+  }
 
   if (response?.ok) {
     renderSummary(response.summary);
@@ -155,6 +218,25 @@ async function summarizeCurrentTab() {
       summary: response?.error || msg("pageCouldNotBeRead")
     });
   }
+}
+
+function requestCurrentTabSummary(confirmedSensitiveTabId) {
+  return chrome.runtime.sendMessage({
+    type: "SUMMARIZE_CURRENT_TAB",
+    activeWindowId: latestRun?.activeWindowId,
+    confirmedSensitiveTabId: confirmedSensitiveTabId || null
+  });
+}
+
+function confirmSensitiveSummaryIfNeeded(check) {
+  if (!check?.requiresConfirmation) {
+    return null;
+  }
+
+  const target = check.hostname || check.title || msg("currentTab");
+  return window.confirm(msg("sensitiveSummaryConfirm", [target]))
+    ? check.tabId
+    : false;
 }
 
 async function previewChatRefine(event) {

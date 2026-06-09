@@ -79,6 +79,7 @@ async function main() {
 
     try {
       await waitForPageReady(cdp);
+      await waitForExtensionApis(cdp);
       const organizeResult = await evaluate(cdp, `
         chrome.runtime.sendMessage({ type: "ACCEPT_PRIVACY_AND_ORGANIZE" })
       `);
@@ -255,6 +256,22 @@ async function waitForPageReady(cdp) {
     const readyState = await evaluate(cdp, "document.readyState");
     return readyState === "interactive" || readyState === "complete";
   }, "Extension page did not become ready");
+}
+
+async function waitForExtensionApis(cdp) {
+  await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `Boolean(
+        globalThis.chrome &&
+        chrome.runtime &&
+        chrome.runtime.sendMessage &&
+        chrome.storage &&
+        chrome.storage.local &&
+        chrome.tabGroups
+      )`
+    ).catch(() => false);
+  }, "Extension page did not expose expected Chrome extension APIs");
 }
 
 async function evaluate(cdp, expression) {

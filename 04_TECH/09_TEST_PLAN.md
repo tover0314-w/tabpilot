@@ -27,6 +27,7 @@ Coverage:
 - exact/tracking duplicate safe close policy
 - hash/query duplicate review policy
 - protected duplicate tabs not auto-closed
+- current-tab summary confirms sensitive pages before visible text extraction
 - AI output validation for invented/repeated tab IDs
 - AI classification request includes minimized metadata only and excludes full URL, restore URL, query token, and page text
 - Dashboard permission explanation remains aligned with manifest permissions

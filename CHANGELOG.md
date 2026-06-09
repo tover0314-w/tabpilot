@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.56 — 2026-06-09
+
+Changed:
+
+- Added a current-tab summary privacy check before visible text extraction.
+- Sensitive pages now require an extra user confirmation before page body text is read.
+- The background script re-checks the active tab and requires the confirmed tab ID before extraction.
+- Added English/Chinese copy and smoke coverage for the sensitive-summary confirmation flow.
+- Stabilized Chrome runtime smoke by waiting for extension APIs before sending runtime messages.
+- Updated extension README, Privacy Controls, Security/Privacy Implementation, Test Plan, QA Runbook, Launch Checklist, Private Beta Handoff, and QA Evidence.
+
+Safety:
+
+- Cancelling the sensitive-page confirmation reads no page body.
+- Current-tab summaries remain local and do not call the AI provider.
+- No extension permissions, AI provider host, AI request payload, automatic tab-closing policy, analytics upload, cloud storage, or product scope changed.
+
 ## v0.55 — 2026-06-09
 
 Changed:

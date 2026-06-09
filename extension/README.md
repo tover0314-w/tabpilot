@@ -21,7 +21,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Chat Refine can create local rules like `GitHub PR to Code Review` or `把 docs.google.com 放到文档笔记`.
 - Chat Refine supports first English/Chinese local commands for current-tab move, domain rule creation, and group rename.
 - User rules apply before AI and built-in rules on future organize runs.
-- Summarize Current Tab reads visible page text only after a user click and generates a local extractive summary.
+- Summarize Current Tab reads visible page text only after a user click, asks for an extra confirmation on sensitive pages, and generates a local extractive summary.
 - Open Dashboard shows a local dashboard page with latest workspace metrics, smart groups, duplicates, and settings snapshot.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
 - Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
@@ -45,7 +45,7 @@ Chat Refine does not call AI, read page body content, or close tabs in this slic
 
 Dashboard apply currently edits group title/color only. It does not move or close tabs.
 
-Current tab summaries do not call AI yet and do not upload page content.
+Current tab summaries do not call AI yet, do not upload page content, and require an extra confirmation before reading sensitive pages.
 
 AI classification sends tab title, hostname, path, and tab state only. It does not send page body or full URL.
 

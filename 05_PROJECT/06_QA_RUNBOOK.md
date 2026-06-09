@@ -195,6 +195,8 @@ Expected:
 
 ```text
 - Page content is read only after the click.
+- Sensitive pages ask for an extra confirmation before visible text is read.
+- Cancelling the sensitive-page confirmation does not read page body.
 - Summary appears in the side panel.
 - No cloud AI request is made in this slice.
 ```

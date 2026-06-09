@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.55 changes in this commit
+Source state verified: v0.56 changes in this commit
 
 ### Unified Preflight
 
@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 96 tracked files
-18 smoke tests passed
+19 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
 PASS UI screenshots captured
@@ -62,7 +62,7 @@ configuredModel=deepseek-v4-flash
 modelAvailable=yes
 modelCount=2
 PASS synthetic classification fixture completed
-fixtureGroupCount=2
+fixtureGroupCount=3
 fixtureAssignedTabs=3
 ```
 
@@ -84,7 +84,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-18 smoke tests passed
+19 smoke tests passed
 ```
 
 Covered:
@@ -96,6 +96,7 @@ Covered:
 - AI host guardrail aligned with manifest host permission.
 - Redacted local error logs.
 - Count-only duplicate safety audit.
+- Sensitive current-tab summary confirmation before visible text extraction.
 - Current run snapshot privacy boundary: no restore URL, raw/full URL, URL hash, query token, or page text in stored UI state.
 - Undo snapshot minimization: only IDs, window, index, and group fields needed to restore grouping.
 - Redacted diagnostics and beta feedback template.
@@ -147,7 +148,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=c998357d0481caa894755bb4a13f1e2623afc4bcec757be3674e3767787534fd
+sha256=804927929752254cd7d750285d078cb0f20b9c3ab4f22299f08b39aa46746eae
 ```
 
 Evidence notes:

@@ -46,7 +46,7 @@
 - [ ] Limited Use disclosure（draft prepared; CONFIRM before publishing）。
 - [x] 数据删除入口（local only first slice）。
 - [x] 权限解释（Dashboard first slice）。
-- [x] 不默认读取正文（current tab summary user-triggered first slice）。
+- [x] 不默认读取正文（current tab summary user-triggered；敏感页二次确认 first slice）。
 - [x] 不在 currentRun、logs、诊断、反馈模板、AI payload 或遥测中记录完整 URL/page text；Restore Closed 恢复快照仅本地保存必要恢复信息。
 
 ## Beta

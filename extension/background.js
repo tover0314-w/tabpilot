@@ -29,6 +29,21 @@ const DEFAULT_AI_SETTINGS = {
 };
 const SUPPORTED_AI_HOSTNAME = "api.deepseek.com";
 const NO_GROUP_ID = -1;
+const SENSITIVE_SUMMARY_TERMS = [
+  "admin",
+  "aws",
+  "bank",
+  "billing",
+  "cloudflare",
+  "finance",
+  "health",
+  "internal",
+  "localhost",
+  "medical",
+  "password",
+  "paypal",
+  "stripe"
+];
 const SUPPORTED_GROUP_COLORS = new Set([
   "grey",
   "blue",
@@ -131,6 +146,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     testAIConnection(message)
       .then((result) => sendResponse({ ok: true, result }))
       .catch((error) => sendErrorResponse(sendResponse, "TEST_AI_CONNECTION", error));
+    return true;
+  }
+
+  if (message.type === "CHECK_SUMMARY_PRIVACY") {
+    getSummaryPrivacyCheck(message, sender)
+      .then((result) => sendResponse({ ok: true, result }))
+      .catch((error) => sendErrorResponse(sendResponse, "CHECK_SUMMARY_PRIVACY", error));
     return true;
   }
 
@@ -1592,7 +1614,7 @@ function getDuplicateGroupId(group) {
   return group.id || `${group.type}:${group.label}:${(group.tabIds || []).join("-")}`;
 }
 
-async function summarizeCurrentTab(message, sender) {
+async function getSummaryPrivacyCheck(message, sender) {
   const tab = await getCurrentTabForSummary(message.activeWindowId ?? sender?.tab?.windowId);
 
   if (!tab?.id) {
@@ -1602,8 +1624,29 @@ async function summarizeCurrentTab(message, sender) {
   const rawUrl = tab.url || tab.pendingUrl || "";
   const parsedUrl = parseUrl(rawUrl);
 
+  return buildSummaryPrivacyCheck(tab, parsedUrl);
+}
+
+async function summarizeCurrentTab(message, sender) {
+  const tab = await getCurrentTabForSummary(message.activeWindowId ?? sender?.tab?.windowId);
+
+  if (!tab?.id) {
+    throw new Error("No active tab is available to summarize.");
+  }
+
+  const rawUrl = tab.url || tab.pendingUrl || "";
+  const parsedUrl = parseUrl(rawUrl);
+  const privacyCheck = buildSummaryPrivacyCheck(tab, parsedUrl);
+
   if (!isRestorableUrl(rawUrl, parsedUrl)) {
     return buildUnreadableSummary(tab, parsedUrl, "This page type cannot be read by the extension.");
+  }
+
+  if (
+    privacyCheck.requiresConfirmation &&
+    Number(message.confirmedSensitiveTabId) !== tab.id
+  ) {
+    return buildSensitiveSummaryConfirmation(tab, parsedUrl, privacyCheck);
   }
 
   const [injectionResult] = await chrome.scripting.executeScript({
@@ -1634,6 +1677,41 @@ async function getCurrentTabForSummary(activeWindowId) {
 
   const [currentWindowTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return currentWindowTab;
+}
+
+function buildSummaryPrivacyCheck(tab, parsedUrl) {
+  const reason = getSensitiveSummaryReason({
+    title: tab.title || "",
+    hostname: parsedUrl.hostname,
+    path: parsedUrl.path,
+    urlScheme: parsedUrl.scheme
+  });
+
+  return {
+    tabId: tab.id,
+    title: tab.title || "Untitled",
+    hostname: parsedUrl.hostname,
+    requiresConfirmation: Boolean(reason),
+    reason: reason || ""
+  };
+}
+
+function getSensitiveSummaryReason(tab) {
+  const host = String(tab.hostname || "").toLowerCase();
+  const path = String(tab.path || "").toLowerCase();
+  const title = String(tab.title || "").toLowerCase();
+  const text = `${host} ${path} ${title}`;
+
+  if (tab.urlScheme && !["http", "https"].includes(tab.urlScheme)) {
+    return "";
+  }
+
+  if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".local")) {
+    return "local or internal page";
+  }
+
+  const term = SENSITIVE_SUMMARY_TERMS.find((item) => text.includes(item));
+  return term ? `${term} context` : "";
 }
 
 function extractReadablePageContent() {
@@ -1711,6 +1789,31 @@ function buildUnreadableSummary(tab, parsedUrl, reason) {
     }).name,
     suggestedAction: "keep",
     confidence: 0.4
+  };
+}
+
+function buildSensitiveSummaryConfirmation(tab, parsedUrl, privacyCheck) {
+  return {
+    status: "needs-confirmation",
+    tabId: tab.id,
+    title: "Sensitive page confirmation needed",
+    hostname: parsedUrl.hostname,
+    summary: "This page may contain sensitive information. Confirm before reading visible page text.",
+    keyPoints: [
+      "No page body was read.",
+      "TabMosaic checked only tab metadata before this prompt.",
+      "Click Summarize Current Tab again and confirm if you want a local summary."
+    ],
+    suggestedGroup: classifyTab({
+      title: tab.title || "",
+      hostname: parsedUrl.hostname,
+      path: parsedUrl.path,
+      urlScheme: parsedUrl.scheme
+    }).name,
+    suggestedAction: "keep",
+    confidence: 0.35,
+    requiresConfirmation: true,
+    reason: privacyCheck.reason || "sensitive context"
   };
 }
 
