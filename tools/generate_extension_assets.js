@@ -11,6 +11,15 @@ fs.mkdirSync(ICON_DIR, { recursive: true });
 for (const size of SIZES) {
   const png = renderIcon(size);
   const outputPath = path.join(ICON_DIR, `icon${size}.png`);
+  writeIfChanged(outputPath, png);
+}
+
+function writeIfChanged(outputPath, png) {
+  if (fs.existsSync(outputPath) && fs.readFileSync(outputPath).equals(png)) {
+    console.log(`Unchanged ${path.relative(ROOT_DIR, outputPath)}`);
+    return;
+  }
+
   fs.writeFileSync(outputPath, png);
   console.log(`Wrote ${path.relative(ROOT_DIR, outputPath)}`);
 }

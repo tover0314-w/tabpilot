@@ -22,6 +22,7 @@
 - `tools/secret_scan.js`：扫描 git tracked files，防止 `.env` 或真实 API key 进入提交和 CI。
 - `tools/issue_form_smoke_test.js`：检查私测 issue forms 的结构、隐私红线和 required safety acknowledgements。
 - `tools/verify_release_package.js`：按 manifest 版本校验 release zip、checksum、package manifest 和包内安全内容。
+- `tools/capture_ui_screenshots.js`：可选 UI 截图脚本，用 mock extension 数据生成 sidebar / dashboard 预览图。
 - `tools/extension_smoke_test.js`：无依赖 Node smoke test，覆盖 manifest、localization、permission explanation、redacted diagnostics、Chat Refine、rules、dedupe safety、AI output validation 和 local data deletion。
 - `tools/chrome_runtime_smoke_test.js`：可选 Chrome runtime smoke test，使用临时 profile 尝试加载 unpacked extension 并验证真实 native tab groups。
 - `tools/deepseek_smoke_test.js`：读取 `.env.local` 的 DeepSeek/OpenAI-compatible request-format smoke test，默认只检查 `/models`，可选合成 tabs 分类。

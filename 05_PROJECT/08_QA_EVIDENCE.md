@@ -8,22 +8,23 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.49 changes in this commit
+Source state verified: v0.50 changes in this commit
 
 ### Unified Preflight
 
 Command:
 
 ```bash
-node tools/preflight.js
+node tools/preflight.js --screenshots
 ```
 
 Result:
 
 ```text
-PASS secret scan checked 93 tracked files
+PASS secret scan checked 94 tracked files
 17 smoke tests passed
 PASS issue form smoke checked 2 forms
+PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS preflight completed
 ```
@@ -31,6 +32,7 @@ PASS preflight completed
 Evidence notes:
 
 - Default preflight did not call DeepSeek classification, did not read real browser tabs, and did not run Chrome runtime automation.
+- `--screenshots` generated mock-data UI screenshots and did not read real browser tabs or `.env.local`.
 - Chrome runtime smoke remains optional because branded Google Chrome may `SKIP` CLI-loaded unpacked extensions.
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
 
@@ -118,7 +120,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=0f67bd3b4cf1bca7ba69cf8a650246350350c0fb65ce52d77836859ff4c34fb5
+sha256=a3bdee9be988e4be6aeacd8a394af3485f9a9ace4cfcbb4964c306837d097894
 ```
 
 Evidence notes:
@@ -126,7 +128,34 @@ Evidence notes:
 - `.env.local` is ignored by git.
 - `.env.local` is not included in the extension zip.
 - Package manifest safety flags state `includesEnvFiles=false`, `includesSourceMaps=false`, and `includesNodeModules=false`.
-- `dist/` is ignored because the zip is reproducible from source.
+- Repeated package generation produced the same package checksum after unchanged icon writes and zip extra attributes were removed.
+- `dist/` is ignored because the zip is regenerable from source.
+
+### UI Screenshot Capture
+
+Command:
+
+```bash
+node tools/capture_ui_screenshots.js
+```
+
+Result:
+
+```text
+PASS UI screenshots captured
+artifacts/ui-screenshots/sidepanel-result.png
+artifacts/ui-screenshots/sidepanel-result-zh.png
+artifacts/ui-screenshots/dashboard-overview.png
+artifacts/ui-screenshots/dashboard-ai-settings.png
+```
+
+Evidence notes:
+
+- Screenshots use mock extension data only.
+- The script does not read real browser tabs.
+- The script does not read `.env.local`.
+- `artifacts/` is ignored by git because screenshots are reproducible local evidence.
+- Screenshot capture is visual QA only and does not prove real Chrome native tab groups were created.
 
 ## Remaining Evidence Gaps
 

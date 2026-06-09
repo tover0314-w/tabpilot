@@ -186,7 +186,29 @@ Expected:
 - Clear AI Key asks for confirmation, removes only the local API key, disables AI classification, keeps rules and recent results, and does not move or close tabs.
 ```
 
-## 10. Beta Diagnostics And Feedback
+## 10. Optional UI Screenshot Preview
+
+Run before or after manual QA when a visual snapshot is useful:
+
+```bash
+node tools/capture_ui_screenshots.js
+```
+
+Expected:
+
+```text
+- Sidebar completed-state screenshot is generated in English.
+- Sidebar completed-state screenshot is generated in Chinese.
+- Dashboard overview screenshot is generated.
+- Dashboard AI settings screenshot is generated.
+- Screenshots use mock extension data only.
+- The script does not read real browser tabs or .env.local.
+- Output goes to ignored local artifacts/ui-screenshots/.
+```
+
+This is not a substitute for real Chrome manual QA because it does not prove native tab groups were created in the browser top bar.
+
+## 11. Beta Diagnostics And Feedback
 
 1. Open Dashboard -> Settings.
 2. Click `Copy Diagnostic Snapshot`.
@@ -221,7 +243,7 @@ Fail if:
 - GitHub issue forms ask testers to include sensitive browsing data or secrets.
 ```
 
-## 11. Privacy Check
+## 12. Privacy Check
 
 Expected:
 
@@ -233,7 +255,7 @@ Expected:
 - No <all_urls>, history, bookmarks, cookies, webRequest, or browsingData permission is requested.
 ```
 
-## 12. Result Log Template
+## 13. Result Log Template
 
 ```text
 Date:
@@ -251,6 +273,7 @@ Pass:
 - Chat Refine:
 - Current tab summary:
 - Dashboard apply:
+- UI screenshot preview:
 - Beta diagnostics:
 - Feedback template:
 - Local error redaction:

@@ -5,6 +5,7 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const SHOULD_RUN_DEEPSEEK = process.argv.includes("--deepseek");
 const SHOULD_RUN_DEEPSEEK_FIXTURE = process.argv.includes("--deepseek-fixture");
 const SHOULD_RUN_RUNTIME = process.argv.includes("--runtime");
+const SHOULD_RUN_SCREENSHOTS = process.argv.includes("--screenshots");
 
 const syntaxTargets = [
   "extension/background.js",
@@ -17,6 +18,7 @@ const syntaxTargets = [
   "tools/chrome_runtime_smoke_test.js",
   "tools/qa_seed_tabs.js",
   "tools/generate_extension_assets.js",
+  "tools/capture_ui_screenshots.js",
   "tools/deepseek_smoke_test.js",
   "tools/secret_scan.js",
   "tools/issue_form_smoke_test.js",
@@ -48,6 +50,12 @@ function main() {
     runStep("Chrome runtime smoke", process.execPath, ["tools/chrome_runtime_smoke_test.js"]);
   } else {
     console.log("SKIP Chrome runtime smoke; pass --runtime to run it.");
+  }
+
+  if (SHOULD_RUN_SCREENSHOTS) {
+    runStep("UI screenshot capture", process.execPath, ["tools/capture_ui_screenshots.js"]);
+  } else {
+    console.log("SKIP UI screenshot capture; pass --screenshots to run it.");
   }
 
   runStep("Package extension", process.execPath, ["tools/package_extension.js"]);

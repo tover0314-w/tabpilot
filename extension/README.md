@@ -108,6 +108,14 @@ It checks manifest permissions, English/Chinese localization, permission explana
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 
+Optional UI screenshot capture:
+
+```bash
+node tools/capture_ui_screenshots.js
+```
+
+This renders the sidebar and dashboard with mock extension data. It does not read real browser tabs or `.env.local`. It requires Playwright locally; the Codex bundled runtime is auto-detected when available. Screenshots are written to `artifacts/ui-screenshots/`.
+
 Optional runtime smoke test:
 
 ```bash

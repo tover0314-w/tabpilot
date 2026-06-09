@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.50 — 2026-06-09
+
+Changed:
+
+- Added `tools/capture_ui_screenshots.js` to generate sidebar and dashboard UI screenshots with mock extension data.
+- Added optional `node tools/preflight.js --screenshots` support.
+- Ignored generated `artifacts/` output so screenshots do not enter commits.
+- Stabilized package generation by skipping unchanged icon writes and using zip extra-attribute exclusion.
+- Updated README, INDEX, extension README, Test Plan, QA Runbook, and QA Evidence with the screenshot workflow.
+
+Safety:
+
+- Screenshot capture does not read real browser tabs or `.env.local`.
+- The tool is optional and does not change extension permissions, product behavior, AI payloads, analytics, storage, cloud upload, or release packaging.
+
 ## v0.49 — 2026-06-09
 
 Changed:

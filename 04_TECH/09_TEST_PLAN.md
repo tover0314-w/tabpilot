@@ -10,6 +10,7 @@ node tools/secret_scan.js
 node tools/extension_smoke_test.js
 node tools/issue_form_smoke_test.js
 node tools/verify_release_package.js
+node --check tools/capture_ui_screenshots.js
 ```
 
 Coverage:
@@ -66,6 +67,25 @@ node tools/preflight.js --runtime
 node tools/chrome_runtime_smoke_test.js
 ```
 
+Optional UI screenshot capture:
+
+```bash
+node tools/capture_ui_screenshots.js
+node tools/preflight.js --screenshots
+```
+
+Expected:
+
+```text
+- renders sidebar completed state with English mock data
+- renders sidebar completed state with Chinese mock data
+- renders dashboard overview with mock workspace data
+- renders dashboard AI settings with mock DeepSeek settings
+- does not read real browser tabs
+- does not read .env.local
+- writes screenshots only to ignored local artifacts/ui-screenshots/
+```
+
 Package check:
 
 ```bash
@@ -105,6 +125,7 @@ Coverage:
 - issue form smoke test
 - extension package generation
 - release package verification, including forbidden-entry exclusion, checksum, package manifest, and required zip entries
+- repeated package generation should keep checksum stable when extension source is unchanged
 - package artifact upload
 ```
 

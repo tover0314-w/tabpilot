@@ -41,7 +41,7 @@ const packageFiles = [
   "_locales"
 ];
 
-run("zip", ["-qr", outputPath, ...packageFiles], EXTENSION_DIR);
+run("zip", ["-Xqr", outputPath, ...packageFiles], EXTENSION_DIR);
 
 const checksum = sha256File(outputPath);
 const packageManifest = {

@@ -59,7 +59,7 @@ tools/             无依赖本地验证脚本，例如 extension smoke test
 node tools/preflight.js
 ```
 
-它会运行 secret scan、JS 语法检查、extension smoke test、打包和 zip env 排除检查。默认不调用 DeepSeek，也不启动真实 Chrome runtime。
+它会运行 secret scan、JS 语法检查、extension smoke test、打包和 zip env 排除检查。默认不调用 DeepSeek，不启动真实 Chrome runtime，也不生成 UI 截图。
 
 ```bash
 node tools/extension_smoke_test.js
@@ -137,6 +137,19 @@ node tools/chrome_runtime_smoke_test.js
 
 ```bash
 CHROME_PATH="/path/to/chrome-or-chromium" node tools/chrome_runtime_smoke_test.js
+```
+
+可选 UI 截图预览：
+
+```bash
+node tools/capture_ui_screenshots.js
+node tools/preflight.js --screenshots
+```
+
+它使用 mock extension 数据渲染 sidebar / dashboard，不读取真实浏览器 tabs，不读取 `.env.local`。这个可选脚本需要本机可用的 Playwright；Codex bundled runtime 会被自动探测。输出在本地忽略目录：
+
+```text
+artifacts/ui-screenshots/
 ```
 
 手动 QA 可按 `05_PROJECT/06_QA_RUNBOOK.md` 执行。可先打印测试 tabs：
