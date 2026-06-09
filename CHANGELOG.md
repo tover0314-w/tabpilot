@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.48 — 2026-06-09
+
+Changed:
+
+- Refreshed `05_PROJECT/08_QA_EVIDENCE.md` with current private-beta verification evidence.
+- QA evidence now records 16 smoke tests, unified preflight, DeepSeek `/models`, release package verifier, package checksum, and current remaining evidence gaps.
+
+Safety:
+
+- Documentation-only evidence update.
+- No product behavior, permissions, AI payload, analytics, storage behavior, or automatic upload path changed.
+- QA evidence does not include API keys, real browsing data, full URLs from the user's browser, page text, or screenshots.
+
 ## v0.47 — 2026-06-09
 
 Changed:
