@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.71 — 2026-06-09
+
+Changed:
+
+- Added beta readiness check to GitHub Actions after release package verification.
+- Added CI syntax checks for `tools/beta_readiness_check.js`, `tools/open_manual_qa_profile.js`, and `tools/capture_ui_screenshots.js`.
+- Updated README, index, test plan, QA evidence, and private beta handoff to document CI readiness coverage.
+
+Safety:
+
+- CI/documentation update only; no extension runtime behavior, permissions, AI payloads, storage defaults, cloud upload, analytics, or tab-closing policy changed.
+- CI readiness reads generated package metadata and local docs only; it does not call DeepSeek or open Chrome.
+
 ## v0.70 — 2026-06-09
 
 Changed:

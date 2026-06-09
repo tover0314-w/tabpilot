@@ -105,7 +105,7 @@ node tools/deepseek_smoke_test.js --classify-fixture
 
 默认只读取 `.env.local` 并调用 DeepSeek `/models`，不发送 tabs。`--classify-fixture` 只发送合成测试 tabs，不读取真实浏览器数据。当前 private beta 不支持任意 OpenAI-compatible host，避免新增更宽 host permissions。
 
-GitHub Actions 会在 push / PR 时自动运行 secret scan、语法检查、extension smoke test、issue form smoke test、打包、release package 校验，并上传扩展 zip artifact。DeepSeek provider smoke 不在 CI 中运行，因为它需要本地 secret。
+GitHub Actions 会在 push / PR 时自动运行 secret scan、语法检查、extension smoke test、issue form smoke test、打包、release package 校验、beta readiness check，并上传扩展 zip artifact。DeepSeek provider smoke 不在 CI 中运行，因为它需要本地 secret。
 
 私测反馈可以走 GitHub issue forms：
 

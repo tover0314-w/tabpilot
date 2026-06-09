@@ -68,6 +68,7 @@ Verified:
 - extension package generation
 - release package verification
 - beta readiness check: controlled local/private beta ready, public Chrome Web Store launch not ready
+- CI beta readiness check after package verification
 ```
 
 DeepSeek provider verification:

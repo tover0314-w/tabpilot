@@ -14,11 +14,11 @@
 - `extension/diagnostics.js`：本地 beta 诊断快照 sanitizer，不包含 URL/title/page text/API key。
 - `extension/i18n.js`：extension page 静态和动态 UI 文案本地化 helper。
 - `dist/`：本地生成的扩展 zip 包输出目录。
-- `.github/workflows/ci.yml`：GitHub Actions CI，运行 extension smoke、打包和 zip env 排除检查。
+- `.github/workflows/ci.yml`：GitHub Actions CI，运行 extension smoke、打包、zip env 排除检查和 beta readiness check。
 - `.github/ISSUE_TEMPLATE/`：私测 bug report 和产品反馈 issue forms，要求提交前移除敏感浏览数据和 secrets。
 - `tools/generate_extension_assets.js`：无依赖 PNG icon 生成脚本。
 - `tools/package_extension.js`：本地扩展打包脚本，输出 beta zip。
-- `tools/preflight.js`：统一本地预检入口，运行 secret scan、语法检查、smoke、打包和 zip env 检查。
+- `tools/preflight.js`：统一本地预检入口，运行 secret scan、语法检查、smoke、打包、zip env 检查和 beta readiness check。
 - `tools/secret_scan.js`：扫描 git tracked files，防止 `.env` 或真实 API key 进入提交和 CI。
 - `tools/issue_form_smoke_test.js`：检查私测 issue forms 的结构、隐私红线和 required safety acknowledgements。
 - `tools/verify_release_package.js`：按 manifest 版本校验 release zip、checksum、package manifest 和包内安全内容。

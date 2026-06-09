@@ -21,6 +21,7 @@ Coverage:
 - issue form smoke test for beta feedback structure, privacy redlines, and required safety acknowledgements
 - release package verification against the current manifest version
 - beta readiness check for QA evidence, handoff, release notes, package checksum, controlled-beta status, and public-launch blockers
+- GitHub Actions runs beta readiness after package verification so CI blocks stale readiness evidence
 - manifest permission guardrails
 - no default_popup one-click action constraint
 - English/Chinese locale parity and UI i18n key references

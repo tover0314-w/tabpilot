@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.70 beta readiness check in this commit
+Source state verified: v0.71 CI beta readiness check in this commit
 
 ### Unified Preflight
 
@@ -41,6 +41,7 @@ Evidence notes:
 - Runtime smoke can still `SKIP` on branded Google Chrome CLI extension loading, but this run auto-detected Chrome for Testing through Playwright and passed.
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
 - Beta readiness check confirms controlled local/private beta evidence is present while public Chrome Web Store launch remains blocked.
+- GitHub Actions runs the same beta readiness check after release package verification.
 
 ### DeepSeek / OpenAI-Compatible Provider
 
