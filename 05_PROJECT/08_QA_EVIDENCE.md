@@ -8,14 +8,14 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.50 changes in this commit
+Source state verified: v0.51 changes in this commit
 
 ### Unified Preflight
 
 Command:
 
 ```bash
-node tools/preflight.js --screenshots
+node tools/preflight.js --runtime --screenshots
 ```
 
 Result:
@@ -24,6 +24,7 @@ Result:
 PASS secret scan checked 94 tracked files
 17 smoke tests passed
 PASS issue form smoke checked 2 forms
+PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS preflight completed
@@ -31,9 +32,10 @@ PASS preflight completed
 
 Evidence notes:
 
-- Default preflight did not call DeepSeek classification, did not read real browser tabs, and did not run Chrome runtime automation.
+- This preflight run did not call DeepSeek classification and did not read real browser tabs.
+- `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups.
 - `--screenshots` generated mock-data UI screenshots and did not read real browser tabs or `.env.local`.
-- Chrome runtime smoke remains optional because branded Google Chrome may `SKIP` CLI-loaded unpacked extensions.
+- Runtime smoke can still `SKIP` on branded Google Chrome CLI extension loading, but this run auto-detected Chrome for Testing through Playwright and passed.
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
 
 ### DeepSeek / OpenAI-Compatible Provider
@@ -104,6 +106,29 @@ Covered:
 - Dashboard scoped AI key clearing.
 - Local data deletion.
 
+### Chrome Runtime Smoke
+
+Command:
+
+```bash
+node tools/chrome_runtime_smoke_test.js
+```
+
+Result:
+
+```text
+Loaded extension <temporary-extension-id>
+Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
+PASS Chrome runtime loaded extension and exercised organize/chat/dashboard apply
+```
+
+Evidence notes:
+
+- The script used a temporary Chrome for Testing profile and a copied unpacked extension directory.
+- Test tabs were synthetic QA URLs only.
+- It verified organize, Chat Refine, and Dashboard apply against real Chrome native tab groups.
+- It did not read the user's real Chrome profile or real browser tabs.
+
 ### Extension Package
 
 Command:
@@ -160,6 +185,5 @@ Evidence notes:
 ## Remaining Evidence Gaps
 
 - P0 manual QA runbook has not been run against the user's real Chrome profile.
-- Chrome runtime automation still may `SKIP` on branded Google Chrome CLI extension loading.
 - Chrome Web Store submission materials remain drafts marked `CONFIRM` / `DO NOT SUBMIT YET`.
 - Public privacy policy URL, support email, final brand/domain, and final store disclosures still need user confirmation.

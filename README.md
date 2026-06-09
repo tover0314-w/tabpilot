@@ -131,9 +131,9 @@ node tools/preflight.js --runtime
 node tools/chrome_runtime_smoke_test.js
 ```
 
-这个脚本会尝试用临时 profile 加载 unpacked extension；如果当前 Google Chrome 构建不允许 CLI 加载扩展，会输出 `SKIP`，仍需要手动在 `chrome://extensions` 使用 `Load unpacked` 验收。
+这个脚本会尝试用临时 profile 加载 unpacked extension，打开合成测试 tabs，并验证 organize、Chat Refine 和 Dashboard apply 能操作真实 Chrome native tab groups。它会优先使用 `CHROME_PATH`，其次自动探测 Playwright / Chrome for Testing / Chromium，最后才回退到系统 Google Chrome。
 
-当前本机官方 Google Chrome 会快速 `SKIP`。要跑自动 runtime QA，可安装 Chrome for Testing 或 Chromium 后设置：
+如果当前 Google Chrome 构建不允许 CLI 加载扩展，会输出 `SKIP`，仍需要手动在 `chrome://extensions` 使用 `Load unpacked` 验收。也可以手动指定 Chrome for Testing 或 Chromium：
 
 ```bash
 CHROME_PATH="/path/to/chrome-or-chromium" node tools/chrome_runtime_smoke_test.js

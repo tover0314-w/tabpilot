@@ -1,5 +1,6 @@
 const childProcess = require("child_process");
 const fs = require("fs");
+const { createRequire } = require("module");
 const net = require("net");
 const os = require("os");
 const path = require("path");
@@ -146,6 +147,7 @@ async function main() {
 function findChromePath() {
   const candidates = [
     process.env.CHROME_PATH,
+    findPlaywrightChromiumPath(),
     "/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
@@ -159,6 +161,32 @@ function findChromePath() {
   }
 
   throw new Error("Could not find Chrome. Set CHROME_PATH to run this test.");
+}
+
+function findPlaywrightChromiumPath() {
+  const nodeModuleDirs = [
+    process.env.PLAYWRIGHT_NODE_MODULE_DIR,
+    process.env.NODE_REPL_NODE_MODULE_DIRS?.split(path.delimiter)[0],
+    path.join(os.homedir(), ".cache", "codex-runtimes", "codex-primary-runtime", "dependencies", "node", "node_modules")
+  ].filter(Boolean);
+
+  const candidates = [
+    () => require("playwright"),
+    ...nodeModuleDirs.map((nodeModulesDir) => {
+      return () => createRequire(path.join(nodeModulesDir, "noop.js"))("playwright");
+    })
+  ];
+
+  for (const loadPlaywright of candidates) {
+    try {
+      const executablePath = loadPlaywright().chromium?.executablePath?.();
+      if (executablePath && fs.existsSync(executablePath)) return executablePath;
+    } catch {
+      // Try the next local runtime candidate.
+    }
+  }
+
+  return "";
 }
 
 function isBrandedGoogleChrome(chromePath) {

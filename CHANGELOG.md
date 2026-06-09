@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.51 — 2026-06-09
+
+Changed:
+
+- Chrome runtime smoke now auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome.
+- Local runtime QA passed with a temporary Chrome for Testing profile and synthetic tabs.
+- Updated README, extension README, Test Plan, Launch Checklist, and QA Evidence.
+
+Safety:
+
+- Runtime smoke uses a temporary browser profile and a copied unpacked extension directory.
+- It does not read the user's real Chrome profile, real browser tabs, `.env.local`, or page content.
+- No extension behavior, permissions, AI payload, analytics, storage, cloud upload, or product scope changed.
+
 ## v0.50 — 2026-06-09
 
 Changed:

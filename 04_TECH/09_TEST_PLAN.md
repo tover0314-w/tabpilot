@@ -67,6 +67,8 @@ node tools/preflight.js --runtime
 node tools/chrome_runtime_smoke_test.js
 ```
 
+The runtime script uses a temporary browser profile and synthetic tabs. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome.
+
 Optional UI screenshot capture:
 
 ```bash
