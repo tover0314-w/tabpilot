@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.100 Chrome Web Store data disclosure draft in this commit
+Source state verified: v0.101 Sidebar Agent optimization answer in this commit
 
 ### Unified Preflight
 
@@ -21,11 +21,11 @@ node tools/preflight.js --runtime --large-runtime --screenshots
 Result:
 
 ```text
-PASS secret scan checked 100 tracked files
+PASS secret scan checked 102 tracked files
 38 smoke tests passed
 PASS issue form smoke checked 2 forms
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 115ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 814ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
 PASS release package verified for v0.1.0
@@ -38,7 +38,7 @@ PASS preflight completed
 Evidence notes:
 
 - This preflight run did not call DeepSeek classification and did not read real browser tabs.
-- `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
+- `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
 - `--large-runtime` used a separate temporary Chrome for Testing profile with 96 synthetic tabs and verified the real native group path, safe duplicate closes, review duplicate groups, bounded runtime, and sanitized run snapshots.
 - `--screenshots` generated mock-data UI screenshots for the chat-first Tab Agent side panel and Smart Groups Dashboard and did not read real browser tabs or `.env.local`.
 - `--screenshots` also generated five local 1280x800 Chrome Web Store screenshot drafts from the mock UI screenshots. These are review drafts only and remain marked `DO NOT SUBMIT YET`.
@@ -110,7 +110,7 @@ Covered:
 - Permission explanation alignment.
 - Side panel minimal glass UI guard: result and Chat are default, technical browser details are hidden from the default chat surface, and internal next-build QA copy is absent.
 - Dashboard minimal glass workbench structure guard.
-- Side panel opens as a chat-first Tab Agent UI with message thread, compact actions, and bottom composer.
+- Side panel opens as a chat-first Tab Agent UI with message thread, bottom composer, and latest organize results rendered as one assistant message bubble rather than separate top status/result/action cards.
 - Side panel composer direct command router triggers current-tab summary, organize, Undo, Restore Closed, and Dashboard before falling back to Chat Refine.
 - Side panel quick action chips route through the same chat command path as typed commands.
 - Side panel keeps recent user and Agent messages in a local in-memory thread.
@@ -146,6 +146,7 @@ Covered:
 - Store screenshot draft guard: five 1280x800 local draft screenshots, output to ignored artifacts, marked DO NOT SUBMIT YET, and sourced from mock UI screenshots only.
 - Standalone privacy policy draft guard: unpublished status, confirmation gate, developer/support/website placeholders, saved workspace disclosure, DeepSeek optional-sharing boundary, no all-URLs permission, no cloud/account/analytics paths, local data deletion, and Limited Use disclosure.
 - Standalone Chrome Web Store data disclosure draft guard: unsubmitted status, confirmation gate, conservative data category mapping, optional DeepSeek sharing boundary, no-sale posture, no analytics upload, and privacy policy draft linkage.
+- Sidebar Agent optimization answer guard: latest-run optimization/memory-relief questions are answered locally as assistant message cards and avoid inventing exact memory MB.
 - Dashboard Settings first screen shows compact AI Classification; provider details, privacy defaults, permission, diagnostics, and local reset controls remain available under folded sections.
 - AI connection test without tab data.
 - Dashboard rule deletion confirmation.
@@ -166,7 +167,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 ```
 
 Evidence notes:
@@ -179,7 +180,7 @@ Evidence notes:
 - It clicked the Ask page quick action and verified it entered the same local user/Agent message thread.
 - It submitted `what can you do` and verified the local capability answer rendered in the chat thread.
 - It submitted `what should I do next` and verified the local next-step answer rendered in the chat thread.
-- It submitted `show groups` and `did AI classify this?` through the real Sidebar composer and verified local run-state answers.
+- It submitted `show groups`, `how much memory did you save?`, and `did AI classify this?` through the real Sidebar composer and verified local run-state answers.
 - It submitted `what did you close` and `what needs review` through the real Sidebar composer and verified local restore/run-state answers.
 - It submitted `what tab am I on`, `protected tabs`, and `read later` through the real Sidebar composer and verified local snapshot answers.
 - It submitted `find github` through the real Sidebar composer and verified the Open action focused an existing GitHub tab.
@@ -202,7 +203,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 115ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 814ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 ```
 
 Evidence notes:
@@ -256,7 +257,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=77dccb4d7f391b7abe37f77e4d52bbe1b0db23dd542a4221987a7d9995101109
+sha256=b168c92f61e677a53d65d231469b6d6fc4ef1addb05dcca45c1a3bb01978bf6a
 ```
 
 Evidence notes:
@@ -266,6 +267,30 @@ Evidence notes:
 - Package manifest safety flags state `includesEnvFiles=false`, `includesSourceMaps=false`, and `includesNodeModules=false`.
 - Repeated package generation produced the same package checksum after unchanged icon writes and zip extra attributes were removed.
 - `dist/` is ignored because the zip is regenerable from source.
+
+### Sidebar Agent Optimization Card
+
+Command:
+
+```bash
+node tools/extension_smoke_test.js
+node tools/chrome_runtime_smoke_test.js
+```
+
+Result:
+
+```text
+38 smoke tests passed
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+```
+
+Evidence notes:
+
+- Sidebar Agent now answers `how much memory did you save?` as a visible assistant message card.
+- The card shows groups, tabs organized, closed duplicates, duplicate review count, and memory relief as duplicate tabs freed.
+- The card includes safe quick-command buttons for groups, Restore Closed, Review duplicates, and Dashboard when those actions are relevant.
+- The Agent explicitly avoids inventing exact memory MB because Chrome does not expose reliable per-tab memory data through the current extension path.
+- This targeted verification did not read the user's real Chrome profile, real tabs, `.env.local`, page text, or API keys.
 
 ### Beta Readiness Check
 

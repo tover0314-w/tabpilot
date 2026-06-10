@@ -304,10 +304,14 @@ async function previewChatRefine(event) {
   if (readOnlyAnswer) {
     latestChatDraft = null;
     chatInput.value = "";
-    renderChatPanel({
-      status: "info",
-      answer: readOnlyAnswer
-    });
+    renderChatPanel(
+      typeof readOnlyAnswer === "string"
+        ? {
+            status: "info",
+            answer: readOnlyAnswer
+          }
+        : readOnlyAnswer
+    );
     return;
   }
 
@@ -503,6 +507,7 @@ async function buildReadOnlyAgentAnswer(text, run) {
   if (!run || !["completed", "closed-restored", "undone"].includes(run.status)) {
     if (
       isNextStepQuestion(normalized) ||
+      isOptimizationQuestion(normalized) ||
       isRunOverviewQuestion(normalized) ||
       isGroupQuestion(normalized) ||
       isDuplicateQuestion(normalized) ||
@@ -521,6 +526,10 @@ async function buildReadOnlyAgentAnswer(text, run) {
 
   if (isNextStepQuestion(normalized)) {
     return buildNextStepAnswer(run);
+  }
+
+  if (isOptimizationQuestion(normalized)) {
+    return buildOptimizationAnswer(run);
   }
 
   if (isActiveTabQuestion(normalized)) {
@@ -583,6 +592,13 @@ function isNextStepQuestion(text) {
   );
 }
 
+function isOptimizationQuestion(text) {
+  return (
+    /\b(optimi[sz](e|ed|ation)|clean(?:ed)? up|memory saved|memory freed|memory relief|how much memory|freed memory|saved memory|impact)\b/.test(text) ||
+    /优化|清理|释放.*内存|内存.*(释放|省|节省|降低)|本次优化|效果如何|节省了多少/.test(text)
+  );
+}
+
 function isGroupQuestion(text) {
   return /\b(groups?|what groups|show groups|list groups)\b/.test(text) || /分组|有哪些组|哪些组|组了什么/.test(text);
 }
@@ -641,6 +657,51 @@ function buildRunOverviewAnswer(run) {
     summary.reviewDuplicateGroups ?? 0,
     groupCopy
   ]);
+}
+
+function buildOptimizationAnswer(run) {
+  const summary = run.summary || {};
+  const groupNames = getTopGroupNames(run);
+  const groupCopy = groupNames.length ? msg("agentOverviewGroups", [groupNames.join(", ")]) : msg("agentOverviewNoGroups");
+  const safeClosed = Number(summary.safeDuplicatesClosed || 0);
+  const reviewGroups = Number(summary.reviewDuplicateGroups || 0);
+
+  return {
+    status: "optimization",
+    answer: msg("agentOptimizationAnswer", [
+      summary.groupsCreated ?? 0,
+      summary.tabsMoved ?? 0,
+      safeClosed,
+      reviewGroups,
+      safeClosed,
+      groupCopy
+    ]),
+    metrics: [
+      { label: msg("groups"), value: summary.groupsCreated ?? 0 },
+      { label: msg("tabsOrganized"), value: summary.tabsMoved ?? 0 },
+      { label: msg("closedDupes"), value: safeClosed },
+      { label: msg("reviewDupes"), value: reviewGroups },
+      { label: msg("memoryRelief"), value: safeClosed }
+    ],
+    actions: buildOptimizationActions(summary)
+  };
+}
+
+function buildOptimizationActions(summary) {
+  const actions = [
+    { label: msg("groups"), command: "show groups" },
+    { label: msg("openDashboard"), command: "open dashboard" }
+  ];
+
+  if (Number(summary.reviewDuplicateGroups || 0) > 0) {
+    actions.splice(1, 0, { label: msg("reviewDuplicates"), command: "what needs review" });
+  }
+
+  if (summary.closedTabsRestoreAvailable || Number(summary.safeDuplicatesClosed || 0) > 0) {
+    actions.splice(1, 0, { label: msg("restoreClosed"), command: "restore closed" });
+  }
+
+  return actions.slice(0, 4);
 }
 
 function buildNextStepAnswer(run) {
@@ -1040,6 +1101,11 @@ async function handleChatPanelAction(event) {
     return;
   }
 
+  if (button.dataset.chatAction === "quick-command") {
+    await runQuickChatCommand(button.dataset.command || "", button.dataset.label || button.textContent.trim());
+    return;
+  }
+
   if (button.dataset.chatAction === "cancel") {
     if (!isActiveDraftButton(button)) return;
     latestChatDraft = null;
@@ -1166,6 +1232,7 @@ async function loadLatestRun() {
 function renderRun(run) {
   latestRun = run;
   renderStatus(run);
+  renderLatestRunMessage(run);
 
   if (run?.status === "privacy-onboarding") {
     renderPrivacy(true);
@@ -1274,7 +1341,7 @@ function renderStatus(run) {
       `
       : "";
 
-  statusPanel.className = `status-panel agent-message agent-message-system ${status}`;
+  statusPanel.className = `status-panel agent-message-system ${status}`;
   statusPanel.innerHTML = `
     <div class="status-dot" aria-hidden="true"></div>
     <div>
@@ -1305,15 +1372,9 @@ function renderMetrics(summary) {
   ];
 
   metricsGrid.innerHTML = `
-    <article class="agent-result-card">
-      <div>
-        <h2>${escapeHtml(msg("browserCleanedUp"))}</h2>
-        <p>${escapeHtml(closedCount > 0 ? msg("memoryReliefCopy") : msg("noTabsWereClosed"))}</p>
-      </div>
-      <div class="agent-result-list">
-        ${impact.map((metric) => renderImpactMetric(metric.label, metric.value)).join("")}
-      </div>
-    </article>
+    <div class="agent-result-list agent-inline-metrics" aria-label="${escapeHtml(msg("impact"))}">
+      ${impact.map((metric) => renderImpactMetric(metric.label, metric.value)).join("")}
+    </div>
   `;
 }
 
@@ -1323,6 +1384,139 @@ function renderImpactMetric(label, value) {
       <small>${escapeHtml(label)}</small>
       <strong>${escapeHtml(String(value))}</strong>
     </span>
+  `;
+}
+
+function renderLatestRunMessage(run) {
+  if (!run || run.status === "privacy-onboarding") return;
+
+  const status = run.status || "idle";
+  const title = status === "idle" ? msg("readyWhenYouAre") : getRunMessageTitle(run);
+  const body = getRunMessageBody(run);
+  const summary = run.summary || null;
+  const metrics = summary && ["completed", "undone", "closed-restored"].includes(status)
+    ? buildRunMessageMetrics(summary, status)
+    : [];
+  const actions = buildRunMessageActions(summary, status);
+
+  upsertSystemChatMessage({
+    role: "assistant",
+    status: `run-${status}`,
+    html: renderRunMessageCard({ title, body, metrics, actions, status })
+  });
+}
+
+function getRunMessageTitle(run) {
+  const titleByStatus = {
+    scanning: msg("scanningTabs"),
+    grouping: msg("creatingNativeGroups"),
+    completed: msg("organizeComplete"),
+    undoing: msg("restoringGroups"),
+    undone: msg("undoComplete"),
+    "restoring-closed": msg("restoringClosedTabs"),
+    "closed-restored": msg("restoreComplete"),
+    error: msg("somethingNeedsAttention")
+  };
+
+  return titleByStatus[run?.status] || msg("readyWhenYouAre");
+}
+
+function getRunMessageBody(run) {
+  const status = run?.status || "idle";
+
+  if (status === "completed") return getCompletedMessage(run);
+  if (status === "undone") return msg("restoredTabsGroups", [run?.summary?.restoredTabs ?? 0, run?.summary?.restoredGroups ?? 0]);
+  if (status === "closed-restored") {
+    return msg("restoredClosedTabsCount", [
+      run?.summary?.restoredClosedTabs ?? 0,
+      run?.summary?.restoreFailedTabs ?? 0
+    ]);
+  }
+  if (status === "error") return run?.error || msg("scanDidNotFinish");
+
+  return run?.message || msg("clickIconToOrganize");
+}
+
+function buildRunMessageMetrics(summary, status) {
+  if (status === "undone") {
+    return [
+      { label: msg("tabs"), value: summary.restoredTabs ?? 0 },
+      { label: msg("groups"), value: summary.restoredGroups ?? 0 }
+    ];
+  }
+
+  if (status === "closed-restored") {
+    return [
+      { label: msg("tabs"), value: summary.restoredClosedTabs ?? 0 },
+      { label: msg("groups"), value: summary.restoredClosedGroups ?? 0 }
+    ];
+  }
+
+  return [
+    { label: msg("groups"), value: summary.groupsCreated ?? 0 },
+    { label: msg("tabsOrganized"), value: summary.tabsMoved ?? 0 },
+    { label: msg("closedDupes"), value: summary.safeDuplicatesClosed ?? 0 },
+    { label: msg("reviewDupes"), value: summary.reviewDuplicateGroups ?? 0 }
+  ];
+}
+
+function buildRunMessageActions(summary, status) {
+  if (["scanning", "grouping", "undoing", "restoring-closed"].includes(status)) {
+    return [];
+  }
+
+  const actions = [
+    { label: msg("organizeAgain"), command: "organize again" },
+    { label: msg("askCurrentPage"), command: "summarize this page" },
+    { label: msg("openDashboard"), command: "open dashboard" }
+  ];
+
+  if (status === "completed" && summary?.undoAvailable) {
+    actions.splice(2, 0, { label: msg("undo"), command: "undo" });
+  }
+
+  if (status === "completed" && summary?.closedTabsRestoreAvailable) {
+    actions.splice(2, 0, { label: msg("restoreClosed"), command: "restore closed" });
+  }
+
+  return actions.slice(0, 5);
+}
+
+function renderRunMessageCard({ title, body, metrics, actions, status }) {
+  return `
+    <article class="run-message-card" data-run-message-status="${escapeHtml(status || "")}">
+      <div class="run-message-heading">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <h2>${escapeHtml(title || "")}</h2>
+          <p class="chat-answer">${escapeHtml(body || "")}</p>
+        </div>
+      </div>
+      ${metrics.length ? `<div class="agent-result-list">${metrics.map((metric) => renderImpactMetric(metric.label, metric.value)).join("")}</div>` : ""}
+      ${actions.length ? renderQuickCommandActions(actions) : ""}
+    </article>
+  `;
+}
+
+function renderQuickCommandActions(actions) {
+  return `
+    <div class="chat-action-row">
+      ${actions
+        .map(
+          (action) => `
+            <button
+              class="mini-button"
+              type="button"
+              data-chat-action="quick-command"
+              data-command="${escapeHtml(action.command)}"
+              data-label="${escapeHtml(action.label)}"
+            >
+              ${escapeHtml(action.label)}
+            </button>
+          `
+        )
+        .join("")}
+    </div>
   `;
 }
 
@@ -1558,6 +1752,10 @@ function renderChatPanelContent(draft) {
     return renderChatSummary(draft.summary || {});
   }
 
+  if (draft.status === "optimization") {
+    return renderOptimizationCard(draft);
+  }
+
   if (["loading", "error", "applied", "info"].includes(draft.status)) {
     return `
       <p class="chat-answer">${escapeHtml(draft.answer || "")}</p>
@@ -1587,6 +1785,46 @@ function renderChatPanelContent(draft) {
   `;
 }
 
+function renderOptimizationCard(draft) {
+  const metrics = Array.isArray(draft.metrics) ? draft.metrics : [];
+  const actions = Array.isArray(draft.actions) ? draft.actions : [];
+
+  return `
+    <article class="run-message-card chat-optimization-card">
+      <div>
+        <h2>${escapeHtml(msg("impact"))}</h2>
+        <p>${escapeHtml(draft.answer || "")}</p>
+      </div>
+      <div class="agent-result-list">
+        ${metrics.map((metric) => renderImpactMetric(metric.label, metric.value)).join("")}
+      </div>
+      ${
+        actions.length
+          ? `
+            <div class="chat-action-row">
+              ${actions
+                .map(
+                  (action) => `
+                    <button
+                      class="mini-button"
+                      type="button"
+                      data-chat-action="quick-command"
+                      data-command="${escapeHtml(action.command)}"
+                      data-label="${escapeHtml(action.label)}"
+                    >
+                      ${escapeHtml(action.label)}
+                    </button>
+                  `
+                )
+                .join("")}
+            </div>
+          `
+          : ""
+      }
+    </article>
+  `;
+}
+
 function appendUserChatMessage(text) {
   appendChatMessage({
     role: "user",
@@ -1600,6 +1838,26 @@ function appendChatMessage(message) {
 
   if (message.status !== "loading" && previous?.role === "assistant" && previous.status === "loading") {
     chatMessages[chatMessages.length - 1] = message;
+  } else {
+    chatMessages.push(message);
+  }
+
+  if (chatMessages.length > CHAT_THREAD_LIMIT) {
+    chatMessages = chatMessages.slice(-CHAT_THREAD_LIMIT);
+  }
+
+  renderChatThread();
+}
+
+function upsertSystemChatMessage(message) {
+  const lastIndex = chatMessages.length - 1;
+  const lastMessage = chatMessages[lastIndex];
+  const shouldReplaceLast =
+    lastMessage?.role === "assistant" &&
+    String(lastMessage.status || "").startsWith("run-");
+
+  if (shouldReplaceLast) {
+    chatMessages[lastIndex] = message;
   } else {
     chatMessages.push(message);
   }

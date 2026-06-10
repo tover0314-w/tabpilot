@@ -23,12 +23,14 @@ CONFIRMED BY IMPLEMENTATION:
 - Sidebar Chat Refine local preview/apply
 - Sidebar quick actions routed through the local chat thread
 - Sidebar ephemeral in-memory user/Agent message thread
+- Sidebar latest organize result as one assistant message bubble with metrics and quick actions inside it
 - Sidebar local capability/help answer
 - Sidebar local next-step guidance answer
 - Sidebar composer direct commands for current-page summary, organize, Undo, Restore Closed, and Dashboard
 - Sidebar current-page summary rendered as a chat message
 - Sidebar local current-page question answering rendered as a chat message
 - Sidebar composer read-only answers for latest result, groups, duplicates, and AI status
+- Sidebar composer read-only answers for optimization / memory relief from the latest local organize result, rendered as an assistant message card with safe next-step buttons
 - Sidebar composer read-only answers for duplicate review queue and closed duplicate restore state
 - Sidebar composer read-only answers for active tabs, protected tabs, and possible read-later tabs
 - Sidebar composer local tab search and focus existing tab
@@ -97,6 +99,7 @@ Verified:
 - Sidebar current-page chat summary in runtime smoke
 - Sidebar current-page question rendering in runtime smoke
 - Sidebar latest-run read-only answers in runtime smoke
+- Sidebar optimization/memory-relief answer in runtime smoke
 - Sidebar duplicate-review/closed-tab local answers in runtime smoke
 - Sidebar active/protected/read-later local answers in runtime smoke
 - Sidebar tab search and Open existing tab in runtime smoke

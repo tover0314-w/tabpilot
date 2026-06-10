@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.101 — 2026-06-10
+
+Changed:
+
+- Sidebar latest organize results now render as ordinary assistant chat message cards, with impact metrics and actions inside the same bubble instead of separate top status/result/action cards.
+- Sidebar Agent now answers optimization / memory-relief questions from the latest local organize result as a visible assistant message card.
+- The answer reports groups created, tabs organized, safe duplicate tabs closed, duplicate groups still needing review, and an honest memory-relief proxy based on duplicate tabs freed rather than invented MB.
+- The card includes safe next-step buttons for groups, restore/review when relevant, and Dashboard.
+- Sidebar Agent docs now list optimization and memory-relief questions as supported read-only status questions.
+
+Safety:
+
+- This is local read-only agent behavior. It does not read page bodies, call AI, upload data, move tabs, close tabs, change permissions, add analytics, or claim exact browser memory usage.
+
 ## v0.100 — 2026-06-10
 
 Changed:

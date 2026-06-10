@@ -552,7 +552,7 @@ function readMessages(language) {
 
 async function assertPageReady(page, pathname) {
   if (pathname.includes("sidepanel")) {
-    await page.waitForSelector(".status-panel.completed", { timeout: 5000 });
+    await page.waitForSelector(".chat-thread-message.assistant.run-completed .run-message-card", { timeout: 5000 });
     return;
   }
 

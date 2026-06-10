@@ -35,10 +35,12 @@ Click extension icon
 - Sidebar Chat Refine for safe local actions and local rule creation.
 - Sidebar quick action chips route through the same local chat thread as typed commands.
 - Sidebar keeps recent user and Agent messages in a local in-memory chat thread.
+- Sidebar latest organize result now appears as one assistant message bubble with impact metrics and quick actions inside it.
 - Sidebar answers `what can you do` / `你能做什么` with local wired-command guidance.
 - Sidebar answers `what should I do next` / `下一步` with local guidance from the latest organize state.
 - Current-page summary and local page questions return inside the Sidebar Agent chat message flow.
-- Sidebar composer local answers for latest result, groups, duplicates, duplicate review queue, closed duplicate restore state, AI status, active tabs, protected tabs, possible read-later tabs, and tab search/open.
+- Sidebar composer local answers for latest result, optimization / memory relief, groups, duplicates, duplicate review queue, closed duplicate restore state, AI status, active tabs, protected tabs, possible read-later tabs, and tab search/open.
+- Sidebar optimization / memory-relief answer renders as an assistant message card with safe next-step buttons instead of plain text only.
 - Current-tab summary only after user click.
 - Dashboard Smart Groups, folded Saved Workspaces, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
 - Dashboard expandable Smart Group tab rows for groups with more than three visible tabs.
@@ -73,7 +75,7 @@ Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 ```text
 node tools/preflight.js --runtime --large-runtime --screenshots
 PASS preflight completed
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs with real native tab groups, safe duplicate closes, and review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
@@ -159,7 +161,7 @@ Minimum manual checks:
 - Standalone privacy policy draft exists, but final policy URL and wording are not approved yet.
 - Standalone Chrome Web Store data disclosure draft exists, but final data category checkboxes and Limited Use wording are not approved yet.
 - P0 manual QA runbook has not been completed on the user's real Chrome profile.
-- Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, Dashboard local workspace save/delete, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open. A separate large-tab runtime probe has also passed with 96 synthetic tabs. These do not replace real-profile manual QA.
+- Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, Dashboard local workspace save/delete, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open. A separate large-tab runtime probe has also passed with 96 synthetic tabs. These do not replace real-profile manual QA.
 - Dashboard apply supports group title/color edits, tab focus, same-window tab moves into existing groups, same-window drag/drop tab assignment, and local-only Save/Delete workspace snapshots; it does not support manual new groups, saved workspace restore, cloud sync, or cross-window tab moves.
 - Current-tab summary is local extractive summary, not cloud AI summary.
 - Multi-tab chat is P1/Pro and not part of this beta slice.

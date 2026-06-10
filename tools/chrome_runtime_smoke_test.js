@@ -99,6 +99,14 @@ async function main() {
       assert(organizeResult.run.summary.safeDuplicatesClosed >= 1, "Expected a safe duplicate tab to be closed");
       assert(organizeResult.run.summary.closedTabsRestoreAvailable, "Expected Restore Closed to be available after safe duplicate close");
 
+      const latestRunMessageRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => Boolean(document.querySelector("#chatPanel .chat-thread-message.assistant.run-completed .run-message-card")))()`
+        );
+      }, "Sidebar latest organize result did not render as an assistant chat message");
+      assert(latestRunMessageRendered, "Latest organize result was not rendered as an assistant chat message");
+
       const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
       const groupTitles = groups.map((group) => group.title).sort();
       assert(groupTitles.includes("Code Review"), `Missing Code Review group: ${groupTitles.join(", ")}`);
@@ -528,6 +536,27 @@ async function main() {
       }, "Sidebar composer did not answer read-later candidates");
       assert(readLaterAnswerRendered, "Read-later answer was not rendered from latest local snapshot");
 
+      await submitSidepanelComposer(cdp, "how much memory did you save?");
+      const optimizationAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(
+              panel &&
+              !panel.hidden &&
+              /Optimization result|本次优化/.test(text) &&
+              /will not invent a memory number|不会编一个内存数字/.test(text) &&
+              panel.querySelector(".chat-optimization-card .agent-result-list") &&
+              panel.querySelector(".chat-thread-message.assistant.optimization .chat-optimization-card") &&
+              panel.querySelector('[data-chat-action="quick-command"][data-command="show groups"]')
+            );
+          })()`
+        );
+      }, "Sidebar composer did not answer optimization and memory-relief state");
+      assert(optimizationAnswerRendered, "Optimization/memory-relief answer was not rendered from latest local snapshot");
+
       await submitSidepanelComposer(cdp, "show groups");
       const groupAnswerRendered = await waitFor(async () => {
         return evaluate(
@@ -668,7 +697,7 @@ async function main() {
         dashboardActionsCdp.close();
       }
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
     } finally {
       cdp.close();
     }

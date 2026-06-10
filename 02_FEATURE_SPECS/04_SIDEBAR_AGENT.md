@@ -41,7 +41,7 @@ Ask TabMosaic about your tabs...
 
 默认显示对话消息流。整理结果、动作草稿、页面总结都作为 agent messages 出现。
 
-P0 UI rule: Quick actions should appear as a lightweight agent message card, not as a separate dashboard toolbar.
+P0 UI rule: The latest organize result, impact metrics, and quick actions should appear inside one assistant chat message card, not as separate top status/result/action cards or a dashboard-like toolbar.
 
 ### B. Group Overview
 
@@ -199,6 +199,8 @@ Read-only status questions:
 
 ```text
 what happened / 刚才整理了什么
+how much memory did you save / 释放了多少内存
+optimization result / 本次优化效果
 show groups / 有哪些分组
 duplicates / 重复项处理了吗
 what needs review / 哪些重复项需要确认
@@ -215,6 +217,15 @@ Tab search:
 find github / 找 GitHub
 open chrome docs / 打开 Chrome docs 标签页
 search docs.google.com / 搜索 docs.google.com
+```
+
+Current optimization answer behavior:
+
+```text
+- renders as an assistant message card, not plain text only and not a separate dashboard-style result card
+- shows groups created, tabs organized, safe duplicates closed, duplicate groups needing review, and memory relief
+- memory relief is counted as duplicate tabs freed; the Agent does not invent exact MB
+- offers safe next-step buttons: Groups, Restore Closed, Review duplicates, Dashboard when relevant
 ```
 
 Supported actions:
@@ -239,7 +250,8 @@ CONFIRMED BY USER / CONFIRMED BY IMPLEMENTATION:
 Sidebar default UI uses a minimal glass Tab Agent layout.
 First screen shows a conversation thread and bottom composer.
 Organize output appears as an agent message, not as a dashboard panel.
-Quick actions are compact chips inside the conversation thread: Organize, Ask page, Undo, Restore, Dashboard.
+Latest organize result, core impact metrics, and quick actions are rendered as one assistant message bubble in the conversation thread.
+Quick actions are compact chips inside the assistant message bubble: Organize, Ask page, Undo, Restore, Dashboard.
 Technical lists are hidden from the default chat surface.
 Composer messages stay in a short local in-memory thread, with user messages and Agent replies shown as separate chat bubbles.
 Quick action chips route through the same chat command path as typed commands, so clicking Organize / Ask page / Undo / Restore / Dashboard also appears in the message thread.
