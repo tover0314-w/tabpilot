@@ -64,50 +64,7 @@ export function buildDiagnosticSnapshot({
 }
 
 export function buildFeedbackTemplate({ diagnosticSnapshot, uiLanguage }) {
-  const isChinese = String(uiLanguage || diagnosticSnapshot?.extension?.locale || "")
-    .toLowerCase()
-    .startsWith("zh");
   const diagnosticsText = JSON.stringify(diagnosticSnapshot || {}, null, 2);
-
-  if (isChinese) {
-    return [
-      "# TabMosaic AI Beta 反馈",
-      "",
-      "## 发生了什么？",
-      "",
-      "请简单描述问题或体验：",
-      "",
-      "## 你原本期待什么？",
-      "",
-      "请写下你希望 TabMosaic 怎么做：",
-      "",
-      "## 如何复现？",
-      "",
-      "1. ",
-      "2. ",
-      "3. ",
-      "",
-      "## 整理质量",
-      "",
-      "目标：70% 明确正确 / 20% 可接受 / 10% Review 或 Misc / 0 个危险误关。",
-      "",
-      "- 本次测试 tabs 总数：",
-      "- 明确正确的 tabs / 分组：",
-      "- 可接受但需要调整的 tabs / 分组：",
-      "- 进入 Review 或 Misc 的 tabs：",
-      "- 明显分错的 tabs / 分组：",
-      "- 是否有标签页被误关：否 / 是，请说明",
-      "- Undo / Restore 是否正常：正常 / 不正常，请说明",
-      "- 你会希望它记住哪条规则：",
-      "",
-      "## 脱敏诊断快照",
-      "",
-      "```json",
-      diagnosticsText,
-      "```",
-      ""
-    ].join("\n");
-  }
 
   return [
     "# TabMosaic AI Beta Feedback",

@@ -36,8 +36,8 @@
    - 决定：sidebar 打开并显示 Scanning / Grouping / Cleaning duplicates。
 3. 自动分组错误时用户如何纠错？
    - 决定：sidebar chat + dashboard drag/drop，两者都可沉淀规则。
-4. 分组命名是否用英文？
-   - 决定：首发支持英文和中文；默认跟随浏览器语言，后续扩展多语言。
+4. 分组命名和可见 UI 是否用英文？
+   - 决定：MVP 默认可见 UI 使用 English-only，避免中英混排；中文资源暂保留为后续多语言素材。
 5. 分类颜色是否 AI 决定？
    - 决定：AI/规则建议，用户可在 dashboard 修改，规则记忆。
 6. Dashboard Latest Result 是否从指标墙改成用户收益摘要？

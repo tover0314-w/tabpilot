@@ -6,17 +6,39 @@ CONFIRMED BY IMPLEMENTATION:
 
 ```text
 P0 dashboard is an extension page.
-It now follows a minimal glass Smart Groups layout: top bar, compact navigation, filter chips, Smart Groups board, and folded Duplicate Center.
+MVP visible Dashboard UI is English-only to avoid mixed-language friction.
+It now follows a minimal glass Smart Groups layout: top bar, filter chips, Smart Groups board, compact Undo / Restore, and folded Duplicate Center.
 It no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area on the default Dashboard page.
 It shows simplified glass Smart Group cards with local tab rows, softer row dividers, expandable hidden tab rows, and folded Duplicate Center with non-destructive duplicate tab details.
-Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
-Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, and Restore Closed. Saved workspace UI, Auto Organize, Save Workspace, and Settings are hidden from the default commercial view until they become real user-facing workflows.
+Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, and Restore Closed.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.
-Workspace restore/history management, manual group creation, new rule creation, group chat, billing/usage, templates, and multi-tab chat are not wired and are not shown as primary default actions.
-Settings still exists for private-beta diagnostics/local reset paths, but it is not a primary Dashboard navigation item.
+Saved Workspaces, Auto Organize, Save Workspace, Rules & Memory, and Settings are not shown in the default customer UI because they do not yet solve a complete user job in this MVP.
+Private-beta diagnostics, local reset, AI key test/clear, and workspace snapshot paths still exist for QA and development, but they are not customer-facing value until restore/history/rules workflows are complete.
 ```
 
-### 0.1 Design Prototype Wiring Status
+### 0.1 MVP Dashboard User Pain Map
+
+The default Dashboard should answer four concrete user questions after one-click organize:
+
+| Visible Dashboard element | User pain it solves | Why it stays in MVP |
+|---|---|---|
+| Smart Groups board | "Where did my work tabs go?" | Shows the current browser groups in a scannable layout and mirrors the real top tab bar. |
+| Tab rows inside each group | "Did the AI put the right pages together?" | Lets the user inspect representative tabs without opening every tab manually. |
+| Edit / same-window move / drag assignment | "The grouping is mostly right, but I need to fix a few mistakes." | Turns AI from a black box into an editable result and can apply changes back to native Chrome groups. |
+| Undo / Restore Closed | "What if the extension made a mistake?" | Builds trust by making grouping and safe duplicate cleanup reversible. |
+| Duplicate Center | "Which tabs are safe duplicates and which need my review?" | Keeps risky duplicate decisions out of automatic cleanup and gives the user a non-destructive review place. |
+
+Items removed from the default customer view:
+
+| Removed from default view | Why it would confuse users now | Required before it returns |
+|---|---|---|
+| Saved Workspaces | A snapshot without restore/history/workspace chat feels like a dead-end archive. | Restore, history management, and workspace chat. |
+| Auto Organize / Rules & Memory | Rules are valuable only when users can understand and manage cause/effect clearly. | Rule creation, preview, audit trail, and clear explanation of what changed. |
+| Settings | A commercial product should not make users configure providers, permissions, diagnostics, and reset controls as a main workflow. | A dedicated private-beta/support path or a polished account/settings flow. |
+| Save Workspace | Saving without a clear next action does not solve an immediate tab-management pain. | Restore, naming, history, and "continue this workspace" behavior. |
+| Refresh / Organize Browser in Dashboard | Repeating the main extension action inside Dashboard adds control clutter. | Only return if user testing shows Dashboard users need a clear re-run action there. |
+
+### 0.2 Design Prototype Wiring Status
 
 Wired now:
 
@@ -53,7 +75,7 @@ Not wired yet:
 - dashboard-hosted cloud sync or account login
 ```
 
-### 0.2 Deprecated Latest Result Information Hierarchy
+### 0.3 Deprecated Latest Result Information Hierarchy
 
 SUPERSEDED BY USER:
 
@@ -112,7 +134,7 @@ Do not show this block in the default Dashboard UI. If needed later, it can appe
 Do not show exact MB saved until the product has a verified memory measurement or tab discard/sleep feature.
 ```
 
-### 0.3 Minimal Glass UI Direction
+### 0.4 Minimal Glass UI Direction
 
 CONFIRMED BY USER:
 

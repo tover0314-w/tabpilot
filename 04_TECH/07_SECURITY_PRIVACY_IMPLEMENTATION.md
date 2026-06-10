@@ -148,7 +148,7 @@ summary_requested
 
 CONFIRMED BY IMPLEMENTATION:
 
-Hidden private-beta Settings includes `Permissions & Data Use`, which explains the current manifest permissions and DeepSeek host permission in user-facing English/Chinese copy. It also explicitly says the extension does not request all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
+Hidden private-beta Settings includes `Permissions & Data Use`, which explains the current manifest permissions and DeepSeek host permission in English MVP copy. It also explicitly says the extension does not request all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
 
 Hidden private-beta Settings also includes `Beta Diagnostics`, a user-triggered local clipboard copy of a redacted QA snapshot and beta feedback Markdown template. It is not analytics and does not upload data. The sanitizer excludes URLs, tab titles, hostnames, rule patterns, group names, page text, emails, bearer tokens, and API keys.
 

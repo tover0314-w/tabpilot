@@ -769,10 +769,7 @@ function buildAIAgentActionDraft(output, { instruction = "", language = "en", an
     return null;
   }
 
-  const isChinese = language === "zh-CN" || isChineseInstruction(instruction);
-  const fallbackAnswer = isChinese
-    ? `我可以把 ${tabIds.length} 个现有标签页移动到 ${groupName}。`
-    : `I can move ${tabIds.length} existing tab(s) to ${groupName}.`;
+  const fallbackAnswer = `I can move ${tabIds.length} existing tab(s) to ${groupName}.`;
 
   return {
     id: buildDraftId(`ai:${instruction}:${groupName}:${tabIds.join(",")}`),
@@ -781,17 +778,13 @@ function buildAIAgentActionDraft(output, { instruction = "", language = "en", an
     createdFrom: "ai-agent",
     instruction,
     answer: addAIAgentSafetyNoteIfNeeded(answer || fallbackAnswer),
-    actionSummary: isChinese
-      ? `移动 ${tabIds.length} 个现有标签页到 ${groupName}。`
-      : `Move ${tabIds.length} existing tab(s) to ${groupName}.`,
+    actionSummary: `Move ${tabIds.length} existing tab(s) to ${groupName}.`,
     groupName,
     groupColor: inferGroupColor(groupName),
     tabIds,
     matchedTabs: tabIds.map((tabId) => buildAIAgentMatchedTab(tabById.get(tabId))),
     matchedTabCount: tabIds.length,
-    risk: isChinese
-      ? "点击 Apply 前不会改动浏览器。不会关闭标签页；不会读取页面正文或发送完整 URL。"
-      : "No browser changes happen until Apply. No tabs will be closed; page text and full URLs were not sent."
+    risk: "No browser changes happen until Apply. No tabs will be closed; page text and full URLs were not sent."
   };
 }
 
@@ -1205,11 +1198,11 @@ async function askTabAgent(message = {}) {
     const output = await callOpenAICompatibleTabAgent(settings, {
       instruction,
       state,
-      language: isChineseInstruction(instruction) ? "zh-CN" : "en"
+      language: "en"
     });
     const result = validateAIAgentAnswer(output, state, {
       instruction,
-      language: isChineseInstruction(instruction) ? "zh-CN" : "en"
+      language: "en"
     });
 
     if (result.status === "draft" && result.draft) {
@@ -1529,7 +1522,7 @@ function buildChatRefineDraft(instruction, snapshot) {
   if (renameDraft) return renameDraft;
 
   throw new Error(
-    "I can handle examples like: GitHub PR to Code Review, docs.google.com to Docs & Notes, current tab to Reading, rename Misc to Reading, 把当前标签页放到阅读, or 把 Misc 改名为阅读."
+    "I can handle examples like: GitHub PR to Code Review, docs.google.com to Docs & Notes, current tab to Reading, or rename Misc to Reading."
   );
 }
 
@@ -1565,9 +1558,7 @@ function buildGitHubPrRuleDraft(instruction, snapshot) {
     instruction,
     rule,
     matchedTabs,
-    answer: isChineseInstruction(instruction)
-      ? `我可以创建 GitHub PR 规则，并移动 ${matchedTabs.length} 个匹配标签页。`
-      : `I can create a rule for GitHub pull requests and move ${matchedTabs.length} matching tabs now.`
+    answer: `I can create a rule for GitHub pull requests and move ${matchedTabs.length} matching tabs now.`
   });
 }
 
@@ -1593,15 +1584,12 @@ function buildDomainRuleDraft(instruction, snapshot) {
     instruction,
     rule,
     matchedTabs,
-    answer: isChineseInstruction(instruction)
-      ? `我可以为 ${hostname} 创建规则，并移动 ${matchedTabs.length} 个匹配标签页。`
-      : `I can create a rule for ${hostname} and move ${matchedTabs.length} matching tabs now.`
+    answer: `I can create a rule for ${hostname} and move ${matchedTabs.length} matching tabs now.`
   });
 }
 
 function buildCurrentTabMoveDraft(instruction, snapshot) {
   const lower = instruction.toLowerCase();
-  const isChinese = isChineseInstruction(instruction);
   const mentionsCurrentTab =
     lower.includes("current tab") ||
     lower.includes("this tab") ||
@@ -1632,8 +1620,8 @@ function buildCurrentTabMoveDraft(instruction, snapshot) {
     type: "move_tabs",
     createdAt: new Date().toISOString(),
     instruction,
-    answer: isChinese ? `我可以把当前标签页移动到 ${groupName}。` : `I can move the current tab to ${groupName}.`,
-    actionSummary: isChinese ? `移动 1 个标签页到 ${groupName}。` : `Move 1 tab to ${groupName}.`,
+    answer: `I can move the current tab to ${groupName}.`,
+    actionSummary: `Move 1 tab to ${groupName}.`,
     groupName,
     groupColor: inferGroupColor(groupName),
     tabIds: [activeTab.id],
@@ -1651,33 +1639,21 @@ function buildRenameGroupDraft(instruction, snapshot) {
   );
 
   if (!matchedGroups.length) {
-    throw new Error(
-      isChineseInstruction(instruction)
-        ? `我找不到名为 ${parsed.oldName} 的分组。`
-        : `I could not find a group named ${parsed.oldName}.`
-    );
+    throw new Error(`I could not find a group named ${parsed.oldName}.`);
   }
-
-  const isChinese = isChineseInstruction(instruction);
 
   return {
     id: buildDraftId(instruction),
     type: "rename_group",
     createdAt: new Date().toISOString(),
     instruction,
-    answer: isChinese
-      ? `我可以把 ${matchedGroups.length} 个分组从 ${parsed.oldName} 改名为 ${parsed.newName}。`
-      : `I can rename ${matchedGroups.length} group(s) from ${parsed.oldName} to ${parsed.newName}.`,
-    actionSummary: isChinese
-      ? `重命名 ${matchedGroups.length} 个分组为 ${parsed.newName}。`
-      : `Rename ${matchedGroups.length} group(s) to ${parsed.newName}.`,
+    answer: `I can rename ${matchedGroups.length} group(s) from ${parsed.oldName} to ${parsed.newName}.`,
+    actionSummary: `Rename ${matchedGroups.length} group(s) to ${parsed.newName}.`,
     oldName: parsed.oldName,
     newName: parsed.newName,
     groupColor: inferGroupColor(parsed.newName),
     groupIds: matchedGroups.map((group) => group.id),
-    risk: isChinese
-      ? "不会移动或关闭标签页，也不会读取页面正文。"
-      : "No tabs will be moved or closed. Page content will not be read."
+    risk: "No tabs will be moved or closed. Page content will not be read."
   };
 }
 
@@ -1688,9 +1664,7 @@ function buildRuleDraft({ instruction, rule, matchedTabs, answer }) {
     createdAt: new Date().toISOString(),
     instruction,
     answer,
-    actionSummary: isChineseInstruction(instruction)
-      ? `创建规则 ${rule.pattern} -> ${rule.targetGroupName}，移动 ${matchedTabs.length} 个当前标签页。`
-      : `Create rule ${rule.pattern} -> ${rule.targetGroupName}. Move ${matchedTabs.length} current tabs.`,
+    actionSummary: `Create rule ${rule.pattern} -> ${rule.targetGroupName}. Move ${matchedTabs.length} current tabs.`,
     rule,
     groupName: rule.targetGroupName,
     groupColor: rule.targetGroupColor,
@@ -2137,12 +2111,6 @@ function buildDraftId(instruction) {
 }
 
 function getChatRefineRisk(instruction, options = {}) {
-  if (isChineseInstruction(instruction)) {
-    return options.storesRule
-      ? "不会关闭标签页，也不会读取页面正文。规则只保存在本地。"
-      : "不会关闭标签页，也不会读取页面正文。";
-  }
-
   return options.storesRule
     ? "No tabs will be closed. Page content will not be read. The rule is stored locally."
     : "No tabs will be closed. Page content will not be read.";

@@ -24,7 +24,7 @@ Harness version：v0.3
 ## 当前已确认方向
 
 - 首发目标用户：办公和知识工作者，独立开发者作为早期传播子人群。
-- 首发语言：英文 + 中文，后续再扩展多语言。当前扩展 UI 已接入 Chrome `_locales/en` 和 `_locales/zh_CN` first slice。
+- MVP 可见 UI 语言：English-only，避免中英混排。中文 `_locales/zh_CN` 资源暂时保留为后续多语言素材，但当前 Sidebar/Dashboard 默认强制加载英文文案。
 - P0 整理范围：当前浏览器所有普通窗口，不默认处理 incognito。
 - 点击插件后：自动打开 sidebar，展示进度和后续操作入口。
 - MVP AI：DeepSeek API 简单测试，保留 OpenAI-compatible provider abstraction。
@@ -76,7 +76,7 @@ node tools/beta_readiness_check.js
 node tools/extension_smoke_test.js
 ```
 
-它会检查 manifest 权限、英文/中文本地化、极简玻璃拟态 side panel / Dashboard 守卫、Dashboard 本地保存 workspace 快照的隐私边界、侧边栏快捷动作进入聊天、侧边栏临时消息流、侧边栏 direct commands（含本地保存 workspace）、本地能力说明回答、当前页 summary / page question 聊天消息渲染、latest-run 只读问答、duplicate-review/closed-tab 本地回答、active/protected/read-later 本地回答、tab search/focus、权限解释、脱敏本地错误日志、本地误关恢复安全审计计数、脱敏 beta 诊断快照和反馈模板、Chat action parser、用户规则优先级、重复项安全策略、180-tab synthetic local planning guard、AI 输出校验、AI 连接测试不发送 tab 数据，以及本地数据清除。
+它会检查 manifest 权限、English-only 默认可见 UI、极简玻璃拟态 side panel / Dashboard 守卫、Dashboard 本地保存 workspace 快照的隐私边界、侧边栏快捷动作进入聊天、侧边栏临时消息流、侧边栏 direct commands（含本地保存 workspace）、本地能力说明回答、当前页 summary / page question 聊天消息渲染、latest-run 只读问答、duplicate-review/closed-tab 本地回答、active/protected/read-later 本地回答、tab search/focus、权限解释、脱敏本地错误日志、本地误关恢复安全审计计数、脱敏 beta 诊断快照和反馈模板、Chat action parser、用户规则优先级、重复项安全策略、180-tab synthetic local planning guard、AI 输出校验、AI 连接测试不发送 tab 数据，以及本地数据清除。
 
 ```bash
 node tools/issue_form_smoke_test.js

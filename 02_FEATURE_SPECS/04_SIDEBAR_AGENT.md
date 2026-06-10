@@ -167,7 +167,7 @@ Cancel discards the draft.
 No page body is read.
 No AI request is made for locally parsed commands.
 No tabs are closed.
-Chinese input returns Chinese preview answer/action/risk copy.
+Chinese input can still be parsed for tolerance, but MVP visible preview answer/action/risk copy stays English-only to avoid mixed-language UI.
 ```
 
 Supported first commands:

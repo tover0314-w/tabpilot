@@ -12,6 +12,7 @@ CONFIRMED BY IMPLEMENTATION:
 
 ```text
 - MV3 Chrome extension
+- English-only visible Sidebar/Dashboard UI for the MVP
 - one-click toolbar action without default_popup
 - side panel opens from the toolbar action
 - first-run privacy gate

@@ -274,7 +274,7 @@ Expected:
 
 ```text
 - Sidebar completed-state screenshot is generated in English.
-- Sidebar completed-state screenshot is generated in Chinese.
+- No mixed-language or Chinese visible UI screenshot is generated in the MVP.
 - Dashboard overview screenshot is generated.
 - Dashboard mobile screenshot is generated.
 - Five local 1280x800 Chrome Web Store screenshot drafts are generated.

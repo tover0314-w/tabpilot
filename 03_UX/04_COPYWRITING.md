@@ -9,7 +9,7 @@ extension/_locales/en/messages.json
 extension/_locales/zh_CN/messages.json
 ```
 
-浏览器 UI 语言为中文时使用中文文案；其他语言默认英文。后续多语言扩展应继续使用 Chrome 原生 `_locales`，并保持 key parity。
+MVP visible UI uses English-only copy to avoid mixed-language friction. Chinese copy remains in `_locales/zh_CN` as a future localization resource, but Sidebar/Dashboard should not switch visible copy based on the browser's Chinese locale until that experience is intentionally re-enabled.
 
 英文：
 

@@ -1,4 +1,4 @@
-import { applyI18n, msg } from "./i18n.js";
+import { applyI18n, initI18n, msg } from "./i18n.js";
 
 const LAST_CLOSED_TABS_KEY = "tabmosaic.lastClosedTabs";
 const CHAT_THREAD_LIMIT = 12;
@@ -26,6 +26,7 @@ let latestRun = null;
 let latestChatDraft = null;
 let chatMessages = [];
 
+await initI18n();
 applyI18n();
 
 dashboardTopButton.addEventListener("click", openDashboard);

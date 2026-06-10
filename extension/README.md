@@ -5,7 +5,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 ## What Works
 
 - Manifest V3 extension shell.
-- English/Chinese UI localization through Chrome `_locales`.
+- English-only visible UI for Sidebar and Dashboard. Chinese `_locales` resources remain in the package as future localization material, but runtime extension pages force English copy in the MVP.
 - Toolbar action click.
 - Side panel opens from the action click.
 - First run shows a lightweight privacy gate before any organizing happens.
@@ -32,7 +32,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - The bottom composer can answer `what should I do next` / `下一步` locally from the latest organize state.
 - The bottom composer can find tabs from the latest local snapshot and focus an existing matching tab.
 - Chat Refine can create local rules like `GitHub PR to Code Review` or `把 docs.google.com 放到文档笔记`.
-- Chat Refine supports first English/Chinese local commands for current-tab move, domain rule creation, and group rename.
+- Chat Refine still accepts first English/Chinese local commands for current-tab move, domain rule creation, and group rename, but visible UI responses default to English in the MVP.
 - User rules apply before AI and built-in rules on future organize runs.
 - Summarize Current Tab reads visible page text only after a user click, asks for an extra confirmation on sensitive pages, and generates a local extractive summary.
 - The composer can answer `ask page: ...` questions from the current page with local visible-text matching after the same current-page privacy flow.
@@ -132,7 +132,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English/Chinese localization, chat-first Tab Agent UI, quick-action chat routing, ephemeral chat thread rendering, stale draft button guards, direct composer commands including local workspace save, local capability/help answers, local next-step guidance, current-page chat summary/question rendering, latest-run read-only answers, duplicate-review/closed-tab local answers, active/protected/read-later local answers, local tab search/focus, minimal glass Dashboard layout, Dashboard Smart Groups filters, Dashboard local workspace save guardrails, Dashboard tab focus, Dashboard same-window tab move and drag/drop guardrails, Dashboard Undo/Restore guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat action parsing, user-rule priority, duplicate safety policy, 180-tab synthetic local planning guard, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
+It checks manifest permissions, English-only visible extension page copy, chat-first Tab Agent UI, quick-action chat routing, ephemeral chat thread rendering, stale draft button guards, direct composer commands including local workspace save, local capability/help answers, local next-step guidance, current-page chat summary/question rendering, latest-run read-only answers, duplicate-review/closed-tab local answers, active/protected/read-later local answers, local tab search/focus, minimal glass Dashboard layout, Dashboard Smart Groups filters, Dashboard local workspace save guardrails, Dashboard tab focus, Dashboard same-window tab move and drag/drop guardrails, Dashboard Undo/Restore guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat action parsing, user-rule priority, duplicate safety policy, 180-tab synthetic local planning guard, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 

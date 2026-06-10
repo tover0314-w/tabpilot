@@ -1,4 +1,4 @@
-import { applyI18n, msg } from "./i18n.js";
+import { applyI18n, initI18n, msg } from "./i18n.js";
 import { buildDiagnosticSnapshot, buildFeedbackTemplate } from "./diagnostics.js";
 
 const CURRENT_RUN_KEY = "tabmosaic.currentRun";
@@ -52,6 +52,7 @@ let latestRun = null;
 let activeGroupFilter = "all";
 let draggedDashboardTab = null;
 
+await initI18n();
 applyI18n();
 
 refreshButton.addEventListener("click", loadDashboard);

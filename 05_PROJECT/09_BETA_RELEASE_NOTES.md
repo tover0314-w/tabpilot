@@ -23,7 +23,7 @@ Click extension icon
 ## Included Capabilities
 
 - MV3 Chrome extension.
-- English and Chinese UI first slice.
+- English-only visible Sidebar/Dashboard UI for the MVP; Chinese locale resources remain only as future localization material.
 - One-click action flow without `default_popup`.
 - Side panel result/control center.
 - All normal windows scan; incognito is not processed by default.

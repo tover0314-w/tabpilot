@@ -262,6 +262,7 @@ test("locales include matching English and Chinese message keys", () => {
 
 test("UI i18n references resolve to locale messages", () => {
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const i18nJs = fs.readFileSync(path.join(EXTENSION_DIR, "i18n.js"), "utf8");
   const files = ["sidepanel.html", "dashboard.html", "sidepanel.js", "dashboard.js"];
   const keys = new Set();
 
@@ -278,6 +279,10 @@ test("UI i18n references resolve to locale messages", () => {
   for (const key of keys) {
     assert(en[key]?.message, `Missing locale message referenced by UI: ${key}`);
   }
+
+  assert(i18nJs.includes("_locales/en/messages.json"), "Visible extension pages should load English UI copy");
+  assert(i18nJs.includes('document.documentElement.lang = "en"'), "Visible extension pages should declare English UI language");
+  assert(!i18nJs.includes("startsWith(\"zh\")"), "Visible extension pages should not switch copy based on Chinese browser locale in the MVP");
 });
 
 test("dashboard permission explanation matches manifest permissions", () => {
@@ -1128,14 +1133,14 @@ test("diagnostics and feedback template redact browsing content and secrets", as
     diagnosticSnapshot: snapshot,
     uiLanguage: "zh-CN"
   });
-  assert(chineseFeedback.includes("TabMosaic AI Beta 反馈"), "Chinese feedback template heading");
+  assert(chineseFeedback.includes("TabMosaic AI Beta Feedback"), "Feedback template should stay English even for zh-CN UI language");
   assert(
-    chineseFeedback.includes("70% 明确正确 / 20% 可接受 / 10% Review 或 Misc / 0 个危险误关"),
-    "Chinese feedback template should include beta quality target"
+    chineseFeedback.includes("70% clearly right / 20% acceptable / 10% Review or Misc / 0 dangerous close mistakes"),
+    "Feedback template should keep the English beta quality target"
   );
-  assert(chineseFeedback.includes("本次测试 tabs 总数"), "Chinese feedback template should include manual tab count field");
-  assert(chineseFeedback.includes("希望它记住哪条规则"), "Chinese feedback template should collect memory rule feedback");
-  assert(chineseFeedback.includes("脱敏诊断快照"), "Chinese feedback diagnostic section");
+  assert(chineseFeedback.includes("Total tabs tested"), "Feedback template should include English manual tab count field");
+  assert(chineseFeedback.includes("What rule should TabMosaic remember next time"), "Feedback template should collect memory rule feedback in English");
+  assert(chineseFeedback.includes("Redacted diagnostic snapshot"), "Feedback template diagnostic section should stay English");
 });
 
 test("chat refine builds safe local action drafts", () => {
@@ -1182,16 +1187,16 @@ test("chat refine builds safe local action drafts", () => {
   assertEqual(chineseCurrentTabDraft.groupName, "阅读", "Chinese current tab target group");
   assertEqual(chineseCurrentTabDraft.groupColor, "yellow", "Chinese current tab group color");
   assertDeepEqual(chineseCurrentTabDraft.tabIds, [1], "Chinese current tab draft tab ids");
-  assert(chineseCurrentTabDraft.answer.includes("当前标签页"), "Chinese current tab answer");
-  assert(chineseCurrentTabDraft.risk.includes("不会关闭标签页"), "Chinese current tab risk");
+  assert(chineseCurrentTabDraft.answer.includes("I can move the current tab"), "Chinese current tab input should still answer in English");
+  assert(chineseCurrentTabDraft.risk.includes("No tabs will be closed"), "Chinese current tab input should still show English risk copy");
 
   const chineseDomainDraft = context.buildChatRefineDraft("把 docs.google.com 放到文档笔记", state);
   assertEqual(chineseDomainDraft.type, "create_rule_and_move", "Chinese domain draft type");
   assertEqual(chineseDomainDraft.rule.pattern, "docs.google.com", "Chinese domain pattern");
   assertEqual(chineseDomainDraft.groupName, "文档笔记", "Chinese domain target group");
   assertEqual(chineseDomainDraft.groupColor, "green", "Chinese domain group color");
-  assert(chineseDomainDraft.actionSummary.includes("创建规则"), "Chinese domain action summary");
-  assert(chineseDomainDraft.risk.includes("规则只保存在本地"), "Chinese domain risk");
+  assert(chineseDomainDraft.actionSummary.includes("Create rule"), "Chinese domain input should still show English action summary");
+  assert(chineseDomainDraft.risk.includes("The rule is stored locally"), "Chinese domain input should still show English risk copy");
 
   const renameDraft = context.buildChatRefineDraft("rename Misc to Reading", state);
   assertEqual(renameDraft.type, "rename_group", "Rename draft type");
@@ -1201,7 +1206,7 @@ test("chat refine builds safe local action drafts", () => {
   assertEqual(chineseRenameDraft.type, "rename_group", "Chinese rename draft type");
   assertEqual(chineseRenameDraft.newName, "阅读", "Chinese rename target");
   assertDeepEqual(chineseRenameDraft.groupIds, [10], "Chinese rename draft group ids");
-  assert(chineseRenameDraft.actionSummary.includes("重命名"), "Chinese rename action summary");
+  assert(chineseRenameDraft.actionSummary.includes("Rename"), "Chinese rename input should still show English action summary");
 });
 
 test("user rules beat AI and built-in classification", () => {

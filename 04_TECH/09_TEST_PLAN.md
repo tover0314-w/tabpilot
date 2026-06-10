@@ -27,7 +27,8 @@ Coverage:
 - GitHub Actions runs beta readiness after package verification so CI blocks stale readiness evidence
 - manifest permission guardrails
 - no default_popup one-click action constraint
-- English/Chinese locale parity and UI i18n key references
+- English-only visible Sidebar/Dashboard copy, with English locale references loaded at runtime
+- Chinese locale key parity kept only as future localization material
 - Chat Refine parser examples, including English and Chinese commands
 - user rule priority before AI/built-in classification
 - exact/tracking duplicate safe close policy
@@ -78,7 +79,7 @@ Coverage:
 - current run snapshot strips restore URLs, URL hashes, raw/full URLs, page text, and favicon query/hash data before storing UI state
 - Undo snapshot stores only the minimum IDs, window, index, and group fields needed to restore grouping
 - Beta diagnostic snapshot and feedback template redact URLs, tab titles, hostnames, rules, group names, page text, and API keys
-- Beta feedback template includes English/Chinese classification quality labeling for the 70/20/10/0 target
+- Beta feedback template uses English-only classification quality labeling for the 70/20/10/0 target
 - AI connection test calls `/models` without sending tab data, full URLs, page text, or a request body
 - AI connection test carries an abort signal
 - AI connection rejects unsupported OpenAI-compatible hosts before fetch; private beta permits only `https://api.deepseek.com`
@@ -143,7 +144,7 @@ Expected:
 
 ```text
 - renders sidebar completed state with English mock data
-- renders sidebar completed state with Chinese mock data
+- does not render mixed-language UI screenshots in the MVP
 - renders dashboard overview with mock workspace data
 - renders dashboard mobile overview with mock workspace data
 - renders side panel result/chat states plus Dashboard desktop/mobile with mock extension data
@@ -170,7 +171,7 @@ Expected:
 - manifest.json is at the zip root
 - icons/icon16.png, icon32.png, icon48.png, icon128.png exist
 - i18n.js and diagnostics.js exist
-- _locales/en/messages.json and _locales/zh_CN/messages.json exist
+- _locales/en/messages.json and _locales/zh_CN/messages.json exist, but visible extension pages force English copy for the MVP
 - default_popup is not present
 - dist/tabmosaic-ai-extension-v0.1.0.sha256 exists
 - dist/tabmosaic-ai-extension-v0.1.0.package.json exists and states env files are excluded

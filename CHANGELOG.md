@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.109 — 2026-06-10
+
+Changed:
+
+- Sidebar and Dashboard visible extension pages now force English copy for the MVP, even when the browser UI language is Chinese.
+- Chinese input can still be parsed for tolerant Chat Refine commands, but previews, risks, diagnostics feedback templates, and AI Agent drafts stay in English.
+- Dashboard spec now explains each default visible element by the user pain it solves, and frames non-default items as incomplete user jobs rather than vague hidden features.
+- UI screenshot capture no longer creates a Chinese side panel screenshot, keeping product review artifacts English-only.
+
+Safety:
+
+- Chinese locale resources remain in the package as future localization material, but they are not used for visible MVP Sidebar/Dashboard copy.
+- This does not broaden permissions, change tab-closing behavior, upload page text, send full URLs, or make AI actions apply without user Apply.
+
 ## v0.108 — 2026-06-10
 
 Changed:

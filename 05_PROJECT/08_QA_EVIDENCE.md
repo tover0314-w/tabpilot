@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.108
+Source state verified: v0.109
 
 ### Unified Preflight
 
@@ -116,7 +116,7 @@ Covered:
 
 - MV3 manifest one-click action guardrails.
 - Narrow permissions and no `default_popup`.
-- English/Chinese locale parity.
+- English-only visible UI guard, with Chinese locale keys retained only as future localization material.
 - Permission explanation alignment.
 - Side panel minimal glass UI guard: result and Chat are default, technical browser details are hidden from the default chat surface, and internal next-build QA copy is absent.
 - Dashboard minimal glass workbench structure guard.
@@ -296,7 +296,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=1ff9dc3be766ee99e27bb8558c15d987ecb29acc19af04f1563ae070e5b1b469
+sha256=31e4689657a1e18df3ec97af5abcb29bae5532fbacd01e7e6ec8740ab3b6284a
 ```
 
 Evidence notes:
@@ -373,7 +373,6 @@ Result:
 PASS UI screenshots captured
 artifacts/ui-screenshots/sidepanel-result.png
 artifacts/ui-screenshots/sidepanel-chat.png
-artifacts/ui-screenshots/sidepanel-result-zh.png
 artifacts/ui-screenshots/dashboard-overview.png
 artifacts/ui-screenshots/dashboard-mobile.png
 PASS store screenshot drafts captured

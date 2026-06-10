@@ -272,13 +272,6 @@ async function main() {
         }
       },
       {
-        name: "sidepanel-result-zh.png",
-        path: "/sidepanel.html",
-        viewport: SIDEPANEL_VIEWPORT,
-        fullPage: false,
-        language: "zh"
-      },
-      {
         name: "dashboard-overview.png",
         path: "/dashboard.html",
         viewport: DEFAULT_VIEWPORT,

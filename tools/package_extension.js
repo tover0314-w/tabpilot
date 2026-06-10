@@ -88,7 +88,7 @@ function validateManifestAssets(manifest) {
 
 function validateLocales(manifest) {
   if (manifest.default_locale !== "en") {
-    throw new Error("default_locale must remain en for the current English/Chinese launch scope");
+    throw new Error("default_locale must remain en for the current English-only visible UI scope");
   }
 
   const enPath = path.join(EXTENSION_DIR, "_locales", "en", "messages.json");
