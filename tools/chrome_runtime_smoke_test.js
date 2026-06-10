@@ -784,8 +784,78 @@ async function runDeepSeekAgentFlow(cdp) {
   assert(agentAnswer.actionButtons >= 1, "DeepSeek Agent answer did not render a safe action chip");
   assert(!/fullUrl|restoreUrl|pageText|token=abc/i.test(agentAnswer.text), "DeepSeek Agent answer leaked sensitive field names or fixture token text");
 
+  const clickedAction = await evaluate(
+    cdp,
+    `(() => {
+      const messages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.ai-agent"));
+      const latest = messages[messages.length - 1];
+      const button =
+        latest?.querySelector('[data-chat-action="quick-command"][data-command="show groups"]') ||
+        latest?.querySelector('[data-chat-action="quick-command"][data-command="open dashboard"]') ||
+        latest?.querySelector('[data-chat-action="quick-command"]');
+
+      if (!button) return null;
+
+      const beforeUserMessages = document.querySelectorAll("#chatPanel .chat-thread-message.user").length;
+      const beforeAssistantMessages = document.querySelectorAll("#chatPanel .chat-thread-message.assistant").length;
+      const label = button.dataset.label || button.textContent.trim();
+      const command = button.dataset.command || "";
+      button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+
+      return { label, command, beforeUserMessages, beforeAssistantMessages };
+    })()`
+  );
+  assert(clickedAction?.command, "DeepSeek Agent action chip did not expose a safe chat command");
+
+  let actionContinuation;
+  try {
+    actionContinuation = await waitFor(async () => {
+      return evaluate(
+        cdp,
+        `(() => {
+          const userMessages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.user"));
+          const assistantMessages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant"));
+          const latestUser = userMessages[userMessages.length - 1];
+          const fullText = document.querySelector("#chatPanel")?.textContent || "";
+
+          return {
+            userCount: userMessages.length,
+            assistantCount: assistantMessages.length,
+            latestUserText: (latestUser?.textContent || "").replace(/\\s+/g, " ").trim(),
+            fullText: fullText.replace(/\\s+/g, " ").trim(),
+            dashboardOpen: false
+          };
+        })()`
+      ).then(async (state) => {
+        if (clickedAction.command === "open dashboard") {
+          const tabs = await evaluate(cdp, "chrome.tabs.query({})");
+          state.dashboardOpen = tabs.some((tab) => String(tab.url || "").endsWith("/dashboard.html"));
+        }
+
+        const userContinued = state.userCount > clickedAction.beforeUserMessages &&
+          state.latestUserText.includes(clickedAction.label);
+        const assistantContinued = clickedAction.command === "show groups"
+          ? /Current groups|当前分组/.test(state.fullText)
+          : state.assistantCount > clickedAction.beforeAssistantMessages || state.dashboardOpen;
+
+        return userContinued && assistantContinued ? state : null;
+      });
+    }, "DeepSeek Agent action chip did not continue the chat thread");
+  } catch (error) {
+    const chatDebug = await evaluate(
+      cdp,
+      `(() => Array.from(document.querySelectorAll("#chatPanel .chat-thread-message"))
+        .slice(-8)
+        .map((node) => ({
+          className: node.className,
+          text: (node.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 260)
+        })))()`
+    );
+    throw new Error(`${error.message}. clickedAction=${JSON.stringify(clickedAction)} chat=${JSON.stringify(chatDebug)}`);
+  }
+
   console.log(
-    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, actionButtons=${agentAnswer.actionButtons}, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
+    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, actionButtons=${agentAnswer.actionButtons}, clickedAction=${clickedAction.command}, continued=${actionContinuation ? "yes" : "no"}, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
   );
 }
 

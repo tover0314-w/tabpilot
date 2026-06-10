@@ -6,7 +6,7 @@ Changed:
 
 - DeepSeek metadata Agent answers now include compact safe action chips when useful.
 - Safe action chips are restricted to an allowlist: Ask page, Open Dashboard, Organize Again, Restore Closed, Review duplicates, and Show groups.
-- The real `--agent-flow` runtime check now verifies the Sidebar Agent returns a normal assistant message card with relevant tab rows, safe action chips, and next-step suggestions.
+- The real `--agent-flow` runtime check now verifies the Sidebar Agent returns a normal assistant message card with relevant tab rows, safe action chips, and next-step suggestions, then clicks one chip and verifies the same chat thread continues.
 
 Safety:
 

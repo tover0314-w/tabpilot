@@ -278,7 +278,7 @@ function confirmSensitiveSummaryIfNeeded(check) {
 
 async function runQuickChatCommand(commandText, displayText = commandText) {
   appendUserChatMessage(displayText);
-  await handleAgentCommand(commandText);
+  await processChatText(commandText);
 }
 
 async function previewChatRefine(event) {
@@ -294,10 +294,13 @@ async function previewChatRefine(event) {
   }
 
   appendUserChatMessage(text);
+  await processChatText(text);
+}
 
+async function processChatText(text) {
   if (await handleAgentCommand(text)) {
     chatInput.value = "";
-    return;
+    return true;
   }
 
   const readOnlyAnswer = await buildReadOnlyAgentAnswer(text, latestRun);
@@ -312,7 +315,7 @@ async function previewChatRefine(event) {
           }
         : readOnlyAnswer
     );
-    return;
+    return true;
   }
 
   const tabSearchResult = buildTabSearchResult(text, latestRun);
@@ -320,7 +323,7 @@ async function previewChatRefine(event) {
     latestChatDraft = null;
     chatInput.value = "";
     renderChatPanel(tabSearchResult);
-    return;
+    return true;
   }
 
   setBusy(true);
@@ -338,19 +341,20 @@ async function previewChatRefine(event) {
   if (response?.ok) {
     latestChatDraft = response.draft;
     renderChatPanel(response.draft);
-    return;
+    return true;
   }
 
   latestChatDraft = null;
 
   if (await askMetadataAgent(text)) {
-    return;
+    return true;
   }
 
   renderChatPanel({
     status: "error",
     answer: response?.error || msg("couldNotBuildSafeAction")
   });
+  return false;
 }
 
 async function askMetadataAgent(text) {

@@ -239,7 +239,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, 4 relevant tab rows, actionButtons=3, nextSteps=yes
+PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, 4 relevant tab rows, actionButtons=3, clickedAction=open dashboard, continued=yes, nextSteps=yes
 ```
 
 Evidence notes:
@@ -249,6 +249,7 @@ Evidence notes:
 - It accepted the privacy gate, organized synthetic tabs into real Chrome native tab groups, then submitted `Which tabs should I focus on for Chrome extension planning?` through the real Sidebar composer.
 - It verified that DeepSeek returned through the Sidebar Agent path as a normal assistant message card, not a Chat Refine action preview.
 - It verified the visible metadata-only privacy note in the assistant card.
+- It clicked one validated safe action chip and verified the action continued the same chat thread with a user message and Agent reply.
 - It verified relevant tab rows, validated safe action chips, and next-step suggestions rendered without applying browser changes automatically.
 - It did not read the user's real Chrome profile, real browser tabs, real page text, or full URLs.
 
@@ -294,7 +295,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=ca93c7a1011711fc0ecfbebe8997f938f23ddd173165ca4d01129dfc49123950
+sha256=2f568abcbf139f0ddce42694ef4b066f4a48be4ea04893ea7cd4dec3b785feab
 ```
 
 Evidence notes:

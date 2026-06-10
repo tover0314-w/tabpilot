@@ -152,6 +152,7 @@ Verified:
 - real Sidebar composer submits an open-ended tab-management question
 - DeepSeek metadata-only Agent returns an assistant message card
 - relevant tab rows, safe action chips, and safe next-step suggestions render
+- clicking a safe action chip continues the same Sidebar chat thread
 - page text and full URLs are not read or sent
 - no browser actions are applied automatically from the AI answer
 ```

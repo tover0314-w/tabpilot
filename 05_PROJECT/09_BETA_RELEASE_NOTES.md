@@ -42,7 +42,7 @@ Click extension icon
 - Sidebar composer local answers for latest result, optimization / memory relief, groups, duplicates, duplicate review queue, closed duplicate restore state, AI status, active tabs, protected tabs, possible read-later tabs, and tab search/open.
 - Sidebar optimization / memory-relief answer renders as an assistant message card with safe next-step buttons instead of plain text only.
 - Sidebar DeepSeek metadata-only Agent fallback for open-ended tab-management questions after local commands/actions do not match.
-- Sidebar DeepSeek Agent answers can include compact validated safe action chips, routed through the normal user-triggered chat command path.
+- Sidebar DeepSeek Agent answers can include compact validated safe action chips, routed through the normal user-triggered chat command path and continuing the same chat thread after click.
 - Current-tab summary only after user click.
 - Dashboard Smart Groups, folded Saved Workspaces, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
 - Dashboard expandable Smart Group tab rows for groups with more than three visible tabs.
