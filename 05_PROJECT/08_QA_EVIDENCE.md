@@ -31,6 +31,7 @@ fixtureGroupCount=2
 fixtureAssignedTabs=3
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, safe action chips, and a validated Apply/Cancel move draft
+PASS Chrome runtime DeepSeek Agent flow answered a follow-up from short-term context with followUp=yes
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 858ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
@@ -45,12 +46,12 @@ Evidence notes:
 
 - This preflight run called DeepSeek for `/models` and a synthetic 3-tab classification fixture; runtime/UI tests used synthetic tabs and did not read real browser tabs or page text.
 - `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, context-aware composer state, ephemeral chat thread rendering, capability/help answer, open-ended chat fallback without DeepSeek, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
-- `--agent-flow` used a temporary Chrome for Testing profile with synthetic tabs, enabled DeepSeek only inside that temporary extension storage, submitted an open-ended question through the real Sidebar composer, verified a metadata-only assistant message card with relevant tab rows, safe action chips, and safe next-step suggestions, then verified a DeepSeek-generated `move_tabs` Apply/Cancel draft could be applied into a real native Chrome group without closing tabs.
+- `--agent-flow` used a temporary Chrome for Testing profile with synthetic tabs, enabled DeepSeek only inside that temporary extension storage, submitted an open-ended question through the real Sidebar composer, verified a metadata-only assistant message card with relevant tab rows, safe action chips, and safe next-step suggestions, submitted `Why those tabs?` as a follow-up using short-term conversation context, then verified a DeepSeek-generated `move_tabs` Apply/Cancel draft could be applied into a real native Chrome group without closing tabs.
 - `--large-runtime` used a separate temporary Chrome for Testing profile with 96 synthetic tabs and verified the real native group path, safe duplicate closes, review duplicate groups, bounded runtime, and sanitized run snapshots.
 - `--screenshots` generated mock-data UI screenshots for the chat-first Tab Agent side panel result state, side panel chat state, and Smart Groups Dashboard and did not read real browser tabs or `.env.local`.
 - `--screenshots` also generated five local 1280x800 Chrome Web Store screenshot drafts from the mock UI screenshots. These are review drafts only and remain marked `DO NOT SUBMIT YET`.
 - Runtime smoke can still `SKIP` on branded Google Chrome CLI extension loading, but this run auto-detected Chrome for Testing through Playwright and passed.
-- Extension smoke verifies the DeepSeek metadata-only Agent answer path sends minimized current run metadata only, filters invented tab IDs, rejects destructive action drafts, and renders no automatic browser actions before user Apply.
+- Extension smoke verifies the DeepSeek Agent answer path sends minimized current run metadata, active Sidebar context, and up to 4 sanitized recent user/assistant chat turns only; filters invented tab IDs; rejects destructive action drafts; and renders no automatic browser actions before user Apply.
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
 - Beta readiness check confirms controlled local/private beta evidence is present, including the large-runtime evidence, while public Chrome Web Store launch remains blocked.
 - Beta readiness check also verifies that the real-profile QA result template exists and includes privacy redaction rules.
@@ -239,7 +240,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, 3 relevant tab rows, actionButtons=3, clickedAction=show groups, continued=yes, aiDraft=2 tabs, aiDraftApplied=2 tabs, nextSteps=yes
+PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, 2 relevant tab rows, actionButtons=3, followUp=yes, clickedAction=show groups, continued=yes, aiDraft=2 tabs, aiDraftApplied=2 tabs, nextSteps=yes
 ```
 
 Evidence notes:
@@ -249,6 +250,7 @@ Evidence notes:
 - It accepted the privacy gate, organized synthetic tabs into real Chrome native tab groups, then submitted `Which tabs should I focus on for Chrome extension planning?` through the real Sidebar composer.
 - It verified that DeepSeek returned through the Sidebar Agent path as a normal assistant message card, not a Chat Refine action preview.
 - It verified the visible metadata-only privacy note in the assistant card.
+- It submitted `Why those tabs?` and verified DeepSeek answered the follow-up from short-term sanitized chat context while preserving the metadata-only privacy boundary.
 - It clicked one validated safe action chip and verified the action continued the same chat thread with a user message and Agent reply.
 - It submitted an explicit regroup request, verified DeepSeek returned a validated `move_tabs` Apply/Cancel draft, clicked Apply, and verified matching synthetic tabs moved into a real native Chrome group without closing tabs.
 - It verified relevant tab rows, validated safe action chips, and next-step suggestions rendered without applying browser changes automatically before user Apply.
@@ -296,7 +298,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=7b92411c72a50845af2ce5bcc5eb0f2867f583904a70b099146f002a5a6119ea
+sha256=8977427014e1b9a12d6114967c67263fbd4317c6c76e52b84a08c3c471f9e714
 ```
 
 Evidence notes:
@@ -328,7 +330,7 @@ Evidence notes:
 - Sidebar Agent now answers `how much memory did you save?` as a visible assistant message card.
 - Sidebar Agent now has a DeepSeek metadata-only fallback for open-ended tab-management questions after local direct commands, local read-only answers, tab search, and safe Chat Refine drafts do not match.
 - Sidebar Agent now answers unsupported open-ended questions as normal assistant messages when DeepSeek is not enabled, instead of surfacing the local parser error.
-- The metadata-only Agent payload includes title, hostname, path, tab state, group state, and duplicate-review counts only; it excludes page body, full URL, restore URL, favicon URL, browser history, chat history, and saved workspace contents.
+- The metadata-only Agent payload includes title, hostname, path, tab state, group state, active Sidebar context, duplicate-review counts, and up to 4 sanitized recent user/assistant chat turns only; it excludes page body, page summaries, full URL, restore URL, favicon URL, browser history, cloud memory, and saved workspace contents.
 - Metadata-only Agent output filters invented tab IDs, rejects destructive action drafts, renders optional relevant tabs / next-step suggestions, and requires Apply before browser changes.
 - The card shows groups, tabs organized, closed duplicates, duplicate review count, and memory relief as duplicate tabs freed.
 - The card includes safe quick-command buttons for groups, Restore Closed, Review duplicates, and Dashboard when those actions are relevant.

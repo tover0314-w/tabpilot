@@ -65,7 +65,7 @@ Protected tabs are never closed: active, pinned, audible, incognito, internal pa
 
 Hash/query/same-page review candidates are never auto-closed.
 
-Local chat commands do not call AI, read page body content, or close tabs. Open-ended tab-management questions can call the metadata-only DeepSeek Agent when a local DeepSeek key is available; that flow still does not read page body content or close tabs.
+Local chat commands do not call AI, read page body content, or close tabs. Open-ended and follow-up tab-management questions can call the DeepSeek Agent when a local DeepSeek key is available; that flow sends minimized tab metadata plus short sanitized chat context, and still does not read page body content, send full URLs, or close tabs.
 
 Dashboard apply currently edits group title/color, focuses existing tabs, supports same-window tab moves into existing groups, supports lightweight drag/drop tab assignment between existing groups in the same window, and exposes compact Undo / Restore Closed actions when available. Hidden private-beta workspace snapshot code remains available for tests, but Saved Workspaces are not shown in the default Dashboard. It does not close tabs directly, create new groups manually, restore saved workspaces, sync cloud data, or move tabs across windows.
 

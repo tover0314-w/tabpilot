@@ -248,8 +248,9 @@ DeepSeek metadata Agent first slice:
 - if direct commands, read-only status answers, tab search, and local chat-refine drafts do not match
 - and DeepSeek is enabled with a local API key
 - Sidebar can ask DeepSeek for a conversational tab-management answer
-- input is minimized current run metadata only: tab title, hostname, path, window id, active/pinned/audible state, group state, duplicate review counts
-- no page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, chat history, or cloud memory is sent
+- input is minimized current run metadata plus active Sidebar context and up to 4 sanitized recent user/assistant chat turns
+- recent chat turns are used only to resolve follow-ups like “why those tabs?” and are not stored in cloud
+- no page body, page summary, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, or cloud memory is sent
 - output renders as an assistant message card with optional relevant tab rows and safe next-step suggestions
 - output may include compact safe action chips from a validated allowlist: Open Dashboard, Organize Again, Restore Closed, Review duplicates, Show groups
 - output may include a validated `move_tabs` action draft when the user explicitly asks to move or regroup existing tabs
@@ -271,7 +272,7 @@ Supported actions:
 - answer latest run status, groups, duplicate handling, duplicate review queue, closed duplicate tabs, AI status, active-tab state, protected-tab state, and possible read-later candidates from local run state only
 - answer “what should I do next / 下一步” from local organize state, prioritizing duplicate review before restore/use-group guidance
 - find matching tabs from the latest local snapshot and focus an existing tab with explicit Open
-- answer open-ended tab-management questions with DeepSeek from minimized tab metadata only when enabled
+- answer open-ended and follow-up tab-management questions with DeepSeek from minimized tab metadata, active Sidebar context, and sanitized recent chat turns only when enabled
 - propose a DeepSeek-assisted `move_tabs` draft for explicit regroup/move requests; the user must click Apply before native groups change
 ```
 

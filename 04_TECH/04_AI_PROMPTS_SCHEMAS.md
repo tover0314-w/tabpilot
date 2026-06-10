@@ -189,7 +189,20 @@ User payload:
 {
   "userMessage": "...",
   "language": "en | zh-CN",
-  "privacyNote": "Input contains tab title, hostname, path, window id, protected state, current group state, and duplicate-review counts only. No page body, full URL, restore URL, cookies, form data, hidden DOM, browser history, or cloud memory is included.",
+  "privacyNote": "Input contains tab title, hostname, path, window id, protected state, current group state, active Sidebar context, duplicate-review counts, and up to four sanitized recent sidebar chat turns only. No page body, page summaries, full URL, restore URL, cookies, form data, hidden DOM, browser history, or cloud memory is included.",
+  "conversationHistory": [
+    {
+      "role": "user | assistant",
+      "text": "short sanitized recent chat turn"
+    }
+  ],
+  "activeContext": {
+    "scope": "current_tab | current_group | current_window | workspace | browser",
+    "tabId": 123,
+    "groupId": 456,
+    "groupName": "Product Planning",
+    "tabIds": [123]
+  },
   "schema": {
     "answer": "short conversational answer",
     "relevantTabIds": [123],

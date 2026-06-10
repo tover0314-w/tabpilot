@@ -364,7 +364,7 @@
   "discarded": { "message": "Suspended" },
   "manual": { "message": "Manual" },
   "aiClassification": { "message": "AI Classification" },
-  "aiClassificationCopy": { "message": "Use your local DeepSeek key for tab grouping and metadata-only Agent answers. TabMosaic sends minimized tab metadata only, not page text or full URLs." },
+  "aiClassificationCopy": { "message": "Use your local DeepSeek key for tab grouping and Agent answers. TabMosaic sends minimized tab metadata plus short sanitized chat context, not page text or full URLs." },
   "privacyDefaults": { "message": "Privacy Defaults" },
   "permissionsAdvancedCopy": { "message": "Required browser permissions and what they support." },
   "diagnosticsAdvancedCopy": { "message": "Copy redacted local QA data only when you need to report a bug." },

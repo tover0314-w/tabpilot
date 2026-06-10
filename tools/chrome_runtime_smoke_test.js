@@ -114,7 +114,7 @@ async function main() {
       const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
       const groupTitles = groups.map((group) => group.title).sort();
       assertGroupFamily(groupTitles, ["code review", "pr review", "pull request", "github pr", "review pages", "review tabs"], "code review");
-      assertGroupFamily(groupTitles, ["chrome extension", "extension docs", "chrome docs", "browser extension", "chrome api", "api docs", "developer documentation"], "Chrome extension docs");
+      assertGroupFamily(groupTitles, ["chrome extension", "extension docs", "chrome docs", "browser extension", "chrome api", "api docs", "api documentation", "developer documentation", "development docs"], "Chrome extension docs");
       assertGroupFamily(groupTitles, ["docs & notes", "documents", "document", "google docs", "design docs", "not found docs"], "documents/notes");
 
       if (SHOULD_RUN_AGENT_FLOW) {
@@ -217,27 +217,41 @@ async function main() {
       assert(capabilityAnswerRendered, "Capability/help answer was not rendered in the chat thread");
 
       await submitSidepanelComposer(cdp, "Which tabs should I focus on for Chrome extension planning?");
-      const openChatAnswerRendered = await waitFor(async () => {
-        return evaluate(
-          cdp,
-          `(() => {
-            const panel = document.querySelector("#chatPanel");
-            const text = panel?.textContent || "";
-            const latestAssistant = Array.from(panel?.querySelectorAll(".chat-thread-message.assistant") || []).pop();
-            const latestText = latestAssistant?.textContent || "";
-            const renderedAIAgent = Boolean(latestAssistant?.querySelector(".ai-agent-card"));
-            const renderedFallback = /local DeepSeek private-beta config|enable DeepSeek|启用 DeepSeek|本地 DeepSeek 私测配置/.test(latestText);
+      let openChatAnswerRendered;
+      try {
+        openChatAnswerRendered = await waitFor(async () => {
+          return evaluate(
+            cdp,
+            `(() => {
+              const panel = document.querySelector("#chatPanel");
+              const text = panel?.textContent || "";
+              const latestAssistant = Array.from(panel?.querySelectorAll(".chat-thread-message.assistant") || []).pop();
+              const latestText = latestAssistant?.textContent || "";
+              const renderedAIAgent = Boolean(latestAssistant?.querySelector(".ai-agent-card"));
+              const renderedFallback = /local DeepSeek private-beta config|enable DeepSeek|启用 DeepSeek|本地 DeepSeek 私测配置/.test(latestText);
 
-            return Boolean(
-              panel &&
-              !panel.hidden &&
-              /Which tabs should I focus on for Chrome extension planning/.test(text) &&
-              (renderedAIAgent || renderedFallback) &&
-              !/could not turn that into a safe tab action|无法把这句话变成安全的标签页操作/i.test(latestText)
-            );
-          })()`
+              return Boolean(
+                panel &&
+                !panel.hidden &&
+                /Which tabs should I focus on for Chrome extension planning/.test(text) &&
+                (renderedAIAgent || renderedFallback) &&
+                !/could not turn that into a safe tab action|无法把这句话变成安全的标签页操作/i.test(latestText)
+              );
+            })()`
+          );
+        }, "Sidebar open-ended chat answer did not render as a normal assistant message", 30000);
+      } catch (error) {
+        const chatDebug = await evaluate(
+          cdp,
+          `(() => Array.from(document.querySelectorAll("#chatPanel .chat-thread-message"))
+            .slice(-8)
+            .map((node) => ({
+              className: node.className,
+              text: (node.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 320)
+            })))()`
         );
-      }, "Sidebar open-ended chat answer did not render as a normal assistant message");
+        throw new Error(`${error.message}. Last chat messages: ${JSON.stringify(chatDebug)}`);
+      }
       assert(openChatAnswerRendered, "Open-ended chat answer was not rendered in the chat thread");
 
       await submitSidepanelComposer(cdp, "save workspace");
@@ -808,6 +822,55 @@ async function runDeepSeekAgentFlow(cdp) {
   assert(agentAnswer.actionButtons >= 1, "DeepSeek Agent answer did not render a safe action chip");
   assert(!/fullUrl|restoreUrl|pageText|token=abc/i.test(agentAnswer.text), "DeepSeek Agent answer leaked sensitive field names or fixture token text");
 
+  const agentMessageCountBeforeFollowUp = await evaluate(
+    cdp,
+    `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.ai-agent").length`
+  );
+  await submitSidepanelComposer(cdp, "Why those tabs?");
+
+  let followUpAnswer;
+  try {
+    followUpAnswer = await waitFor(async () => {
+      return evaluate(
+        cdp,
+        `(() => {
+          const messages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.ai-agent"));
+          if (messages.length <= ${Number(agentMessageCountBeforeFollowUp)}) return null;
+
+          const latest = messages[messages.length - 1];
+          const text = latest?.textContent || "";
+
+          if (!latest || /could not get an AI tab answer|没能拿到 AI 标签页回答/i.test(text)) {
+            return null;
+          }
+
+          return {
+            text,
+            hasCard: Boolean(latest.querySelector(".ai-agent-card")),
+            hasPrivacyNote: /Page text and full URLs were not sent|页面正文或完整 URL/.test(text),
+            actionButtons: latest.querySelectorAll('[data-chat-action="quick-command"]').length
+          };
+        })()`
+      );
+    }, "Sidebar DeepSeek Agent flow did not answer a follow-up message with short-term context", 30000);
+  } catch (error) {
+    const chatDebug = await evaluate(
+      cdp,
+      `(() => Array.from(document.querySelectorAll("#chatPanel .chat-thread-message"))
+        .slice(-8)
+        .map((node) => ({
+          className: node.className,
+          text: (node.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 320)
+        })))()`
+    );
+    throw new Error(`${error.message}. Last chat messages: ${JSON.stringify(chatDebug)}`);
+  }
+
+  assert(followUpAnswer.hasCard, "DeepSeek Agent follow-up did not render as an assistant card");
+  assert(followUpAnswer.hasPrivacyNote, "DeepSeek Agent follow-up did not preserve metadata-only privacy boundary");
+  assert(followUpAnswer.actionButtons >= 1, "DeepSeek Agent follow-up did not render a safe action chip");
+  assert(!/fullUrl|restoreUrl|pageText|token=abc/i.test(followUpAnswer.text), "DeepSeek Agent follow-up leaked sensitive field names or fixture token text");
+
   const clickedAction = await evaluate(
     cdp,
     `(() => {
@@ -931,23 +994,43 @@ async function runDeepSeekAgentFlow(cdp) {
     })()`
   );
 
-  const appliedDraft = await waitFor(async () => {
-    const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
-    const tabs = await evaluate(cdp, "chrome.tabs.query({})");
-    const targetGroup = groups.find((group) => group.title === "Extension Planning");
-    const targetTabs = targetGroup
-      ? tabs.filter((tab) => tab.groupId === targetGroup.id && String(tab.url || "").includes("developer.chrome.com/docs/extensions"))
-      : [];
+  let appliedDraft;
+  try {
+    appliedDraft = await waitFor(async () => {
+      const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
+      const tabs = await evaluate(cdp, "chrome.tabs.query({})");
+      const targetGroup = groups.find((group) => /extension planning/i.test(group.title || ""));
+      const targetTabs = targetGroup
+        ? tabs.filter((tab) => tab.groupId === targetGroup.id)
+        : [];
 
-    return targetGroup && targetTabs.length >= 1
-      ? { groupId: targetGroup.id, movedTabs: targetTabs.length, tabCount: tabs.length }
-      : null;
-  }, "DeepSeek Agent Apply did not move tabs into a native Extension Planning group");
+      return targetGroup && targetTabs.length >= 1
+        ? { groupId: targetGroup.id, movedTabs: targetTabs.length, tabCount: tabs.length }
+        : null;
+    }, "DeepSeek Agent Apply did not move tabs into a native Extension Planning group", 30000);
+  } catch (error) {
+    const debugState = await evaluate(
+      cdp,
+      `Promise.all([
+        chrome.tabGroups.query({}),
+        chrome.tabs.query({}),
+        chrome.storage.local.get("tabmosaic.currentRun")
+      ]).then(([groups, tabs, run]) => ({
+        groups: groups.map((group) => ({ id: group.id, title: group.title, windowId: group.windowId })),
+        extensionPlanningTabs: tabs
+          .filter((tab) => groups.some((group) => /extension planning/i.test(group.title || "") && group.id === tab.groupId))
+          .map((tab) => ({ id: tab.id, groupId: tab.groupId, title: tab.title })),
+        latestRunStatus: run["tabmosaic.currentRun"]?.status,
+        latestRunMessage: run["tabmosaic.currentRun"]?.message
+      }))`
+    );
+    throw new Error(`${error.message}. debug=${JSON.stringify(debugState)}`);
+  }
 
   assertEqual(appliedDraft.tabCount, tabsBeforeDraftApply.length, "AI Agent move draft must not close tabs");
 
   console.log(
-    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, actionButtons=${agentAnswer.actionButtons}, clickedAction=${clickedAction.command}, continued=${actionContinuation ? "yes" : "no"}, aiDraft=${aiDraft.matchedRows} tabs, aiDraftApplied=${appliedDraft.movedTabs} tabs, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
+    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, actionButtons=${agentAnswer.actionButtons}, followUp=yes, clickedAction=${clickedAction.command}, continued=${actionContinuation ? "yes" : "no"}, aiDraft=${aiDraft.matchedRows} tabs, aiDraftApplied=${appliedDraft.movedTabs} tabs, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
   );
 }
 

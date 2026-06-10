@@ -364,7 +364,7 @@
   "discarded": { "message": "休眠" },
   "manual": { "message": "手动" },
   "aiClassification": { "message": "AI 分类" },
-  "aiClassificationCopy": { "message": "用你本地保存的 DeepSeek key 做标签页分组和仅基于元数据的 Agent 回答。TabMosaic 只发送最小化标签页元数据，不发送页面正文或完整 URL。" },
+  "aiClassificationCopy": { "message": "用你本地保存的 DeepSeek key 做标签页分组和 Agent 回答。TabMosaic 会发送最小化标签页元数据和短期清洗后的对话上下文，不发送页面正文或完整 URL。" },
   "privacyDefaults": { "message": "隐私默认值" },
   "permissionsAdvancedCopy": { "message": "浏览器必需权限，以及它们支持的功能。" },
   "diagnosticsAdvancedCopy": { "message": "只有反馈 bug 时才复制已脱敏的本地 QA 数据。" },

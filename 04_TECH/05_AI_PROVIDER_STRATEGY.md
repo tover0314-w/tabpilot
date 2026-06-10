@@ -58,7 +58,7 @@ defaultModel: deepseek-v4-flash
 - `chat/completions` classification has a 12s timeout.
 - Sidebar metadata Agent answers use the same DeepSeek/OpenAI-compatible chat endpoint with a 12s timeout.
 - Metadata Agent input is limited to minimized current run metadata: title, hostname, path, window id, tab state, group state, and duplicate-review counts.
-- Metadata Agent input does not include page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, chat history, summaries, or cloud memory.
+- Metadata Agent input includes minimized tab metadata, active Sidebar context, and up to 4 sanitized recent user/assistant chat turns for follow-up resolution. It does not include page body, page summaries, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, or cloud memory.
 - Metadata Agent output is validated before rendering: invented tab IDs are ignored, safe action chips are restricted to an allowlist, `move_tabs` action drafts require explicit Apply, and no browser action is applied automatically.
 - Classification timeout or provider failure returns `fallback:*` status and one-click organize continues with local rules.
 - Timeout handling does not change host permission, request payload, full URL policy, page text policy, or cloud storage defaults.

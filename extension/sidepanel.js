@@ -3,6 +3,7 @@ import { applyI18n, initI18n, msg } from "./i18n.js";
 const LAST_CLOSED_TABS_KEY = "tabmosaic.lastClosedTabs";
 const SIDEBAR_CONTEXT_KEY = "tabmosaic.sidebarContext";
 const CHAT_THREAD_LIMIT = 12;
+const AI_AGENT_CONVERSATION_LIMIT = 4;
 
 const statusPanel = document.querySelector("#statusPanel");
 const metricsGrid = document.querySelector("#metricsGrid");
@@ -526,6 +527,8 @@ function isAIGatedOpenChatQuestion(text) {
 }
 
 async function askMetadataAgent(text) {
+  const conversationHistory = buildAIAgentConversationHistory(text);
+
   renderChatPanel({
     status: "loading",
     answer: msg("askingAIAgent")
@@ -538,7 +541,8 @@ async function askMetadataAgent(text) {
     response = await chrome.runtime.sendMessage({
       type: "ASK_TAB_AGENT",
       text,
-      context: getAIAgentContextPayload()
+      context: getAIAgentContextPayload(),
+      conversationHistory
     });
   } catch (error) {
     setBusy(false);
@@ -1989,11 +1993,52 @@ function renderSummaryMeta(summary) {
 }
 
 function renderChatPanel(draft) {
+  const transcript = buildChatPanelTranscript(draft);
   appendChatMessage({
     role: "assistant",
     status: draft.status || "info",
-    html: renderChatPanelContent(draft)
+    html: renderChatPanelContent(draft),
+    text: transcript.text,
+    includeInAIAgentContext: transcript.includeInAIAgentContext
   });
+}
+
+function buildChatPanelTranscript(draft = {}) {
+  const status = draft.status || "info";
+
+  if (status === "ai-agent") {
+    return {
+      text: draft.answer || "",
+      includeInAIAgentContext: true
+    };
+  }
+
+  if (status === "summary") {
+    return {
+      text: "",
+      includeInAIAgentContext: false
+    };
+  }
+
+  if (["loading", "error"].includes(status)) {
+    return {
+      text: "",
+      includeInAIAgentContext: false
+    };
+  }
+
+  const text = [
+    draft.answer,
+    draft.actionSummary,
+    draft.risk
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    text,
+    includeInAIAgentContext: Boolean(text)
+  };
 }
 
 function renderChatPanelContent(draft) {
@@ -2131,8 +2176,37 @@ function appendUserChatMessage(text) {
   appendChatMessage({
     role: "user",
     status: "user",
-    html: `<p class="chat-answer">${escapeHtml(text)}</p>`
+    html: `<p class="chat-answer">${escapeHtml(text)}</p>`,
+    text,
+    includeInAIAgentContext: true
   });
+}
+
+function buildAIAgentConversationHistory(currentText = "") {
+  const entries = chatMessages
+    .filter((message) => message?.includeInAIAgentContext !== false)
+    .filter((message) => ["user", "assistant"].includes(message?.role))
+    .filter((message) => !["loading", "summary", "error"].includes(message?.status))
+    .map((message) => ({
+      role: message.role,
+      text: normalizeConversationText(message.text)
+    }))
+    .filter((message) => message.text);
+  const normalizedCurrentText = normalizeConversationText(currentText);
+  const latestEntry = entries[entries.length - 1];
+
+  if (latestEntry?.role === "user" && latestEntry.text === normalizedCurrentText) {
+    entries.pop();
+  }
+
+  return entries.slice(-AI_AGENT_CONVERSATION_LIMIT);
+}
+
+function normalizeConversationText(text) {
+  return String(text || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 600);
 }
 
 function appendChatMessage(message) {

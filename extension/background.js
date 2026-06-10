@@ -39,6 +39,7 @@ const AI_CONNECTION_TIMEOUT_MS = 8000;
 const AI_CLASSIFICATION_TIMEOUT_MS = 12000;
 const AI_AGENT_TIMEOUT_MS = 12000;
 const MAX_AI_AGENT_TABS = 80;
+const AI_AGENT_CONVERSATION_LIMIT = 4;
 const AI_AGENT_ACTIONS = {
   open_dashboard: "open dashboard",
   organize_again: "organize again",
@@ -614,7 +615,7 @@ async function callOpenAICompatibleClassifier(settings, tabs, options = {}) {
   return JSON.parse(content);
 }
 
-async function callOpenAICompatibleTabAgent(settings, { instruction, state, activeContext, language }, options = {}) {
+async function callOpenAICompatibleTabAgent(settings, { instruction, state, activeContext, conversationHistory, language }, options = {}) {
   const baseUrl = normalizeAIBaseUrl(settings.baseUrl);
   const timeoutMs = Number(options.timeoutMs || settings.agentTimeoutMs || AI_AGENT_TIMEOUT_MS);
   const response = await fetchWithTimeout(
@@ -633,7 +634,7 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, acti
           {
             role: "system",
             content:
-              "You are TabMosaic's sidebar Tab Agent. Answer browser tab management questions using only the provided tab metadata, active sidebar context, and current group state. Prioritize the active context when it is a current tab or group. Do not claim you read page bodies. Do not mention full URLs. Do not invent tabIds. Do not apply actions. Do not say you closed, moved, or changed tabs. If the user asks for destructive action, explain that confirmation is required. Return only valid JSON."
+              "You are TabMosaic's sidebar Tab Agent. Answer browser tab management questions using only the provided tab metadata, active sidebar context, short sanitized conversation history, and current group state. Use conversationHistory to resolve follow-up references like 'those tabs' or 'why that group'. Prioritize the active context when it is a current tab or group. Do not claim you read page bodies. Do not mention full URLs. Do not invent tabIds. Do not apply actions. Do not say you closed, moved, or changed tabs. If the user asks for destructive action, explain that confirmation is required. Return only valid JSON."
           },
           {
             role: "user",
@@ -641,7 +642,7 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, acti
               userMessage: instruction,
               language,
               privacyNote:
-                "Input contains tab title, hostname, path, window id, protected state, current group state, and duplicate-review counts only. No page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, chat history, summaries, or cloud memory is included.",
+                "Input contains tab title, hostname, path, window id, protected state, current group state, active sidebar context, duplicate-review counts, and up to four sanitized recent sidebar chat turns only. No page body, page summaries, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, or cloud memory is included.",
               schema: {
                 answer: "short conversational answer",
                 relevantTabIds: [123],
@@ -667,6 +668,7 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, acti
                 "Never include close/delete actions.",
                 "The browser will only change after the user clicks Apply."
               ],
+              conversationHistory: sanitizeAIAgentConversation(conversationHistory),
               activeContext: activeContext || { scope: "browser" },
               state
             })
@@ -1191,6 +1193,7 @@ async function askTabAgent(message = {}) {
   const run = await getCurrentRun();
   const state = buildAIAgentState(run);
   const activeContext = sanitizeAIAgentContext(message.context, state);
+  const conversationHistory = sanitizeAIAgentConversation(message.conversationHistory);
 
   if (!state.tabs.length) {
     return { status: "no-context" };
@@ -1201,6 +1204,7 @@ async function askTabAgent(message = {}) {
       instruction,
       state,
       activeContext,
+      conversationHistory,
       language: "en"
     });
     const result = validateAIAgentAnswer(output, state, {
@@ -1262,6 +1266,38 @@ function sanitizeAIAgentContext(context, state = {}) {
     tabCount: nonNegativeInt(context.tabCount || filteredTabIds.length),
     tabIds: filteredTabIds
   };
+}
+
+function sanitizeAIAgentConversation(history) {
+  return (Array.isArray(history) ? history : [])
+    .map((entry) => {
+      const role = entry?.role === "assistant" ? "assistant" : entry?.role === "user" ? "user" : "";
+      const text = sanitizeAIAgentConversationText(entry?.text);
+
+      return role && text ? { role, text } : null;
+    })
+    .filter(Boolean)
+    .slice(-AI_AGENT_CONVERSATION_LIMIT);
+}
+
+function sanitizeAIAgentConversationText(value) {
+  return String(value || "")
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]+/gi, "Bearer [redacted-token]")
+    .replace(/\bsk-[A-Za-z0-9_-]{6,}\b/g, "[redacted-api-key]")
+    .replace(/\b(?:https?|file|chrome|chrome-extension|edge|brave):\/\/[^\s"'<>]+/gi, redactConversationUrl)
+    .replace(/([?&](?:token|key|api_key|apikey|access_token|auth|session|code|secret)=)[^\s&]+/gi, "$1[redacted]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 500);
+}
+
+function redactConversationUrl(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    return url.hostname ? `[redacted URL: ${url.hostname}]` : "[redacted URL]";
+  } catch {
+    return "[redacted URL]";
+  }
 }
 
 function toOptionalInteger(value) {

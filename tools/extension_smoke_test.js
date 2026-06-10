@@ -343,6 +343,10 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelHtml.includes('id="agentContextBar"'), "Sidepanel composer should show the active chat context");
   assert(sidepanelJs.includes("SIDEBAR_CONTEXT_KEY"), "Sidepanel should read shared Dashboard chat context");
   assert(sidepanelJs.includes("context: getAIAgentContextPayload()"), "AI Agent calls should carry the current sidebar context");
+  assert(sidepanelJs.includes("function buildAIAgentConversationHistory"), "Sidepanel should build short-term Agent conversation context");
+  assert(sidepanelJs.includes("conversationHistory"), "Sidepanel should send short-term conversation context to the AI Agent");
+  assert(sidepanelJs.includes("AI_AGENT_CONVERSATION_LIMIT = 4"), "Sidepanel should cap Agent conversation context to four turns");
+  assert(sidepanelJs.includes('status === "summary"'), "Current-page summary messages should be excluded from AI Agent conversation context");
   assert(sidepanelJs.includes('runQuickChatCommand("restore closed"'), "Restore quick action should route through chat command handling");
   assert(sidepanelJs.includes("function renderChatThread"), "Sidepanel should render a multi-message chat thread");
   assert(sidepanelJs.includes("disableStaleChatDraftButtons"), "Sidepanel should disable stale draft Apply/Cancel buttons");
@@ -1464,7 +1468,7 @@ test("AI classification request sends minimized tab metadata only", async () => 
   assert(bodyText.includes("No page body or full URL"), "AI payload should include privacy note");
 });
 
-test("AI Agent metadata answer sends minimized tab context only", async () => {
+test("AI Agent answer sends minimized tab context and sanitized short conversation only", async () => {
   const fetchCalls = [];
   context.fetch = async (url, options = {}) => {
     fetchCalls.push({ url, options });
@@ -1544,6 +1548,20 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
     {
       instruction: "Which tab should I review first?",
       state,
+      conversationHistory: [
+        {
+          role: "user",
+          text: "Which docs at https://docs.example/private-prd?token=abc should I review first? ?api_key=historysecret"
+        },
+        {
+          role: "assistant",
+          text: "Review Private PRD draft and Product Planning next."
+        },
+        {
+          role: "tool",
+          text: "This role should be dropped."
+        }
+      ],
       language: "en"
     }
   );
@@ -1557,6 +1575,7 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
   const body = JSON.parse(bodyText);
   const userContent = JSON.parse(body.messages[1].content);
   const firstTab = userContent.state.tabs[0];
+  const history = userContent.conversationHistory || [];
 
   assertEqual(firstTab.tabId, 51, "AI Agent payload should include tab id");
   assertEqual(firstTab.title, "Private PRD draft", "AI Agent payload should include title");
@@ -1566,10 +1585,16 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
   assert(!("fullUrl" in firstTab), "AI Agent payload must not include fullUrl field");
   assert(!("restoreUrl" in firstTab), "AI Agent payload must not include restoreUrl field");
   assert(!("pageText" in firstTab), "AI Agent payload must not include pageText field");
+  assertEqual(history.length, 2, "AI Agent payload should include only valid recent conversation turns");
+  assertEqual(history[0].role, "user", "AI Agent conversation should preserve user role");
+  assert(history[0].text.includes("[redacted URL: docs.example]"), "AI Agent conversation should redact full URLs but keep useful host context");
+  assert(!history[0].text.includes("historysecret"), "AI Agent conversation should redact token-like query text");
+  assert(history[1].text.includes("Review Private PRD draft"), "AI Agent conversation should preserve assistant follow-up context");
   assert(!bodyText.includes("https://docs.example/private-prd?token=abc"), "AI Agent payload must not include full URL");
   assert(!bodyText.includes("token=abc"), "AI Agent payload must not include URL query token");
   assert(!bodyText.includes("Confidential page body"), "AI Agent payload must not include page text");
-  assert(bodyText.includes("No page body, full URL"), "AI Agent payload should include privacy note");
+  assert(bodyText.includes("up to four sanitized recent sidebar chat turns"), "AI Agent payload should disclose short-term conversation context");
+  assert(bodyText.includes("No page body, page summaries, full URL"), "AI Agent payload should include privacy note");
   assertEqual(validated.status, "answered", "AI Agent answer should validate");
   assertEqual(validated.matchedTabs.length, 1, "AI Agent validation should drop invented and duplicate tab ids");
   assertEqual(validated.matchedTabs[0].id, 51, "AI Agent validation should keep real tab ids");
