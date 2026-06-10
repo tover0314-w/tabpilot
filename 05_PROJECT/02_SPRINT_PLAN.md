@@ -108,7 +108,7 @@
 
 ## Sprint 6：Dashboard V0
 
-状态：已实现 extension page dashboard、workspace metrics、smart group cards、duplicate center、rules memory、AI settings、group title/color apply、same-window tab move、same-window drag/drop tab assignment、Dashboard Undo/Restore、Smart Group expandable tab rows。Save workspace 仍未实现。
+状态：已实现 extension page dashboard、workspace metrics、smart group cards、duplicate center、rules memory、AI settings、group title/color apply、same-window tab move、same-window drag/drop tab assignment、Dashboard Undo/Restore、Smart Group expandable tab rows、Duplicate Center tab details/focus。Save workspace 仍未实现。
 
 目标：看板管理好的分组。
 
@@ -126,6 +126,7 @@
 
 - 用户可在 dashboard 调整分组并同步到浏览器。
 - 用户可展开 Smart Group 的 `+ N tabs` 行，查看并操作更多本地 tab 行。
+- 用户可在 Dashboard Duplicate Center 展开重复组并打开对应 tab 检查。
 - 用户可把 tab 行拖到同窗口另一个已有分组，并同步到真实 Chrome native tab group。
 - 用户可在 dashboard 直接 Undo 或 Restore Closed。
 

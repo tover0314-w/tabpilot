@@ -60,6 +60,7 @@ testAIButton.addEventListener("click", testAIConnection);
 clearAIKeyButton.addEventListener("click", clearAIKey);
 dashboardRules.addEventListener("click", handleRuleAction);
 dashboardGroups.addEventListener("click", handleGroupAction);
+dashboardDuplicates.addEventListener("click", handleGroupAction);
 dashboardGroups.addEventListener("dragstart", handleDashboardTabDragStart);
 dashboardGroups.addEventListener("dragover", handleDashboardTabDragOver);
 dashboardGroups.addEventListener("dragleave", handleDashboardTabDragLeave);
@@ -951,18 +952,51 @@ function renderDuplicates(duplicates) {
     return;
   }
 
+  const tabById = new Map((latestRun?.snapshot?.tabs || []).map((tab) => [tab.id, tab]));
   dashboardDuplicates.innerHTML = duplicates
     .map((duplicate) => {
       const status = duplicate.reviewStatus || duplicate.action;
+      const tabs = (duplicate.tabIds || []).map((tabId) => tabById.get(tabId)).filter(Boolean);
+      const tabRows = tabs.length
+        ? tabs.map(renderDuplicateTabRow).join("")
+        : `<p class="empty">${escapeHtml(msg("groupTabsPending"))}</p>`;
 
       return `
-        <div class="row">
-          <span>${escapeHtml(duplicate.label)} · ${escapeHtml(duplicate.type)} · ${escapeHtml(status)}</span>
-          <strong>${escapeHtml(String(duplicate.tabCount))}</strong>
-        </div>
+        <details class="dashboard-duplicate-group">
+          <summary class="row">
+            <span>${escapeHtml(duplicate.label)} · ${escapeHtml(duplicate.type)} · ${escapeHtml(status)}</span>
+            <strong>${escapeHtml(String(duplicate.tabCount))}</strong>
+          </summary>
+          <div class="dashboard-duplicate-tabs">
+            ${tabRows}
+          </div>
+        </details>
       `;
     })
     .join("");
+}
+
+function renderDuplicateTabRow(tab) {
+  const title = tab.title || msg("untitled");
+  const meta = [tab.hostname, tab.path].filter(Boolean).join(" · ");
+
+  return `
+    <div class="dashboard-duplicate-tab" data-tab-id="${escapeHtml(String(tab.id))}">
+      ${renderTabFavicon(tab)}
+      <span>
+        <b>${escapeHtml(title)}</b>
+        <small>${escapeHtml(meta || msg("noHostDataYet"))}</small>
+      </span>
+      <button
+        class="mini-button"
+        type="button"
+        data-group-action="focus-tab"
+        aria-label="${escapeHtml(msg("openTab"))}: ${escapeHtml(title)}"
+      >
+        ${escapeHtml(msg("openTab"))}
+      </button>
+    </div>
+  `;
 }
 
 function renderRules(rules) {

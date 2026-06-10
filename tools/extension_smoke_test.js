@@ -388,6 +388,21 @@ test("dashboard exposes compact undo and restore actions without adding destruct
   assert(en.restoring?.message && zh.restoring?.message, "Dashboard restoring state copy should be localized");
 });
 
+test("dashboard duplicate center exposes non-destructive tab details", () => {
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+
+  assert(dashboardJs.includes("dashboardDuplicates.addEventListener(\"click\", handleGroupAction)"), "Duplicate Center should reuse safe dashboard focus actions");
+  assert(dashboardJs.includes("function renderDuplicateTabRow"), "Duplicate Center should render tab detail rows");
+  assert(dashboardJs.includes("dashboard-duplicate-group"), "Duplicate Center groups should be expandable details");
+  assert(dashboardJs.includes("dashboard-duplicate-tab"), "Duplicate Center should expose individual duplicate tab rows");
+  assert(dashboardJs.includes('data-group-action="focus-tab"'), "Duplicate Center tab rows should focus existing tabs only");
+  assert(dashboardJs.includes("latestRun?.snapshot?.tabs"), "Duplicate Center should use the latest sanitized local snapshot");
+  assert(dashboardCss.includes(".dashboard-duplicate-group"), "Duplicate Center expandable groups should have scoped styling");
+  assert(dashboardCss.includes(".dashboard-duplicate-tab"), "Duplicate Center tab rows should have scoped styling");
+  assert(!dashboardJs.includes("chrome.tabs.remove"), "Duplicate Center UI must not directly close tabs");
+});
+
 test("dashboard tab titles focus existing browser tabs", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
@@ -441,6 +456,7 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
   for (const token of [
     "Dashboard opens directly to Smart Groups without Latest Result",
     "Duplicate Center stays folded until opened",
+    "Duplicate Center rows expand to show duplicate tabs and Open tab focuses an existing tab.",
     "Dashboard Undo and Restore Closed are compact and enabled only when available.",
     "Smart Groups filters switch between All, AI groups, and Rule groups",
     "Clicking a tab title focuses the existing browser tab/window.",

@@ -35,6 +35,7 @@ CONFIRMED BY IMPLEMENTATION:
 - local user rules and Rules & Memory
 - current-tab local extractive summary after user click, with sensitive-page confirmation
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
+- Dashboard Duplicate Center tab details and safe focus existing tab action
 - Chat-first Tab Agent side panel with message thread, compact actions, and bottom composer
 - Dashboard Smart Groups default page with no Latest Result, timestamp, Current Workspace card, or result metrics area
 - Dashboard HTML-prototype workbench layout with expanded local tab rows
@@ -77,7 +78,7 @@ Verified:
 - real native tab groups in runtime smoke
 - safe duplicate close and Restore Closed in runtime smoke
 - Chat Refine in runtime smoke
-- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, Undo, and Restore Closed in runtime smoke
+- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, Duplicate Center focus, Undo, and Restore Closed in runtime smoke
 - Sidebar composer direct commands in runtime smoke
 - Sidebar quick-action chat routing in runtime smoke
 - Sidebar ephemeral chat thread in runtime smoke

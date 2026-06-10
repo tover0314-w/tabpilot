@@ -2600,6 +2600,62 @@ summary {
   padding: 0 12px 12px;
 }
 
+.dashboard-duplicate-group {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.dashboard-duplicate-group + .dashboard-duplicate-group {
+  margin-top: 8px;
+}
+
+.dashboard-duplicate-group > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.dashboard-duplicate-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-duplicate-tabs {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.dashboard-duplicate-tab {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 7px 10px;
+  border-top: 1px solid rgba(47, 116, 105, 0.08);
+}
+
+.dashboard-duplicate-tab:first-child {
+  border-top: 0;
+}
+
+.dashboard-duplicate-tab span {
+  min-width: 0;
+}
+
+.dashboard-duplicate-tab b,
+.dashboard-duplicate-tab small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-duplicate-tab small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .settings-form {
   max-width: 640px;
   padding: 14px;

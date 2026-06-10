@@ -31,6 +31,7 @@
 - [x] sidebar local tab search and focus existing tab。
 - [x] current tab summary（local extractive first slice）。
 - [x] dashboard V0 smart groups（read-only local first slice）。
+- [x] dashboard Duplicate Center tab details / focus existing tab。
 - [x] dashboard apply to browser（group title/color first slice）。
 - [x] dashboard expandable Smart Group tab rows。
 - [x] dashboard drag/drop tab assignment（same-window existing groups first slice）。

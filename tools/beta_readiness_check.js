@@ -52,7 +52,7 @@ function main() {
     [
       "Status: PASSED for local private-beta evidence",
       `Source state verified: ${topVersion}`,
-      "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/undo/restore",
+      "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore",
       "PASS UI screenshots captured",
       "PASS release package verified for v0.1.0",
       "PASS synthetic classification fixture completed",
@@ -90,7 +90,7 @@ function main() {
     releaseNotes,
     [
       "Status: PRIVATE BETA ONLY",
-      "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/undo/restore",
+      "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore",
       "fixtureGroupCount=3",
       "Public Chrome Web Store submission is not approved yet.",
       "P0 manual QA runbook has not been completed on the user's real Chrome profile."

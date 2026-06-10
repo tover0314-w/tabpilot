@@ -42,6 +42,7 @@ Click extension icon
 - Current-tab summary only after user click.
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
 - Dashboard expandable Smart Group tab rows for groups with more than three visible tabs.
+- Dashboard Duplicate Center expands duplicate groups and can focus existing duplicate tabs for review.
 - Dashboard same-window drag/drop tab assignment between existing native groups.
 - Dashboard compact Undo / Restore Closed actions when available.
 - Optional DeepSeek classification with a user-provided API key through an OpenAI-compatible request format.
@@ -68,7 +69,7 @@ Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 ```text
 node tools/preflight.js --runtime --screenshots
 PASS preflight completed
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS UI screenshots captured
 PASS controlled private beta readiness evidence checked
 

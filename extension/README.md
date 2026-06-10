@@ -43,6 +43,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
 - Dashboard Smart Groups can move a tab into another existing group in the same window, with Undo available; the move control is folded/contextual by default.
 - Dashboard Smart Groups show local tab rows from the latest sanitized run snapshot when group membership is available, with folded `+ N tabs` rows that expand on demand.
+- Dashboard Duplicate Center can expand duplicate groups and focus existing duplicate tabs for review without closing anything.
 - Dashboard keeps unwired design-prototype features out of the default UI so users see only working MVP actions.
 - Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
 - Dashboard can save a local DeepSeek API key for AI tab classification through an OpenAI-compatible request format.

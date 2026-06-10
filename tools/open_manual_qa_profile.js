@@ -220,6 +220,7 @@ function renderChecklistHtml(details) {
       items: [
         "Dashboard opens directly to Smart Groups without Latest Result, timestamp, or Current Workspace clutter.",
         "Duplicate Center stays folded until opened.",
+        "Duplicate Center rows expand to show duplicate tabs and Open tab focuses an existing tab.",
         "Dashboard Undo and Restore Closed are compact and enabled only when available.",
         "Smart Groups filters switch between All, AI groups, and Rule groups.",
         "Clicking a tab title focuses the existing browser tab/window.",
@@ -697,6 +698,7 @@ function assertChecklistHtml(checklistPath) {
     "AI Verification",
     "Dashboard opens directly to Smart Groups",
     "Dashboard Undo and Restore Closed are compact and enabled only when available.",
+    "Duplicate Center rows expand to show duplicate tabs and Open tab focuses an existing tab.",
     "Clicking a tab title focuses the existing browser tab/window.",
     "Same-window Move sends a tab into an existing native group and does not close tabs.",
     "billing-dashboard",

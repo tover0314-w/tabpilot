@@ -317,6 +317,54 @@ async function main() {
 
         const draggedTab = await evaluate(cdp, `chrome.tabs.get(${dashboardDragMove.tabId})`);
         assertEqual(draggedTab.groupId, dashboardDragMove.targetGroupId, "Dashboard drag/drop did not update the native tab group");
+
+        const dashboardDuplicateFocus = await waitFor(async () => {
+          return evaluate(
+            dashboardCdp,
+            `new Promise((resolve) => {
+              const delay = (ms) => new Promise((done) => setTimeout(done, ms));
+
+              (async () => {
+                await delay(250);
+                const duplicateCenter = document.querySelector("#duplicates");
+                duplicateCenter.open = true;
+                const duplicateGroup = document.querySelector(".dashboard-duplicate-group");
+
+                if (!duplicateGroup) {
+                  resolve(null);
+                  return;
+                }
+
+                duplicateGroup.open = true;
+                const row = duplicateGroup.querySelector(".dashboard-duplicate-tab[data-tab-id]");
+                const button = row?.querySelector('[data-group-action="focus-tab"]');
+
+                if (!row || !button) {
+                  resolve(null);
+                  return;
+                }
+
+                const tabId = Number(row.dataset.tabId);
+                button.click();
+
+                const startedAt = Date.now();
+                while (Date.now() - startedAt < 5000) {
+                  const [activeTab] = await chrome.tabs.query({ active: true });
+
+                  if (activeTab?.id === tabId) {
+                    resolve({ ok: true, tabId });
+                    return;
+                  }
+
+                  await delay(100);
+                }
+
+                resolve(null);
+              })().catch((error) => resolve({ ok: false, error: error?.message || String(error) }));
+            })`
+          );
+        }, "Dashboard Duplicate Center Open action did not focus a duplicate tab");
+        assert(dashboardDuplicateFocus?.ok, `Dashboard Duplicate Center focus failed: ${JSON.stringify(dashboardDuplicateFocus)}`);
       } finally {
         dashboardCdp.close();
       }
@@ -533,7 +581,7 @@ async function main() {
         dashboardActionsCdp.close();
       }
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
     } finally {
       cdp.close();
     }

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.88 — 2026-06-10
+
+Changed:
+
+- Dashboard Duplicate Center rows now expand to show the duplicate tabs from the latest sanitized local snapshot.
+- Duplicate tab rows include a safe `Open tab` action that focuses the existing browser tab for review.
+- Runtime smoke now expands Dashboard Duplicate Center and verifies a duplicate tab can be focused without closing anything.
+
+Safety:
+
+- Duplicate Center details are read-only and non-destructive. They do not close tabs, read page content, call AI, upload data, add analytics, or request new permissions.
+
 ## v0.87 — 2026-06-10
 
 Changed:
