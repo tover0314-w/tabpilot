@@ -7,6 +7,7 @@ const USER_RULES_KEY = "tabmosaic.userRules";
 const ERROR_LOG_KEY = "tabmosaic.errorLog";
 const DUPLICATE_SAFETY_AUDIT_KEY = "tabmosaic.duplicateSafetyAudit";
 const SAVED_WORKSPACES_KEY = "tabmosaic.savedWorkspaces";
+const SIDEBAR_CONTEXT_KEY = "tabmosaic.sidebarContext";
 const GROUP_COLORS = ["grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan"];
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
@@ -346,7 +347,11 @@ async function deleteSavedWorkspaceFromDashboard(button) {
 
 async function handleGroupAction(event) {
   const button = event.target.closest("[data-group-action]");
-  if (!button) return;
+
+  if (!button) {
+    await handleDashboardGroupContextClick(event);
+    return;
+  }
 
   if (button.dataset.groupAction === "move-tab") {
     await handleDashboardTabMove(button);
@@ -389,6 +394,10 @@ async function handleDashboardTabFocus(button) {
   const row = button.closest("[data-tab-id]");
   if (!row) return;
 
+  const openSidebarPromise = openSidebarForDashboardContext(Number(row.dataset.windowId));
+  await setSidebarContextFromDashboard(buildSidebarTabContext(row));
+  await openSidebarPromise;
+
   const response = await chrome.runtime.sendMessage({
     type: "FOCUS_DASHBOARD_TAB",
     tabId: Number(row.dataset.tabId)
@@ -397,6 +406,112 @@ async function handleDashboardTabFocus(button) {
   if (!response?.ok) {
     window.alert(response?.error || msg("couldNotOpenTab"));
   }
+}
+
+async function handleDashboardGroupContextClick(event) {
+  const card = event.target.closest("[data-group-id][data-window-id]");
+  if (!card || isDashboardContextClickIgnored(event.target)) return;
+
+  const openSidebarPromise = openSidebarForDashboardContext(Number(card.dataset.windowId));
+  await setSidebarContextFromDashboard(buildSidebarGroupContext(card));
+  await openSidebarPromise;
+  markDashboardContextCard(card);
+}
+
+function isDashboardContextClickIgnored(target) {
+  return Boolean(
+    target?.closest?.("button, input, select, textarea, summary, details, a, [data-tab-id], [draggable='true']")
+  );
+}
+
+function buildSidebarTabContext(row) {
+  const tabId = Number(row?.dataset?.tabId);
+  const tab = findDashboardTab(tabId);
+  const group = findDashboardGroup(Number(row?.dataset?.currentGroupId));
+
+  return {
+    scope: "current_tab",
+    tabId,
+    windowId: toOptionalInteger(tab?.windowId || row?.dataset?.windowId || group?.windowId),
+    title: tab?.title || row?.querySelector(".dashboard-tab-title-button")?.textContent?.trim() || "",
+    hostname: tab?.hostname || "",
+    groupId: toOptionalInteger(group?.id || row?.dataset?.currentGroupId),
+    groupName: group?.name || "",
+    source: "dashboard",
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function buildSidebarGroupContext(card) {
+  const group = findDashboardGroup(Number(card?.dataset?.groupId));
+  const tabs = group ? getTabsForGroup(group, latestRun) : [];
+
+  return {
+    scope: "current_group",
+    groupId: toOptionalInteger(group?.id || card?.dataset?.groupId),
+    windowId: toOptionalInteger(group?.windowId || card?.dataset?.windowId),
+    groupName: group?.name || card?.querySelector("[data-group-title]")?.value?.trim() || msg("contextUnnamedGroup"),
+    tabCount: tabs.length || Number(group?.tabCount || 0) || 0,
+    tabIds: tabs.map((tab) => tab.id).filter(Number.isInteger),
+    source: "dashboard",
+    updatedAt: new Date().toISOString()
+  };
+}
+
+async function setSidebarContextFromDashboard(context) {
+  await chrome.storage.local.set({ [SIDEBAR_CONTEXT_KEY]: sanitizeSidebarContext(context) });
+}
+
+function sanitizeSidebarContext(context = {}) {
+  const tabIds = Array.isArray(context.tabIds)
+    ? Array.from(new Set(context.tabIds.map((tabId) => Number(tabId)).filter(Number.isInteger))).slice(0, 80)
+    : [];
+
+  return {
+    scope: ["current_tab", "current_group"].includes(context.scope) ? context.scope : "current_tab",
+    tabId: toOptionalInteger(context.tabId),
+    groupId: toOptionalInteger(context.groupId),
+    windowId: toOptionalInteger(context.windowId),
+    title: String(context.title || "").slice(0, 160),
+    hostname: String(context.hostname || "").slice(0, 120),
+    groupName: String(context.groupName || "").slice(0, 120),
+    tabCount: Number.isInteger(Number(context.tabCount)) ? Math.max(0, Number(context.tabCount)) : tabIds.length,
+    tabIds,
+    source: "dashboard",
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function toOptionalInteger(value) {
+  if (value === null || value === undefined || value === "") return null;
+
+  const number = Number(value);
+  return Number.isInteger(number) ? number : null;
+}
+
+async function openSidebarForDashboardContext(windowId) {
+  if (!Number.isInteger(windowId) || !chrome.sidePanel?.open) return;
+
+  try {
+    await chrome.sidePanel.open({ windowId });
+  } catch {
+    // The Dashboard can still update Sidebar context when the panel is already open.
+  }
+}
+
+function markDashboardContextCard(card) {
+  dashboardGroups.querySelectorAll(".dashboard-group-card.context-active").forEach((element) => {
+    element.classList.remove("context-active");
+  });
+  card.classList.add("context-active");
+}
+
+function findDashboardTab(tabId) {
+  return (latestRun?.snapshot?.tabs || []).find((tab) => Number(tab.id) === Number(tabId)) || null;
+}
+
+function findDashboardGroup(groupId) {
+  return (latestRun?.groups || []).find((group) => Number(group.id) === Number(groupId)) || null;
 }
 
 async function handleDashboardTabMove(button) {

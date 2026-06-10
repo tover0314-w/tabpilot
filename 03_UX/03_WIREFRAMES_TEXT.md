@@ -31,7 +31,8 @@ CONFIRMED BY USER: Sidebar 首屏必须是类似 OpenAI 的对话框，用作 Ta
 │ moved 61 tabs. Memory relief:│
 │ 9 duplicate tabs freed.      │
 │ Duplicate review: 4 groups.  │
-│ [Organize Again] [Ask page]  │
+│ Context · Current tab         │
+│ [Organize Again] [Undo]       │
 │ [Undo] [Restore]             │
 ├─────────────────────────────┤
 │ Ask TabMosaic about tabs...  │

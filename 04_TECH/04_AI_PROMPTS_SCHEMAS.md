@@ -196,7 +196,7 @@ User payload:
     "suggestedNextSteps": ["short safe suggestion"],
     "suggestedActions": [
       {
-        "type": "ask_page | open_dashboard | organize_again | restore_closed | review_duplicates | show_groups",
+        "type": "open_dashboard | organize_again | restore_closed | review_duplicates | show_groups",
         "reason": "short reason"
       }
     ],

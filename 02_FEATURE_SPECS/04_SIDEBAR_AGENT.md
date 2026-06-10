@@ -25,8 +25,11 @@ TabMosaic AI
 内存压力降低：释放 9 个重复标签页。待看重复：4 组。
 这次使用 DeepSeek / 本地规则完成分类，具体取决于本地私测配置是否可用。
 
+[context]
+Current tab · chrome.sidePanel API
+
 [quick messages]
-重新整理 · 问页面 · 撤销 · 恢复
+重新整理 · 撤销 · 恢复
 
 Ask TabMosaic about your tabs...
 [GitHub PR] [Current tab] [Rename]
@@ -187,7 +190,7 @@ Direct chat commands:
 
 ```text
 summarize this page / 总结当前页面
-ask page: what does this page say about tabs / 问页面：这里关于 tabs 说了什么
+summarize this page / what is this page about / 当前页面讲了什么
 what can you do / 你能做什么
 organize again / 重新整理
 undo / 撤销
@@ -248,7 +251,7 @@ DeepSeek metadata Agent first slice:
 - input is minimized current run metadata only: tab title, hostname, path, window id, active/pinned/audible state, group state, duplicate review counts
 - no page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, chat history, or cloud memory is sent
 - output renders as an assistant message card with optional relevant tab rows and safe next-step suggestions
-- output may include compact safe action chips from a validated allowlist: Ask page, Open Dashboard, Organize Again, Restore Closed, Review duplicates, Show groups
+- output may include compact safe action chips from a validated allowlist: Open Dashboard, Organize Again, Restore Closed, Review duplicates, Show groups
 - output may include a validated `move_tabs` action draft when the user explicitly asks to move or regroup existing tabs
 - AI move drafts render as the same assistant message card shape with matched tab rows and Apply / Cancel
 - output does not automatically move, close, rename, save, or read tabs
@@ -284,14 +287,16 @@ First screen shows a conversation thread and bottom composer.
 Organize output appears as an agent message, not as a dashboard panel.
 Latest organize result and quick actions are rendered as one assistant message bubble in the conversation thread.
 The completion message mentions groups created, tabs organized, duplicate-tab memory relief proxy, review duplicates, and whether DeepSeek or local fallback was used.
-Quick actions are compact chips inside the assistant message bubble: Organize, Ask page, Undo, Restore when relevant.
+Quick actions are compact chips inside the assistant message bubble: Organize, Undo, Restore when relevant.
+The composer shows a small context status row, for example `Current tab · chrome.sidePanel API` or `Group · Product Planning · 7 tabs`.
+Dashboard tab/group selection writes the same context, so clicking a Smart Group or tab can make the Sidebar conversation target that object.
 Dashboard opens from a dedicated top-right icon button, not from a crowded result card.
 Technical lists are hidden from the default chat surface.
 Composer messages stay in a short local in-memory thread, with user messages and Agent replies shown as separate chat bubbles.
-Quick action chips route through the same chat command path as typed commands, so clicking Organize / Ask page / Undo / Restore / Dashboard also appears in the message thread.
-Current tab summary and first-slice local page Q&A are compact Ask page actions and render back as chat messages in the same conversation flow.
+Quick action chips route through the same chat command path as typed commands, so clicking Organize / Undo / Restore / Dashboard also appears in the message thread.
+Current tab summary and first-slice local page Q&A are composer-driven current-tab chat requests and render back as chat messages in the same conversation flow.
 The bottom composer can trigger summary, organize, undo, restore, dashboard, and local save workspace commands directly.
-The bottom composer can parse `ask page: ...` / `问页面：...`, read only the current page after the existing user-triggered privacy flow, and answer from visible page text with local sentence matching.
+The bottom composer can parse current-page questions, read only the current page after the existing user-triggered privacy flow, and answer from visible page text with local sentence matching.
 The bottom composer can answer help/capability questions locally so first-time users understand the wired MVP commands.
 The bottom composer can answer latest-result, group, duplicate, duplicate-review, closed-duplicate, AI status, active-tab, protected-tab, and read-later questions without reading page content.
 The bottom composer can answer “what should I do next / 下一步” locally from the latest organize state.

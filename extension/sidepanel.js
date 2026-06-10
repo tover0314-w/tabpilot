@@ -1,6 +1,7 @@
 import { applyI18n, initI18n, msg } from "./i18n.js";
 
 const LAST_CLOSED_TABS_KEY = "tabmosaic.lastClosedTabs";
+const SIDEBAR_CONTEXT_KEY = "tabmosaic.sidebarContext";
 const CHAT_THREAD_LIMIT = 12;
 
 const statusPanel = document.querySelector("#statusPanel");
@@ -16,18 +17,22 @@ const undoButton = document.querySelector("#undoButton");
 const restoreButton = document.querySelector("#restoreButton");
 const dashboardButton = document.querySelector("#dashboardButton");
 const startButton = document.querySelector("#startButton");
-const summaryButton = document.querySelector("#summaryButton");
 const summaryPanel = document.querySelector("#summaryPanel");
 const chatForm = document.querySelector("#chatForm");
 const chatInput = document.querySelector("#chatInput");
 const chatSendButton = document.querySelector("#chatSendButton");
 const chatPanel = document.querySelector("#chatPanel");
+const agentContextBar = document.querySelector("#agentContextBar");
+const agentContextLabel = document.querySelector("#agentContextLabel");
+const agentContextName = document.querySelector("#agentContextName");
 let latestRun = null;
 let latestChatDraft = null;
 let chatMessages = [];
+let activeSidebarContext = { scope: "current_tab" };
 
 await initI18n();
 applyI18n();
+await initSidebarContext();
 
 dashboardTopButton.addEventListener("click", openDashboard);
 organizeButton.addEventListener("click", () => runQuickChatCommand("organize again", msg("organizeAgain")));
@@ -35,7 +40,6 @@ undoButton.addEventListener("click", () => runQuickChatCommand("undo", msg("undo
 restoreButton.addEventListener("click", () => runQuickChatCommand("restore closed", msg("restoreClosed")));
 dashboardButton.addEventListener("click", () => runQuickChatCommand("open dashboard", msg("openDashboard")));
 startButton.addEventListener("click", acceptPrivacyAndOrganize);
-summaryButton.addEventListener("click", () => runQuickChatCommand("summarize this page", msg("summarizeCurrentTab")));
 duplicatesList.addEventListener("click", handleDuplicateAction);
 chatForm.addEventListener("submit", previewChatRefine);
 chatPanel.addEventListener("click", handleChatPanelAction);
@@ -137,6 +141,148 @@ async function openDashboard() {
   });
 }
 
+async function initSidebarContext() {
+  const storedContext = await getStoredSidebarContext();
+
+  if (storedContext) {
+    renderSidebarContext(storedContext);
+  } else {
+    await renderActiveTabContext();
+  }
+
+  chrome.storage?.onChanged?.addListener?.((changes, areaName) => {
+    if (areaName !== "local" || !changes[SIDEBAR_CONTEXT_KEY]) return;
+
+    const nextContext = normalizeSidebarContext(changes[SIDEBAR_CONTEXT_KEY].newValue);
+    if (nextContext) {
+      renderSidebarContext(nextContext);
+    }
+  });
+
+  chrome.tabs?.onActivated?.addListener?.(() => {
+    renderActiveTabContext();
+  });
+
+  chrome.tabs?.onUpdated?.addListener?.((_tabId, changeInfo, tab) => {
+    if (!tab?.active || (!changeInfo?.title && !changeInfo?.url && !changeInfo?.favIconUrl)) return;
+    renderActiveTabContext();
+  });
+}
+
+async function getStoredSidebarContext() {
+  try {
+    const result = await chrome.storage.local.get(SIDEBAR_CONTEXT_KEY);
+    return normalizeSidebarContext(result[SIDEBAR_CONTEXT_KEY]);
+  } catch {
+    return null;
+  }
+}
+
+async function renderActiveTabContext() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    renderSidebarContext(tab ? buildTabContextFromChromeTab(tab, "browser") : { scope: "current_tab" });
+  } catch {
+    renderSidebarContext({ scope: "current_tab" });
+  }
+}
+
+function buildTabContextFromChromeTab(tab, source = "browser") {
+  const rawUrl = tab?.url || tab?.pendingUrl || "";
+  return {
+    scope: "current_tab",
+    tabId: Number.isInteger(tab?.id) ? tab.id : null,
+    windowId: Number.isInteger(tab?.windowId) ? tab.windowId : null,
+    title: String(tab?.title || "").slice(0, 160),
+    hostname: getHostnameFromUrl(rawUrl).slice(0, 120),
+    source,
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function normalizeSidebarContext(context) {
+  if (!context || typeof context !== "object") return null;
+
+  const scope = ["current_tab", "current_group", "current_window", "workspace", "browser"].includes(context.scope)
+    ? context.scope
+    : "current_tab";
+  const tabIds = Array.isArray(context.tabIds)
+    ? Array.from(new Set(context.tabIds.map((tabId) => Number(tabId)).filter(Number.isInteger))).slice(0, 80)
+    : [];
+
+  return {
+    scope,
+    tabId: toOptionalInteger(context.tabId),
+    groupId: toOptionalInteger(context.groupId),
+    windowId: toOptionalInteger(context.windowId),
+    title: String(context.title || "").slice(0, 160),
+    groupName: String(context.groupName || "").slice(0, 120),
+    hostname: String(context.hostname || "").slice(0, 120),
+    tabCount: Number.isInteger(Number(context.tabCount)) ? Math.max(0, Number(context.tabCount)) : tabIds.length,
+    tabIds,
+    source: String(context.source || "").slice(0, 40),
+    updatedAt: String(context.updatedAt || "").slice(0, 40)
+  };
+}
+
+function toOptionalInteger(value) {
+  if (value === null || value === undefined || value === "") return null;
+
+  const number = Number(value);
+  return Number.isInteger(number) ? number : null;
+}
+
+function renderSidebarContext(context) {
+  const normalized = normalizeSidebarContext(context) || { scope: "current_tab" };
+  activeSidebarContext = normalized;
+
+  if (!agentContextBar || !agentContextLabel || !agentContextName) return;
+
+  const labelByScope = {
+    current_tab: msg("contextCurrentTab"),
+    current_group: msg("contextCurrentGroup"),
+    current_window: msg("contextCurrentWindow"),
+    workspace: msg("contextWorkspace"),
+    browser: msg("contextBrowser")
+  };
+  const name = getSidebarContextName(normalized);
+
+  agentContextBar.dataset.contextScope = normalized.scope;
+  agentContextLabel.textContent = labelByScope[normalized.scope] || msg("contextCurrentTab");
+  agentContextName.textContent = name;
+  agentContextBar.title = `${agentContextLabel.textContent}: ${name}`;
+}
+
+function getSidebarContextName(context) {
+  if (context.scope === "current_group") {
+    const count = Number(context.tabCount || context.tabIds?.length || 0);
+    const name = context.groupName || msg("contextUnnamedGroup");
+    return count ? `${name} · ${msg("tabsCount", [count])}` : name;
+  }
+
+  if (context.scope === "browser" || context.scope === "current_window") {
+    return msg("contextAllWindows");
+  }
+
+  if (context.scope === "workspace") {
+    return context.title || msg("currentWorkspace");
+  }
+
+  return context.title || context.hostname || msg("contextNoTab");
+}
+
+function getCurrentContextWindowId() {
+  const contextWindowId = Number(activeSidebarContext?.windowId);
+  if (Number.isInteger(contextWindowId)) return contextWindowId;
+
+  const latestWindowId = Number(latestRun?.activeWindowId);
+  return Number.isInteger(latestWindowId) ? latestWindowId : null;
+}
+
+function getAIAgentContextPayload() {
+  return normalizeSidebarContext(activeSidebarContext) || { scope: "current_tab" };
+}
+
 async function saveCurrentWorkspace() {
   setBusy(true);
   const response = await chrome.runtime.sendMessage({
@@ -172,7 +318,7 @@ async function summarizeCurrentTab(question = "") {
 
   const privacyResponse = await chrome.runtime.sendMessage({
     type: "CHECK_SUMMARY_PRIVACY",
-    activeWindowId: latestRun?.activeWindowId
+    activeWindowId: getCurrentContextWindowId()
   });
 
   if (!privacyResponse?.ok) {
@@ -260,7 +406,7 @@ async function summarizeCurrentTab(question = "") {
 function requestCurrentTabSummary(confirmedSensitiveTabId, question = "") {
   return chrome.runtime.sendMessage({
     type: "SUMMARIZE_CURRENT_TAB",
-    activeWindowId: latestRun?.activeWindowId,
+    activeWindowId: getCurrentContextWindowId(),
     confirmedSensitiveTabId: confirmedSensitiveTabId || null,
     question: question || ""
   });
@@ -391,7 +537,8 @@ async function askMetadataAgent(text) {
   try {
     response = await chrome.runtime.sendMessage({
       type: "ASK_TAB_AGENT",
-      text
+      text,
+      context: getAIAgentContextPayload()
     });
   } catch (error) {
     setBusy(false);
@@ -1561,16 +1708,15 @@ function buildRunMessageActions(summary, status) {
   }
 
   const actions = [
-    { label: msg("organizeAgain"), command: "organize again" },
-    { label: msg("askCurrentPage"), command: "summarize this page" }
+    { label: msg("organizeAgain"), command: "organize again" }
   ];
 
   if (status === "completed" && summary?.undoAvailable) {
-    actions.splice(2, 0, { label: msg("undo"), command: "undo" });
+    actions.push({ label: msg("undo"), command: "undo" });
   }
 
   if (status === "completed" && summary?.closedTabsRestoreAvailable) {
-    actions.splice(2, 0, { label: msg("restoreClosed"), command: "restore closed" });
+    actions.push({ label: msg("restoreClosed"), command: "restore closed" });
   }
 
   return actions.slice(0, 5);
@@ -1931,7 +2077,6 @@ function renderAIAgentActions(actions) {
 
 function getAIAgentActionLabel(type) {
   const labels = {
-    ask_page: msg("askCurrentPage"),
     open_dashboard: msg("openDashboard"),
     organize_again: msg("organizeAgain"),
     restore_closed: msg("restoreClosed"),
@@ -2096,7 +2241,6 @@ function renderPrivacy(isVisible) {
   privacyPanel.hidden = !isVisible;
   organizeButton.disabled = isVisible;
   dashboardTopButton.disabled = isVisible;
-  summaryButton.disabled = isVisible;
   chatInput.disabled = isVisible;
   chatSendButton.disabled = isVisible;
 }
@@ -2108,7 +2252,6 @@ function setBusy(isBusy) {
   restoreButton.disabled = isBusy || restoreButton.disabled;
   dashboardButton.disabled = isBusy;
   startButton.disabled = isBusy;
-  summaryButton.disabled = isBusy;
   chatInput.disabled = isBusy;
   chatSendButton.disabled = isBusy;
   chatPanel.querySelectorAll("button").forEach((button) => {

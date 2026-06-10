@@ -339,7 +339,10 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("let chatMessages = []"), "Sidepanel should keep an ephemeral chat message thread");
   assert(sidepanelJs.includes("appendUserChatMessage(text)"), "Sidepanel should render user messages in the chat thread");
   assert(sidepanelJs.includes("function runQuickChatCommand"), "Sidepanel quick actions should enter the chat thread");
-  assert(sidepanelJs.includes('runQuickChatCommand("summarize this page"'), "Ask page quick action should route through chat command handling");
+  assert(!sidepanelHtml.includes('id="summaryButton"'), "Sidepanel should not expose a separate Ask page button");
+  assert(sidepanelHtml.includes('id="agentContextBar"'), "Sidepanel composer should show the active chat context");
+  assert(sidepanelJs.includes("SIDEBAR_CONTEXT_KEY"), "Sidepanel should read shared Dashboard chat context");
+  assert(sidepanelJs.includes("context: getAIAgentContextPayload()"), "AI Agent calls should carry the current sidebar context");
   assert(sidepanelJs.includes('runQuickChatCommand("restore closed"'), "Restore quick action should route through chat command handling");
   assert(sidepanelJs.includes("function renderChatThread"), "Sidepanel should render a multi-message chat thread");
   assert(sidepanelJs.includes("disableStaleChatDraftButtons"), "Sidepanel should disable stale draft Apply/Cancel buttons");
@@ -397,6 +400,7 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("renderAIAgentNextSteps"), "AI Agent answers should show safe next-step suggestions without applying actions");
   assert(sidepanelJs.includes("function renderAIAgentActions"), "AI Agent answers should render validated safe action chips");
   assert(sidepanelJs.includes("getAIAgentActionLabel"), "AI Agent action chips should use localized labels");
+  assert(!sidepanelJs.includes("ask_page: msg"), "AI Agent should not render a separate Ask page chip");
   assert(sidepanelJs.includes("renderQuickCommandActions("), "AI Agent action chips should reuse safe chat quick commands");
   assert(sidepanelJs.includes('response.result?.status === "draft"'), "AI Agent action drafts should render as Apply/Cancel chat drafts");
   assert(sidepanelJs.includes("latestChatDraft = response.result.draft"), "AI Agent action drafts should become the active local draft");
@@ -409,8 +413,10 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(css.includes(".chat-summary-card"), "Current-page summary chat message should have scoped styling");
   assert(css.includes(".ai-agent-card"), "AI Agent answer should remain a simple message card");
   assert(css.includes(".chat-summary-question"), "Current-page question should have scoped chat styling");
+  assert(css.includes(".agent-context-bar"), "Composer context status should have scoped styling");
   assert(css.includes("backdrop-filter: blur"), "Minimal UI should use glass blur styling");
   assert(en.openDashboard?.message && zh.openDashboard?.message, "Header Dashboard action should be localized");
+  assert(en.contextCurrentTab?.message && zh.contextCurrentTab?.message, "Sidebar context copy should be localized");
   assert(en.agentCommandSummarize?.message && zh.agentCommandSummarize?.message, "Agent command response copy should be localized");
   assert(en.agentCommandAskPage?.message && zh.agentCommandAskPage?.message, "Ask-page command response copy should be localized");
   assert(en.currentPageAnswer?.message && zh.currentPageAnswer?.message, "Current-page chat summary label should be localized");
@@ -708,7 +714,12 @@ test("dashboard tab titles focus existing browser tabs", () => {
 
   assert(dashboardJs.includes('data-group-action="focus-tab"'), "Dashboard tab titles should expose focus action");
   assert(dashboardJs.includes("FOCUS_DASHBOARD_TAB"), "Dashboard should call the tab focus background action");
+  assert(dashboardJs.includes("SIDEBAR_CONTEXT_KEY"), "Dashboard tab/group clicks should share context with the Sidebar");
+  assert(dashboardJs.includes("function buildSidebarTabContext"), "Dashboard should build current-tab Sidebar context");
+  assert(dashboardJs.includes("function buildSidebarGroupContext"), "Dashboard should build current-group Sidebar context");
+  assert(dashboardJs.includes("chrome.sidePanel.open"), "Dashboard should try to open the linked Sidebar context");
   assert(dashboardCss.includes(".dashboard-tab-title-button"), "Dashboard tab title focus control should have scoped styling");
+  assert(dashboardCss.includes(".dashboard-group-card.context-active"), "Dashboard selected groups should have light context styling");
   assert(backgroundCode.includes("FOCUS_DASHBOARD_TAB"), "Background should handle Dashboard tab focus");
   assert(backgroundCode.includes("chrome.tabs.update(tabId, { active: true })"), "Background should activate the requested tab");
   assert(backgroundCode.includes("chrome.windows.update(tab.windowId, { focused: true })"), "Background should focus the tab window");
@@ -1467,10 +1478,10 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
                 content: JSON.stringify({
                   answer: "This looks like product planning. Review the active tab first.",
                   relevantTabIds: [51, 999, 51],
-                  suggestedNextSteps: ["Open Dashboard", "Ask page if you need page content"],
+                  suggestedNextSteps: ["Open Dashboard", "Ask from the current tab in the composer"],
                   suggestedActions: [
                     { type: "open_dashboard", reason: "Inspect groups" },
-                    { type: "ask_page", reason: "Read active page only if user asks" },
+                    { type: "ask_page", reason: "Old page button should be ignored" },
                     { type: "close_tabs", reason: "Should be rejected" }
                   ],
                   confidence: 0.82
@@ -1562,11 +1573,11 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
   assertEqual(validated.status, "answered", "AI Agent answer should validate");
   assertEqual(validated.matchedTabs.length, 1, "AI Agent validation should drop invented and duplicate tab ids");
   assertEqual(validated.matchedTabs[0].id, 51, "AI Agent validation should keep real tab ids");
-  assertEqual(validated.actions.length, 3, "AI Agent validation should expose safe action chips");
+  assertEqual(validated.actions.length, 2, "AI Agent validation should expose safe action chips without a separate Ask page button");
   assertDeepEqual(
     validated.actions.map((action) => action.type),
-    ["open_dashboard", "ask_page", "show_groups"],
-    "AI Agent validation should keep safe actions and add safe fallback actions"
+    ["open_dashboard", "show_groups"],
+    "AI Agent validation should keep safe actions, reject old Ask page actions, and add safe fallback actions"
   );
   assert(!validated.actions.some((action) => action.type === "close_tabs"), "AI Agent validation must reject destructive unknown actions");
   assertEqual(validated.privacy.sentPageText, false, "AI Agent validation should report no page text upload");
@@ -1904,7 +1915,8 @@ test("clear local data removes sensitive local keys and resets run state", async
     "tabmosaic.chatDraft",
     "tabmosaic.errorLog",
     "tabmosaic.duplicateSafetyAudit",
-    "tabmosaic.savedWorkspaces"
+    "tabmosaic.savedWorkspaces",
+    "tabmosaic.sidebarContext"
   ];
 
   assertDeepEqual(removedKeys.sort(), expectedKeys.sort(), "Clear local data keys");

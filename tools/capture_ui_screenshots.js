@@ -453,6 +453,14 @@ async function newMockedPage(browser, viewport, language) {
         return text;
       }
 
+      function toChromeTab(tab) {
+        return {
+          ...tab,
+          url: tab.hostname ? `https://${tab.hostname}${tab.path || "/"}` : "",
+          pendingUrl: ""
+        };
+      }
+
       globalThis.chrome = {
         i18n: {
           getUILanguage: () => (language === "zh" ? "zh-CN" : "en-US"),
@@ -515,6 +523,9 @@ async function newMockedPage(browser, viewport, language) {
           }
         },
         storage: {
+          onChanged: {
+            addListener: () => {}
+          },
           local: {
             get: async (keys) => pick(keys),
             set: async (value) => Object.assign(storage, clone(value)),
@@ -525,7 +536,23 @@ async function newMockedPage(browser, viewport, language) {
           }
         },
         tabs: {
-          create: async () => ({ id: 999 })
+          create: async () => ({ id: 999 }),
+          query: async (queryInfo = {}) => {
+            const tabs = storage["tabmosaic.currentRun"]?.snapshot?.tabs || [];
+            const matches = queryInfo.active
+              ? tabs.filter((tab) => tab.active)
+              : tabs;
+            return matches.map(toChromeTab);
+          },
+          onActivated: {
+            addListener: () => {}
+          },
+          onUpdated: {
+            addListener: () => {}
+          }
+        },
+        sidePanel: {
+          open: async () => {}
         }
       };
     },

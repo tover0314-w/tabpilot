@@ -21,7 +21,7 @@ node tools/preflight.js --runtime --agent-flow --large-runtime --screenshots --d
 Result:
 
 ```text
-PASS secret scan checked 102 tracked files
+PASS secret scan checked 103 tracked files
 42 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS DeepSeek/OpenAI-compatible /models reachable
@@ -29,7 +29,7 @@ modelAvailable=yes
 PASS synthetic classification fixture completed
 fixtureGroupCount=2
 fixtureAssignedTabs=3
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, safe action chips, and a validated Apply/Cancel move draft
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 858ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
@@ -44,7 +44,7 @@ PASS preflight completed
 Evidence notes:
 
 - This preflight run called DeepSeek for `/models` and a synthetic 3-tab classification fixture; runtime/UI tests used synthetic tabs and did not read real browser tabs or page text.
-- `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, open-ended chat fallback without DeepSeek, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
+- `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, context-aware composer state, ephemeral chat thread rendering, capability/help answer, open-ended chat fallback without DeepSeek, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
 - `--agent-flow` used a temporary Chrome for Testing profile with synthetic tabs, enabled DeepSeek only inside that temporary extension storage, submitted an open-ended question through the real Sidebar composer, verified a metadata-only assistant message card with relevant tab rows, safe action chips, and safe next-step suggestions, then verified a DeepSeek-generated `move_tabs` Apply/Cancel draft could be applied into a real native Chrome group without closing tabs.
 - `--large-runtime` used a separate temporary Chrome for Testing profile with 96 synthetic tabs and verified the real native group path, safe duplicate closes, review duplicate groups, bounded runtime, and sanitized run snapshots.
 - `--screenshots` generated mock-data UI screenshots for the chat-first Tab Agent side panel result state, side panel chat state, and Smart Groups Dashboard and did not read real browser tabs or `.env.local`.
@@ -178,7 +178,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 ```
 
 Evidence notes:
@@ -188,7 +188,7 @@ Evidence notes:
 - It verified `summarize this page` rendered a current-page chat summary and kept the legacy summary panel hidden.
 - It submitted `ask page: what does this page say about tabs` and verified the page question rendered in the current-page chat summary card.
 - It verified the Sidebar kept both the user page question and multiple Agent replies in the same local message thread.
-- It clicked the Ask page quick action and verified it entered the same local user/Agent message thread.
+- It submitted `summarize this page` through the composer and verified the current-tab request entered the same local user/Agent message thread.
 - It submitted `what can you do` and verified the local capability answer rendered in the chat thread.
 - It submitted `what should I do next` and verified the local next-step answer rendered in the chat thread.
 - It submitted `show groups`, `how much memory did you save?`, and `did AI classify this?` through the real Sidebar composer and verified local run-state answers.
@@ -296,7 +296,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=31e4689657a1e18df3ec97af5abcb29bae5532fbacd01e7e6ec8740ab3b6284a
+sha256=7b92411c72a50845af2ce5bcc5eb0f2867f583904a70b099146f002a5a6119ea
 ```
 
 Evidence notes:
@@ -320,7 +320,7 @@ Result:
 
 ```text
 42 smoke tests passed
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 ```
 
 Evidence notes:

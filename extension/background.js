@@ -9,6 +9,7 @@ const CHAT_DRAFT_KEY = "tabmosaic.chatDraft";
 const ERROR_LOG_KEY = "tabmosaic.errorLog";
 const DUPLICATE_SAFETY_AUDIT_KEY = "tabmosaic.duplicateSafetyAudit";
 const SAVED_WORKSPACES_KEY = "tabmosaic.savedWorkspaces";
+const SIDEBAR_CONTEXT_KEY = "tabmosaic.sidebarContext";
 const MAX_ERROR_LOG_ENTRIES = 12;
 const MAX_DUPLICATE_SAFETY_AUDIT_ENTRIES = 20;
 const MAX_SAVED_WORKSPACES = 12;
@@ -22,7 +23,8 @@ const LOCAL_DATA_KEYS = [
   CHAT_DRAFT_KEY,
   ERROR_LOG_KEY,
   DUPLICATE_SAFETY_AUDIT_KEY,
-  SAVED_WORKSPACES_KEY
+  SAVED_WORKSPACES_KEY,
+  SIDEBAR_CONTEXT_KEY
 ];
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
@@ -38,7 +40,6 @@ const AI_CLASSIFICATION_TIMEOUT_MS = 12000;
 const AI_AGENT_TIMEOUT_MS = 12000;
 const MAX_AI_AGENT_TABS = 80;
 const AI_AGENT_ACTIONS = {
-  ask_page: "summarize this page",
   open_dashboard: "open dashboard",
   organize_again: "organize again",
   restore_closed: "restore closed",
@@ -613,7 +614,7 @@ async function callOpenAICompatibleClassifier(settings, tabs, options = {}) {
   return JSON.parse(content);
 }
 
-async function callOpenAICompatibleTabAgent(settings, { instruction, state, language }, options = {}) {
+async function callOpenAICompatibleTabAgent(settings, { instruction, state, activeContext, language }, options = {}) {
   const baseUrl = normalizeAIBaseUrl(settings.baseUrl);
   const timeoutMs = Number(options.timeoutMs || settings.agentTimeoutMs || AI_AGENT_TIMEOUT_MS);
   const response = await fetchWithTimeout(
@@ -632,7 +633,7 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, lang
           {
             role: "system",
             content:
-              "You are TabMosaic's sidebar Tab Agent. Answer browser tab management questions using only the provided tab metadata and current group state. Do not claim you read page bodies. Do not mention full URLs. Do not invent tabIds. Do not apply actions. Do not say you closed, moved, or changed tabs. If the user asks for destructive action, explain that confirmation is required. Return only valid JSON."
+              "You are TabMosaic's sidebar Tab Agent. Answer browser tab management questions using only the provided tab metadata, active sidebar context, and current group state. Prioritize the active context when it is a current tab or group. Do not claim you read page bodies. Do not mention full URLs. Do not invent tabIds. Do not apply actions. Do not say you closed, moved, or changed tabs. If the user asks for destructive action, explain that confirmation is required. Return only valid JSON."
           },
           {
             role: "user",
@@ -647,7 +648,7 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, lang
                 suggestedNextSteps: ["short safe suggestion"],
                 suggestedActions: [
                   {
-                    type: "ask_page|open_dashboard|organize_again|restore_closed|review_duplicates|show_groups",
+                    type: "open_dashboard|organize_again|restore_closed|review_duplicates|show_groups",
                     reason: "short reason"
                   }
                 ],
@@ -666,6 +667,7 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, lang
                 "Never include close/delete actions.",
                 "The browser will only change after the user clicks Apply."
               ],
+              activeContext: activeContext || { scope: "browser" },
               state
             })
           }
@@ -856,7 +858,6 @@ function inferAIAgentActionsFromText(text) {
   const value = String(text || "").toLowerCase();
   const actions = [];
 
-  if (/ask page|current page|summarize|summary|页面|总结/.test(value)) actions.push("ask_page");
   if (/dashboard|workbench|工作台/.test(value)) actions.push("open_dashboard");
   if (/organize|organise|整理/.test(value)) actions.push("organize_again");
   if (/restore|恢复/.test(value)) actions.push("restore_closed");
@@ -1189,6 +1190,7 @@ async function askTabAgent(message = {}) {
 
   const run = await getCurrentRun();
   const state = buildAIAgentState(run);
+  const activeContext = sanitizeAIAgentContext(message.context, state);
 
   if (!state.tabs.length) {
     return { status: "no-context" };
@@ -1198,6 +1200,7 @@ async function askTabAgent(message = {}) {
     const output = await callOpenAICompatibleTabAgent(settings, {
       instruction,
       state,
+      activeContext,
       language: "en"
     });
     const result = validateAIAgentAnswer(output, state, {
@@ -1231,6 +1234,41 @@ function buildAIAgentState(run) {
       groupName: tabGroupNameById.get(tab.tabId) || ""
     }))
   };
+}
+
+function sanitizeAIAgentContext(context, state = {}) {
+  if (!context || typeof context !== "object") {
+    return { scope: "browser" };
+  }
+
+  const scope = ["current_tab", "current_group", "current_window", "workspace", "browser"].includes(context.scope)
+    ? context.scope
+    : "browser";
+  const tabIds = Array.isArray(context.tabIds)
+    ? Array.from(new Set(context.tabIds.map((tabId) => Number(tabId)).filter(Number.isInteger)))
+    : [];
+  const validTabIds = new Set((state.tabs || []).map((tab) => tab.tabId));
+  const filteredTabIds = tabIds.filter((tabId) => validTabIds.has(tabId)).slice(0, 40);
+  const tabId = Number(context.tabId);
+
+  return {
+    scope,
+    tabId: Number.isInteger(tabId) && validTabIds.has(tabId) ? tabId : null,
+    groupId: toOptionalInteger(context.groupId),
+    windowId: toOptionalInteger(context.windowId),
+    title: String(context.title || "").slice(0, 120),
+    hostname: String(context.hostname || "").slice(0, 120),
+    groupName: String(context.groupName || "").slice(0, 100),
+    tabCount: nonNegativeInt(context.tabCount || filteredTabIds.length),
+    tabIds: filteredTabIds
+  };
+}
+
+function toOptionalInteger(value) {
+  if (value === null || value === undefined || value === "") return null;
+
+  const number = Number(value);
+  return Number.isInteger(number) ? number : null;
 }
 
 function buildAIAgentTabGroupMap(run) {
@@ -2615,7 +2653,7 @@ function buildSensitiveSummaryConfirmation(tab, parsedUrl, privacyCheck) {
     keyPoints: [
       "No page body was read.",
       "TabMosaic checked only tab metadata before this prompt.",
-      "Click Summarize Current Tab again and confirm if you want a local summary."
+      "Ask from the sidebar composer again and confirm if you want a local summary."
     ],
     suggestedGroup: classifyTab({
       title: tab.title || "",

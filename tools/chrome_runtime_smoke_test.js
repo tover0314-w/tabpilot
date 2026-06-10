@@ -114,7 +114,7 @@ async function main() {
       const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
       const groupTitles = groups.map((group) => group.title).sort();
       assertGroupFamily(groupTitles, ["code review", "pr review", "pull request", "github pr", "review pages", "review tabs"], "code review");
-      assertGroupFamily(groupTitles, ["chrome extension", "extension docs", "chrome docs", "browser extension", "chrome api", "api docs"], "Chrome extension docs");
+      assertGroupFamily(groupTitles, ["chrome extension", "extension docs", "chrome docs", "browser extension", "chrome api", "api docs", "developer documentation"], "Chrome extension docs");
       assertGroupFamily(groupTitles, ["docs & notes", "documents", "document", "google docs", "design docs", "not found docs"], "documents/notes");
 
       if (SHOULD_RUN_AGENT_FLOW) {
@@ -186,8 +186,8 @@ async function main() {
       }, "Sidebar composer did not preserve user and assistant chat messages");
       assert(threadedChatRendered, "Chat thread did not preserve user and assistant messages");
 
-      await evaluate(cdp, `document.querySelector("#summaryButton")?.click()`);
-      const quickActionThreaded = await waitFor(async () => {
+      await submitSidepanelComposer(cdp, "summarize this page");
+      const composerSummaryThreaded = await waitFor(async () => {
         return evaluate(
           cdp,
           `(() => {
@@ -195,13 +195,13 @@ async function main() {
             const userMessages = Array.from(panel?.querySelectorAll(".chat-thread-message.user") || []);
             const assistantMessages = Array.from(panel?.querySelectorAll(".chat-thread-message.assistant") || []);
             return Boolean(
-              userMessages.some((node) => /Summarize Current Tab|总结当前标签页/.test(node.textContent || "")) &&
+              userMessages.some((node) => /summarize this page/.test(node.textContent || "")) &&
               assistantMessages.some((node) => /Current page|当前页面/.test(node.textContent || ""))
             );
           })()`
         );
-      }, "Sidebar quick action did not enter the chat message thread");
-      assert(quickActionThreaded, "Quick action did not preserve user and assistant messages in the chat thread");
+      }, "Sidebar composer summary command did not enter the chat message thread");
+      assert(composerSummaryThreaded, "Composer summary command did not preserve user and assistant messages in the chat thread");
 
       await submitSidepanelComposer(cdp, "what can you do");
       const capabilityAnswerRendered = await waitFor(async () => {
@@ -730,7 +730,7 @@ async function main() {
         dashboardActionsCdp.close();
       }
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
     } finally {
       cdp.close();
     }

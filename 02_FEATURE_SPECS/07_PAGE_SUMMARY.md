@@ -112,7 +112,7 @@ sessionStorage
 
 ```gherkin
 Given 用户打开一个普通网页
-When 用户点击 Summarize Current Tab
+When 用户在 Sidebar composer 里发起当前页总结或当前页问答
 Then 系统首次请求读取当前页面内容授权
 And 返回摘要、关键点、建议分组和建议操作
 And 用户可以继续追问

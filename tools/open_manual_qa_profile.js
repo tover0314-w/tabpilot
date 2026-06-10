@@ -207,7 +207,7 @@ function renderChecklistHtml(details) {
         "Active, pinned, audible, internal, and incognito tabs are not closed.",
         "Exact/tracking duplicates close only when safe.",
         "Hash/query duplicate candidates stay in review.",
-        "No page body is read before Summarize Current Tab.",
+        "No page body is read before a current-page request from the sidebar composer.",
         "The synthetic billing-dashboard tab asks for confirmation before visible text is read."
       ]
     },

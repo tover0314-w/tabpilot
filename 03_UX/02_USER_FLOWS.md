@@ -53,7 +53,8 @@
 
 ```text
 用户在某个页面
-→ Sidebar 点击 Summarize Current Tab
+→ Sidebar composer shows Current tab context
+→ User asks for a summary or page question
 → 首次请求读取当前页面正文
 → 用户确认
 → Agent 返回摘要、关键点、建议分组、建议操作
