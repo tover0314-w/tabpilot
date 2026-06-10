@@ -71,7 +71,7 @@ function main() {
       "PASS release package verified for v0.1.0",
       "blank real-profile QA result template",
       "PASS synthetic classification fixture completed",
-      "fixtureGroupCount=3",
+      "fixtureAssignedTabs=3",
       "P0 manual QA runbook has not been run against the user's real Chrome profile.",
       `sha256=${checksum}`
     ],
@@ -80,7 +80,7 @@ function main() {
   requireMatches(
     "05_PROJECT/08_QA_EVIDENCE.md",
     qaEvidence,
-    [/\b\d+ smoke tests passed\b/],
+    [/\b\d+ smoke tests passed\b/, /\bfixtureGroupCount=\d+\b/],
     failures
   );
   requireIncludes(
@@ -115,7 +115,7 @@ function main() {
       "optimization/memory-relief answer",
       "PASS Chrome runtime large-tab probe organized 96 synthetic tabs",
       "PASS store screenshot drafts captured",
-      "fixtureGroupCount=3",
+      "fixtureAssignedTabs=3",
       "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md",
       "Copy Real-Profile Template",
       "Public Chrome Web Store submission is not approved yet.",
@@ -135,6 +135,12 @@ function main() {
       "Local QA Notes",
       "不要公开发布，不要提交 Chrome Web Store。"
     ],
+    failures
+  );
+  requireMatches(
+    "05_PROJECT/09_BETA_RELEASE_NOTES.md",
+    releaseNotes,
+    [/\bfixtureGroupCount=\d+\b/],
     failures
   );
   requireIncludes(

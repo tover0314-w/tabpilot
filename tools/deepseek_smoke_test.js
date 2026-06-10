@@ -5,6 +5,9 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const ENV_PATH = path.join(ROOT_DIR, ".env.local");
 const DEFAULT_BASE_URL = "https://api.deepseek.com";
 const DEFAULT_MODEL = "deepseek-v4-flash";
+const SUPPORTED_AI_HOSTNAME = "api.deepseek.com";
+const MODELS_TIMEOUT_MS = 8000;
+const CLASSIFICATION_TIMEOUT_MS = 12000;
 const SHOULD_CLASSIFY_FIXTURE = process.argv.includes("--classify-fixture");
 
 main().catch((error) => {
@@ -17,7 +20,7 @@ async function main() {
     ...readDotEnv(ENV_PATH),
     ...process.env
   };
-  const apiKey = String(env.DEEPSEEK_API_KEY || env.OPENAI_COMPATIBLE_API_KEY || "").trim();
+  const apiKey = normalizeApiKey(env.DEEPSEEK_API_KEY || env.OPENAI_COMPATIBLE_API_KEY || "");
   const baseUrl = normalizeBaseUrl(env.DEEPSEEK_BASE_URL || env.OPENAI_COMPATIBLE_BASE_URL || DEFAULT_BASE_URL);
   const model = String(env.DEEPSEEK_MODEL || env.OPENAI_COMPATIBLE_MODEL || DEFAULT_MODEL).trim();
 
@@ -79,12 +82,17 @@ function readDotEnv(filePath) {
 }
 
 async function fetchModels({ baseUrl, apiKey }) {
-  const response = await fetch(`${baseUrl}/models`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${apiKey}`
-    }
-  });
+  const response = await fetchWithTimeout(
+    `${baseUrl}/models`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${apiKey}`
+      }
+    },
+    MODELS_TIMEOUT_MS,
+    "DeepSeek /models timed out."
+  );
 
   if (!response.ok) {
     throw new Error(`DeepSeek /models failed with status ${response.status}.`);
@@ -127,42 +135,48 @@ async function classifySyntheticFixture({ baseUrl, apiKey, model }) {
       audible: false
     }
   ];
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
+  const response = await fetchWithTimeout(
+    `${baseUrl}/chat/completions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        response_format: { type: "json_object" },
+        max_tokens: 700,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You classify browser tabs into task-oriented groups. Return only valid JSON with a groups array. Do not invent tabIds."
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              schema: {
+                groups: [
+                  {
+                    name: "string",
+                    color: "blue",
+                    confidence: 0.9,
+                    reason: "short string",
+                    tabIds: [101]
+                  }
+                ]
+              },
+              privacyNote: "Synthetic fixture only. No real browser tabs, page text, full URLs, or API keys are included in this payload.",
+              tabs: fixtureTabs
+            })
+          }
+        ]
+      })
     },
-    body: JSON.stringify({
-      model,
-      response_format: { type: "json_object" },
-      max_tokens: 700,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You classify browser tabs into task-oriented groups. Return only valid JSON with a groups array. Do not invent tabIds."
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            schema: {
-              groups: [
-                {
-                  name: "string",
-                  color: "blue",
-                  confidence: 0.9,
-                  reason: "short string",
-                  tabIds: [101]
-                }
-              ]
-            },
-            tabs: fixtureTabs
-          })
-        }
-      ]
-    })
-  });
+    CLASSIFICATION_TIMEOUT_MS,
+    "DeepSeek chat/completions fixture timed out."
+  );
 
   if (!response.ok) {
     throw new Error(`DeepSeek chat/completions fixture failed with status ${response.status}.`);
@@ -196,5 +210,49 @@ async function classifySyntheticFixture({ baseUrl, apiKey, model }) {
 }
 
 function normalizeBaseUrl(value) {
-  return String(value || DEFAULT_BASE_URL).trim().replace(/\/+$/, "") || DEFAULT_BASE_URL;
+  const rawValue = String(value || DEFAULT_BASE_URL).trim() || DEFAULT_BASE_URL;
+  let url;
+
+  try {
+    url = new URL(rawValue);
+  } catch {
+    throw new Error("Current beta supports only https://api.deepseek.com as the AI base URL.");
+  }
+
+  if (
+    url.protocol !== "https:" ||
+    url.hostname !== SUPPORTED_AI_HOSTNAME ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error("Current beta supports only https://api.deepseek.com as the AI base URL.");
+  }
+
+  return url.toString().replace(/\/+$/, "");
+}
+
+function normalizeApiKey(value) {
+  return String(value || "").trim().replace(/;+$/g, "");
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs, timeoutMessage) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (controller.signal.aborted || error?.name === "AbortError") {
+      throw new Error(timeoutMessage || "DeepSeek request timed out.");
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

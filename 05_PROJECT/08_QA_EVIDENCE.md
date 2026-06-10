@@ -8,24 +8,29 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.101 Sidebar Agent optimization answer in this commit
+Source state verified: v0.102 DeepSeek smoke provider guardrails in this commit
 
 ### Unified Preflight
 
 Command:
 
 ```bash
-node tools/preflight.js --runtime --large-runtime --screenshots
+node tools/preflight.js --runtime --large-runtime --screenshots --deepseek-fixture
 ```
 
 Result:
 
 ```text
 PASS secret scan checked 102 tracked files
-38 smoke tests passed
+39 smoke tests passed
 PASS issue form smoke checked 2 forms
+PASS DeepSeek/OpenAI-compatible /models reachable
+modelAvailable=yes
+PASS synthetic classification fixture completed
+fixtureGroupCount=2
+fixtureAssignedTabs=3
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 814ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 927ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
 PASS release package verified for v0.1.0
@@ -37,7 +42,7 @@ PASS preflight completed
 
 Evidence notes:
 
-- This preflight run did not call DeepSeek classification and did not read real browser tabs.
+- This preflight run called DeepSeek only for `/models` and a synthetic 3-tab classification fixture; it did not read real browser tabs or page text.
 - `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
 - `--large-runtime` used a separate temporary Chrome for Testing profile with 96 synthetic tabs and verified the real native group path, safe duplicate closes, review duplicate groups, bounded runtime, and sanitized run snapshots.
 - `--screenshots` generated mock-data UI screenshots for the chat-first Tab Agent side panel and Smart Groups Dashboard and did not read real browser tabs or `.env.local`.
@@ -77,7 +82,7 @@ configuredModel=deepseek-v4-flash
 modelAvailable=yes
 modelCount=2
 PASS synthetic classification fixture completed
-fixtureGroupCount=3
+fixtureGroupCount=2
 fixtureAssignedTabs=3
 ```
 
@@ -86,6 +91,8 @@ Evidence notes:
 - `.env.local` was used locally but not printed.
 - The default `/models` check sends no tab data.
 - The synthetic classification fixture used fake tabs only and did not use real browser data.
+- The provider smoke uses bounded network calls and rejects non-DeepSeek hosts before fetch in this private beta.
+- The synthetic fixture group count may vary by model response; pass criteria are fixture completion, no invented tab IDs, and all three synthetic tabs assigned.
 - The extension private beta only permits `https://api.deepseek.com/*`; other OpenAI-compatible hosts require later permission confirmation.
 
 ### Extension Smoke Test
@@ -99,7 +106,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-38 smoke tests passed
+39 smoke tests passed
 ```
 
 Covered:
@@ -203,7 +210,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 814ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 927ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 ```
 
 Evidence notes:
@@ -280,7 +287,7 @@ node tools/chrome_runtime_smoke_test.js
 Result:
 
 ```text
-38 smoke tests passed
+39 smoke tests passed
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 ```
 

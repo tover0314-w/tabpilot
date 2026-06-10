@@ -98,6 +98,7 @@ Expected:
 - default mode reads .env.local and calls /models only
 - no real browser tab data is sent
 - --classify-fixture sends synthetic tabs only and rejects invented tabIds
+- provider smoke uses bounded requests and rejects non-DeepSeek hosts before fetch in the private beta
 ```
 
 Optional runtime smoke test:

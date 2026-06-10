@@ -73,7 +73,7 @@ Click extension icon
 Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 
 ```text
-node tools/preflight.js --runtime --large-runtime --screenshots
+node tools/preflight.js --runtime --large-runtime --screenshots --deepseek-fixture
 PASS preflight completed
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs with real native tab groups, safe duplicate closes, and review duplicate groups
@@ -81,11 +81,10 @@ PASS UI screenshots captured
 PASS store screenshot drafts captured
 PASS controlled private beta readiness evidence checked
 
-node tools/deepseek_smoke_test.js --classify-fixture
 PASS DeepSeek/OpenAI-compatible /models reachable
 modelAvailable=yes
 PASS synthetic classification fixture completed
-fixtureGroupCount=3
+fixtureGroupCount=2
 fixtureAssignedTabs=3
 ```
 

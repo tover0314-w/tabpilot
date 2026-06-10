@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.102 — 2026-06-10
+
+Changed:
+
+- DeepSeek provider smoke now uses bounded network calls for `/models` and synthetic `chat/completions` fixture checks.
+- DeepSeek provider smoke now enforces the private-beta `https://api.deepseek.com` host boundary and normalizes pasted local API keys without printing them.
+- Beta readiness no longer requires a fixed synthetic AI fixture group count; it requires the fixture to complete and assign all synthetic tabs without invented tab IDs.
+
+Safety:
+
+- The provider smoke still uses `.env.local` only for local testing, does not print API keys, sends only synthetic tab metadata, does not read real browser tabs, does not read page text, and does not broaden extension host permissions.
+
 ## v0.101 — 2026-06-10
 
 Changed:

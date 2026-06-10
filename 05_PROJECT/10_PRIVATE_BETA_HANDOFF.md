@@ -72,7 +72,7 @@ Current verified evidence is recorded in `05_PROJECT/08_QA_EVIDENCE.md`.
 Most complete local verification command:
 
 ```bash
-node tools/preflight.js --runtime --large-runtime --screenshots
+node tools/preflight.js --runtime --large-runtime --screenshots --deepseek-fixture
 ```
 
 Verified:
@@ -128,6 +128,7 @@ Verified:
 - DeepSeek /models reachable
 - configured model available
 - synthetic classification fixture completes
+- provider smoke uses bounded requests, rejects non-DeepSeek hosts before fetch, and does not print API keys
 - no real browser tab data is used
 ```
 

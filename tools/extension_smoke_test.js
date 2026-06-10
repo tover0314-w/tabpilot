@@ -1594,6 +1594,19 @@ test("AI connection test does not send tab data", async () => {
   assertEqual(fetchCalls.length, 1, "Unsupported AI host must not trigger another fetch");
 });
 
+test("DeepSeek smoke test stays inside private beta provider guardrails", () => {
+  const deepseekSmoke = fs.readFileSync(path.join(ROOT_DIR, "tools", "deepseek_smoke_test.js"), "utf8");
+
+  assert(deepseekSmoke.includes('const SUPPORTED_AI_HOSTNAME = "api.deepseek.com"'), "DeepSeek smoke should stay limited to the private beta host");
+  assert(deepseekSmoke.includes("function normalizeBaseUrl"), "DeepSeek smoke should validate the configured base URL");
+  assert(deepseekSmoke.includes("Current beta supports only https://api.deepseek.com"), "DeepSeek smoke should explain unsupported hosts");
+  assert(deepseekSmoke.includes("function fetchWithTimeout"), "DeepSeek smoke should use bounded network calls");
+  assert(deepseekSmoke.includes("AbortController"), "DeepSeek smoke should abort slow provider requests");
+  assert(deepseekSmoke.includes("function normalizeApiKey"), "DeepSeek smoke should normalize pasted local API keys without printing them");
+  assert(deepseekSmoke.includes("Synthetic fixture only. No real browser tabs"), "DeepSeek fixture should document that it sends only synthetic tab data");
+  assert(!deepseekSmoke.includes("console.log(apiKey"), "DeepSeek smoke must not print API keys");
+});
+
 test("clear local data removes sensitive local keys and resets run state", async () => {
   const removedKeys = [];
   const setValues = [];
