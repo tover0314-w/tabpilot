@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.104 — 2026-06-10
+
+Changed:
+
+- DeepSeek metadata Agent answers now include compact safe action chips when useful.
+- Safe action chips are restricted to an allowlist: Ask page, Open Dashboard, Organize Again, Restore Closed, Review duplicates, and Show groups.
+- The real `--agent-flow` runtime check now verifies the Sidebar Agent returns a normal assistant message card with relevant tab rows, safe action chips, and next-step suggestions.
+
+Safety:
+
+- AI suggestions still do not apply browser actions automatically.
+- Unknown or destructive AI action types are ignored before rendering.
+- Action chips route through the same user-clicked Sidebar chat command path as typed commands.
+
 ## v0.103 — 2026-06-10
 
 Changed:

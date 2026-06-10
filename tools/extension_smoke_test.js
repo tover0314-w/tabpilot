@@ -382,6 +382,9 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("function renderAIAgentCard"), "AI Agent answers should use a simple assistant message card");
   assert(sidepanelJs.includes("agentMetadataPrivacy"), "AI Agent answers should disclose metadata-only context");
   assert(sidepanelJs.includes("renderAIAgentNextSteps"), "AI Agent answers should show safe next-step suggestions without applying actions");
+  assert(sidepanelJs.includes("function renderAIAgentActions"), "AI Agent answers should render validated safe action chips");
+  assert(sidepanelJs.includes("getAIAgentActionLabel"), "AI Agent action chips should use localized labels");
+  assert(sidepanelJs.includes("renderQuickCommandActions("), "AI Agent action chips should reuse safe chat quick commands");
   assert(css.includes(".run-message-card"), "Latest organize message card should have scoped styling");
   assert(css.includes(".run-message-heading"), "Latest organize message heading should have scoped styling");
   assert(css.includes(".tab-agent-shell .chat-panel"), "Chat panel should be a plain message stream in the side panel");
@@ -1433,6 +1436,11 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
                   answer: "This looks like product planning. Review the active tab first.",
                   relevantTabIds: [51, 999, 51],
                   suggestedNextSteps: ["Open Dashboard", "Ask page if you need page content"],
+                  suggestedActions: [
+                    { type: "open_dashboard", reason: "Inspect groups" },
+                    { type: "ask_page", reason: "Read active page only if user asks" },
+                    { type: "close_tabs", reason: "Should be rejected" }
+                  ],
                   confidence: 0.82
                 })
               }
@@ -1450,6 +1458,7 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
       tabsMoved: 1,
       safeDuplicatesClosed: 0,
       reviewDuplicateGroups: 0,
+      closedTabsRestoreAvailable: false,
       aiClassificationStatus: "applied"
     },
     groups: [
@@ -1521,6 +1530,13 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
   assertEqual(validated.status, "answered", "AI Agent answer should validate");
   assertEqual(validated.matchedTabs.length, 1, "AI Agent validation should drop invented and duplicate tab ids");
   assertEqual(validated.matchedTabs[0].id, 51, "AI Agent validation should keep real tab ids");
+  assertEqual(validated.actions.length, 3, "AI Agent validation should expose safe action chips");
+  assertDeepEqual(
+    validated.actions.map((action) => action.type),
+    ["open_dashboard", "ask_page", "show_groups"],
+    "AI Agent validation should keep safe actions and add safe fallback actions"
+  );
+  assert(!validated.actions.some((action) => action.type === "close_tabs"), "AI Agent validation must reject destructive unknown actions");
   assertEqual(validated.privacy.sentPageText, false, "AI Agent validation should report no page text upload");
   assertEqual(validated.privacy.sentFullUrls, false, "AI Agent validation should report no full URL upload");
 });

@@ -35,6 +35,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Sidebar composer read-only answers for active tabs, protected tabs, and possible read-later tabs
 - Sidebar composer local tab search and focus existing tab
 - Sidebar DeepSeek metadata-only Agent fallback for open-ended tab-management answers after local commands/actions do not match
+- Sidebar DeepSeek metadata-only Agent safe action chips from a validated allowlist
 - local user rules and Rules & Memory
 - current-tab local extractive summary after user click, with sensitive-page confirmation
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
@@ -105,7 +106,7 @@ Verified:
 - Sidebar duplicate-review/closed-tab local answers in runtime smoke
 - Sidebar active/protected/read-later local answers in runtime smoke
 - Sidebar tab search and Open existing tab in runtime smoke
-- DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer
+- DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer, including safe action chips
 - DeepSeek metadata-only Agent payload minimization and invented-tab-id filtering in extension smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
 - mock-data Chrome Web Store screenshot drafts, generated as five 1280x800 local PNGs
@@ -150,7 +151,7 @@ Verified:
 - local DeepSeek key is stored only in the temporary extension storage
 - real Sidebar composer submits an open-ended tab-management question
 - DeepSeek metadata-only Agent returns an assistant message card
-- relevant tab rows and safe next-step suggestions render
+- relevant tab rows, safe action chips, and safe next-step suggestions render
 - page text and full URLs are not read or sent
 - no browser actions are applied automatically from the AI answer
 ```

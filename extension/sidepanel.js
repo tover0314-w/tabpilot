@@ -1854,12 +1854,14 @@ function renderChatPanelContent(draft) {
 function renderAIAgentCard(draft) {
   const tabs = Array.isArray(draft.matchedTabs) ? draft.matchedTabs : [];
   const nextSteps = Array.isArray(draft.nextSteps) ? draft.nextSteps : [];
+  const actions = Array.isArray(draft.actions) ? draft.actions : [];
 
   return `
     <article class="ai-agent-card">
       <p class="chat-answer">${escapeHtml(draft.answer || "")}</p>
       ${tabs.length ? renderChatMatchedTabs(tabs, draft.matchedTabCount, { showOpenAction: true }) : ""}
       ${nextSteps.length ? renderAIAgentNextSteps(nextSteps) : ""}
+      ${actions.length ? renderAIAgentActions(actions) : ""}
       <small class="agent-privacy-note">${escapeHtml(msg("agentMetadataPrivacy"))}</small>
     </article>
   `;
@@ -1872,6 +1874,31 @@ function renderAIAgentNextSteps(nextSteps) {
       <small>${escapeHtml(nextSteps.join(" · "))}</small>
     </div>
   `;
+}
+
+function renderAIAgentActions(actions) {
+  return renderQuickCommandActions(
+    actions
+      .map((action) => ({
+        command: action.command || "",
+        label: getAIAgentActionLabel(action.type)
+      }))
+      .filter((action) => action.command && action.label)
+      .slice(0, 3)
+  );
+}
+
+function getAIAgentActionLabel(type) {
+  const labels = {
+    ask_page: msg("askCurrentPage"),
+    open_dashboard: msg("openDashboard"),
+    organize_again: msg("organizeAgain"),
+    restore_closed: msg("restoreClosed"),
+    review_duplicates: msg("reviewDuplicates"),
+    show_groups: msg("groups")
+  };
+
+  return labels[type] || "";
 }
 
 function renderOptimizationCard(draft) {

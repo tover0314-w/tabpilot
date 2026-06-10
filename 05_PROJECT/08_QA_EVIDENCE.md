@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.103
+Source state verified: v0.104
 
 ### Unified Preflight
 
@@ -27,11 +27,11 @@ PASS issue form smoke checked 2 forms
 PASS DeepSeek/OpenAI-compatible /models reachable
 modelAvailable=yes
 PASS synthetic classification fixture completed
-fixtureGroupCount=2
+fixtureGroupCount=3
 fixtureAssignedTabs=3
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 749ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note and safe action chips
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 2609ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
 PASS release package verified for v0.1.0
@@ -45,7 +45,7 @@ Evidence notes:
 
 - This preflight run called DeepSeek for `/models` and a synthetic 3-tab classification fixture; runtime/UI tests used synthetic tabs and did not read real browser tabs or page text.
 - `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
-- `--agent-flow` used a temporary Chrome for Testing profile with synthetic tabs, enabled DeepSeek only inside that temporary extension storage, submitted an open-ended question through the real Sidebar composer, and verified a metadata-only assistant message card with relevant tab rows and safe next-step suggestions.
+- `--agent-flow` used a temporary Chrome for Testing profile with synthetic tabs, enabled DeepSeek only inside that temporary extension storage, submitted an open-ended question through the real Sidebar composer, and verified a metadata-only assistant message card with relevant tab rows, safe action chips, and safe next-step suggestions.
 - `--large-runtime` used a separate temporary Chrome for Testing profile with 96 synthetic tabs and verified the real native group path, safe duplicate closes, review duplicate groups, bounded runtime, and sanitized run snapshots.
 - `--screenshots` generated mock-data UI screenshots for the chat-first Tab Agent side panel and Smart Groups Dashboard and did not read real browser tabs or `.env.local`.
 - `--screenshots` also generated five local 1280x800 Chrome Web Store screenshot drafts from the mock UI screenshots. These are review drafts only and remain marked `DO NOT SUBMIT YET`.
@@ -85,7 +85,7 @@ configuredModel=deepseek-v4-flash
 modelAvailable=yes
 modelCount=2
 PASS synthetic classification fixture completed
-fixtureGroupCount=2
+fixtureGroupCount=3
 fixtureAssignedTabs=3
 ```
 
@@ -214,7 +214,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 749ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 2609ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 ```
 
 Evidence notes:
@@ -239,7 +239,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, 4 relevant tab rows, nextSteps=yes
+PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, 4 relevant tab rows, actionButtons=3, nextSteps=yes
 ```
 
 Evidence notes:
@@ -249,7 +249,7 @@ Evidence notes:
 - It accepted the privacy gate, organized synthetic tabs into real Chrome native tab groups, then submitted `Which tabs should I focus on for Chrome extension planning?` through the real Sidebar composer.
 - It verified that DeepSeek returned through the Sidebar Agent path as a normal assistant message card, not a Chat Refine action preview.
 - It verified the visible metadata-only privacy note in the assistant card.
-- It verified relevant tab rows and next-step suggestions rendered without applying browser changes automatically.
+- It verified relevant tab rows, validated safe action chips, and next-step suggestions rendered without applying browser changes automatically.
 - It did not read the user's real Chrome profile, real browser tabs, real page text, or full URLs.
 
 ### Disposable Manual QA Profile Self-Test
@@ -294,7 +294,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=c64f6dfb846e10be53c15aab11755a446565d28c91fb10034e33908a5ffe49a1
+sha256=ca93c7a1011711fc0ecfbebe8997f938f23ddd173165ca4d01129dfc49123950
 ```
 
 Evidence notes:

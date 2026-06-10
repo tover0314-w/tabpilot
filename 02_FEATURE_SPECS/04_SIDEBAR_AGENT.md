@@ -237,7 +237,9 @@ DeepSeek metadata Agent first slice:
 - input is minimized current run metadata only: tab title, hostname, path, window id, active/pinned/audible state, group state, duplicate review counts
 - no page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, chat history, or cloud memory is sent
 - output renders as an assistant message card with optional relevant tab rows and safe next-step suggestions
+- output may include compact safe action chips from a validated allowlist: Ask page, Open Dashboard, Organize Again, Restore Closed, Review duplicates, Show groups
 - output does not automatically move, close, rename, save, or read tabs
+- action chips route through the normal user-triggered chat command path
 - invented tab IDs are filtered out before rendering
 - provider failure falls back to the existing local command/action flow
 ```

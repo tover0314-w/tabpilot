@@ -35,6 +35,14 @@ const AI_CONNECTION_TIMEOUT_MS = 8000;
 const AI_CLASSIFICATION_TIMEOUT_MS = 12000;
 const AI_AGENT_TIMEOUT_MS = 12000;
 const MAX_AI_AGENT_TABS = 80;
+const AI_AGENT_ACTIONS = {
+  ask_page: "summarize this page",
+  open_dashboard: "open dashboard",
+  organize_again: "organize again",
+  restore_closed: "restore closed",
+  review_duplicates: "what needs review",
+  show_groups: "show groups"
+};
 const NO_GROUP_ID = -1;
 const SENSITIVE_SUMMARY_TERMS = [
   "admin",
@@ -590,6 +598,12 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, lang
                 answer: "short conversational answer",
                 relevantTabIds: [123],
                 suggestedNextSteps: ["short safe suggestion"],
+                suggestedActions: [
+                  {
+                    type: "ask_page|open_dashboard|organize_again|restore_closed|review_duplicates|show_groups",
+                    reason: "short reason"
+                  }
+                ],
                 confidence: 0.0
               },
               state
@@ -643,6 +657,7 @@ function validateAIAgentAnswer(output, state) {
     matchedTabs: relevantTabIds.map((tabId) => buildAIAgentMatchedTab(tabById.get(tabId))),
     matchedTabCount: relevantTabIds.length,
     nextSteps,
+    actions: buildAIAgentActions(output, { nextSteps, state }),
     confidence: clamp(Number(output?.confidence || 0.6), 0, 1),
     privacy: {
       sentTabMetadata: true,
@@ -650,6 +665,56 @@ function validateAIAgentAnswer(output, state) {
       sentFullUrls: false
     }
   };
+}
+
+function buildAIAgentActions(output, { nextSteps = [], state = {} } = {}) {
+  const fromOutput = Array.isArray(output?.suggestedActions)
+    ? output.suggestedActions.map((action) => action?.type || action?.action || action)
+    : [];
+  const inferred = inferAIAgentActionsFromText(nextSteps.join(" "));
+  const fallback = state.groups?.length ? ["show_groups", "open_dashboard"] : ["open_dashboard"];
+  const actions = [];
+  const seen = new Set();
+
+  for (const type of [...fromOutput, ...inferred, ...fallback]) {
+    const normalized = normalizeAIAgentActionType(type);
+    if (!normalized || seen.has(normalized)) continue;
+    if (normalized === "restore_closed" && !state.summary?.closedTabsRestoreAvailable) continue;
+    if (normalized === "review_duplicates" && !state.summary?.reviewDuplicateGroups) continue;
+
+    seen.add(normalized);
+    actions.push({
+      type: normalized,
+      command: AI_AGENT_ACTIONS[normalized]
+    });
+
+    if (actions.length >= 3) break;
+  }
+
+  return actions;
+}
+
+function inferAIAgentActionsFromText(text) {
+  const value = String(text || "").toLowerCase();
+  const actions = [];
+
+  if (/ask page|current page|summarize|summary|页面|总结/.test(value)) actions.push("ask_page");
+  if (/dashboard|workbench|工作台/.test(value)) actions.push("open_dashboard");
+  if (/organize|organise|整理/.test(value)) actions.push("organize_again");
+  if (/restore|恢复/.test(value)) actions.push("restore_closed");
+  if (/review|duplicate|重复|确认/.test(value)) actions.push("review_duplicates");
+  if (/group|分组/.test(value)) actions.push("show_groups");
+
+  return actions;
+}
+
+function normalizeAIAgentActionType(type) {
+  const normalized = String(type || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+
+  return AI_AGENT_ACTIONS[normalized] ? normalized : "";
 }
 
 function extractAIAgentRelevantTabIds(output) {
@@ -1024,6 +1089,7 @@ function sanitizeAIAgentSummary(summary) {
     tabsMoved: nonNegativeInt(summary.tabsMoved),
     safeDuplicatesClosed: nonNegativeInt(summary.safeDuplicatesClosed),
     reviewDuplicateGroups: nonNegativeInt(summary.reviewDuplicateGroups),
+    closedTabsRestoreAvailable: Boolean(summary.closedTabsRestoreAvailable),
     aiClassificationStatus: String(summary.aiClassificationStatus || "not-configured").slice(0, 60),
     userRulesApplied: nonNegativeInt(summary.userRulesApplied)
   };

@@ -42,6 +42,7 @@ Click extension icon
 - Sidebar composer local answers for latest result, optimization / memory relief, groups, duplicates, duplicate review queue, closed duplicate restore state, AI status, active tabs, protected tabs, possible read-later tabs, and tab search/open.
 - Sidebar optimization / memory-relief answer renders as an assistant message card with safe next-step buttons instead of plain text only.
 - Sidebar DeepSeek metadata-only Agent fallback for open-ended tab-management questions after local commands/actions do not match.
+- Sidebar DeepSeek Agent answers can include compact validated safe action chips, routed through the normal user-triggered chat command path.
 - Current-tab summary only after user click.
 - Dashboard Smart Groups, folded Saved Workspaces, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
 - Dashboard expandable Smart Group tab rows for groups with more than three visible tabs.
@@ -67,7 +68,7 @@ Click extension icon
 - Private beta AI network access is limited to `https://api.deepseek.com/*`; other OpenAI-compatible hosts require a later permission confirmation.
 - AI classification sends tab title, hostname, path, window ID, and tab state only; it does not send page text or full URL by default.
 - Metadata-only Agent answers use the same minimized tab metadata boundary and do not send page body, full URL, restore URL, favicon URL, browser history, chat history, saved workspace contents, or cloud memory.
-- Metadata-only Agent answers do not apply browser actions automatically.
+- Metadata-only Agent answers do not apply browser actions automatically; safe action chips require a user click and are restricted to an allowlist.
 - Full URLs may be stored locally only where needed to restore closed duplicate tabs.
 - Copied diagnostics and feedback exclude URLs, hostnames, tab titles, page text, rule patterns, group names, emails, bearer tokens, and API keys.
 
@@ -80,7 +81,7 @@ node tools/preflight.js --runtime --agent-flow --large-runtime --screenshots --d
 PASS preflight completed
 40 smoke tests passed
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note
+PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note and safe action chips
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs with real native tab groups, safe duplicate closes, and review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
@@ -89,7 +90,7 @@ PASS controlled private beta readiness evidence checked
 PASS DeepSeek/OpenAI-compatible /models reachable
 modelAvailable=yes
 PASS synthetic classification fixture completed
-fixtureGroupCount=2
+fixtureGroupCount=3
 fixtureAssignedTabs=3
 ```
 

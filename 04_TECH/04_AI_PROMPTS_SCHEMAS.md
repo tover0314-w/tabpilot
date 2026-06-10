@@ -194,6 +194,12 @@ User payload:
     "answer": "short conversational answer",
     "relevantTabIds": [123],
     "suggestedNextSteps": ["short safe suggestion"],
+    "suggestedActions": [
+      {
+        "type": "ask_page | open_dashboard | organize_again | restore_closed | review_duplicates | show_groups",
+        "reason": "short reason"
+      }
+    ],
     "confidence": 0.0
   },
   "state": {
@@ -211,4 +217,6 @@ Validation:
 - `relevantTabIds` must exist in the current sanitized run state.
 - duplicate or invented tab IDs are ignored.
 - suggested next steps are rendered as copy only, not as automatic browser actions.
+- suggested actions must match the allowlist and are rendered as user-clicked chat command chips only.
+- unknown or destructive action types such as `close_tabs` are ignored.
 - privacy metadata reports `sentPageText: false` and `sentFullUrls: false`.

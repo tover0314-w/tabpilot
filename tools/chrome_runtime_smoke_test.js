@@ -760,7 +760,8 @@ async function runDeepSeekAgentFlow(cdp) {
             hasCard: Boolean(latest.querySelector(".ai-agent-card")),
             hasPrivacyNote: /Page text and full URLs were not sent|页面正文或完整 URL/.test(text),
             tabRows: latest.querySelectorAll(".chat-tab-row").length,
-            nextSteps: /Suggested next steps|建议下一步/.test(text)
+            nextSteps: /Suggested next steps|建议下一步/.test(text),
+            actionButtons: latest.querySelectorAll('[data-chat-action="quick-command"]').length
           };
         })()`
       );
@@ -780,10 +781,11 @@ async function runDeepSeekAgentFlow(cdp) {
 
   assert(agentAnswer.hasCard, "DeepSeek Agent answer did not render as an assistant card");
   assert(agentAnswer.hasPrivacyNote, "DeepSeek Agent answer did not disclose metadata-only privacy boundary");
+  assert(agentAnswer.actionButtons >= 1, "DeepSeek Agent answer did not render a safe action chip");
   assert(!/fullUrl|restoreUrl|pageText|token=abc/i.test(agentAnswer.text), "DeepSeek Agent answer leaked sensitive field names or fixture token text");
 
   console.log(
-    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
+    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, actionButtons=${agentAnswer.actionButtons}, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
   );
 }
 

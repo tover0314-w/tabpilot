@@ -157,7 +157,7 @@ node tools/preflight.js --agent-flow
 node tools/chrome_runtime_smoke_test.js --agent-flow
 ```
 
-这个脚本会用临时 Chrome profile、synthetic tabs 和 `.env.local` 里的 DeepSeek key 跑真实 sidebar composer 流程：用户输入开放式 tab 管理问题，DeepSeek metadata-only Agent 返回普通 assistant 消息卡片、相关 tab 行和下一步建议。它不会打印 API key，不读取真实 Chrome profile，不读取真实 tabs，不读取页面正文，不发送完整 URL。
+这个脚本会用临时 Chrome profile、synthetic tabs 和 `.env.local` 里的 DeepSeek key 跑真实 sidebar composer 流程：用户输入开放式 tab 管理问题，DeepSeek metadata-only Agent 返回普通 assistant 消息卡片、相关 tab 行、安全动作按钮和下一步建议。它不会打印 API key，不读取真实 Chrome profile，不读取真实 tabs，不读取页面正文，不发送完整 URL，也不会让 AI 自动执行浏览器动作。
 
 可选真实 Chrome 大标签 synthetic runtime 探针：
 
