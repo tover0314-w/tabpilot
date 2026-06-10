@@ -338,13 +338,75 @@ async function previewChatRefine(event) {
   if (response?.ok) {
     latestChatDraft = response.draft;
     renderChatPanel(response.draft);
-  } else {
-    latestChatDraft = null;
+    return;
+  }
+
+  latestChatDraft = null;
+
+  if (await askMetadataAgent(text)) {
+    return;
+  }
+
+  renderChatPanel({
+    status: "error",
+    answer: response?.error || msg("couldNotBuildSafeAction")
+  });
+}
+
+async function askMetadataAgent(text) {
+  renderChatPanel({
+    status: "loading",
+    answer: msg("askingAIAgent")
+  });
+
+  setBusy(true);
+
+  let response;
+  try {
+    response = await chrome.runtime.sendMessage({
+      type: "ASK_TAB_AGENT",
+      text
+    });
+  } catch (error) {
+    setBusy(false);
     renderChatPanel({
       status: "error",
-      answer: response?.error || msg("couldNotBuildSafeAction")
+      answer: error?.message || msg("couldNotBuildSafeAction")
     });
+    chatInput.value = "";
+    return true;
   }
+
+  setBusy(false);
+
+  if (response?.ok && response.result?.status === "answered") {
+    renderChatPanel({
+      ...response.result,
+      status: "ai-agent"
+    });
+    chatInput.value = "";
+    return true;
+  }
+
+  if (response?.ok && ["not-configured", "no-context"].includes(response.result?.status)) {
+    return false;
+  }
+
+  if (response?.ok && response.result?.status === "fallback") {
+    renderChatPanel({
+      status: "error",
+      answer: msg("agentAIAnswerFailed", [response.result.error || msg("scanDidNotFinish")])
+    });
+    chatInput.value = "";
+    return true;
+  }
+
+  renderChatPanel({
+    status: "error",
+    answer: response?.error || msg("couldNotBuildSafeAction")
+  });
+  chatInput.value = "";
+  return true;
 }
 
 async function handleAgentCommand(text) {
@@ -1756,6 +1818,10 @@ function renderChatPanelContent(draft) {
     return renderOptimizationCard(draft);
   }
 
+  if (draft.status === "ai-agent") {
+    return renderAIAgentCard(draft);
+  }
+
   if (["loading", "error", "applied", "info"].includes(draft.status)) {
     return `
       <p class="chat-answer">${escapeHtml(draft.answer || "")}</p>
@@ -1781,6 +1847,29 @@ function renderChatPanelContent(draft) {
     <div class="chat-action-row">
       <button class="primary-button" type="button" data-chat-action="apply" data-draft-id="${escapeHtml(draft.id || "")}">${escapeHtml(msg("apply"))}</button>
       <button class="secondary-button" type="button" data-chat-action="cancel" data-draft-id="${escapeHtml(draft.id || "")}">${escapeHtml(msg("cancel"))}</button>
+    </div>
+  `;
+}
+
+function renderAIAgentCard(draft) {
+  const tabs = Array.isArray(draft.matchedTabs) ? draft.matchedTabs : [];
+  const nextSteps = Array.isArray(draft.nextSteps) ? draft.nextSteps : [];
+
+  return `
+    <article class="ai-agent-card">
+      <p class="chat-answer">${escapeHtml(draft.answer || "")}</p>
+      ${tabs.length ? renderChatMatchedTabs(tabs, draft.matchedTabCount, { showOpenAction: true }) : ""}
+      ${nextSteps.length ? renderAIAgentNextSteps(nextSteps) : ""}
+      <small class="agent-privacy-note">${escapeHtml(msg("agentMetadataPrivacy"))}</small>
+    </article>
+  `;
+}
+
+function renderAIAgentNextSteps(nextSteps) {
+  return `
+    <div class="chat-action-summary">
+      <span>${escapeHtml(msg("suggestedNextSteps"))}</span>
+      <small>${escapeHtml(nextSteps.join(" · "))}</small>
     </div>
   `;
 }
@@ -1836,7 +1925,7 @@ function appendUserChatMessage(text) {
 function appendChatMessage(message) {
   const previous = chatMessages[chatMessages.length - 1];
 
-  if (message.status !== "loading" && previous?.role === "assistant" && previous.status === "loading") {
+  if (previous?.role === "assistant" && previous.status === "loading") {
     chatMessages[chatMessages.length - 1] = message;
   } else {
     chatMessages.push(message);

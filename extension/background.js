@@ -33,6 +33,8 @@ const DEFAULT_AI_SETTINGS = {
 const SUPPORTED_AI_HOSTNAME = "api.deepseek.com";
 const AI_CONNECTION_TIMEOUT_MS = 8000;
 const AI_CLASSIFICATION_TIMEOUT_MS = 12000;
+const AI_AGENT_TIMEOUT_MS = 12000;
+const MAX_AI_AGENT_TABS = 80;
 const NO_GROUP_ID = -1;
 const SENSITIVE_SUMMARY_TERMS = [
   "admin",
@@ -149,6 +151,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     previewChatRefine(message)
       .then((draft) => sendResponse({ ok: true, draft }))
       .catch((error) => sendErrorResponse(sendResponse, "PREVIEW_CHAT_REFINE", error));
+    return true;
+  }
+
+  if (message.type === "ASK_TAB_AGENT") {
+    askTabAgent(message)
+      .then((result) => sendResponse({ ok: true, result }))
+      .catch((error) => sendErrorResponse(sendResponse, "ASK_TAB_AGENT", error));
     return true;
   }
 
@@ -549,6 +558,139 @@ async function callOpenAICompatibleClassifier(settings, tabs, options = {}) {
   return JSON.parse(content);
 }
 
+async function callOpenAICompatibleTabAgent(settings, { instruction, state, language }, options = {}) {
+  const baseUrl = normalizeAIBaseUrl(settings.baseUrl);
+  const timeoutMs = Number(options.timeoutMs || settings.agentTimeoutMs || AI_AGENT_TIMEOUT_MS);
+  const response = await fetchWithTimeout(
+    `${baseUrl}/chat/completions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${settings.apiKey}`
+      },
+      body: JSON.stringify({
+        model: settings.model || DEFAULT_AI_SETTINGS.model,
+        response_format: { type: "json_object" },
+        max_tokens: 900,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are TabMosaic's sidebar Tab Agent. Answer browser tab management questions using only the provided tab metadata and current group state. Do not claim you read page bodies. Do not mention full URLs. Do not invent tabIds. Do not apply actions. Do not say you closed, moved, or changed tabs. If the user asks for destructive action, explain that confirmation is required. Return only valid JSON."
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              userMessage: instruction,
+              language,
+              privacyNote:
+                "Input contains tab title, hostname, path, window id, protected state, current group state, and duplicate-review counts only. No page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, chat history, summaries, or cloud memory is included.",
+              schema: {
+                answer: "short conversational answer",
+                relevantTabIds: [123],
+                suggestedNextSteps: ["short safe suggestion"],
+                confidence: 0.0
+              },
+              state
+            })
+          }
+        ]
+      })
+    },
+    timeoutMs,
+    "AI Agent answer timed out"
+  );
+
+  if (!response.ok) {
+    throw new Error(`AI Agent answer failed (${response.status})`);
+  }
+
+  const data = await response.json();
+  const content = data?.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("AI Agent returned no content");
+  }
+
+  return JSON.parse(content);
+}
+
+function validateAIAgentAnswer(output, state) {
+  const answer = String(output?.answer || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 1000);
+
+  if (!answer) {
+    throw new Error("AI Agent returned an empty answer");
+  }
+
+  const tabById = new Map((state.tabs || []).map((tab) => [tab.tabId, tab]));
+  const relevantTabIds = extractAIAgentRelevantTabIds(output)
+    .filter((tabId) => tabById.has(tabId))
+    .slice(0, 8);
+  const nextSteps = (Array.isArray(output?.suggestedNextSteps) ? output.suggestedNextSteps : [])
+    .map((step) => String(step || "").replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((step) => step.slice(0, 160));
+
+  return {
+    status: "answered",
+    provider: "deepseek",
+    answer: addAIAgentSafetyNoteIfNeeded(answer),
+    matchedTabs: relevantTabIds.map((tabId) => buildAIAgentMatchedTab(tabById.get(tabId))),
+    matchedTabCount: relevantTabIds.length,
+    nextSteps,
+    confidence: clamp(Number(output?.confidence || 0.6), 0, 1),
+    privacy: {
+      sentTabMetadata: true,
+      sentPageText: false,
+      sentFullUrls: false
+    }
+  };
+}
+
+function extractAIAgentRelevantTabIds(output) {
+  const fromIds = Array.isArray(output?.relevantTabIds) ? output.relevantTabIds : [];
+  const fromTabs = Array.isArray(output?.relevantTabs)
+    ? output.relevantTabs.map((tab) => tab?.tabId ?? tab?.id)
+    : [];
+  const seen = new Set();
+  const ids = [];
+
+  for (const value of [...fromIds, ...fromTabs]) {
+    const id = Number(value);
+    if (!Number.isInteger(id) || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+
+  return ids;
+}
+
+function buildAIAgentMatchedTab(tab) {
+  return {
+    id: tab.tabId,
+    title: tab.title,
+    hostname: tab.hostname,
+    path: tab.path,
+    windowId: tab.windowId,
+    active: tab.active,
+    pinned: tab.pinned,
+    audible: tab.audible
+  };
+}
+
+function addAIAgentSafetyNoteIfNeeded(answer) {
+  if (!/\b(i\s+(closed|moved|changed|deleted)|i'?ll\s+(close|move|delete)|closing now|moving now)\b/i.test(answer)) {
+    return answer;
+  }
+
+  return `${answer} No browser changes have been applied from this answer.`;
+}
+
 async function fetchWithTimeout(url, options = {}, timeoutMs, timeoutMessage) {
   const ms = Number(timeoutMs);
   if (!Number.isFinite(ms) || ms <= 0) {
@@ -807,6 +949,130 @@ async function previewChatRefine(message) {
 
   await chrome.storage.local.set({ [CHAT_DRAFT_KEY]: draft });
   return draft;
+}
+
+async function askTabAgent(message = {}) {
+  const instruction = normalizeInstruction(message.text);
+
+  if (!instruction) {
+    throw new Error("Ask TabMosaic something about the latest tab context.");
+  }
+
+  const settings = await getAISettings();
+
+  if (!settings.enabled || !settings.apiKey) {
+    return { status: "not-configured" };
+  }
+
+  const run = await getCurrentRun();
+  const state = buildAIAgentState(run);
+
+  if (!state.tabs.length) {
+    return { status: "no-context" };
+  }
+
+  try {
+    const output = await callOpenAICompatibleTabAgent(settings, {
+      instruction,
+      state,
+      language: isChineseInstruction(instruction) ? "zh-CN" : "en"
+    });
+    return validateAIAgentAnswer(output, state);
+  } catch (error) {
+    return {
+      status: "fallback",
+      error: normalizeError(error).slice(0, 120)
+    };
+  }
+}
+
+function buildAIAgentState(run) {
+  const tabs = sanitizeAIAgentTabs(run?.snapshot?.tabs || []);
+  const tabGroupNameById = buildAIAgentTabGroupMap(run);
+
+  return {
+    summary: sanitizeAIAgentSummary(run?.summary || {}),
+    groups: sanitizeAIAgentGroups(run?.groups || []),
+    duplicateReview: sanitizeAIAgentDuplicateReview(run?.duplicateGroups || []),
+    tabs: tabs.map((tab) => ({
+      ...tab,
+      groupName: tabGroupNameById.get(tab.tabId) || ""
+    }))
+  };
+}
+
+function buildAIAgentTabGroupMap(run) {
+  const map = new Map();
+
+  for (const group of Array.isArray(run?.groups) ? run.groups : []) {
+    const name = String(group?.name || "").slice(0, 80);
+    for (const tabId of Array.isArray(group?.tabIds) ? group.tabIds : []) {
+      if (Number.isInteger(Number(tabId)) && name) {
+        map.set(Number(tabId), name);
+      }
+    }
+  }
+
+  return map;
+}
+
+function sanitizeAIAgentSummary(summary) {
+  return {
+    tabCount: nonNegativeInt(summary.tabCount),
+    windowCount: nonNegativeInt(summary.windowCount),
+    groupsCreated: nonNegativeInt(summary.groupsCreated),
+    tabsMoved: nonNegativeInt(summary.tabsMoved),
+    safeDuplicatesClosed: nonNegativeInt(summary.safeDuplicatesClosed),
+    reviewDuplicateGroups: nonNegativeInt(summary.reviewDuplicateGroups),
+    aiClassificationStatus: String(summary.aiClassificationStatus || "not-configured").slice(0, 60),
+    userRulesApplied: nonNegativeInt(summary.userRulesApplied)
+  };
+}
+
+function sanitizeAIAgentGroups(groups) {
+  return (Array.isArray(groups) ? groups : []).slice(0, 20).map((group) => ({
+    name: String(group?.name || "Untitled Group").slice(0, 80),
+    color: SUPPORTED_GROUP_COLORS.has(group?.color) ? group.color : "grey",
+    tabCount: nonNegativeInt(group?.tabCount),
+    tabIds: Array.isArray(group?.tabIds)
+      ? group.tabIds.map((tabId) => Number(tabId)).filter(Number.isInteger).slice(0, 80)
+      : [],
+    reason: String(group?.reason || "").slice(0, 120)
+  }));
+}
+
+function sanitizeAIAgentDuplicateReview(duplicateGroups) {
+  return (Array.isArray(duplicateGroups) ? duplicateGroups : [])
+    .filter((group) => group?.action === "review" && group?.reviewStatus !== "kept")
+    .slice(0, 12)
+    .map((group) => ({
+      type: String(group?.type || "duplicate").slice(0, 40),
+      label: String(group?.label || "Duplicate candidates").slice(0, 120),
+      tabCount: nonNegativeInt(group?.tabCount || group?.tabIds?.length),
+      tabIds: Array.isArray(group?.tabIds)
+        ? group.tabIds.map((tabId) => Number(tabId)).filter(Number.isInteger).slice(0, 20)
+        : []
+    }));
+}
+
+function sanitizeAIAgentTabs(tabs) {
+  return (Array.isArray(tabs) ? tabs : [])
+    .filter((tab) => Number.isInteger(Number(tab?.id)))
+    .slice(0, MAX_AI_AGENT_TABS)
+    .map((tab) => ({
+      tabId: Number(tab.id),
+      title: String(tab.title || "Untitled").slice(0, 160),
+      hostname: String(tab.hostname || "").slice(0, 120),
+      path: String(tab.path || "").slice(0, 160),
+      windowId: Number.isInteger(Number(tab.windowId)) ? Number(tab.windowId) : 0,
+      active: Boolean(tab.active),
+      pinned: Boolean(tab.pinned),
+      audible: Boolean(tab.audible),
+      discarded: Boolean(tab.discarded),
+      protectedReasons: Array.isArray(tab.protectedReasons)
+        ? tab.protectedReasons.map((reason) => String(reason).slice(0, 32)).slice(0, 4)
+        : []
+    }));
 }
 
 async function applyChatRefine(message) {

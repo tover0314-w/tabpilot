@@ -5,6 +5,7 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const SHOULD_RUN_DEEPSEEK = process.argv.includes("--deepseek");
 const SHOULD_RUN_DEEPSEEK_FIXTURE = process.argv.includes("--deepseek-fixture");
 const SHOULD_RUN_RUNTIME = process.argv.includes("--runtime");
+const SHOULD_RUN_AGENT_FLOW = process.argv.includes("--agent-flow");
 const SHOULD_RUN_LARGE_RUNTIME = process.argv.includes("--large-runtime");
 const SHOULD_RUN_SCREENSHOTS = process.argv.includes("--screenshots");
 
@@ -54,6 +55,12 @@ function main() {
     runStep("Chrome runtime smoke", process.execPath, ["tools/chrome_runtime_smoke_test.js"]);
   } else {
     console.log("SKIP Chrome runtime smoke; pass --runtime to run it.");
+  }
+
+  if (SHOULD_RUN_AGENT_FLOW) {
+    runStep("Chrome DeepSeek Agent flow", process.execPath, ["tools/chrome_runtime_smoke_test.js", "--agent-flow"]);
+  } else {
+    console.log("SKIP Chrome DeepSeek Agent flow; pass --agent-flow to run it.");
   }
 
   if (SHOULD_RUN_LARGE_RUNTIME) {

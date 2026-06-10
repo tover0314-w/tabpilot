@@ -47,6 +47,21 @@ Context: [Current Tab] [Selected Tabs] [Current Group] [Current Window] [All Win
 相关 tabs
 ```
 
+Implementation status:
+
+```text
+CONFIRMED BY IMPLEMENTATION:
+- Current tab summary / question path is user-triggered.
+- Sensitive-looking pages ask for confirmation before visible text is read.
+- Page answers render inside the Sidebar message flow.
+- DeepSeek currently answers open-ended tab-management questions from minimized tab metadata only.
+- DeepSeek does not receive current-page body text in the private-beta Agent path.
+
+DO NOT BUILD YET WITHOUT CONFIRMATION:
+- Cloud AI page-body upload for current tab Q&A.
+- Multi-tab page-body reading or upload.
+```
+
 ## 5. Selected Tabs Chat
 
 用户可以问：

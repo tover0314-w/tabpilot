@@ -53,6 +53,9 @@ Coverage:
 - Side panel composer answers duplicate review queue and closed duplicate restore questions from latest local run state / local restore state without rendering full restore URLs
 - Side panel composer answers active-tab, protected-tab, and read-later candidate questions from the latest sanitized local run snapshot
 - Side panel composer finds tabs from the latest local snapshot and focuses an existing matching tab through the existing focus action
+- Side panel composer falls back to DeepSeek metadata-only Agent answers after direct commands, local status answers, tab search, and safe local chat-refine drafts do not match
+- DeepSeek metadata-only Agent answers send title, hostname, path, tab state, group state, and duplicate-review counts only; they do not send page body, full URLs, restore URLs, favicon URLs, browser history, chat history, or saved workspace contents
+- DeepSeek metadata-only Agent output filters invented tab IDs and renders optional relevant tabs without applying browser actions automatically
 - Dashboard default page opens directly to Smart Groups and does not show Latest Result, timestamp, Current Workspace card, or result metrics area
 - Dashboard Smart Groups filter chips render All / AI groups / Rule groups views and localized empty states
 - Dashboard Smart Groups keep first rows compact while expandable `+ N tabs` rows reveal remaining local tab rows and actions
@@ -105,8 +108,10 @@ Optional runtime smoke test:
 
 ```bash
 node tools/preflight.js --runtime
+node tools/preflight.js --agent-flow
 node tools/preflight.js --large-runtime
 node tools/chrome_runtime_smoke_test.js
+node tools/chrome_runtime_smoke_test.js --agent-flow
 node tools/chrome_runtime_smoke_test.js --large-tabs
 node tools/open_manual_qa_profile.js --dry-run
 node tools/open_manual_qa_profile.js --self-test
@@ -115,6 +120,8 @@ node tools/open_manual_qa_profile.js --self-test
 The runtime script uses a temporary browser profile and synthetic tabs. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome.
 
 Runtime coverage includes one-click organize, safe duplicate close, Restore Closed, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, Dashboard drag/drop tab assignment into an existing native group, Dashboard tab focus, Dashboard local workspace save/delete, Dashboard Duplicate Center tab focus, Dashboard Restore Closed, Dashboard Undo, and real Sidebar composer command submission for Open Dashboard, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, local workspace save command, next-step answer, current-page chat summary response, current-page question rendering, Restore Closed, Undo, Organize Again, group-status answer, AI-status answer, duplicate-review answer, closed-duplicate answer, active-tab answer, protected-tab answer, read-later candidate answer, tab search, and opening a matching existing tab.
+
+The optional DeepSeek Agent-flow runtime check opens a temporary Chrome profile with synthetic URLs, enables DeepSeek only inside temporary extension storage, submits an open-ended tab-management question through the real Sidebar composer, and verifies that the metadata-only Agent answer renders as a normal assistant message card with privacy note, relevant tab rows, and safe next-step suggestions. It does not read the user's real Chrome profile, real browser tabs, page text, or full URLs, and it does not apply browser actions automatically from the AI answer.
 
 The optional large-tab runtime probe opens a temporary Chrome profile with synthetic URLs only and verifies the real native tab group path against 96 tabs by default. It checks organize completion, moved tabs, safe duplicate closes, review duplicate groups, expected group titles, bounded runtime, and sanitized run snapshots. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 

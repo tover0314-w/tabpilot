@@ -7,8 +7,12 @@ const path = require("path");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 const EXTENSION_DIR = path.join(ROOT_DIR, "extension");
+const ENV_PATH = path.join(ROOT_DIR, ".env.local");
 const SHOULD_RUN_LARGE_TABS = process.argv.includes("--large-tabs");
+const SHOULD_RUN_AGENT_FLOW = process.argv.includes("--agent-flow");
 const LARGE_TAB_COUNT = Number(process.env.TABMOSAIC_LARGE_TAB_COUNT || 96);
+const DEFAULT_AI_BASE_URL = "https://api.deepseek.com";
+const DEFAULT_AI_MODEL = "deepseek-v4-flash";
 const TEST_URLS = [
   "https://github.com/acme/app/pull/42",
   "https://github.com/acme/app/pull/43",
@@ -112,6 +116,11 @@ async function main() {
       assert(groupTitles.includes("Code Review"), `Missing Code Review group: ${groupTitles.join(", ")}`);
       assert(groupTitles.includes("Chrome Extension Docs"), `Missing Chrome Extension Docs group: ${groupTitles.join(", ")}`);
       assert(groupTitles.includes("Docs & Notes"), `Missing Docs & Notes group: ${groupTitles.join(", ")}`);
+
+      if (SHOULD_RUN_AGENT_FLOW) {
+        await runDeepSeekAgentFlow(cdp);
+        return;
+      }
 
       const tabsBeforeDashboardCommand = await evaluate(cdp, "chrome.tabs.query({})");
       await submitSidepanelComposer(cdp, "open dashboard");
@@ -714,6 +723,70 @@ async function main() {
   }
 }
 
+async function runDeepSeekAgentFlow(cdp) {
+  const aiSettings = getDeepSeekSettingsFromEnv();
+
+  await evaluate(
+    cdp,
+    `chrome.storage.local.set({
+      "tabmosaic.aiSettings": {
+        enabled: true,
+        provider: "deepseek",
+        baseUrl: ${JSON.stringify(aiSettings.baseUrl)},
+        model: ${JSON.stringify(aiSettings.model)},
+        apiKey: ${JSON.stringify(aiSettings.apiKey)}
+      }
+    })`
+  );
+
+  await submitSidepanelComposer(cdp, "Which tabs should I focus on for Chrome extension planning?");
+
+  let agentAnswer;
+  try {
+    agentAnswer = await waitFor(async () => {
+      return evaluate(
+        cdp,
+        `(() => {
+          const messages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.ai-agent"));
+          const latest = messages[messages.length - 1];
+          const text = latest?.textContent || "";
+
+          if (!latest || /could not get an AI tab answer|没能拿到 AI 标签页回答/i.test(text)) {
+            return null;
+          }
+
+          return {
+            text,
+            hasCard: Boolean(latest.querySelector(".ai-agent-card")),
+            hasPrivacyNote: /Page text and full URLs were not sent|页面正文或完整 URL/.test(text),
+            tabRows: latest.querySelectorAll(".chat-tab-row").length,
+            nextSteps: /Suggested next steps|建议下一步/.test(text)
+          };
+        })()`
+      );
+    }, "Sidebar DeepSeek Agent flow did not return an assistant metadata answer", 30000);
+  } catch (error) {
+    const chatDebug = await evaluate(
+      cdp,
+      `(() => Array.from(document.querySelectorAll("#chatPanel .chat-thread-message"))
+        .slice(-6)
+        .map((node) => ({
+          className: node.className,
+          text: (node.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 260)
+        })))()`
+    );
+    throw new Error(`${error.message}. Last chat messages: ${JSON.stringify(chatDebug)}`);
+  }
+
+  assert(agentAnswer.hasCard, "DeepSeek Agent answer did not render as an assistant card");
+  assert(agentAnswer.hasPrivacyNote, "DeepSeek Agent answer did not disclose metadata-only privacy boundary");
+  assert(!/fullUrl|restoreUrl|pageText|token=abc/i.test(agentAnswer.text), "DeepSeek Agent answer leaked sensitive field names or fixture token text");
+
+  console.log(
+    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
+  );
+}
+
 async function runLargeTabsRuntimeProbe(port, extensionId) {
   const testUrls = buildLargeRuntimeUrls(LARGE_TAB_COUNT);
 
@@ -799,6 +872,63 @@ function buildLargeRuntimeUrls(tabCount) {
   }
 
   return urls;
+}
+
+function getDeepSeekSettingsFromEnv() {
+  const env = readEnv();
+  const apiKey = normalizeApiKey(env.DEEPSEEK_API_KEY || env.OPENAI_COMPATIBLE_API_KEY || "");
+
+  if (!apiKey) {
+    throw new Error("Missing DEEPSEEK_API_KEY in .env.local or environment for --agent-flow.");
+  }
+
+  return {
+    apiKey,
+    baseUrl: String(env.DEEPSEEK_BASE_URL || env.OPENAI_COMPATIBLE_BASE_URL || DEFAULT_AI_BASE_URL).trim() || DEFAULT_AI_BASE_URL,
+    model: String(env.DEEPSEEK_MODEL || env.OPENAI_COMPATIBLE_MODEL || DEFAULT_AI_MODEL).trim() || DEFAULT_AI_MODEL
+  };
+}
+
+function readEnv() {
+  const fileEnv = {};
+
+  if (fs.existsSync(ENV_PATH)) {
+    const lines = fs.readFileSync(ENV_PATH, "utf8").split(/\r?\n/);
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+
+      const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+      if (!match) continue;
+
+      fileEnv[match[1]] = unquoteEnvValue(match[2].trim());
+    }
+  }
+
+  return {
+    ...fileEnv,
+    ...process.env
+  };
+}
+
+function unquoteEnvValue(value) {
+  const trimmed = String(value || "").trim();
+
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+
+  return trimmed;
+}
+
+function normalizeApiKey(value) {
+  return String(value || "")
+    .trim()
+    .replace(/[;\s]+$/g, "");
 }
 
 function findChromePath() {

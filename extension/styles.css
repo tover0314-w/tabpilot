@@ -428,6 +428,17 @@ p {
   line-height: 1.4;
 }
 
+.ai-agent-card {
+  display: grid;
+  gap: 9px;
+}
+
+.agent-privacy-note {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .chat-tabs {
   display: grid;
   gap: 6px;

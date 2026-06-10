@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.103 — 2026-06-10
+
+Changed:
+
+- Added a DeepSeek-powered Sidebar metadata Agent fallback for open-ended tab-management questions.
+- The Agent path runs only after direct commands, local read-only answers, tab search, and safe local Chat Refine drafts do not match.
+- AI Agent answers render as ordinary assistant message cards with optional relevant tab rows and safe next-step suggestions.
+- Dashboard AI settings copy now reflects that DeepSeek can support both AI classification and metadata-only Agent answers.
+
+Safety:
+
+- The metadata Agent sends only minimized current run metadata: tab title, hostname, path, window id, tab state, group state, and duplicate-review counts.
+- It does not send page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, chat history, summaries, or cloud memory.
+- AI output is validated before rendering: invented tab IDs are ignored and no browser actions are applied automatically.
+- Current-page body upload to cloud AI remains `DO NOT BUILD YET WITHOUT CONFIRMATION`.
+
 ## v0.102 — 2026-06-10
 
 Changed:

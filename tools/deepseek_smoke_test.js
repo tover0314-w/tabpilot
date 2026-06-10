@@ -188,7 +188,7 @@ async function classifySyntheticFixture({ baseUrl, apiKey, model }) {
     throw new Error("DeepSeek chat/completions fixture returned no content.");
   }
 
-  const parsed = JSON.parse(content);
+  const parsed = parseJsonObject(content);
   const validTabIds = new Set(fixtureTabs.map((tab) => tab.tabId));
   const groups = Array.isArray(parsed?.groups) ? parsed.groups : [];
   let assignedTabs = 0;
@@ -207,6 +207,64 @@ async function classifySyntheticFixture({ baseUrl, apiKey, model }) {
     groupCount: groups.length,
     assignedTabs
   };
+}
+
+function parseJsonObject(content) {
+  const text = String(content || "").trim();
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    const extracted = extractFirstJsonObject(text);
+    if (!extracted) {
+      throw new Error("DeepSeek chat/completions fixture returned invalid JSON.");
+    }
+
+    return JSON.parse(extracted);
+  }
+}
+
+function extractFirstJsonObject(text) {
+  const value = String(text || "");
+  const start = value.indexOf("{");
+
+  if (start === -1) return "";
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start; index < value.length; index += 1) {
+    const char = value[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === "{") {
+      depth += 1;
+    } else if (char === "}") {
+      depth -= 1;
+
+      if (depth === 0) {
+        return value.slice(start, index + 1);
+      }
+    }
+  }
+
+  return "";
 }
 
 function normalizeBaseUrl(value) {

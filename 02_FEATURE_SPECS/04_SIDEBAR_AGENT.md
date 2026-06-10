@@ -228,6 +228,20 @@ Current optimization answer behavior:
 - offers safe next-step buttons: Groups, Restore Closed, Review duplicates, Dashboard when relevant
 ```
 
+DeepSeek metadata Agent first slice:
+
+```text
+- if direct commands, read-only status answers, tab search, and local chat-refine drafts do not match
+- and DeepSeek is enabled with a local API key
+- Sidebar can ask DeepSeek for a conversational tab-management answer
+- input is minimized current run metadata only: tab title, hostname, path, window id, active/pinned/audible state, group state, duplicate review counts
+- no page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, chat history, or cloud memory is sent
+- output renders as an assistant message card with optional relevant tab rows and safe next-step suggestions
+- output does not automatically move, close, rename, save, or read tabs
+- invented tab IDs are filtered out before rendering
+- provider failure falls back to the existing local command/action flow
+```
+
 Supported actions:
 
 ```text
@@ -238,6 +252,7 @@ Supported actions:
 - answer latest run status, groups, duplicate handling, duplicate review queue, closed duplicate tabs, AI status, active-tab state, protected-tab state, and possible read-later candidates from local run state only
 - answer “what should I do next / 下一步” from local organize state, prioritizing duplicate review before restore/use-group guidance
 - find matching tabs from the latest local snapshot and focus an existing tab with explicit Open
+- answer open-ended tab-management questions with DeepSeek from minimized tab metadata only when enabled
 ```
 
 Rules created from chat are stored locally and appear in Dashboard → Rules & Memory.

@@ -376,6 +376,12 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("await saveCurrentWorkspace()"), "Chat command should support local workspace save");
   assert(sidepanelJs.includes("isSaveWorkspaceCommand(normalized)"), "Save workspace commands should be recognized before chat refine");
   assert(sidepanelJs.includes('type: "SAVE_CURRENT_WORKSPACE"'), "Sidepanel save workspace should use the background action");
+  assert(sidepanelJs.includes("function askMetadataAgent"), "Sidepanel should fall back to metadata-only AI Agent answers");
+  assert(sidepanelJs.indexOf('type: "PREVIEW_CHAT_REFINE"') < sidepanelJs.indexOf('type: "ASK_TAB_AGENT"'), "Safe local action drafts should run before AI Agent open answers");
+  assert(sidepanelJs.includes('status: "ai-agent"'), "AI Agent answers should render as assistant messages");
+  assert(sidepanelJs.includes("function renderAIAgentCard"), "AI Agent answers should use a simple assistant message card");
+  assert(sidepanelJs.includes("agentMetadataPrivacy"), "AI Agent answers should disclose metadata-only context");
+  assert(sidepanelJs.includes("renderAIAgentNextSteps"), "AI Agent answers should show safe next-step suggestions without applying actions");
   assert(css.includes(".run-message-card"), "Latest organize message card should have scoped styling");
   assert(css.includes(".run-message-heading"), "Latest organize message heading should have scoped styling");
   assert(css.includes(".tab-agent-shell .chat-panel"), "Chat panel should be a plain message stream in the side panel");
@@ -383,6 +389,7 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(css.includes(".chat-thread-message.user"), "User chat messages should have scoped styling");
   assert(css.includes(".chat-thread-message.assistant"), "Assistant chat messages should have scoped styling");
   assert(css.includes(".chat-summary-card"), "Current-page summary chat message should have scoped styling");
+  assert(css.includes(".ai-agent-card"), "AI Agent answer should remain a simple message card");
   assert(css.includes(".chat-summary-question"), "Current-page question should have scoped chat styling");
   assert(css.includes("backdrop-filter: blur"), "Minimal UI should use glass blur styling");
   assert(en.tabAgentTitle?.message && zh.tabAgentTitle?.message, "Tab Agent title should be localized");
@@ -404,6 +411,10 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(en.agentFindTabsAnswer?.message && zh.agentFindTabsAnswer?.message, "Tab search answer copy should be localized");
   assert(en.agentCommandSaveWorkspace?.message && zh.agentCommandSaveWorkspace?.message, "Save workspace command copy should be localized");
   assert(en.agentWorkspaceSaved?.message && zh.agentWorkspaceSaved?.message, "Saved workspace result copy should be localized");
+  assert(en.askingAIAgent?.message && zh.askingAIAgent?.message, "Metadata AI Agent loading copy should be localized");
+  assert(en.agentAIAnswerFailed?.message && zh.agentAIAnswerFailed?.message, "Metadata AI Agent failure copy should be localized");
+  assert(en.agentMetadataPrivacy?.message && zh.agentMetadataPrivacy?.message, "Metadata AI Agent privacy copy should be localized");
+  assert(en.suggestedNextSteps?.message && zh.suggestedNextSteps?.message, "Metadata AI Agent next-step copy should be localized");
   assert(en.moreBrowserDetails?.message && zh.moreBrowserDetails?.message, "Folded detail summary should be localized");
 });
 
@@ -1407,6 +1418,113 @@ test("AI classification request sends minimized tab metadata only", async () => 
   assert(bodyText.includes("No page body or full URL"), "AI payload should include privacy note");
 });
 
+test("AI Agent metadata answer sends minimized tab context only", async () => {
+  const fetchCalls = [];
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: "This looks like product planning. Review the active tab first.",
+                  relevantTabIds: [51, 999, 51],
+                  suggestedNextSteps: ["Open Dashboard", "Ask page if you need page content"],
+                  confidence: 0.82
+                })
+              }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const state = context.buildAIAgentState({
+    summary: {
+      tabCount: 1,
+      groupsCreated: 1,
+      tabsMoved: 1,
+      safeDuplicatesClosed: 0,
+      reviewDuplicateGroups: 0,
+      aiClassificationStatus: "applied"
+    },
+    groups: [
+      {
+        name: "Product Planning",
+        color: "blue",
+        tabCount: 1,
+        tabIds: [51],
+        reason: "Synthetic group"
+      }
+    ],
+    duplicateGroups: [],
+    snapshot: {
+      tabs: [
+        {
+          id: 51,
+          title: "Private PRD draft",
+          hostname: "docs.example",
+          path: "/private-prd",
+          fullUrl: "https://docs.example/private-prd?token=abc",
+          restoreUrl: "https://docs.example/private-prd?token=abc",
+          pageText: "Confidential page body",
+          windowId: 2,
+          active: true,
+          pinned: false,
+          audible: false,
+          discarded: false,
+          protectedReasons: []
+        }
+      ]
+    }
+  });
+
+  const output = await context.callOpenAICompatibleTabAgent(
+    {
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-v4-flash",
+      apiKey: "sk-secret"
+    },
+    {
+      instruction: "Which tab should I review first?",
+      state,
+      language: "en"
+    }
+  );
+  const validated = context.validateAIAgentAnswer(output, state);
+
+  assertEqual(fetchCalls.length, 1, "AI Agent fetch call count");
+  assertEqual(fetchCalls[0].url, "https://api.deepseek.com/chat/completions", "AI Agent endpoint");
+  assert(fetchCalls[0].options.signal, "AI Agent fetch should carry an abort signal");
+
+  const bodyText = fetchCalls[0].options.body || "";
+  const body = JSON.parse(bodyText);
+  const userContent = JSON.parse(body.messages[1].content);
+  const firstTab = userContent.state.tabs[0];
+
+  assertEqual(firstTab.tabId, 51, "AI Agent payload should include tab id");
+  assertEqual(firstTab.title, "Private PRD draft", "AI Agent payload should include title");
+  assertEqual(firstTab.hostname, "docs.example", "AI Agent payload should include hostname");
+  assertEqual(firstTab.path, "/private-prd", "AI Agent payload should include path");
+  assertEqual(firstTab.groupName, "Product Planning", "AI Agent payload should include current group context");
+  assert(!("fullUrl" in firstTab), "AI Agent payload must not include fullUrl field");
+  assert(!("restoreUrl" in firstTab), "AI Agent payload must not include restoreUrl field");
+  assert(!("pageText" in firstTab), "AI Agent payload must not include pageText field");
+  assert(!bodyText.includes("https://docs.example/private-prd?token=abc"), "AI Agent payload must not include full URL");
+  assert(!bodyText.includes("token=abc"), "AI Agent payload must not include URL query token");
+  assert(!bodyText.includes("Confidential page body"), "AI Agent payload must not include page text");
+  assert(bodyText.includes("No page body, full URL"), "AI Agent payload should include privacy note");
+  assertEqual(validated.status, "answered", "AI Agent answer should validate");
+  assertEqual(validated.matchedTabs.length, 1, "AI Agent validation should drop invented and duplicate tab ids");
+  assertEqual(validated.matchedTabs[0].id, 51, "AI Agent validation should keep real tab ids");
+  assertEqual(validated.privacy.sentPageText, false, "AI Agent validation should report no page text upload");
+  assertEqual(validated.privacy.sentFullUrls, false, "AI Agent validation should report no full URL upload");
+});
+
 test("AI classification timeout falls back to local rules", async () => {
   let aborted = false;
   context.fetch = async (url, options = {}) =>
@@ -1603,6 +1721,8 @@ test("DeepSeek smoke test stays inside private beta provider guardrails", () => 
   assert(deepseekSmoke.includes("function fetchWithTimeout"), "DeepSeek smoke should use bounded network calls");
   assert(deepseekSmoke.includes("AbortController"), "DeepSeek smoke should abort slow provider requests");
   assert(deepseekSmoke.includes("function normalizeApiKey"), "DeepSeek smoke should normalize pasted local API keys without printing them");
+  assert(deepseekSmoke.includes("function parseJsonObject"), "DeepSeek smoke should tolerate wrapped JSON responses before validation");
+  assert(deepseekSmoke.includes("function extractFirstJsonObject"), "DeepSeek smoke should extract JSON without printing model output");
   assert(deepseekSmoke.includes("Synthetic fixture only. No real browser tabs"), "DeepSeek fixture should document that it sends only synthetic tab data");
   assert(!deepseekSmoke.includes("console.log(apiKey"), "DeepSeek smoke must not print API keys");
 });

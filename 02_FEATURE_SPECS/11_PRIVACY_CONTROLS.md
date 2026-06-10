@@ -80,6 +80,8 @@ An individual saved workspace snapshot can be deleted from Dashboard after brows
 
 Current-tab summary reads visible page text only after the user clicks Summarize Current Tab. For sensitive contexts such as bank, billing, health, medical, password, admin, Stripe, AWS, Cloudflare, internal, or localhost pages, the sidebar asks for an extra confirmation before the background script executes content extraction. If the user cancels, no page body is read.
 
+Sidebar metadata Agent answers use the locally saved DeepSeek key only when the user has enabled AI. This path sends minimized current run metadata only: tab title, hostname, path, window id, active/pinned/audible/discarded state, current group state, and duplicate-review counts. It must not send page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, chat history, or cloud memory. The answer is rendered as a chat message and does not apply browser actions automatically.
+
 ## 6. Sensitive Sites
 
 内置敏感域名提示：

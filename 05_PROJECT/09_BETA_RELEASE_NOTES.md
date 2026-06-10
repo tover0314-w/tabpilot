@@ -41,6 +41,7 @@ Click extension icon
 - Current-page summary and local page questions return inside the Sidebar Agent chat message flow.
 - Sidebar composer local answers for latest result, optimization / memory relief, groups, duplicates, duplicate review queue, closed duplicate restore state, AI status, active tabs, protected tabs, possible read-later tabs, and tab search/open.
 - Sidebar optimization / memory-relief answer renders as an assistant message card with safe next-step buttons instead of plain text only.
+- Sidebar DeepSeek metadata-only Agent fallback for open-ended tab-management questions after local commands/actions do not match.
 - Current-tab summary only after user click.
 - Dashboard Smart Groups, folded Saved Workspaces, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
 - Dashboard expandable Smart Group tab rows for groups with more than three visible tabs.
@@ -65,6 +66,8 @@ Click extension icon
 - Optional AI classification is off until the user enables it and saves a local API key.
 - Private beta AI network access is limited to `https://api.deepseek.com/*`; other OpenAI-compatible hosts require a later permission confirmation.
 - AI classification sends tab title, hostname, path, window ID, and tab state only; it does not send page text or full URL by default.
+- Metadata-only Agent answers use the same minimized tab metadata boundary and do not send page body, full URL, restore URL, favicon URL, browser history, chat history, saved workspace contents, or cloud memory.
+- Metadata-only Agent answers do not apply browser actions automatically.
 - Full URLs may be stored locally only where needed to restore closed duplicate tabs.
 - Copied diagnostics and feedback exclude URLs, hostnames, tab titles, page text, rule patterns, group names, emails, bearer tokens, and API keys.
 
@@ -73,9 +76,11 @@ Click extension icon
 Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 
 ```text
-node tools/preflight.js --runtime --large-runtime --screenshots --deepseek-fixture
+node tools/preflight.js --runtime --agent-flow --large-runtime --screenshots --deepseek-fixture
 PASS preflight completed
+40 smoke tests passed
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs with real native tab groups, safe duplicate closes, and review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
@@ -160,9 +165,10 @@ Minimum manual checks:
 - Standalone privacy policy draft exists, but final policy URL and wording are not approved yet.
 - Standalone Chrome Web Store data disclosure draft exists, but final data category checkboxes and Limited Use wording are not approved yet.
 - P0 manual QA runbook has not been completed on the user's real Chrome profile.
-- Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, Dashboard local workspace save/delete, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open. A separate large-tab runtime probe has also passed with 96 synthetic tabs. These do not replace real-profile manual QA.
+- Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, Dashboard local workspace save/delete, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open. A separate DeepSeek Agent-flow runtime check has passed through the real Sidebar composer, and a separate large-tab runtime probe has also passed with 96 synthetic tabs. These do not replace real-profile manual QA.
 - Dashboard apply supports group title/color edits, tab focus, same-window tab moves into existing groups, same-window drag/drop tab assignment, and local-only Save/Delete workspace snapshots; it does not support manual new groups, saved workspace restore, cloud sync, or cross-window tab moves.
 - Current-tab summary is local extractive summary, not cloud AI summary.
+- Sidebar DeepSeek open answers are metadata-only tab-management answers, not cloud page-content chat.
 - Multi-tab chat is P1/Pro and not part of this beta slice.
 - Hosted AI, accounts, billing, cloud sync, and analytics are not included.
 - DeepSeek API key in `.env.local` is for local testing only and should be rotated before public or broader beta use.

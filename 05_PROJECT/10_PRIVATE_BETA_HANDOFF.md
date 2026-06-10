@@ -34,6 +34,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Sidebar composer read-only answers for duplicate review queue and closed duplicate restore state
 - Sidebar composer read-only answers for active tabs, protected tabs, and possible read-later tabs
 - Sidebar composer local tab search and focus existing tab
+- Sidebar DeepSeek metadata-only Agent fallback for open-ended tab-management answers after local commands/actions do not match
 - local user rules and Rules & Memory
 - current-tab local extractive summary after user click, with sensitive-page confirmation
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
@@ -52,6 +53,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard compact Undo / Restore Closed actions
 - Sidepanel/Dashboard actionable safe organize error states
 - optional DeepSeek AI classification through OpenAI-compatible request format
+- optional DeepSeek metadata-only Agent answers through OpenAI-compatible request format
 - DeepSeek connection test without tab data
 - AI classification timeout fallback to local rules
 - AI classification status and suggested group count visible in Sidebar and Dashboard
@@ -72,7 +74,7 @@ Current verified evidence is recorded in `05_PROJECT/08_QA_EVIDENCE.md`.
 Most complete local verification command:
 
 ```bash
-node tools/preflight.js --runtime --large-runtime --screenshots --deepseek-fixture
+node tools/preflight.js --runtime --agent-flow --large-runtime --screenshots --deepseek-fixture
 ```
 
 Verified:
@@ -80,7 +82,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 38 extension smoke tests
+- 40 extension smoke tests
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
@@ -103,6 +105,8 @@ Verified:
 - Sidebar duplicate-review/closed-tab local answers in runtime smoke
 - Sidebar active/protected/read-later local answers in runtime smoke
 - Sidebar tab search and Open existing tab in runtime smoke
+- DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer
+- DeepSeek metadata-only Agent payload minimization and invented-tab-id filtering in extension smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
 - mock-data Chrome Web Store screenshot drafts, generated as five 1280x800 local PNGs
 - disposable manual QA profile self-test with synthetic QA tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
@@ -132,6 +136,25 @@ Verified:
 - no real browser tab data is used
 ```
 
+DeepSeek Sidebar Agent flow verification:
+
+```bash
+node tools/chrome_runtime_smoke_test.js --agent-flow
+```
+
+Verified:
+
+```text
+- temporary Chrome profile and synthetic tabs only
+- first organize creates real native tab groups
+- local DeepSeek key is stored only in the temporary extension storage
+- real Sidebar composer submits an open-ended tab-management question
+- DeepSeek metadata-only Agent returns an assistant message card
+- relevant tab rows and safe next-step suggestions render
+- page text and full URLs are not read or sent
+- no browser actions are applied automatically from the AI answer
+```
+
 Disposable manual QA tooling verification:
 
 ```bash
@@ -159,6 +182,7 @@ OPEN QUESTION / MANUAL QA REQUIRED:
 - Store screenshot drafts exist, but final screenshots and demo video are not approved.
 - Chrome Web Store data disclosure checkboxes and Limited Use wording are drafted but not confirmed.
 - Design-prototype features are not all wired yet: manual new groups, workspace restore/history management, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
+- Cloud AI page-content chat is not wired; current DeepSeek Agent answers use tab metadata only.
 ```
 
 Manual QA source of truth:
