@@ -52,7 +52,10 @@ function main() {
     [
       "Status: PASSED for local private-beta evidence",
       `Source state verified: ${topVersion}`,
+      "node tools/preflight.js --runtime --large-runtime --screenshots",
       "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore",
+      "PASS Chrome runtime large-tab probe organized 96 synthetic tabs",
+      "`--large-runtime` used a separate temporary Chrome for Testing profile",
       "PASS UI screenshots captured",
       "PASS release package verified for v0.1.0",
       "PASS synthetic classification fixture completed",
@@ -73,7 +76,9 @@ function main() {
     handoff,
     [
       "Status: READY FOR CONTROLLED LOCAL PRIVATE BETA",
+      "node tools/preflight.js --runtime --large-runtime --screenshots",
       "safe duplicate close and Restore Closed in runtime smoke",
+      "Chrome runtime large-tab probe with 96 synthetic tabs",
       "P0 manual QA has not been run on the user's real day-to-day Chrome profile.",
       "Do not submit to Chrome Web Store until confirmation gates are resolved."
     ],
@@ -91,6 +96,7 @@ function main() {
     [
       "Status: PRIVATE BETA ONLY",
       "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore",
+      "PASS Chrome runtime large-tab probe organized 96 synthetic tabs",
       "fixtureGroupCount=3",
       "Public Chrome Web Store submission is not approved yet.",
       "P0 manual QA runbook has not been completed on the user's real Chrome profile."
@@ -114,6 +120,7 @@ function main() {
     readme,
     [
       "node tools/beta_readiness_check.js",
+      "node tools/preflight.js --large-runtime",
       "controlled local/private beta",
       "not ready for public Chrome Web Store launch",
       "05_PROJECT/11_SELF_TEST_GUIDE.md"

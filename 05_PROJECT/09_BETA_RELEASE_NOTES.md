@@ -68,7 +68,7 @@ Click extension icon
 Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 
 ```text
-node tools/preflight.js --runtime --screenshots
+node tools/preflight.js --runtime --large-runtime --screenshots
 PASS preflight completed
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs with real native tab groups, safe duplicate closes, and review duplicate groups

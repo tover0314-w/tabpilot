@@ -65,7 +65,7 @@ Current verified evidence is recorded in `05_PROJECT/08_QA_EVIDENCE.md`.
 Most complete local verification command:
 
 ```bash
-node tools/preflight.js --runtime --screenshots
+node tools/preflight.js --runtime --large-runtime --screenshots
 ```
 
 Verified:

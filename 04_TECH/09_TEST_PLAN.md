@@ -20,7 +20,7 @@ Coverage:
 - secret scan for tracked env files and real-looking API keys
 - issue form smoke test for beta feedback structure, privacy redlines, and required safety acknowledgements
 - release package verification against the current manifest version
-- beta readiness check for QA evidence, handoff, release notes, package checksum, controlled-beta status, and public-launch blockers
+- beta readiness check for QA evidence, ordinary runtime evidence, large-tab runtime evidence, handoff, release notes, package checksum, controlled-beta status, and public-launch blockers
 - GitHub Actions runs beta readiness after package verification so CI blocks stale readiness evidence
 - manifest permission guardrails
 - no default_popup one-click action constraint

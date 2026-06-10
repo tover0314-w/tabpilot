@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.93 — 2026-06-10
+
+Changed:
+
+- Beta readiness now requires the large-tab runtime evidence, including the `--large-runtime` preflight command and the 96 synthetic-tab Chrome runtime probe result.
+- Private beta handoff now points to the full verification command: `node tools/preflight.js --runtime --large-runtime --screenshots`.
+- Test-plan coverage now calls out that beta readiness guards ordinary runtime and large-tab runtime evidence.
+
+Safety:
+
+- This is readiness-gate and documentation enforcement only. It does not change extension runtime behavior, read real browser data, call AI, upload data, move tabs, close tabs, or request new permissions.
+
 ## v0.92 — 2026-06-10
 
 Changed:
