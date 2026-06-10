@@ -74,16 +74,17 @@ node tools/open_manual_qa_profile.js
 2. 如果看到隐私提示，点击 Start Organizing。
 3. Chrome 顶部 tab bar 出现真实 native tab groups。
 4. Sidebar 显示整理结果。
-5. Dashboard 默认打开 Smart Groups，不再显示 Latest Result/Current Workspace clutter。
-6. exact/tracking duplicate 可以 Restore Closed。
-7. hash/query duplicate 留在 Review，不被自动关闭。
-8. Undo 可以撤销分组变更。
-9. Chat Refine 先 preview，再 Apply。
-10. Dashboard group title/color Apply 能更新真实 native groups。
-11. Dashboard tab title 可以聚焦回原 tab。
-12. Dashboard same-window tab move 可以把 tab 移进同窗口已有 group。
-13. 如果出现整理错误，Sidebar/Dashboard 明确说明没有移动或关闭标签页。
-14. Copy Diagnostic Snapshot 不包含 URL、tab title、页面正文、API key。
+5. Sidebar 像普通聊天：整理结果是一条 AI 消息气泡，底部输入框保持可用。
+6. Dashboard 默认打开 Smart Groups，不再显示 Latest Result/Current Workspace clutter。
+7. exact/tracking duplicate 可以 Restore Closed。
+8. hash/query duplicate 留在 Review，不被自动关闭。
+9. Undo 可以撤销分组变更。
+10. Chat Refine 先 preview，再 Apply。
+11. Dashboard group title/color Apply 能更新真实 native groups。
+12. Dashboard tab title 可以聚焦回原 tab。
+13. Dashboard same-window tab move 可以把 tab 移进同窗口已有 group。
+14. 如果出现整理错误，Sidebar/Dashboard 明确说明没有移动或关闭标签页。
+15. Copy Diagnostic Snapshot 不包含 URL、tab title、页面正文、API key。
 ```
 
 ## 4. 可选 AI 测试

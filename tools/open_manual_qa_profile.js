@@ -212,6 +212,16 @@ function renderChecklistHtml(details) {
       ]
     },
     {
+      title: "Tab Agent Chat UI",
+      items: [
+        "Sidebar stays chat-first and does not show a dashboard-like result panel.",
+        "Latest organize result appears as one assistant message bubble with impact metrics and quick actions inside it.",
+        "The bottom composer remains visible and works like a normal chat input.",
+        "Typed user messages and Agent replies stay in the same short conversation thread.",
+        "Asking how much memory was saved returns an honest optimization answer without invented exact MB."
+      ]
+    },
+    {
       title: "AI Verification",
       items: [
         "If testing AI, use only a disposable DeepSeek key in this disposable profile.",
@@ -740,6 +750,8 @@ function assertChecklistHtml(checklistPath) {
     "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
     "Keep completed real-profile notes private unless they are manually redacted.",
     "tabmosaic.manualQaChecklist.v1",
+    "Tab Agent Chat UI",
+    "Latest organize result appears as one assistant message bubble",
     "AI Verification",
     "Dashboard opens directly to Smart Groups",
     "Error States",

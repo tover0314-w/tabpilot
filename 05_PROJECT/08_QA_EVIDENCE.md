@@ -125,7 +125,7 @@ Covered:
 - Dashboard same-window tab move/drag-drop guard: target group selection, drag/drop event wiring, background action reuse, same-window enforcement, and no tab close action.
 - Dashboard Undo/Restore guard: compact action buttons, latest-run availability checks, existing background action reuse, and no direct tab close action.
 - Dashboard simple MVP UI guard: no default P1 placeholders, advanced Settings folded.
-- Disposable manual QA checklist coverage guard: Tab Agent UI, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive summary, privacy outputs, and local QA notes in copied Markdown reports.
+- Disposable manual QA checklist coverage guard: Tab Agent chat UI, latest organize result as one assistant message bubble, bottom composer, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive summary, privacy outputs, and local QA notes in copied Markdown reports.
 - 180-tab synthetic local planning guard: duplicate detection, safe-close planning, group-plan validation, bounded runtime, and sanitized run snapshots without reading real browser tabs.
 - AI host guardrail aligned with manifest host permission.
 - Redacted local error logs.
@@ -152,7 +152,7 @@ Covered:
 - Dashboard rule deletion confirmation.
 - Dashboard scoped AI key clearing.
 - Local data deletion.
-- Disposable manual QA checklist includes current MVP Dashboard workflow checks, Duplicate Center, safe error states, AI status, sensitive-summary confirmation, privacy-output checks, and local QA notes.
+- Disposable manual QA checklist includes current MVP Sidebar chat UI checks, Dashboard workflow checks, Duplicate Center, safe error states, AI status, sensitive-summary confirmation, privacy-output checks, and local QA notes.
 
 ### Chrome Runtime Smoke
 
@@ -236,7 +236,7 @@ Evidence notes:
 
 - The script used Chrome for Testing with a disposable profile under `artifacts/manual-qa-profiles/`.
 - It loaded a copied unpacked extension, opened the local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard.
-- The checklist now covers Tab Agent UI, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive-summary confirmation, privacy outputs, local QA notes, and one-click copying of the blank real-profile QA result template.
+- The checklist now covers Tab Agent chat UI, latest organize result as one assistant message bubble, bottom composer behavior, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive-summary confirmation, privacy outputs, local QA notes, and one-click copying of the blank real-profile QA result template.
 - QA notes are stored only in the disposable profile localStorage and copied into the local Markdown report; the tool does not upload them.
 - It did not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 - This proves the disposable manual QA tooling opens and cleans up correctly; it does not replace the remaining real-profile manual QA pass.
