@@ -450,6 +450,26 @@ test("dashboard keeps MVP UI simple and folds advanced settings", () => {
   assert(en.privacyDefaults?.message && zh.privacyDefaults?.message, "Privacy defaults copy should be localized");
 });
 
+test("sidepanel and dashboard expose actionable safe error states", () => {
+  const sidepanelJs = fs.readFileSync(path.join(EXTENSION_DIR, "sidepanel.js"), "utf8");
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(sidepanelJs.includes('data-error-state="safe"'), "Sidepanel error state should disclose safe no-change behavior");
+  assert(sidepanelJs.includes("nothingChangedOnError"), "Sidepanel error state should tell users no tabs changed");
+  assert(sidepanelJs.includes("errorNextStepHint"), "Sidepanel error state should offer a next step");
+  assert(dashboardJs.includes('run?.status === "error"'), "Dashboard should render stored organize errors explicitly");
+  assert(dashboardJs.includes("function renderDashboardError"), "Dashboard should use a reusable error card");
+  assert(dashboardJs.includes('data-dashboard-error-state="safe"'), "Dashboard error card should disclose safe no-change behavior");
+  assert(dashboardCss.includes(".error-note"), "Sidepanel error state should have scoped styling");
+  assert(dashboardCss.includes(".dashboard-error-card"), "Dashboard error card should have scoped styling");
+  assert(en.nothingChangedOnError?.message && zh.nothingChangedOnError?.message, "No-change error copy should be localized");
+  assert(en.dashboardErrorTitle?.message && zh.dashboardErrorTitle?.message, "Dashboard error title should be localized");
+  assert(!dashboardJs.includes("chrome.tabs.remove"), "Dashboard error state must not close tabs");
+});
+
 test("disposable manual QA checklist covers current MVP workflows", () => {
   const manualQaTool = fs.readFileSync(path.join(ROOT_DIR, "tools", "open_manual_qa_profile.js"), "utf8");
 

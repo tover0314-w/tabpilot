@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.88 Dashboard Duplicate Center tab details and focus in this commit
+Source state verified: v0.89 safe organize error states in this commit
 
 ### Unified Preflight
 
@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 98 tracked files
-31 smoke tests passed
+32 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS UI screenshots captured
@@ -90,7 +90,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-31 smoke tests passed
+32 smoke tests passed
 ```
 
 Covered:
@@ -215,7 +215,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=f3b4424ce3996be0172d51530870fa17d2f110fd518254354d8bd9e541cb5fb3
+sha256=514520a141f0d958e15c9fbece997f83fabc31b4b973ca1943ca31f86136b7d6
 ```
 
 Evidence notes:

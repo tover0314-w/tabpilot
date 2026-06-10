@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.89 — 2026-06-10
+
+Changed:
+
+- Side panel organize errors now include an explicit safe-state note that no tabs were moved or closed.
+- Dashboard now renders stored organize errors as a compact glass error card instead of treating them like an empty workspace.
+- Smoke coverage now guards English/Chinese error copy and verifies the error cards stay non-destructive.
+
+Safety:
+
+- This is a UI-only error-state polish. It does not move tabs, close tabs, read page content, call AI, upload data, add analytics, change duplicate policy, or request new permissions.
+
 ## v0.88 — 2026-06-10
 
 Changed:

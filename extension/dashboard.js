@@ -91,6 +91,14 @@ function renderDashboard(run, rules = []) {
   syncDashboardActionButtons(run);
   renderRuleCount(rules);
 
+  if (run?.status === "error") {
+    dashboardGroups.innerHTML = renderDashboardError(run.error || msg("scanDidNotFinish"));
+    dashboardDuplicates.innerHTML = `<p class="empty">${escapeHtml(msg("noDuplicateDataYet"))}</p>`;
+    renderSettingsSnapshot({});
+    renderGroupFilterCounts([]);
+    return;
+  }
+
   if (!run || !["completed", "closed-restored", "undone"].includes(run.status)) {
     dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(msg("openSidePanelToPopulateDashboard"))}</p>`;
     dashboardDuplicates.innerHTML = `<p class="empty">${escapeHtml(msg("noDuplicateDataYet"))}</p>`;
@@ -142,12 +150,12 @@ async function organizeFromDashboard() {
   try {
     const response = await chrome.runtime.sendMessage({ type: "ORGANIZE_NOW" });
     if (!response?.ok) {
-      dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(response?.error || msg("scanDidNotFinish"))}</p>`;
+      dashboardGroups.innerHTML = renderDashboardError(response?.error || msg("scanDidNotFinish"));
       return;
     }
     renderDashboard(response.run, await loadRules());
   } catch (error) {
-    dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(error?.message || msg("scanDidNotFinish"))}</p>`;
+    dashboardGroups.innerHTML = renderDashboardError(error?.message || msg("scanDidNotFinish"));
   } finally {
     organizeNowButton.disabled = false;
     organizeNowButton.textContent = msg("organizeBrowser");
@@ -689,6 +697,21 @@ function renderGroups(groups, run = latestRun) {
   dashboardGroups.innerHTML = filteredGroups
     .map((group, index) => renderGroupCard(group, run, index))
     .join("");
+}
+
+function renderDashboardError(errorText) {
+  return `
+    <article class="dashboard-error-card" data-dashboard-error-state="safe">
+      <div>
+        <h2>${escapeHtml(msg("dashboardErrorTitle"))}</h2>
+        <p>${escapeHtml(errorText || msg("scanDidNotFinish"))}</p>
+      </div>
+      <div class="dashboard-error-note">
+        <strong>${escapeHtml(msg("nothingChangedOnError"))}</strong>
+        <small>${escapeHtml(msg("dashboardErrorNextStep"))}</small>
+      </div>
+    </article>
+  `;
 }
 
 function getFilteredGroups(groups, filterName) {

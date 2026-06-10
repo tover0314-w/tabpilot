@@ -1225,12 +1225,23 @@ function renderStatus(run) {
     error: run?.error || msg("scanDidNotFinish")
   };
 
+  const errorNote =
+    status === "error"
+      ? `
+        <div class="error-note" data-error-state="safe">
+          <strong>${escapeHtml(msg("nothingChangedOnError"))}</strong>
+          <small>${escapeHtml(msg("errorNextStepHint"))}</small>
+        </div>
+      `
+      : "";
+
   statusPanel.className = `status-panel agent-message agent-message-system ${status}`;
   statusPanel.innerHTML = `
     <div class="status-dot" aria-hidden="true"></div>
     <div>
       <h2>${escapeHtml(titleByStatus[status] || titleByStatus.idle)}</h2>
       <p>${escapeHtml(bodyByStatus[status] || bodyByStatus.idle)}</p>
+      ${errorNote}
     </div>
   `;
 }

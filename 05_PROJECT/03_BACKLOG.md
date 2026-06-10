@@ -37,6 +37,7 @@
 - [x] dashboard drag/drop tab assignment（same-window existing groups first slice）。
 - [x] dashboard Undo / Restore Closed actions。
 - [x] privacy onboarding。
+- [x] actionable safe error states（Sidepanel + Dashboard first slice）。
 - [x] local data deletion（Dashboard first slice）。
 
 ## P1 Should-have

@@ -1,5 +1,27 @@
 # Empty / Error States
 
+## 0. 当前实现
+
+CONFIRMED BY IMPLEMENTATION:
+
+```text
+Side panel organize error:
+- shows the raw safe error summary
+- states that no tabs were moved or closed
+- suggests Organize Again or copying a redacted diagnostic snapshot from Dashboard
+
+Dashboard organize error:
+- renders a compact glass error card
+- states that no tabs were moved or closed
+- suggests retrying with Organize Browser or copying diagnostics from Settings
+```
+
+Safety:
+
+```text
+These error states do not move tabs, close tabs, read page content, call AI, upload diagnostics, add analytics, or request new permissions.
+```
+
 ## 1. Tabs 太少
 
 场景：当前浏览器所有普通窗口合计少于 6 个 tabs。

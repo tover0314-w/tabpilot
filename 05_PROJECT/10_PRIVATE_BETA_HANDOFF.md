@@ -47,6 +47,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard same-window tab move into existing native tab groups
 - Dashboard same-window drag/drop tab assignment into existing native tab groups
 - Dashboard compact Undo / Restore Closed actions
+- Sidepanel/Dashboard actionable safe organize error states
 - optional DeepSeek AI classification through OpenAI-compatible request format
 - DeepSeek connection test without tab data
 - AI classification timeout fallback to local rules
@@ -72,7 +73,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 30 extension smoke tests
+- 32 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke

@@ -37,6 +37,7 @@ Coverage:
 - AI classification status remains lightweight in the sidebar completion message, while Dashboard retains the fuller AI status view
 - Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, filter chips, expanded group cards, and favicon-backed tab rows
 - Side panel opens as a chat-first Tab Agent UI, not a result metrics panel
+- Side panel organize error states disclose that no tabs were moved or closed and show a retry/diagnostics next step
 - Side panel composer preserves recent user and Agent messages in an in-memory local thread
 - Side panel disables stale Chat Refine Apply/Cancel buttons when a newer draft appears or a draft is cancelled
 - Side panel quick action chips route through the same chat command path and append user/Agent messages to the local thread
@@ -53,6 +54,7 @@ Coverage:
 - Dashboard Smart Groups filter chips render All / AI groups / Rule groups views and localized empty states
 - Dashboard Smart Groups keep first rows compact while expandable `+ N tabs` rows reveal remaining local tab rows and actions
 - Dashboard Duplicate Center expands duplicate groups into local tab details and focuses existing tabs without close actions
+- Dashboard stored organize errors render as a compact safe error card instead of an empty workspace
 - Dashboard tab title focus activates the existing browser tab/window without storage writes or destructive tab actions
 - Dashboard same-window tab move UI calls the background action, limits target groups to the same window, and avoids tab close actions
 - Dashboard drag/drop tab assignment reuses the same same-window background move action and avoids tab close actions
@@ -364,6 +366,28 @@ Safety:
 → 不关闭 tabs
 → 不移动 tabs
 → 下次 organize 重新显示 first-run privacy onboarding
+```
+
+### Safe Error States
+
+```text
+organize run 失败
+→ Sidebar 显示错误消息
+→ Sidebar 明确说明没有移动或关闭标签页
+→ Dashboard 打开后显示 compact error card
+→ Dashboard 明确说明没有移动或关闭标签页
+→ 用户能看到重试或复制脱敏诊断的下一步
+```
+
+Safety:
+
+```text
+不关闭 tabs。
+不移动 tabs。
+不读取页面正文。
+不调用 AI provider。
+不上传诊断数据。
+不新增权限。
 ```
 
 ## 3. E2E 测试

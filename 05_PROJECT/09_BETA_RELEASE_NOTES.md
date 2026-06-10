@@ -45,6 +45,7 @@ Click extension icon
 - Dashboard Duplicate Center expands duplicate groups and can focus existing duplicate tabs for review.
 - Dashboard same-window drag/drop tab assignment between existing native groups.
 - Dashboard compact Undo / Restore Closed actions when available.
+- Side panel and Dashboard organize errors explain that no tabs were moved or closed and suggest retrying or copying redacted diagnostics.
 - Optional DeepSeek classification with a user-provided API key through an OpenAI-compatible request format.
 - AI connection test that calls DeepSeek `/models` only and sends no tab data.
 - Redacted local error summaries and count-only duplicate safety audit for beta diagnostics.

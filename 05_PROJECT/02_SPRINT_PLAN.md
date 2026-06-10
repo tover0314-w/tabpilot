@@ -134,15 +134,17 @@
 
 目标：可给真实用户试用。
 
+状态：已实现 first-run privacy onboarding、Sidepanel/Dashboard actionable safe error states first slice。Analytics、performance optimization、Chrome Web Store final submission 仍未完成或需确认。
+
 任务：
 
 - onboarding。
 - privacy settings。
-- error states。
+- error states（Sidepanel + Dashboard first slice 已实现）。
 - analytics minimal。
 - performance optimization。
 - Chrome Web Store draft。
 
 交付：
 
-- Private beta build。
+- Controlled local/private beta build。
