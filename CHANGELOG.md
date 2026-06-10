@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.99 — 2026-06-10
+
+Changed:
+
+- Added `05_PROJECT/13_PRIVACY_POLICY_DRAFT.md` as a standalone privacy policy draft for review.
+- Updated the Chrome Web Store submission draft to point at the standalone privacy policy draft and include current saved-workspace, Clear AI Key, and no-cloud/no-analytics boundaries.
+- Beta readiness and smoke coverage now verify the standalone privacy policy draft exists, remains `DO NOT PUBLISH YET`, keeps required placeholders, and includes Limited Use / permissions / deletion disclosures.
+
+Safety:
+
+- This is documentation and readiness enforcement only. It does not publish a privacy policy, submit to Chrome Web Store, change permissions, call AI, upload data, read page content, move tabs, close tabs, add analytics, or finalize legal wording without user confirmation.
+
 ## v0.98 — 2026-06-10
 
 Changed:

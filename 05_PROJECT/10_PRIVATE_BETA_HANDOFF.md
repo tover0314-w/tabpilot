@@ -57,6 +57,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard Clear Local Data
 - local redacted diagnostics and feedback template
 - redaction-safe real-profile QA result template and disposable checklist copy action
+- standalone privacy policy draft marked DO NOT PUBLISH YET
 - mock-data Chrome Web Store screenshot drafts
 - GitHub private beta issue forms with privacy redlines
 ```
@@ -76,7 +77,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 36 extension smoke tests
+- 37 extension smoke tests
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
@@ -102,6 +103,7 @@ Verified:
 - mock-data Chrome Web Store screenshot drafts, generated as five 1280x800 local PNGs
 - disposable manual QA profile self-test with synthetic QA tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
 - real-profile QA result template exists, but completed real-profile QA is still pending
+- standalone privacy policy draft exists, but final policy URL / wording is still pending user confirmation
 - extension package generation
 - release package verification
 - beta readiness check: controlled local/private beta ready, public Chrome Web Store launch not ready

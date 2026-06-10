@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.98 store screenshot draft generator in this commit
+Source state verified: v0.99 standalone privacy policy draft in this commit
 
 ### Unified Preflight
 
@@ -22,10 +22,10 @@ Result:
 
 ```text
 PASS secret scan checked 100 tracked files
-36 smoke tests passed
+37 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 428ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 151ms with 10 groups, 96 moved tabs, 8 safe duplicate closes, and 10 review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
 PASS release package verified for v0.1.0
@@ -46,6 +46,7 @@ Evidence notes:
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
 - Beta readiness check confirms controlled local/private beta evidence is present, including the large-runtime evidence, while public Chrome Web Store launch remains blocked.
 - Beta readiness check also verifies that the real-profile QA result template exists and includes privacy redaction rules.
+- Beta readiness check also verifies that the standalone privacy policy draft exists, remains unpublished, keeps required placeholders, and includes Limited Use / permissions / deletion disclosures.
 - GitHub Actions runs the same beta readiness check after release package verification.
 - Beta readiness check requires the beginner self-test guide and its controlled-beta/public-launch boundary.
 - Disposable manual QA checklist self-test verifies that testers can copy the blank redaction-safe real-profile QA template before testing a non-critical real profile.
@@ -97,7 +98,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-36 smoke tests passed
+37 smoke tests passed
 ```
 
 Covered:
@@ -142,6 +143,7 @@ Covered:
 - Dashboard Smart Group cards and local favicon-backed tab-row rendering from sanitized run data, with expandable hidden tab rows and edit/move controls folded/contextual by default.
 - Dashboard local workspace save/delete guard: minimized local snapshot, no full URL, no restore URL, no URL hashes, no favicon URL, no page text, and delete only updates local saved workspace storage.
 - Store screenshot draft guard: five 1280x800 local draft screenshots, output to ignored artifacts, marked DO NOT SUBMIT YET, and sourced from mock UI screenshots only.
+- Standalone privacy policy draft guard: unpublished status, confirmation gate, developer/support/website placeholders, saved workspace disclosure, DeepSeek optional-sharing boundary, no all-URLs permission, no cloud/account/analytics paths, local data deletion, and Limited Use disclosure.
 - Dashboard Settings first screen shows compact AI Classification; provider details, privacy defaults, permission, diagnostics, and local reset controls remain available under folded sections.
 - AI connection test without tab data.
 - Dashboard rule deletion confirmation.
@@ -198,7 +200,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 428ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 151ms with 10 groups, 96 moved tabs, 8 safe duplicate closes, and 10 review duplicate groups
 ```
 
 Evidence notes:
@@ -324,5 +326,5 @@ Evidence notes:
 ## Remaining Evidence Gaps
 
 - P0 manual QA runbook has not been run against the user's real Chrome profile.
-- Chrome Web Store submission materials remain drafts marked `CONFIRM` / `DO NOT SUBMIT YET`.
+- Chrome Web Store submission materials and standalone privacy policy remain drafts marked `CONFIRM` / `DO NOT SUBMIT YET` / `DO NOT PUBLISH YET`.
 - Public privacy policy URL, support email, final brand/domain, and final store disclosures still need user confirmation.

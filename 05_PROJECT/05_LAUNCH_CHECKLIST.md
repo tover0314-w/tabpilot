@@ -43,7 +43,8 @@
 
 ## Privacy / Compliance
 
-- [ ] 隐私政策（draft prepared; CONFIRM before publishing）。
+- [x] 独立隐私政策草稿（`05_PROJECT/13_PRIVACY_POLICY_DRAFT.md`；DO NOT PUBLISH YET）。
+- [ ] 最终隐私政策 URL / 文案确认。
 - [ ] Chrome Store single purpose 文案（draft prepared; CONFIRM before submission）。
 - [ ] Limited Use disclosure（draft prepared; CONFIRM before publishing）。
 - [x] 数据删除入口（local only first slice）。

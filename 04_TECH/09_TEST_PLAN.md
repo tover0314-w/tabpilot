@@ -22,6 +22,7 @@ Coverage:
 - issue form smoke test for beta feedback structure, privacy redlines, and required safety acknowledgements
 - release package verification against the current manifest version
 - beta readiness check for QA evidence, ordinary runtime evidence, large-tab runtime evidence, handoff, release notes, package checksum, controlled-beta status, and public-launch blockers
+- standalone privacy policy draft guard for unpublished status, confirmation gate, placeholders, saved workspace disclosure, DeepSeek optional-sharing boundary, no all-URLs permission, no cloud/account/analytics paths, local data deletion, and Limited Use disclosure
 - GitHub Actions runs beta readiness after package verification so CI blocks stale readiness evidence
 - manifest permission guardrails
 - no default_popup one-click action constraint

@@ -1474,6 +1474,26 @@ test("store screenshot drafts are reproducible and marked not final", () => {
   assert(tool.includes("developer.chrome.com/docs/webstore/best-listing"), "Store screenshot draft README should cite listing guidance");
 });
 
+test("standalone privacy policy draft stays unpublished and matches privacy boundaries", () => {
+  const draftPath = path.join(ROOT_DIR, "05_PROJECT", "13_PRIVACY_POLICY_DRAFT.md");
+  const storeDraft = fs.readFileSync(path.join(ROOT_DIR, "05_PROJECT", "07_STORE_SUBMISSION_DRAFT.md"), "utf8");
+  const draft = fs.readFileSync(draftPath, "utf8");
+
+  assert(fs.existsSync(draftPath), "Standalone privacy policy draft should exist");
+  assert(draft.includes("Status: DO NOT PUBLISH YET"), "Privacy policy draft should not be publish-ready");
+  assert(draft.includes("Decision state: CONFIRM before publishing"), "Privacy policy draft should require confirmation");
+  assert(draft.includes("[Developer name]"), "Privacy policy draft should keep developer identity placeholder");
+  assert(draft.includes("[support email]"), "Privacy policy draft should keep support email placeholder");
+  assert(draft.includes("[website URL]"), "Privacy policy draft should keep website URL placeholder");
+  assert(draft.includes("saved workspace snapshots"), "Privacy policy draft should cover saved workspace snapshots");
+  assert(draft.includes("does not request `<all_urls>`"), "Privacy policy draft should disclose no all-URLs permission");
+  assert(draft.includes("DeepSeek only if the user enables optional AI classification"), "Privacy policy draft should bound DeepSeek sharing");
+  assert(draft.includes("does not provide cloud sync, hosted AI accounts, account storage, billing, analytics upload"), "Privacy policy draft should disclose absent cloud/account/analytics paths");
+  assert(draft.includes("Dashboard -> Settings -> Clear Local Data"), "Privacy policy draft should document local data deletion");
+  assert(draft.includes("Chrome Web Store User Data Policy, including the Limited Use requirements"), "Privacy policy draft should include Limited Use disclosure");
+  assert(storeDraft.includes("Standalone draft source: `05_PROJECT/13_PRIVACY_POLICY_DRAFT.md`"), "Store submission draft should point to standalone privacy policy draft");
+});
+
 test("AI connection test does not send tab data", async () => {
   const fetchCalls = [];
   context.fetch = async (url, options = {}) => {

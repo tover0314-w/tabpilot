@@ -12,7 +12,8 @@ const requiredFiles = [
   "05_PROJECT/10_PRIVATE_BETA_HANDOFF.md",
   "05_PROJECT/07_STORE_SUBMISSION_DRAFT.md",
   "05_PROJECT/11_SELF_TEST_GUIDE.md",
-  "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md"
+  "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md",
+  "05_PROJECT/13_PRIVACY_POLICY_DRAFT.md"
 ];
 
 main();
@@ -41,6 +42,7 @@ function main() {
   const storeSubmissionDraft = readText("05_PROJECT/07_STORE_SUBMISSION_DRAFT.md", failures);
   const selfTestGuide = readText("05_PROJECT/11_SELF_TEST_GUIDE.md", failures);
   const realProfileQaTemplate = readText("05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md", failures);
+  const privacyPolicyDraft = readText("05_PROJECT/13_PRIVACY_POLICY_DRAFT.md", failures);
   const readme = readText("README.md", failures);
   const topVersion = getTopChangelogVersion(changelog);
   const packageBase = `tabmosaic-ai-extension-v${version}`;
@@ -140,6 +142,20 @@ function main() {
       "Store Screenshot Draft Pack",
       "five 1280x800 PNGs",
       "Final screenshots still need user approval before Chrome Web Store submission."
+    ],
+    failures
+  );
+  requireIncludes(
+    "05_PROJECT/13_PRIVACY_POLICY_DRAFT.md",
+    privacyPolicyDraft,
+    [
+      "Status: DO NOT PUBLISH YET",
+      "Decision state: CONFIRM before publishing",
+      "Placeholders to replace: `[Developer name]`, `[support email]`, `[website URL]`, `[CONFIRM DATE]`",
+      "saved workspace snapshots",
+      "does not request `<all_urls>`",
+      "DeepSeek only if the user enables optional AI classification",
+      "Chrome Web Store User Data Policy, including the Limited Use requirements"
     ],
     failures
   );

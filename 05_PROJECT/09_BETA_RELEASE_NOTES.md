@@ -49,6 +49,7 @@ Click extension icon
 - Optional DeepSeek classification with a user-provided API key through an OpenAI-compatible request format.
 - AI connection test that calls DeepSeek `/models` only and sends no tab data.
 - Redacted local error summaries and count-only duplicate safety audit for beta diagnostics.
+- Standalone privacy policy draft marked `DO NOT PUBLISH YET`.
 - Mock-data Chrome Web Store screenshot drafts generated locally as five 1280x800 PNGs.
 
 ## Privacy Defaults
@@ -154,6 +155,7 @@ Minimum manual checks:
 ## Known Limits
 
 - Public Chrome Web Store submission is not approved yet.
+- Standalone privacy policy draft exists, but final policy URL and wording are not approved yet.
 - P0 manual QA runbook has not been completed on the user's real Chrome profile.
 - Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, Dashboard local workspace save/delete, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open. A separate large-tab runtime probe has also passed with 96 synthetic tabs. These do not replace real-profile manual QA.
 - Dashboard apply supports group title/color edits, tab focus, same-window tab moves into existing groups, same-window drag/drop tab assignment, and local-only Save/Delete workspace snapshots; it does not support manual new groups, saved workspace restore, cloud sync, or cross-window tab moves.
@@ -169,6 +171,7 @@ Minimum manual checks:
 - Final product name and domain.
 - Public developer identity and support email.
 - Privacy policy URL.
+- Final privacy policy wording.
 - Chrome Web Store single-purpose wording.
 - Final data-use disclosure and Limited Use wording.
 - Whether optional DeepSeek user-key classification remains in the first public build.
