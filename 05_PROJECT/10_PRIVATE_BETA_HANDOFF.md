@@ -58,6 +58,7 @@ CONFIRMED BY IMPLEMENTATION:
 - local redacted diagnostics and feedback template
 - redaction-safe real-profile QA result template and disposable checklist copy action
 - standalone privacy policy draft marked DO NOT PUBLISH YET
+- standalone Chrome Web Store data disclosure draft marked DO NOT SUBMIT YET
 - mock-data Chrome Web Store screenshot drafts
 - GitHub private beta issue forms with privacy redlines
 ```
@@ -77,7 +78,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 37 extension smoke tests
+- 38 extension smoke tests
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
@@ -104,6 +105,7 @@ Verified:
 - disposable manual QA profile self-test with synthetic QA tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
 - real-profile QA result template exists, but completed real-profile QA is still pending
 - standalone privacy policy draft exists, but final policy URL / wording is still pending user confirmation
+- standalone Chrome Web Store data disclosure draft exists, but final data category checkboxes / Limited Use wording are still pending user confirmation
 - extension package generation
 - release package verification
 - beta readiness check: controlled local/private beta ready, public Chrome Web Store launch not ready
@@ -151,6 +153,7 @@ OPEN QUESTION / MANUAL QA REQUIRED:
 - Chrome Web Store submission has not been attempted.
 - Private beta with 20-50 external users has not started.
 - Store screenshot drafts exist, but final screenshots and demo video are not approved.
+- Chrome Web Store data disclosure checkboxes and Limited Use wording are drafted but not confirmed.
 - Design-prototype features are not all wired yet: manual new groups, workspace restore/history management, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 ```
 

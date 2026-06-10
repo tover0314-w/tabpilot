@@ -1494,6 +1494,26 @@ test("standalone privacy policy draft stays unpublished and matches privacy boun
   assert(storeDraft.includes("Standalone draft source: `05_PROJECT/13_PRIVACY_POLICY_DRAFT.md`"), "Store submission draft should point to standalone privacy policy draft");
 });
 
+test("Chrome Web Store data disclosure draft stays unsubmitted and conservative", () => {
+  const draftPath = path.join(ROOT_DIR, "05_PROJECT", "14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md");
+  const storeDraft = fs.readFileSync(path.join(ROOT_DIR, "05_PROJECT", "07_STORE_SUBMISSION_DRAFT.md"), "utf8");
+  const draft = fs.readFileSync(draftPath, "utf8");
+
+  assert(fs.existsSync(draftPath), "Chrome Web Store data disclosure draft should exist");
+  assert(draft.includes("Status: DO NOT SUBMIT YET"), "Data disclosure draft should not be submission-ready");
+  assert(draft.includes("Decision state: CONFIRM before Chrome Web Store submission"), "Data disclosure draft should require confirmation");
+  assert(draft.includes("Final data-use categories must be confirmed in the Chrome Web Store dashboard."), "Data disclosure draft should keep final category confirmation gate");
+  assert(draft.includes("Web history / web browsing activity"), "Data disclosure draft should map browsing metadata");
+  assert(draft.includes("Website content / website resources"), "Data disclosure draft should map user-triggered page content");
+  assert(draft.includes("User-provided content"), "Data disclosure draft should map local chat/rules content");
+  assert(draft.includes("Authentication information"), "Data disclosure draft should cover the optional local DeepSeek API key");
+  assert(draft.includes("optional DeepSeek"), "Data disclosure draft should keep DeepSeek as optional");
+  assert(draft.includes("does not sell user data"), "Data disclosure draft should include no-sale posture");
+  assert(draft.includes("No analytics upload"), "Data disclosure draft should disclose no analytics upload");
+  assert(draft.includes("05_PROJECT/13_PRIVACY_POLICY_DRAFT.md") || storeDraft.includes("05_PROJECT/13_PRIVACY_POLICY_DRAFT.md"), "Disclosure flow should stay connected to the standalone privacy policy draft");
+  assert(storeDraft.includes("Standalone data disclosure draft source: `05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md`"), "Store submission draft should point to standalone data disclosure draft");
+});
+
 test("AI connection test does not send tab data", async () => {
   const fetchCalls = [];
   context.fetch = async (url, options = {}) => {

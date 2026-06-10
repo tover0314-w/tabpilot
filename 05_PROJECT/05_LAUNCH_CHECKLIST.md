@@ -44,9 +44,10 @@
 ## Privacy / Compliance
 
 - [x] 独立隐私政策草稿（`05_PROJECT/13_PRIVACY_POLICY_DRAFT.md`；DO NOT PUBLISH YET）。
+- [x] Chrome Web Store 数据披露草稿（`05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md`；DO NOT SUBMIT YET）。
 - [ ] 最终隐私政策 URL / 文案确认。
 - [ ] Chrome Store single purpose 文案（draft prepared; CONFIRM before submission）。
-- [ ] Limited Use disclosure（draft prepared; CONFIRM before publishing）。
+- [ ] Final Chrome Store data-use categories / Limited Use disclosure（draft prepared; CONFIRM before submission）。
 - [x] 数据删除入口（local only first slice）。
 - [x] 权限解释（Dashboard first slice）。
 - [x] 不默认读取正文（current tab summary user-triggered；敏感页二次确认 first slice）。

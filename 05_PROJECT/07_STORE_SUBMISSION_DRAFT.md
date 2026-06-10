@@ -100,6 +100,7 @@ API responses must remain data, not executable code. Do not add remote script lo
 ## Data Use Draft
 
 Status: CONFIRM
+Standalone data disclosure draft source: `05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md`
 
 Current local data handled:
 
@@ -262,7 +263,7 @@ Important boundaries:
 - [ ] User confirms final single-purpose field.
 - [ ] User confirms permission justifications.
 - [ ] User confirms remote-code declaration.
-- [ ] User confirms data-use categories.
+- [ ] User confirms data-use categories against `05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md`.
 - [ ] Manual QA runbook is completed on a real Chrome profile.
 - [ ] Privacy policy is published before store submission.
 - [ ] Final store screenshots and demo video are approved from the current build.

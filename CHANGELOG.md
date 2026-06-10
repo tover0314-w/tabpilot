@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.100 — 2026-06-10
+
+Changed:
+
+- Added `05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md` as a standalone Chrome Web Store data disclosure checklist.
+- Mapped current private-beta data handling to draft Web Store categories, including web browsing activity, website content, user activity, user-provided content, authentication information, optional DeepSeek sharing, and Limited Use posture.
+- Updated store submission, launch checklist, README, index, release notes, handoff, readiness, and smoke coverage so the disclosure draft stays visible and cannot quietly become a final submission artifact.
+
+Safety:
+
+- This is documentation and readiness enforcement only. It does not submit Chrome Web Store disclosures, publish legal text, change permissions, call AI, upload data, read page content, move tabs, close tabs, add analytics, or finalize store checkboxes without user confirmation.
+
 ## v0.99 — 2026-06-10
 
 Changed:

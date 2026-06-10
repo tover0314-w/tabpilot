@@ -97,6 +97,7 @@
 - `11_SELF_TEST_GUIDE.md`：小白自测指南，覆盖一次性 QA profile、可选 AI 测试、真实 Chrome profile 测试和剩余上线阻塞项。
 - `12_REAL_PROFILE_QA_RESULT_TEMPLATE.md`：真实 Chrome profile QA 结果记录模板，要求先脱敏，避免把真实浏览数据写进 git。
 - `13_PRIVACY_POLICY_DRAFT.md`：独立隐私政策草稿，带发布前确认门和占位符，DO NOT PUBLISH YET。
+- `14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md`：Chrome Web Store 数据披露草稿，映射数据类别、Limited Use、DeepSeek 共享和确认门，DO NOT SUBMIT YET。
 
 ## 06_REFERENCES
 

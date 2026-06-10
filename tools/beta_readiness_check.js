@@ -13,7 +13,8 @@ const requiredFiles = [
   "05_PROJECT/07_STORE_SUBMISSION_DRAFT.md",
   "05_PROJECT/11_SELF_TEST_GUIDE.md",
   "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md",
-  "05_PROJECT/13_PRIVACY_POLICY_DRAFT.md"
+  "05_PROJECT/13_PRIVACY_POLICY_DRAFT.md",
+  "05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md"
 ];
 
 main();
@@ -43,6 +44,7 @@ function main() {
   const selfTestGuide = readText("05_PROJECT/11_SELF_TEST_GUIDE.md", failures);
   const realProfileQaTemplate = readText("05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md", failures);
   const privacyPolicyDraft = readText("05_PROJECT/13_PRIVACY_POLICY_DRAFT.md", failures);
+  const dataDisclosureDraft = readText("05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md", failures);
   const readme = readText("README.md", failures);
   const topVersion = getTopChangelogVersion(changelog);
   const packageBase = `tabmosaic-ai-extension-v${version}`;
@@ -141,7 +143,25 @@ function main() {
       "https://developer.chrome.com/docs/webstore/best-listing",
       "Store Screenshot Draft Pack",
       "five 1280x800 PNGs",
-      "Final screenshots still need user approval before Chrome Web Store submission."
+      "Final screenshots still need user approval before Chrome Web Store submission.",
+      "Standalone data disclosure draft source: `05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md`"
+    ],
+    failures
+  );
+  requireIncludes(
+    "05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md",
+    dataDisclosureDraft,
+    [
+      "Status: DO NOT SUBMIT YET",
+      "Decision state: CONFIRM before Chrome Web Store submission",
+      "Final data-use categories must be confirmed in the Chrome Web Store dashboard.",
+      "Web history / web browsing activity",
+      "Website content / website resources",
+      "Authentication information",
+      "optional DeepSeek",
+      "No analytics upload",
+      "Tab title, hostname, path, window ID, tab state",
+      "No. TabMosaic AI does not execute remotely hosted code."
     ],
     failures
   );

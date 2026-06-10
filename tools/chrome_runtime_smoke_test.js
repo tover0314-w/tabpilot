@@ -572,14 +572,49 @@ async function main() {
       }, "Sidebar composer did not render tab search results");
       assert(tabSearchRendered, "Tab search results were not rendered");
 
-      await evaluate(
+      const tabSearchClickState = await evaluate(
         cdp,
-        `document.querySelector('[data-chat-action="focus-tab"]')?.click()`
+        `new Promise((resolve) => {
+          const delay = (ms) => new Promise((done) => setTimeout(done, ms));
+          const messages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.tab-search"));
+          const latestMessage = messages[messages.length - 1];
+          const button = latestMessage?.querySelector('[data-chat-action="focus-tab"]');
+
+          if (!button) {
+            resolve({ ok: false, reason: "missing-button" });
+            return;
+          }
+
+          const tabId = Number(button.dataset.tabId);
+          button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+
+          (async () => {
+            await delay(1000);
+            const tab = Number.isInteger(tabId) ? await chrome.tabs.get(tabId).catch(() => null) : null;
+            const activeTabsInWindow = tab?.windowId ? await chrome.tabs.query({ active: true, windowId: tab.windowId }) : [];
+            const text = document.querySelector("#chatPanel")?.textContent || "";
+
+            resolve({
+              ok: Number.isInteger(tabId),
+              tabId,
+              buttonDisabled: button.disabled,
+              tabUrl: tab?.url || "",
+              tabActive: Boolean(tab?.active),
+              activeTabIdsInWindow: activeTabsInWindow.map((item) => item.id),
+              openedMessage: /Opened tab|已打开标签页/.test(text),
+              errorMessage: /could not open|无法打开/.test(text)
+            });
+          })().catch((error) => resolve({ ok: false, reason: error?.message || String(error) }));
+        })`
       );
+      assert(tabSearchClickState?.ok, `Tab search Open action did not expose a valid target tab id: ${JSON.stringify(tabSearchClickState)}`);
       const focusedGithubTab = await waitFor(async () => {
-        const activeTabsAfterSearch = await evaluate(cdp, "chrome.tabs.query({ active: true })");
-        return activeTabsAfterSearch.some((tab) => String(tab.url || "").includes("github.com")) ? activeTabsAfterSearch : null;
-      }, "Sidebar tab search Open action did not focus a matching tab");
+        const tabAfterSearch = await evaluate(cdp, `chrome.tabs.get(${JSON.stringify(tabSearchClickState.tabId)}).catch(() => null)`);
+        if (!tabAfterSearch || !String(tabAfterSearch.url || "").includes("github.com")) return null;
+
+        const activeTabsInWindow = await evaluate(cdp, `chrome.tabs.query({ active: true, windowId: ${JSON.stringify(tabAfterSearch.windowId)} })`);
+        return activeTabsInWindow.some((tab) => tab.id === tabAfterSearch.id) ? tabAfterSearch : null;
+      }, `Sidebar tab search Open action did not focus a matching tab: ${JSON.stringify(tabSearchClickState)}`);
       assert(focusedGithubTab, "Tab search Open action did not focus a GitHub tab");
 
       const dashboardActionsPage = await createTarget(port, `chrome-extension://${extensionId}/dashboard.html`);
