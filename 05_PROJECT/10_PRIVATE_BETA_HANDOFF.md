@@ -57,6 +57,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard Clear Local Data
 - local redacted diagnostics and feedback template
 - redaction-safe real-profile QA result template and disposable checklist copy action
+- mock-data Chrome Web Store screenshot drafts
 - GitHub private beta issue forms with privacy redlines
 ```
 
@@ -75,7 +76,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 35 extension smoke tests
+- 36 extension smoke tests
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
@@ -98,6 +99,7 @@ Verified:
 - Sidebar active/protected/read-later local answers in runtime smoke
 - Sidebar tab search and Open existing tab in runtime smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
+- mock-data Chrome Web Store screenshot drafts, generated as five 1280x800 local PNGs
 - disposable manual QA profile self-test with synthetic QA tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
 - real-profile QA result template exists, but completed real-profile QA is still pending
 - extension package generation
@@ -146,7 +148,7 @@ OPEN QUESTION / MANUAL QA REQUIRED:
 - P0 manual QA has not been run on the user's real day-to-day Chrome profile.
 - Chrome Web Store submission has not been attempted.
 - Private beta with 20-50 external users has not started.
-- Store screenshots and demo video are not final.
+- Store screenshot drafts exist, but final screenshots and demo video are not approved.
 - Design-prototype features are not all wired yet: manual new groups, workspace restore/history management, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 ```
 
@@ -251,7 +253,7 @@ CONFIRM before public launch:
 - cloud storage defaults
 - hosted AI strategy
 - analytics policy
-- final store screenshots and demo video
+- final user-approved store screenshots and demo video
 ```
 
 ## Current Beta Recommendation

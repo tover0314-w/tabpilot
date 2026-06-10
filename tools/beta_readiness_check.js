@@ -10,6 +10,7 @@ const requiredFiles = [
   "05_PROJECT/08_QA_EVIDENCE.md",
   "05_PROJECT/09_BETA_RELEASE_NOTES.md",
   "05_PROJECT/10_PRIVATE_BETA_HANDOFF.md",
+  "05_PROJECT/07_STORE_SUBMISSION_DRAFT.md",
   "05_PROJECT/11_SELF_TEST_GUIDE.md",
   "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md"
 ];
@@ -37,6 +38,7 @@ function main() {
   const qaEvidence = readText("05_PROJECT/08_QA_EVIDENCE.md", failures);
   const releaseNotes = readText("05_PROJECT/09_BETA_RELEASE_NOTES.md", failures);
   const handoff = readText("05_PROJECT/10_PRIVATE_BETA_HANDOFF.md", failures);
+  const storeSubmissionDraft = readText("05_PROJECT/07_STORE_SUBMISSION_DRAFT.md", failures);
   const selfTestGuide = readText("05_PROJECT/11_SELF_TEST_GUIDE.md", failures);
   const realProfileQaTemplate = readText("05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md", failures);
   const readme = readText("README.md", failures);
@@ -59,6 +61,7 @@ function main() {
       "PASS Chrome runtime large-tab probe organized 96 synthetic tabs",
       "`--large-runtime` used a separate temporary Chrome for Testing profile",
       "PASS UI screenshots captured",
+      "PASS store screenshot drafts captured",
       "PASS release package verified for v0.1.0",
       "blank real-profile QA result template",
       "PASS synthetic classification fixture completed",
@@ -83,6 +86,7 @@ function main() {
       "safe duplicate close and Restore Closed in runtime smoke",
       "Dashboard local workspace save/delete in runtime smoke",
       "Chrome runtime large-tab probe with 96 synthetic tabs",
+      "mock-data Chrome Web Store screenshot drafts",
       "blank real-profile QA template copy control",
       "P0 manual QA has not been run on the user's real day-to-day Chrome profile.",
       "Do not submit to Chrome Web Store until confirmation gates are resolved."
@@ -102,6 +106,7 @@ function main() {
       "Status: PRIVATE BETA ONLY",
       "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore",
       "PASS Chrome runtime large-tab probe organized 96 synthetic tabs",
+      "PASS store screenshot drafts captured",
       "fixtureGroupCount=3",
       "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md",
       "Copy Real-Profile Template",
@@ -121,6 +126,20 @@ function main() {
       "Copy Real-Profile Template",
       "Local QA Notes",
       "不要公开发布，不要提交 Chrome Web Store。"
+    ],
+    failures
+  );
+  requireIncludes(
+    "05_PROJECT/07_STORE_SUBMISSION_DRAFT.md",
+    storeSubmissionDraft,
+    [
+      "Status: DO NOT SUBMIT YET",
+      "https://developer.chrome.com/docs/webstore/cws-dashboard-listing",
+      "https://developer.chrome.com/docs/webstore/images",
+      "https://developer.chrome.com/docs/webstore/best-listing",
+      "Store Screenshot Draft Pack",
+      "five 1280x800 PNGs",
+      "Final screenshots still need user approval before Chrome Web Store submission."
     ],
     failures
   );
@@ -166,7 +185,7 @@ function main() {
 
   warnings.push("READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes");
   warnings.push("READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no");
-  warnings.push("PUBLIC_LAUNCH_BLOCKERS=real-profile manual QA, privacy policy URL, support email, final brand/domain, store disclosures, screenshots/demo video, beta user feedback");
+  warnings.push("PUBLIC_LAUNCH_BLOCKERS=real-profile manual QA, privacy policy URL, support email, final brand/domain, store disclosures, final screenshots/demo video, beta user feedback");
 
   printResult({ failures, warnings });
 

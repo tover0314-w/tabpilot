@@ -161,13 +161,15 @@ node tools/chrome_runtime_smoke_test.js --large-tabs
 
 ```bash
 node tools/capture_ui_screenshots.js
+node tools/build_store_screenshots.js
 node tools/preflight.js --screenshots
 ```
 
-它使用 mock extension 数据渲染 sidebar / dashboard，不读取真实浏览器 tabs，不读取 `.env.local`。这个可选脚本需要本机可用的 Playwright；Codex bundled runtime 会被自动探测。输出在本地忽略目录：
+它使用 mock extension 数据渲染 sidebar / dashboard，并生成 1280x800 Chrome Web Store screenshot 草稿，不读取真实浏览器 tabs，不读取 `.env.local`。这个可选脚本需要本机可用的 Playwright；Codex bundled runtime 会被自动探测。输出在本地忽略目录：
 
 ```text
 artifacts/ui-screenshots/
+artifacts/store-screenshots/
 ```
 
 小白自测先看 `05_PROJECT/11_SELF_TEST_GUIDE.md`。完整手动 QA 可按 `05_PROJECT/06_QA_RUNBOOK.md` 执行。可先打印测试 tabs：

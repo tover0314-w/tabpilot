@@ -1457,6 +1457,23 @@ test("AI classification status stays lightweight in sidebar and dashboard", () =
   assert(zh.aiNoUsableGroups?.message, "Chinese empty AI copy");
 });
 
+test("store screenshot drafts are reproducible and marked not final", () => {
+  const toolPath = path.join(ROOT_DIR, "tools", "build_store_screenshots.js");
+  const preflight = fs.readFileSync(path.join(ROOT_DIR, "tools", "preflight.js"), "utf8");
+  const tool = fs.readFileSync(toolPath, "utf8");
+
+  assert(fs.existsSync(toolPath), "Store screenshot draft tool should exist");
+  assert(preflight.includes("tools/build_store_screenshots.js"), "Preflight should syntax-check store screenshot drafts");
+  assert(preflight.includes("Store screenshot draft capture"), "Preflight --screenshots should build store screenshot drafts");
+  assert(tool.includes("const WIDTH = 1280"), "Store screenshot drafts should use 1280px width");
+  assert(tool.includes("const HEIGHT = 800"), "Store screenshot drafts should use 800px height");
+  assert(tool.includes("DO NOT SUBMIT YET"), "Store screenshot drafts should be clearly marked as not final");
+  assert(tool.includes('"artifacts", "store-screenshots"'), "Store screenshot drafts should stay in ignored local artifacts");
+  assert(tool.includes("do not use real browser tabs"), "Store screenshot draft README should explain privacy scope");
+  assert(tool.includes("developer.chrome.com/docs/webstore/images"), "Store screenshot draft README should cite image guidance");
+  assert(tool.includes("developer.chrome.com/docs/webstore/best-listing"), "Store screenshot draft README should cite listing guidance");
+});
+
 test("AI connection test does not send tab data", async () => {
   const fetchCalls = [];
   context.fetch = async (url, options = {}) => {

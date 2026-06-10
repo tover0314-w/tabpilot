@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.97 dashboard local workspace save/delete in this commit
+Source state verified: v0.98 store screenshot draft generator in this commit
 
 ### Unified Preflight
 
@@ -21,12 +21,13 @@ node tools/preflight.js --runtime --large-runtime --screenshots
 Result:
 
 ```text
-PASS secret scan checked 99 tracked files
-35 smoke tests passed
+PASS secret scan checked 100 tracked files
+36 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 735ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 428ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
+PASS store screenshot drafts captured
 PASS release package verified for v0.1.0
 PASS controlled private beta readiness evidence checked
 READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes
@@ -40,6 +41,7 @@ Evidence notes:
 - `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
 - `--large-runtime` used a separate temporary Chrome for Testing profile with 96 synthetic tabs and verified the real native group path, safe duplicate closes, review duplicate groups, bounded runtime, and sanitized run snapshots.
 - `--screenshots` generated mock-data UI screenshots for the chat-first Tab Agent side panel and Smart Groups Dashboard and did not read real browser tabs or `.env.local`.
+- `--screenshots` also generated five local 1280x800 Chrome Web Store screenshot drafts from the mock UI screenshots. These are review drafts only and remain marked `DO NOT SUBMIT YET`.
 - Runtime smoke can still `SKIP` on branded Google Chrome CLI extension loading, but this run auto-detected Chrome for Testing through Playwright and passed.
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
 - Beta readiness check confirms controlled local/private beta evidence is present, including the large-runtime evidence, while public Chrome Web Store launch remains blocked.
@@ -95,7 +97,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-35 smoke tests passed
+36 smoke tests passed
 ```
 
 Covered:
@@ -139,6 +141,7 @@ Covered:
 - AI classification status stays lightweight in the sidebar completion message while Dashboard retains fuller AI status.
 - Dashboard Smart Group cards and local favicon-backed tab-row rendering from sanitized run data, with expandable hidden tab rows and edit/move controls folded/contextual by default.
 - Dashboard local workspace save/delete guard: minimized local snapshot, no full URL, no restore URL, no URL hashes, no favicon URL, no page text, and delete only updates local saved workspace storage.
+- Store screenshot draft guard: five 1280x800 local draft screenshots, output to ignored artifacts, marked DO NOT SUBMIT YET, and sourced from mock UI screenshots only.
 - Dashboard Settings first screen shows compact AI Classification; provider details, privacy defaults, permission, diagnostics, and local reset controls remain available under folded sections.
 - AI connection test without tab data.
 - Dashboard rule deletion confirmation.
@@ -195,7 +198,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 735ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 428ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 ```
 
 Evidence notes:
@@ -274,7 +277,7 @@ Result:
 PASS controlled private beta readiness evidence checked
 READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes
 READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
-PUBLIC_LAUNCH_BLOCKERS=real-profile manual QA, privacy policy URL, support email, final brand/domain, store disclosures, screenshots/demo video, beta user feedback
+PUBLIC_LAUNCH_BLOCKERS=real-profile manual QA, privacy policy URL, support email, final brand/domain, store disclosures, final screenshots/demo video, beta user feedback
 ```
 
 Evidence notes:
@@ -289,6 +292,7 @@ Command:
 
 ```bash
 node tools/capture_ui_screenshots.js
+node tools/build_store_screenshots.js
 ```
 
 Result:
@@ -300,13 +304,20 @@ artifacts/ui-screenshots/sidepanel-result-zh.png
 artifacts/ui-screenshots/dashboard-overview.png
 artifacts/ui-screenshots/dashboard-mobile.png
 artifacts/ui-screenshots/dashboard-ai-settings.png
+PASS store screenshot drafts captured
+artifacts/store-screenshots/01-one-click-native-groups.png
+artifacts/store-screenshots/02-tab-agent-sidebar.png
+artifacts/store-screenshots/03-smart-groups-dashboard.png
+artifacts/store-screenshots/04-privacy-ai-settings.png
+artifacts/store-screenshots/05-mobile-dashboard.png
 ```
 
 Evidence notes:
 
 - Screenshots use mock extension data only, including Dashboard desktop, mobile, and AI Settings views.
-- The script does not read real browser tabs.
-- The script does not read `.env.local`.
+- The scripts do not read real browser tabs.
+- The scripts do not read `.env.local`.
+- Store screenshot drafts are 1280x800 PNGs generated for review. They are not final Chrome Web Store listing assets and must not be submitted without user approval.
 - `artifacts/` is ignored by git because screenshots are reproducible local evidence.
 - Screenshot capture is visual QA only and does not prove real Chrome native tab groups were created.
 

@@ -24,6 +24,7 @@
 - `tools/verify_release_package.js`：按 manifest 版本校验 release zip、checksum、package manifest 和包内安全内容。
 - `tools/beta_readiness_check.js`：检查 QA evidence、private beta handoff、release notes、package checksum 和 public-launch blocker 标注，输出 controlled beta / public launch readiness 结论。
 - `tools/capture_ui_screenshots.js`：可选 UI 截图脚本，用 mock extension 数据生成 sidebar / dashboard 预览图。
+- `tools/build_store_screenshots.js`：可选 Chrome Web Store screenshot 草稿生成脚本，用 mock UI 截图生成 5 张本地 1280x800 PNG，输出到 ignored artifacts，DO NOT SUBMIT YET。
 - `tools/extension_smoke_test.js`：无依赖 Node smoke test，覆盖 manifest、localization、permission explanation、redacted diagnostics、Chat Refine、rules、dedupe safety、sensitive summary confirmation、AI output validation、AI status visibility 和 local data deletion。
 - `tools/chrome_runtime_smoke_test.js`：可选 Chrome runtime smoke test，使用临时 profile 尝试加载 unpacked extension 并验证真实 native tab groups。
 - `tools/open_manual_qa_profile.js`：打开一次性手动 QA Chrome profile，加载 extension、本地 checklist、合成 QA tabs、sidepanel 和 dashboard，不触碰真实 Chrome profile；checklist 覆盖 AI 状态、敏感页 summary 确认、Undo/Restore、Dashboard apply 和隐私输出。

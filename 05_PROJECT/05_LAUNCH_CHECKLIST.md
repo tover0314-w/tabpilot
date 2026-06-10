@@ -70,7 +70,8 @@
 - [ ] Product Hunt 素材。
 - [ ] Hacker News launch post。
 - [ ] X/Twitter thread。
-- [ ] Chrome Web Store screenshots。
+- [x] Chrome Web Store screenshot draft generator（local mock-data 1280x800 assets；DO NOT SUBMIT YET）。
+- [ ] Final Chrome Web Store screenshots approved by user。
 
 ## Metrics
 

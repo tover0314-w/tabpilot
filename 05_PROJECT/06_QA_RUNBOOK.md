@@ -237,6 +237,7 @@ Run before or after manual QA when a visual snapshot is useful:
 
 ```bash
 node tools/capture_ui_screenshots.js
+node tools/build_store_screenshots.js
 ```
 
 Expected:
@@ -246,9 +247,11 @@ Expected:
 - Sidebar completed-state screenshot is generated in Chinese.
 - Dashboard overview screenshot is generated.
 - Dashboard AI settings screenshot is generated.
+- Five local 1280x800 Chrome Web Store screenshot drafts are generated.
 - Screenshots use mock extension data only.
-- The script does not read real browser tabs or .env.local.
+- The scripts do not read real browser tabs or .env.local.
 - Output goes to ignored local artifacts/ui-screenshots/.
+- Store screenshot draft output goes to ignored local artifacts/store-screenshots/ and remains DO NOT SUBMIT YET until user approval.
 ```
 
 This is not a substitute for real Chrome manual QA because it does not prove native tab groups were created in the browser top bar.

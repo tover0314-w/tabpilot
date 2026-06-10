@@ -1,7 +1,7 @@
 # Chrome Web Store Submission Draft
 
 Status: DO NOT SUBMIT YET  
-Last checked: 2026-06-09  
+Last checked: 2026-06-10  
 Decision state: CONFIRM before publishing  
 Scope: TabMosaic AI private-beta extension package
 
@@ -14,6 +14,9 @@ This document is a draft for Chrome Web Store submission and privacy-policy prep
 - Limited Use: https://developer.chrome.com/docs/webstore/program-policies/limited-use
 - Fill out the privacy fields: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
 - Disclosure Requirements: https://developer.chrome.com/docs/webstore/program-policies/disclosure-requirements
+- Complete your listing information: https://developer.chrome.com/docs/webstore/cws-dashboard-listing
+- Supplying Images: https://developer.chrome.com/docs/webstore/images
+- Creating a great listing page: https://developer.chrome.com/docs/webstore/best-listing
 
 ## Confirmation Gates
 
@@ -204,6 +207,37 @@ Privacy-first defaults:
 - Optional AI classification is off by default
 ```
 
+## Store Screenshot Draft Pack
+
+Status: DO NOT SUBMIT YET  
+Source: generated mock UI screenshots, not real browsing data
+
+Chrome Web Store dashboard guidance currently asks for at least one 1280x800 screenshot and allows up to five. The current local draft pack therefore generates five 1280x800 PNGs:
+
+```text
+artifacts/store-screenshots/01-one-click-native-groups.png
+artifacts/store-screenshots/02-tab-agent-sidebar.png
+artifacts/store-screenshots/03-smart-groups-dashboard.png
+artifacts/store-screenshots/04-privacy-ai-settings.png
+artifacts/store-screenshots/05-mobile-dashboard.png
+```
+
+Generation command:
+
+```bash
+node tools/capture_ui_screenshots.js
+node tools/build_store_screenshots.js
+```
+
+Important boundaries:
+
+```text
+- These are local draft assets for review, not final listing assets.
+- They use mock extension data only.
+- They do not read real browser tabs, .env.local, API keys, page text, or real profile screenshots.
+- Final screenshots still need user approval before Chrome Web Store submission.
+```
+
 ## Final Submission Checklist
 
 - [ ] User confirms final product name.
@@ -216,4 +250,4 @@ Privacy-first defaults:
 - [ ] User confirms data-use categories.
 - [ ] Manual QA runbook is completed on a real Chrome profile.
 - [ ] Privacy policy is published before store submission.
-- [ ] Store screenshots and demo video are created from the current build.
+- [ ] Final store screenshots and demo video are approved from the current build.

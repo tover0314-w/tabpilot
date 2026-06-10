@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.98 — 2026-06-10
+
+Changed:
+
+- Added `tools/build_store_screenshots.js` to generate five local 1280x800 Chrome Web Store screenshot drafts from mock UI screenshots.
+- `node tools/preflight.js --screenshots` now captures UI screenshots and then builds the store screenshot draft pack.
+- Store submission draft now records the official image/listing guidance checked on 2026-06-10 and keeps generated screenshots marked `DO NOT SUBMIT YET`.
+- Smoke/readiness/docs now distinguish reproducible local store screenshot drafts from final user-approved store listing assets.
+
+Safety:
+
+- Screenshot drafts use mock extension data only and write to ignored local `artifacts/`. They do not read a real Chrome profile, real tabs, `.env.local`, page text, API keys, or private screenshots. They do not submit to Chrome Web Store.
+
 ## v0.97 — 2026-06-10
 
 Changed:

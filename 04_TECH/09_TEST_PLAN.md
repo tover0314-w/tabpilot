@@ -12,6 +12,7 @@ node tools/issue_form_smoke_test.js
 node tools/verify_release_package.js
 node tools/beta_readiness_check.js
 node --check tools/capture_ui_screenshots.js
+node --check tools/build_store_screenshots.js
 ```
 
 Coverage:
@@ -121,6 +122,7 @@ Optional UI screenshot capture:
 
 ```bash
 node tools/capture_ui_screenshots.js
+node tools/build_store_screenshots.js
 node tools/preflight.js --screenshots
 ```
 
@@ -132,9 +134,12 @@ Expected:
 - renders dashboard overview with mock workspace data
 - renders dashboard mobile overview with mock workspace data
 - renders dashboard AI settings with mock DeepSeek settings
+- generates five 1280x800 Chrome Web Store screenshot drafts from mock UI screenshots
 - does not read real browser tabs
 - does not read .env.local
 - writes screenshots only to ignored local artifacts/ui-screenshots/
+- writes store screenshot drafts only to ignored local artifacts/store-screenshots/
+- marks store screenshot drafts DO NOT SUBMIT YET until user approval
 ```
 
 Package check:

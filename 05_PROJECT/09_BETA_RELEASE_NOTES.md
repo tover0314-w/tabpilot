@@ -49,6 +49,7 @@ Click extension icon
 - Optional DeepSeek classification with a user-provided API key through an OpenAI-compatible request format.
 - AI connection test that calls DeepSeek `/models` only and sends no tab data.
 - Redacted local error summaries and count-only duplicate safety audit for beta diagnostics.
+- Mock-data Chrome Web Store screenshot drafts generated locally as five 1280x800 PNGs.
 
 ## Privacy Defaults
 
@@ -73,6 +74,7 @@ PASS preflight completed
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs with real native tab groups, safe duplicate closes, and review duplicate groups
 PASS UI screenshots captured
+PASS store screenshot drafts captured
 PASS controlled private beta readiness evidence checked
 
 node tools/deepseek_smoke_test.js --classify-fixture
@@ -160,6 +162,7 @@ Minimum manual checks:
 - Hosted AI, accounts, billing, cloud sync, and analytics are not included.
 - DeepSeek API key in `.env.local` is for local testing only and should be rotated before public or broader beta use.
 - Real-profile QA results should use `05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md` or the checklist's `Copy Real-Profile Template` action, and must be manually redacted before sharing or committing.
+- Store screenshot drafts exist, but final Chrome Web Store screenshots and demo video are not approved.
 
 ## Confirmation Gates Before Public Launch
 
@@ -171,7 +174,7 @@ Minimum manual checks:
 - Whether optional DeepSeek user-key classification remains in the first public build.
 - Free/Pro boundary and pricing.
 - Any analytics involving browsing activity.
-- Store screenshots and demo video.
+- Final Chrome Web Store screenshots and demo video.
 
 ## Feedback Path
 

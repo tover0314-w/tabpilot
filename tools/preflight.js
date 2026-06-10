@@ -21,6 +21,7 @@ const syntaxTargets = [
   "tools/qa_seed_tabs.js",
   "tools/generate_extension_assets.js",
   "tools/capture_ui_screenshots.js",
+  "tools/build_store_screenshots.js",
   "tools/deepseek_smoke_test.js",
   "tools/secret_scan.js",
   "tools/issue_form_smoke_test.js",
@@ -63,6 +64,7 @@ function main() {
 
   if (SHOULD_RUN_SCREENSHOTS) {
     runStep("UI screenshot capture", process.execPath, ["tools/capture_ui_screenshots.js"]);
+    runStep("Store screenshot draft capture", process.execPath, ["tools/build_store_screenshots.js"]);
   } else {
     console.log("SKIP UI screenshot capture; pass --screenshots to run it.");
   }
