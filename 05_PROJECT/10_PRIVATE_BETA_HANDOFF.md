@@ -73,7 +73,8 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 32 extension smoke tests
+- 33 extension smoke tests
+- synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke

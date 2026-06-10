@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.91 — 2026-06-10
+
+Changed:
+
+- Added a synthetic 180-tab smoke guard for local planning, duplicate detection, safe-close planning, and sanitized run snapshots.
+- The guard checks that large local planning stays bounded, avoids protected-tab closes, keeps hash/query variants in review, and strips URL/body-sensitive fields from stored UI state.
+- QA evidence and test-plan docs now distinguish this local planning guard from future real Chrome `tabs.group` performance research.
+
+Safety:
+
+- This is test coverage only. It uses synthetic tabs, does not read real browser data, does not open Chrome, does not call AI, does not upload data, does not move or close tabs, and does not request new permissions.
+
 ## v0.90 — 2026-06-10
 
 Changed:

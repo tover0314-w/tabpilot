@@ -134,7 +134,7 @@
 
 目标：可给真实用户试用。
 
-状态：已实现 first-run privacy onboarding、Sidepanel/Dashboard actionable safe error states first slice。Analytics、performance optimization、Chrome Web Store final submission 仍未完成或需确认。
+状态：已实现 first-run privacy onboarding、Sidepanel/Dashboard actionable safe error states first slice、180-tab synthetic local planning performance guard。Analytics、real Chrome `tabs.group` large-tab performance research、Chrome Web Store final submission 仍未完成或需确认。
 
 任务：
 
@@ -142,7 +142,7 @@
 - privacy settings。
 - error states（Sidepanel + Dashboard first slice 已实现）。
 - analytics minimal。
-- performance optimization。
+- performance optimization（synthetic local planning guard 已实现；真实 Chrome `tabs.group` 大规模性能仍需后续研究）。
 - Chrome Web Store draft。
 
 交付：

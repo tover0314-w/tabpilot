@@ -30,6 +30,7 @@ Coverage:
 - exact/tracking duplicate safe close policy
 - hash/query duplicate review policy
 - protected duplicate tabs not auto-closed
+- large synthetic local planning guard for 180 tabs, covering duplicate detection, safe-close planning, group-plan validation, privacy sanitization, and bounded runtime without reading real browser tabs
 - current-tab summary confirms sensitive pages before visible text extraction
 - AI output validation for invented/repeated tab IDs
 - AI classification request includes minimized metadata only and excludes full URL, restore URL, favicon URL, query token, and page text

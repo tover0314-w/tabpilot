@@ -118,6 +118,97 @@ function snapshot(tabs, groups = []) {
   };
 }
 
+function largeSyntheticSnapshot(tabCount = 180) {
+  const fixtures = [
+    {
+      title: (index) => `GitHub PR ${index}`,
+      url: (index) => `https://github.com/acme/tabmosaic/pull/${1000 + index}`
+    },
+    {
+      title: (index) => `Chrome extension docs ${index}`,
+      url: (index) => `https://developer.chrome.com/docs/extensions/develop/concepts/${index}`
+    },
+    {
+      title: (index) => `Product spec ${index}`,
+      url: (index) => `https://docs.google.com/document/d/mock-${index}/edit`
+    },
+    {
+      title: (index) => `Linear issue ${index}`,
+      url: (index) => `https://linear.app/acme/issue/TAB-${index}/mvp-polish`
+    },
+    {
+      title: (index) => `Slack thread ${index}`,
+      url: (index) => `https://acme.slack.com/archives/C123/p${String(index).padStart(8, "0")}`
+    },
+    {
+      title: (index) => `Tutorial video ${index}`,
+      url: (index) => `https://www.youtube.com/watch?v=tabmosaic${index}tutorial`
+    },
+    {
+      title: (index) => `Analytics report ${index}`,
+      url: (index) => `https://analytics.google.com/analytics/web/#/p${index}/reports`
+    },
+    {
+      title: (index) => `Article ${index}`,
+      url: (index) => `https://example.com/blog/tab-workflow-${index}`
+    },
+    {
+      title: (index) => `Exact duplicate ${Math.floor(Math.floor(index / fixtures.length) / 2)}`,
+      url: (index) => `https://example.com/exact-duplicate-${Math.floor(Math.floor(index / fixtures.length) / 2)}`
+    },
+    {
+      title: (index) => `Tracking duplicate ${Math.floor(Math.floor(index / fixtures.length) / 2)}`,
+      url: (index) =>
+        `https://example.com/tracking-duplicate-${Math.floor(Math.floor(index / fixtures.length) / 2)}?utm_source=newsletter&utm_campaign=${index}`
+    },
+    {
+      title: (index) => `Review duplicate ${Math.floor(Math.floor(index / fixtures.length) / 2)}`,
+      url: (index) =>
+        `https://example.com/review-duplicate-${Math.floor(Math.floor(index / fixtures.length) / 2)}#section-${Math.floor(index / fixtures.length) % 2}`
+    },
+    {
+      title: (index) => `Misc workspace ${index}`,
+      url: (index) => `https://workspace-${index}.example.net/app`
+    }
+  ];
+  const tabs = [];
+
+  for (let index = 0; index < tabCount; index += 1) {
+    const fixture = fixtures[index % fixtures.length];
+    const windowId = index < tabCount / 2 ? 1 : 2;
+    const syntheticTab = tab({
+      id: 5000 + index,
+      windowId,
+      index: index % Math.ceil(tabCount / 2),
+      title: fixture.title(index),
+      url: fixture.url(index),
+      active: index === 0,
+      pinned: index === 1,
+      audible: index === 2,
+      lastAccessed: 1700000000000 + index
+    });
+
+    if (syntheticTab.active) syntheticTab.protectedReasons.push("active");
+    if (syntheticTab.pinned) syntheticTab.protectedReasons.push("pinned");
+    if (syntheticTab.audible) syntheticTab.protectedReasons.push("audible");
+
+    tabs.push(syntheticTab);
+  }
+
+  tabs[0].pageText = "Private visible page text must never enter stored run snapshots.";
+  tabs[0].fullUrl = "https://secret.example.com/private?token=should-not-persist";
+
+  return {
+    collectedAt: "2026-06-08T00:00:00.000Z",
+    windows: [
+      { id: 1, focused: true, state: "normal", tabCount: Math.ceil(tabCount / 2) },
+      { id: 2, focused: false, state: "normal", tabCount: Math.floor(tabCount / 2) }
+    ],
+    groups: [],
+    tabs
+  };
+}
+
 test("manifest keeps one-click action and narrow permissions", () => {
   assertEqual(manifest.manifest_version, 3, "Manifest version");
   assert(!manifest.action.default_popup, "Manifest action must not define default_popup");
@@ -975,6 +1066,46 @@ test("duplicate policy closes only safe exact/tracking duplicates", () => {
   assert(!closeIds.includes(21), "Active tab must not close");
   assert(!closeIds.includes(27), "Pinned tab must not close");
   assert(!closeIds.includes(25) && !closeIds.includes(26), "Hash review tabs must not auto-close");
+});
+
+test("large synthetic tab planning stays bounded and private", () => {
+  const state = largeSyntheticSnapshot();
+  const startedAt = process.hrtime.bigint();
+  const duplicateGroups = context.detectDuplicateGroups(state.tabs);
+  const closePlan = context.buildSafeDuplicateClosePlan(duplicateGroups, state.tabs);
+  const groupPlan = context.buildGroupPlan(state);
+  const validatedPlan = context.validateGroupPlan(groupPlan, state);
+  const summary = context.summarizeSnapshot(state, duplicateGroups);
+  const sanitized = context.sanitizeSnapshotForRun(state);
+  const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1000000;
+  const closedTabs = closePlan.closeTabs
+    .map((item) => state.tabs.find((tabItem) => tabItem.id === item.tabId))
+    .filter(Boolean);
+
+  assert(elapsedMs < 2000, `Large synthetic tab planning should stay bounded, took ${elapsedMs.toFixed(2)}ms`);
+  assertEqual(summary.tabCount, 180, "Large synthetic summary tab count");
+  assertEqual(summary.windowCount, 2, "Large synthetic summary window count");
+  assert(validatedPlan.length > 0, "Large synthetic plan should create useful groups");
+  assert(validatedPlan.length <= 32, "Large synthetic plan should avoid unreasonable group explosion");
+  assert(duplicateGroups.some((group) => group.action === "safe-close-candidate"), "Large synthetic run should find safe duplicates");
+  assert(duplicateGroups.some((group) => group.action === "review"), "Large synthetic run should keep hash/query variants in review");
+  assert(closePlan.closeTabs.length > 0, "Large synthetic close plan should include safe duplicates");
+  assert(
+    closedTabs.every((tabItem) => !tabItem.active && !tabItem.pinned && !tabItem.audible && !tabItem.incognito && !tabItem.protectedReasons.length),
+    "Large synthetic close plan must not close protected tabs"
+  );
+  assert(
+    sanitized.tabs.every(
+      (tabItem) =>
+        !("restoreUrl" in tabItem) &&
+        !("exactUrlHash" in tabItem) &&
+        !("trackingUrlHash" in tabItem) &&
+        !("reviewUrlHash" in tabItem) &&
+        !("fullUrl" in tabItem) &&
+        !("pageText" in tabItem)
+    ),
+    "Large synthetic sanitized snapshot should not retain sensitive URL/body fields"
+  );
 });
 
 test("AI validation rejects invented ids and duplicate assignments", () => {

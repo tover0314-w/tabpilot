@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.90 manual QA checklist alignment in this commit
+Source state verified: v0.91 synthetic large-tab planning guard in this commit
 
 ### Unified Preflight
 
@@ -22,7 +22,7 @@ Result:
 
 ```text
 PASS secret scan checked 98 tracked files
-32 smoke tests passed
+33 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS UI screenshots captured
@@ -90,7 +90,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-32 smoke tests passed
+33 smoke tests passed
 ```
 
 Covered:
@@ -117,6 +117,7 @@ Covered:
 - Dashboard Undo/Restore guard: compact action buttons, latest-run availability checks, existing background action reuse, and no direct tab close action.
 - Dashboard simple MVP UI guard: no default P1 placeholders, advanced Settings folded.
 - Disposable manual QA checklist coverage guard: Tab Agent UI, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive summary, privacy outputs, and local QA notes in copied Markdown reports.
+- 180-tab synthetic local planning guard: duplicate detection, safe-close planning, group-plan validation, bounded runtime, and sanitized run snapshots without reading real browser tabs.
 - AI host guardrail aligned with manifest host permission.
 - Redacted local error logs.
 - Count-only duplicate safety audit.
