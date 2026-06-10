@@ -291,17 +291,6 @@ async function main() {
         viewport: DASHBOARD_MOBILE_VIEWPORT,
         fullPage: false,
         language: "en"
-      },
-      {
-        name: "dashboard-ai-settings.png",
-        path: "/dashboard.html",
-        viewport: DEFAULT_VIEWPORT,
-        fullPage: false,
-        language: "en",
-        beforeScreenshot: async (page) => {
-          await page.locator('.dashboard-nav-item[data-page="settings"]').click();
-          await page.locator("#aiSettingsForm").scrollIntoViewIfNeeded();
-        }
       }
     ];
 

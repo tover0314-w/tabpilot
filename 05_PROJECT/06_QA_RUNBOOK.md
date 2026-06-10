@@ -192,9 +192,9 @@ Expected:
 
 Only run this in a disposable or non-critical profile with a disposable DeepSeek key.
 
-1. Open Dashboard -> Settings -> AI Classification.
-2. Save `https://api.deepseek.com`, `deepseek-v4-flash`, and the disposable API key.
-3. Click `Test AI Connection`.
+1. Confirm `.env.local` contains a disposable `DEEPSEEK_API_KEY=...` entry or a single-line `sk-...` private-test key.
+2. Run `node tools/write_private_beta_ai_config.js`.
+3. Reload the unpacked extension from `chrome://extensions`.
 4. Organize the browser again.
 5. In the Sidebar composer, ask an open tab-management question, such as `Which tabs should I focus on for Chrome extension planning?`.
 6. Confirm the answer renders as a normal assistant message, not as a raw parser error.
@@ -205,7 +205,7 @@ Only run this in a disposable or non-critical profile with a disposable DeepSeek
 Expected:
 
 ```text
-- Test AI Connection calls /models and does not send tab data.
+- The local private-beta config file is ignored by git and not included in release zips.
 - The open answer uses minimized tab metadata only, not page body or full URLs.
 - The move draft requires Apply before browser changes.
 - Apply updates real Chrome native tab groups.
@@ -240,29 +240,25 @@ Expected:
 ## 11. Dashboard
 
 1. Click `Open Dashboard`.
-2. Review Smart Groups, Duplicate Center, Rules & Memory, and Settings.
+2. Review Smart Groups and Duplicate Center.
 3. Confirm the default Dashboard opens to Smart Groups without Latest Result, timestamp, or Current Workspace clutter.
 4. Open Duplicate Center when review groups exist.
 5. Click a Smart Group tab title and confirm the existing browser tab/window is focused.
 6. Move one tab into another group in the same window.
 7. Edit a Smart Group title/color and click `Apply`.
-8. Optional: enter a DeepSeek API key and click `Test AI Connection`.
-9. Optional: click `Clear AI Key`, confirm, and verify only the AI key is removed.
+8. Optional: verify the hidden private-beta Settings path still rejects non-DeepSeek AI base URLs before any network request.
 
 Expected:
 
 ```text
 - Dashboard opens directly to Smart Groups and keeps Latest Result, timestamp, Current Workspace, and metric-wall clutter out of the default page.
-- Rules & Memory can enable, disable, and delete local rules.
-- Deleting a local rule asks for confirmation and does not move or close tabs.
+- Rules & Memory and Settings are not primary default navigation items in the commercial Dashboard UI.
 - Clicking a tab title focuses the existing tab/window and does not create or close tabs.
 - Same-window tab move updates the target native tab group and does not close tabs.
 - Group title/color updates real Chrome native group.
 - Undo can restore group state after dashboard apply.
 - Dashboard does not create new groups manually, move tabs across windows, or close tabs from Smart Groups.
-- Test AI Connection checks /models and does not send tab data, page text, or full URLs.
 - Non-DeepSeek AI base URLs are rejected before any network request in this private beta.
-- Clear AI Key asks for confirmation, removes only the local API key, disables AI classification, keeps rules and recent results, and does not move or close tabs.
 ```
 
 ## 12. Optional UI Screenshot Preview
@@ -280,7 +276,7 @@ Expected:
 - Sidebar completed-state screenshot is generated in English.
 - Sidebar completed-state screenshot is generated in Chinese.
 - Dashboard overview screenshot is generated.
-- Dashboard AI settings screenshot is generated.
+- Dashboard mobile screenshot is generated.
 - Five local 1280x800 Chrome Web Store screenshot drafts are generated.
 - Screenshots use mock extension data only.
 - The scripts do not read real browser tabs or .env.local.
@@ -292,7 +288,7 @@ This is not a substitute for real Chrome manual QA because it does not prove nat
 
 ## 12. Beta Diagnostics And Feedback
 
-1. Open Dashboard -> Settings.
+1. Open the hidden private-beta Settings path in a development build.
 2. Click `Copy Diagnostic Snapshot`.
 3. Paste into a local text editor and scan the JSON.
 4. Click `Copy Feedback Template`.

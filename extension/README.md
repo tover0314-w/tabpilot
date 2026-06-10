@@ -12,7 +12,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Background service worker scans all non-incognito normal Chrome windows.
 - Built-in rules apply native Chrome tab groups across all normal windows.
 - Side panel uses a ChatGPT-style Tab Agent UI with a message thread, compact action chips, and a bottom composer.
-- Organize status and impact appear as agent messages instead of a dashboard-like result panel.
+- Organize completion appears as one assistant reply with plain-language impact text and quick action chips instead of a dashboard-like result panel.
 - Side panel hides technical browser lists from the default Tab Agent chat surface.
 - Side panel quick action chips route through the same local chat thread as typed commands.
 - Undo restores the previous group state for still-open tabs.
@@ -36,7 +36,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - User rules apply before AI and built-in rules on future organize runs.
 - Summarize Current Tab reads visible page text only after a user click, asks for an extra confirmation on sensitive pages, and generates a local extractive summary.
 - The composer can answer `ask page: ...` questions from the current page with local visible-text matching after the same current-page privacy flow.
-- Open Dashboard shows a minimal glass Smart Groups page with a top bar, compact navigation, smart group cards, folded Duplicate Center, Rules & Memory, and settings.
+- Open Dashboard shows a minimal glass Smart Groups page with a top bar, compact navigation, smart group cards, and folded Duplicate Center.
 - Dashboard default page no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area.
 - Dashboard Smart Groups filter chips can show all groups, AI-source groups, or rule-source groups.
 - Dashboard Smart Groups tab titles can focus the existing browser tab and window.
@@ -45,31 +45,29 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Dashboard Smart Groups show local tab rows from the latest sanitized run snapshot when group membership is available, with folded `+ N tabs` rows that expand on demand.
 - Dashboard Duplicate Center can expand duplicate groups and focus existing duplicate tabs for review without closing anything.
 - Side panel and Dashboard organize errors show a safe-state note that no tabs were moved or closed, plus a simple retry/diagnostics next step.
-- Dashboard keeps unwired design-prototype features out of the default UI so users see only working MVP actions.
-- Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
-- Dashboard can save a local DeepSeek API key for AI tab classification through an OpenAI-compatible request format.
-- Dashboard can test the AI provider connection without sending tab data.
-- Dashboard can clear only the locally saved AI key, disabling AI classification while keeping local rules and recent results.
+- Dashboard keeps unwired design-prototype features, Saved Workspaces, Auto Organize, Settings, and Save Workspace out of the default UI so users see only working MVP actions.
+- Hidden private-beta Settings paths still support diagnostics, local reset, and AI connection tooling when needed for testing.
+- Local private-beta DeepSeek config can be generated from `.env.local` into ignored `extension/private-beta-ai-settings.json` for unpacked-extension AI testing without manual Settings entry.
 - Side panel and Dashboard show whether AI classification was applied, fell back, or stayed on local rules.
 - Side panel and Dashboard show how many AI groups were suggested in the latest organize run.
 - AI connection testing and AI classification use request timeouts; classification timeout or provider failure falls back to local rules.
-- Dashboard Settings explains each Chrome permission and what data it supports.
-- Dashboard Settings keeps AI Classification visible first; provider details, privacy defaults, permissions, diagnostics, and local reset live under folded sections.
-- Dashboard Settings can copy a redacted local diagnostic snapshot for beta bug reports.
+- Hidden private-beta Settings explains each Chrome permission and what data it supports.
+- Hidden private-beta Settings keeps provider details, privacy defaults, permissions, diagnostics, and local reset under folded sections.
+- Hidden private-beta Settings can copy a redacted local diagnostic snapshot for beta bug reports.
 - Dashboard diagnostics include recent local error summaries after redaction.
 - Dashboard diagnostics include local duplicate close safety audit counts for beta validation.
-- Dashboard Settings can copy a local beta feedback template with manual prompts and the redacted diagnostic snapshot.
+- Hidden private-beta Settings can copy a local beta feedback template with manual prompts and the redacted diagnostic snapshot.
 - The beta feedback template asks testers to label classification quality against the 70% clearly right / 20% acceptable / 10% Review or Misc / 0 dangerous close mistakes target.
-- Dashboard Settings can clear local data, including local rules, API key, recent results, Undo/Restore snapshots, chat drafts, and first-run privacy acceptance.
+- Hidden private-beta Settings can clear local data, including local rules, API key, recent results, Undo/Restore snapshots, chat drafts, and first-run privacy acceptance.
 - When enabled, organize tries AI classification first and falls back to local rules if the API fails.
 
 Protected tabs are never closed: active, pinned, audible, incognito, internal pages, and non-restorable URLs.
 
 Hash/query/same-page review candidates are never auto-closed.
 
-Chat does not call AI, read page body content, or close tabs in this slice.
+Local chat commands do not call AI, read page body content, or close tabs. Open-ended tab-management questions can call the metadata-only DeepSeek Agent when a local DeepSeek key is available; that flow still does not read page body content or close tabs.
 
-Dashboard apply currently edits group title/color, focuses existing tabs, supports same-window tab moves into existing groups, supports lightweight drag/drop tab assignment between existing groups in the same window, saves the current workspace as a local-only snapshot, and exposes compact Undo / Restore Closed actions when available. It does not close tabs directly, create new groups manually, restore saved workspaces, sync cloud data, or move tabs across windows.
+Dashboard apply currently edits group title/color, focuses existing tabs, supports same-window tab moves into existing groups, supports lightweight drag/drop tab assignment between existing groups in the same window, and exposes compact Undo / Restore Closed actions when available. Hidden private-beta workspace snapshot code remains available for tests, but Saved Workspaces are not shown in the default Dashboard. It does not close tabs directly, create new groups manually, restore saved workspaces, sync cloud data, or move tabs across windows.
 
 Dashboard design-prototype features that are not wired yet: manual new groups, workspace restore/history management, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 
@@ -104,7 +102,7 @@ Beta feedback templates are copied locally and do not submit data automatically.
 5. Click the TabMosaic AI toolbar icon.
 6. On first run, review the privacy note and click `Start Organizing`.
 7. Click `Open Dashboard` from the side panel to view the local dashboard.
-8. Optional: enable DeepSeek classification in Dashboard Settings with your API key.
+8. Optional: from the repository root, run `node tools/write_private_beta_ai_config.js` to let the unpacked extension use DeepSeek from `.env.local` without manual Settings entry.
 9. Try Chat Refine examples such as `GitHub PR to Code Review`, `current tab to Reading`, `rename Misc to Reading`, `把当前标签页放到阅读`, or `把 Misc 改名为阅读`.
 10. In Dashboard Smart Groups, edit a group name/color and click `Apply`.
 
@@ -144,7 +142,7 @@ Optional UI screenshot capture:
 node tools/capture_ui_screenshots.js
 ```
 
-This renders the sidebar and dashboard with mock extension data, including side panel result/chat states and Dashboard desktop, mobile, and AI Settings screenshots. It does not read real browser tabs or `.env.local`. It requires Playwright locally; the Codex bundled runtime is auto-detected when available. Screenshots are written to `artifacts/ui-screenshots/`.
+This renders the sidebar and dashboard with mock extension data, including side panel result/chat states plus Dashboard desktop and mobile screenshots. It does not read real browser tabs or `.env.local`. It requires Playwright locally; the Codex bundled runtime is auto-detected when available. Screenshots are written to `artifacts/ui-screenshots/`.
 
 Optional runtime smoke test:
 

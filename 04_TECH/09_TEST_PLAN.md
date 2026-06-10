@@ -13,6 +13,7 @@ node tools/verify_release_package.js
 node tools/beta_readiness_check.js
 node --check tools/capture_ui_screenshots.js
 node --check tools/build_store_screenshots.js
+node --check tools/write_private_beta_ai_config.js
 ```
 
 Coverage:
@@ -38,7 +39,7 @@ Coverage:
 - AI classification request includes minimized metadata only and excludes full URL, restore URL, favicon URL, query token, and page text
 - AI classification request carries an abort signal and falls back to local rules on timeout
 - AI classification status remains lightweight in the sidebar completion message, while Dashboard retains the fuller AI status view
-- Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, filter chips, expanded group cards, favicon-backed tab rows, compact Save action, and folded Saved Workspaces list
+- Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, filter chips, expanded group cards, and favicon-backed tab rows
 - Side panel opens as a chat-first Tab Agent UI, not a result metrics panel
 - Side panel organize error states disclose that no tabs were moved or closed and show a retry/diagnostics next step
 - Side panel composer preserves recent user and Agent messages in an in-memory local thread
@@ -64,14 +65,14 @@ Coverage:
 - Dashboard Duplicate Center expands duplicate groups into local tab details and focuses existing tabs without close actions
 - Dashboard stored organize errors render as a compact safe error card instead of an empty workspace
 - Dashboard tab title focus activates the existing browser tab/window without storage writes or destructive tab actions
-- Dashboard local workspace save stores a minimized local snapshot and excludes full URLs, restore URLs, URL hashes, favicon URLs, and page text
-- Dashboard local workspace delete requires confirmation and only removes the selected local snapshot without calling tab, tab group, or window APIs
+- Hidden/private-beta local workspace save stores a minimized local snapshot and excludes full URLs, restore URLs, URL hashes, favicon URLs, and page text
+- Hidden/private-beta local workspace delete requires confirmation and only removes the selected local snapshot without calling tab, tab group, or window APIs
 - Dashboard same-window tab move UI calls the background action, limits target groups to the same window, and avoids tab close actions
 - Dashboard drag/drop tab assignment reuses the same same-window background move action and avoids tab close actions
 - Dashboard Undo and Restore Closed actions reuse existing background actions, enable only from latest run state, and avoid direct destructive tab actions
-- Dashboard keeps unwired P1/prototype placeholders out of the default UI and folds advanced Settings content
+- Dashboard keeps unwired P1/prototype placeholders, Saved Workspaces, Auto Organize, and Settings out of the default commercial UI
 - Disposable manual QA checklist covers the current MVP flows: Tab Agent chat UI, latest organize result as one assistant message bubble, bottom composer, DeepSeek Agent open answer / move draft when tested, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive summary, privacy outputs, local QA notes in copied Markdown reports, and one-click copying of the blank redaction-safe real-profile QA template
-- Dashboard permission explanation remains aligned with manifest permissions
+- Hidden/private-beta permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types
 - current run snapshot strips restore URLs, URL hashes, raw/full URLs, page text, and favicon query/hash data before storing UI state
@@ -82,7 +83,8 @@ Coverage:
 - AI connection test carries an abort signal
 - AI connection rejects unsupported OpenAI-compatible hosts before fetch; private beta permits only `https://api.deepseek.com`
 - AI host guardrail keeps background validation, Dashboard validation, Dashboard permission copy, and manifest host permissions aligned
-- Dashboard AI settings copy explains the private-beta DeepSeek host limit
+- Hidden private-beta AI settings copy still explains the DeepSeek host limit when the Settings path is opened intentionally for testing
+- Local private-beta AI config tool can copy `.env.local` DeepSeek settings into ignored `extension/private-beta-ai-settings.json`; release package verification rejects that file if it appears in a zip
 - Dashboard local rule deletion requires confirmation and does not move or close tabs
 - Dashboard Clear AI Key removes only the local API key, disables AI classification, keeps other local data, and does not move or close tabs
 - Dashboard Clear Local Data removes local rules, saved workspace snapshots, AI key/settings, run state, Undo/Restore snapshots, privacy acceptance, chat draft, and local error log
@@ -144,7 +146,7 @@ Expected:
 - renders sidebar completed state with Chinese mock data
 - renders dashboard overview with mock workspace data
 - renders dashboard mobile overview with mock workspace data
-- renders dashboard AI settings with mock DeepSeek settings
+- renders side panel result/chat states plus Dashboard desktop/mobile with mock extension data
 - generates five 1280x800 Chrome Web Store screenshot drafts from mock UI screenshots
 - does not read real browser tabs
 - does not read .env.local
@@ -348,7 +350,7 @@ Dashboard apply 不读取页面正文。
 ### AI Provider Connection Test
 
 ```text
-用户打开 Dashboard Settings
+用户打开 hidden private-beta Settings
 → 填写 DeepSeek base URL、model、API key
 → 点击 Test AI Connection
 → background 调用 /models
@@ -369,7 +371,7 @@ Safety:
 ### AI Key Deletion
 
 ```text
-用户打开 Dashboard Settings
+用户打开 hidden private-beta Settings
 → 点击 Clear AI Key
 → browser confirm 出现
 → 确认后删除本地 API key 并停用 AI classification
@@ -382,7 +384,7 @@ Safety:
 ### Local Data Deletion
 
 ```text
-用户打开 Dashboard Settings
+用户打开 hidden private-beta Settings
 → 点击 Clear Local Data
 → browser confirm 出现
 → 确认后删除本地 rules、AI key/settings、最近整理结果、Undo/Restore snapshot、chat draft、first-run privacy acceptance

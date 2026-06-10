@@ -24,6 +24,7 @@ const syntaxTargets = [
   "tools/capture_ui_screenshots.js",
   "tools/build_store_screenshots.js",
   "tools/deepseek_smoke_test.js",
+  "tools/write_private_beta_ai_config.js",
   "tools/secret_scan.js",
   "tools/issue_form_smoke_test.js",
   "tools/verify_release_package.js",

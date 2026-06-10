@@ -153,11 +153,12 @@ CHROME_PATH="/path/to/chrome-or-chromium" node tools/chrome_runtime_smoke_test.j
 可选真实 Sidebar Agent + DeepSeek flow：
 
 ```bash
+node tools/write_private_beta_ai_config.js
 node tools/preflight.js --agent-flow
 node tools/chrome_runtime_smoke_test.js --agent-flow
 ```
 
-这个脚本会用临时 Chrome profile、synthetic tabs 和 `.env.local` 里的 DeepSeek key 跑真实 sidebar composer 流程：用户输入开放式 tab 管理问题，DeepSeek metadata-only Agent 返回普通 assistant 消息卡片、相关 tab 行、安全动作按钮和下一步建议；随后再让 DeepSeek 生成一个受本地校验的 `move_tabs` 草稿，点击 Apply 后验证真实 Chrome native tab group 更新且没有关闭 tab。它不会打印 API key，不读取真实 Chrome profile，不读取真实 tabs，不读取页面正文，不发送完整 URL，也不会让 AI 在用户 Apply 前自动执行浏览器动作。
+`write_private_beta_ai_config.js` 会从 `.env.local` 生成本地忽略的 `extension/private-beta-ai-settings.json`，让你用真实 unpacked extension 测 DeepSeek 时不用再进 Settings 手填 key。`.env.local` 可以写 `DEEPSEEK_API_KEY=...`，也兼容只有一行 `sk-...` 的本地私测格式。这个文件不会打印 key、不会进 git、也不会进正式 zip。后面两个脚本会用临时 Chrome profile、synthetic tabs 和 `.env.local`/本地私测配置跑真实 sidebar composer 流程：用户输入开放式 tab 管理问题，DeepSeek metadata-only Agent 返回普通 assistant 消息卡片、相关 tab 行、安全动作按钮和下一步建议；随后再让 DeepSeek 生成一个受本地校验的 `move_tabs` 草稿，点击 Apply 后验证真实 Chrome native tab group 更新且没有关闭 tab。它不会打印 API key，不读取真实 Chrome profile，不读取真实 tabs，不读取页面正文，不发送完整 URL，也不会让 AI 在用户 Apply 前自动执行浏览器动作。
 
 可选真实 Chrome 大标签 synthetic runtime 探针：
 

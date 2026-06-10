@@ -21,6 +21,7 @@
         id="refreshButton"
         class="dashboard-icon-button"
         type="button"
+        hidden
         aria-label="Refresh"
         data-i18n-aria-label="refresh"
         title="Refresh"
@@ -38,21 +39,21 @@
             <span class="dashboard-nav-icon" aria-hidden="true">⊟</span>
             <span data-i18n="projectSpace">Project Space</span>
           </button>
-          <button class="dashboard-nav-item" type="button" data-page="rules">
+          <button class="dashboard-nav-item" type="button" data-page="rules" hidden>
             <span class="dashboard-nav-icon" aria-hidden="true">⊕</span>
             <span data-i18n="autoOrganize">Auto Organize</span>
             <span id="rulesCountBadge" class="dashboard-count">0</span>
           </button>
-          <button class="dashboard-nav-item" type="button" data-page="settings">
+          <button class="dashboard-nav-item" type="button" data-page="settings" hidden>
             <span class="dashboard-nav-icon" aria-hidden="true">⚙</span>
             <span data-i18n="settings">Settings</span>
           </button>
-          <button id="organizeNowButton" class="dashboard-nav-item dashboard-nav-action" type="button" data-i18n="organizeBrowser">
+          <button id="organizeNowButton" class="dashboard-nav-item dashboard-nav-action" type="button" data-i18n="organizeBrowser" hidden>
             Organize Browser
           </button>
         </section>
 
-        <div class="dashboard-privacy-note">
+        <div class="dashboard-privacy-note" hidden>
           <div>
             <div class="dashboard-privacy-title" data-i18n="dataStaysLocal">Data stays local</div>
             <div class="dashboard-privacy-copy" data-i18n="noWebsiteUpload">No website data is uploaded by default.</div>
@@ -75,8 +76,8 @@
               <span data-i18n="ruleGroups">Rule groups</span>
               <span id="ruleGroupsCount" class="dashboard-chip-count">0</span>
             </button>
-            <button id="workspaceRefreshButton" class="dashboard-chip" type="button" data-i18n="refresh">Refresh</button>
-            <button id="saveWorkspaceButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="saveWorkspace" disabled>
+            <button id="workspaceRefreshButton" class="dashboard-chip" type="button" data-i18n="refresh" hidden>Refresh</button>
+            <button id="saveWorkspaceButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="saveWorkspace" disabled hidden>
               Save
             </button>
             <button id="dashboardUndoButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="undo" disabled>
@@ -97,7 +98,7 @@
             <div id="dashboardGroups" class="dashboard-group-grid"></div>
           </section>
 
-          <details id="saved-workspaces" class="dashboard-section dashboard-details-section">
+          <details id="saved-workspaces" class="dashboard-section dashboard-details-section" hidden>
             <summary>
               <span class="section-title" data-i18n="savedWorkspaces">Saved Workspaces</span>
               <small data-i18n="savedWorkspacesCopy">Local snapshots only. Restore, cloud sync, and workspace chat come later.</small>

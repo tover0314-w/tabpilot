@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.108 — 2026-06-10
+
+Changed:
+
+- Sidebar top-right button now opens Dashboard; the old refresh icon is removed from the primary header.
+- Sidebar no longer shows the `Tab Agent` title in the header.
+- Latest organize completion renders as one assistant text reply with the impact numbers in prose, followed by lightweight quick-action chips.
+- Sidebar chat scroll styling is cleaner, with transparent scrollbar track and more bottom space so messages are not cut off behind the composer.
+- Dashboard default commercial UI hides Saved Workspaces, Auto Organize, Settings, and Save Workspace until those workflows are more complete.
+- UI screenshots and store screenshot drafts no longer use the Settings page as a primary product screenshot.
+- Added `tools/write_private_beta_ai_config.js` to copy `.env.local` DeepSeek settings into an ignored local unpacked-extension config file for private testing without manually entering Settings.
+
+Safety:
+
+- The private-beta AI config file is git-ignored and release verification rejects it if it appears in a packaged zip.
+- This does not broaden host permissions, upload page text, send full URLs, add analytics, change tab-closing policy, or make AI actions apply before user Apply.
+
 ## v0.107 — 2026-06-10
 
 Changed:

@@ -312,14 +312,18 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelHtml.includes("agent-primary-message") && sidepanelHtml.includes("hidden"), "Legacy result containers should stay hidden from the default chat surface");
   assert(!/id="statusPanel" class="[^"]*(^|\s)agent-message(\s|")/.test(sidepanelHtml), "Status should not render as a separate top card");
   assert(!sidepanelJs.includes("status-panel agent-message agent-message-system"), "Status renderer must not re-add a standalone card class");
-  assert(sidepanelHtml.includes('data-i18n="tabAgentTitle"'), "Sidepanel should title the surface as a Tab Agent");
+  assert(!sidepanelHtml.includes('data-i18n="tabAgentTitle"'), "Sidepanel should not show a visible Tab Agent title");
+  assert(sidepanelHtml.includes('id="dashboardTopButton"'), "Sidepanel should expose Dashboard as a top-right icon button");
+  assert(!sidepanelHtml.includes('id="scanButton"'), "Sidepanel should not keep the old header refresh button");
+  assert(sidepanelJs.includes('dashboardTopButton.addEventListener("click", openDashboard)'), "Top-right Dashboard button should open Dashboard");
   assert(sidepanelHtml.includes('data-i18n="ask"'), "Chat action should read like a conversation, not a settings preview");
   assert(sidepanelHtml.indexOf("agent-thread") < sidepanelHtml.indexOf("chatForm"), "Conversation should sit before the composer");
   assert(sidepanelHtml.includes('class="prompt-row"') && sidepanelHtml.includes("hidden"), "Suggested refinements should not crowd the default chat surface");
   assert(!sidepanelHtml.includes('data-i18n="browserResult"'), "Sidepanel should not expose a dashboard-like Browser Result section");
   assert(sidepanelHtml.includes('<details class="glass-details sidepanel-details" hidden>'), "Technical browser lists should be hidden from the default chat surface");
   assert(!sidepanelHtml.includes("next-card"), "Sidepanel should not expose internal next-build QA copy");
-  assert(sidepanelJs.includes("function renderImpactMetric"), "Sidepanel should render a compact impact summary");
+  assert(sidepanelJs.includes("function getCompletedAgentReply"), "Completed organize output should render as one assistant reply text");
+  assert(sidepanelJs.includes("completedAgentReply"), "Completed organize output should use localized assistant prose");
   assert(sidepanelJs.includes("function renderLatestRunMessage"), "Latest organize output should be rendered into the chat thread");
   assert(sidepanelJs.includes("function upsertSystemChatMessage"), "Latest organize output should update as a chat assistant message");
   assert(sidepanelJs.includes("function renderRunMessageCard"), "Latest organize output should use the shared AI message card markup");
@@ -401,7 +405,7 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(css.includes(".ai-agent-card"), "AI Agent answer should remain a simple message card");
   assert(css.includes(".chat-summary-question"), "Current-page question should have scoped chat styling");
   assert(css.includes("backdrop-filter: blur"), "Minimal UI should use glass blur styling");
-  assert(en.tabAgentTitle?.message && zh.tabAgentTitle?.message, "Tab Agent title should be localized");
+  assert(en.openDashboard?.message && zh.openDashboard?.message, "Header Dashboard action should be localized");
   assert(en.agentCommandSummarize?.message && zh.agentCommandSummarize?.message, "Agent command response copy should be localized");
   assert(en.agentCommandAskPage?.message && zh.agentCommandAskPage?.message, "Ask-page command response copy should be localized");
   assert(en.currentPageAnswer?.message && zh.currentPageAnswer?.message, "Current-page chat summary label should be localized");
@@ -456,8 +460,9 @@ test("dashboard follows minimal glass workbench structure", () => {
   assert(dashboardJs.includes("hiddenTabs.map((tab) => renderGroupTabRow"), "Expanded Dashboard rows should reuse normal tab row actions");
   assert(dashboardJs.includes("function renderTabFavicon"), "Dashboard should render real tab favicons when available");
   assert(dashboardJs.includes("favIconUrl"), "Dashboard tab rows should read favIconUrl from the local snapshot");
-  assert(dashboardHtml.includes("saveWorkspaceButton"), "Dashboard should expose a compact save workspace action");
-  assert(dashboardHtml.includes("saved-workspaces"), "Dashboard should keep saved workspaces folded");
+  assert(dashboardHtml.includes('id="saveWorkspaceButton"'), "Dashboard should keep workspace save wiring available");
+  assert(dashboardHtml.includes('id="saveWorkspaceButton"') && dashboardHtml.includes("disabled hidden"), "Dashboard should hide workspace save from the default commercial UI");
+  assert(dashboardHtml.includes('id="saved-workspaces"') && dashboardHtml.includes("hidden"), "Dashboard should hide saved workspaces from the default commercial UI");
   assert(dashboardJs.includes("function renderSavedWorkspaces"), "Dashboard should render saved local workspace snapshots");
   assert(dashboardCss.includes(".dashboard-favicon img"), "Dashboard should style favicon image assets");
   assert(dashboardCss.includes(".dashboard-workspace-row"), "Dashboard should style saved workspace rows");
@@ -721,7 +726,7 @@ test("dashboard filter chips filter smart groups", () => {
   assert(en.noGroupsForFilter?.message && zh.noGroupsForFilter?.message, "Filter empty state should be localized");
 });
 
-test("dashboard keeps MVP UI simple and folds advanced settings", () => {
+test("dashboard keeps MVP UI simple and hides advanced settings from the default view", () => {
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
   const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
@@ -729,6 +734,11 @@ test("dashboard keeps MVP UI simple and folds advanced settings", () => {
 
   assert(!dashboardHtml.includes("P1"), "Dashboard should not expose unwired P1 placeholders in the default UI");
   assert(!dashboardHtml.includes("disabled data-i18n"), "Dashboard should avoid disabled placeholder buttons");
+  assert(dashboardHtml.includes('data-page="rules" hidden'), "Dashboard should hide Auto Organize from the default commercial UI");
+  assert(dashboardHtml.includes('data-page="settings" hidden'), "Dashboard should hide Settings from the default commercial UI");
+  assert(dashboardHtml.includes('id="organizeNowButton"') && dashboardHtml.includes('data-i18n="organizeBrowser" hidden'), "Dashboard should hide Organize Browser from the default commercial UI");
+  assert(dashboardHtml.includes('id="workspaceRefreshButton"') && dashboardHtml.includes('data-i18n="refresh" hidden'), "Dashboard should hide Refresh from the default commercial UI");
+  assert(dashboardCss.includes("[hidden]") && dashboardCss.includes("display: none !important"), "Hidden Dashboard controls should not be revived by component display styles");
   assert(dashboardHtml.includes('data-i18n="aiClassification"'), "Settings should lead with AI classification");
   assert(dashboardHtml.includes('data-i18n="privacyDefaults"'), "Settings should show compact privacy defaults");
   assert(dashboardHtml.includes('<details class="settings-advanced">'), "Advanced settings should be folded into details");
@@ -794,6 +804,8 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
 test("AI host guardrail matches manifest host permission", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const verifier = fs.readFileSync(path.join(ROOT_DIR, "tools", "verify_release_package.js"), "utf8");
+  const configTool = fs.readFileSync(path.join(ROOT_DIR, "tools", "write_private_beta_ai_config.js"), "utf8");
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
   const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
   const allowedHostPermission = "https://api.deepseek.com/*";
@@ -807,6 +819,10 @@ test("AI host guardrail matches manifest host permission", () => {
   assert(dashboardHtml.includes('data-i18n="aiBaseUrlBetaLimit"'), "Dashboard AI settings should explain the private-beta host limit");
   assert(en.aiBaseUrlBetaLimit?.message.includes(allowedHost), "English AI host limit copy should mention DeepSeek host");
   assert(zh.aiBaseUrlBetaLimit?.message.includes(allowedHost), "Chinese AI host limit copy should mention DeepSeek host");
+  assert(backgroundCode.includes("private-beta-ai-settings.json"), "Background should support local private-beta AI config for full-flow testing");
+  assert(configTool.includes("DEEPSEEK_API_KEY"), "Private beta AI config tool should read the local DeepSeek env key");
+  assert(configTool.includes("key was copied") && !configTool.includes("console.log(apiKey"), "Private beta AI config tool must not print the API key");
+  assert(verifier.includes("private-beta-ai-settings\\.json"), "Release verifier must reject private beta AI config in package zips");
   assert(!dashboardJs.includes("api.openai.com"), "Dashboard must not silently allow OpenAI host without confirmation");
   assert(!backgroundCode.includes("api.openai.com"), "Background must not silently allow OpenAI host without confirmation");
 });

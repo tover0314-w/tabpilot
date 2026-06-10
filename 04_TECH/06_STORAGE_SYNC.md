@@ -71,7 +71,7 @@ Chat history: Free 本地短期，Pro 可云同步
 
 ### 5.1 当前实现
 
-P0 Dashboard Settings includes `Clear Local Data`.
+P0 keeps `Clear Local Data` in a hidden private-beta Settings path, not as a primary default Dashboard feature.
 
 Cleared `chrome.storage.local` keys:
 
@@ -90,7 +90,7 @@ tabmosaic.savedWorkspaces
 
 After clearing, the extension publishes an idle run state and first-run privacy onboarding appears again before the next organize.
 
-Current `tabmosaic.savedWorkspaces` P0 snapshot is local-only and minimized. It stores group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It does not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
+Current `tabmosaic.savedWorkspaces` snapshot support is local-only, minimized, and hidden from the default Dashboard until restore/history/workspace chat become real user-facing workflows. It stores group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It does not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
 
 Dashboard can delete an individual saved workspace snapshot after browser confirmation. The delete path rewrites only `tabmosaic.savedWorkspaces` with the selected snapshot removed. It does not touch current tabs, groups, Undo/Restore snapshots, rules, browser history, cookies, cloud data, or AI settings.
 

@@ -53,7 +53,7 @@ TabMosaic 会读取标签页标题、网站域名和路径来自动整理分组�
 CONFIRMED BY IMPLEMENTATION:
 
 ```text
-Dashboard Settings includes:
+Hidden private-beta Settings includes:
 - Settings Snapshot
 - DeepSeek AI settings using an OpenAI-compatible request format
 - Permissions & Data Use
@@ -72,15 +72,15 @@ Local error summaries are kept in a capped `chrome.storage.local` ring buffer an
 
 Duplicate close safety audit entries are kept locally as count-only events for beta validation. They may record whitelisted event types such as `auto_safe_close`, `manual_review_close`, and `restore_closed_tabs`, plus counts for requested, closed, restored, failed, and skipped tabs. They must not include URLs, hostnames, tab titles, page text, duplicate labels, rule patterns, group names, or API keys. This is not browsing analytics and has no upload path.
 
-Saved workspace snapshots are created only when the user clicks Save in Dashboard. They are local-only, stored in `chrome.storage.local`, and keep minimized workspace metadata: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. They must not include full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud data, summaries, or chat history. Copied diagnostics expose only the saved workspace count.
+Saved workspace snapshots are created only from hidden/private-beta workspace save paths. They are local-only, stored in `chrome.storage.local`, and keep minimized workspace metadata: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. They must not include full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud data, summaries, or chat history. Copied diagnostics expose only the saved workspace count.
 
-An individual saved workspace snapshot can be deleted from Dashboard after browser confirmation. This deletes only the selected local snapshot and must not restore, close, move, or regroup tabs.
+An individual saved workspace snapshot can be deleted from the hidden/private-beta workspace path after browser confirmation. This deletes only the selected local snapshot and must not restore, close, move, or regroup tabs.
 
 `Clear AI Key` removes only the locally saved AI API key, disables AI classification, and keeps local rules, recent organize results, Undo/Restore snapshots, privacy acceptance, chat drafts, diagnostics, and duplicate safety audit counts. It asks for browser confirmation and does not move or close tabs, call the AI provider, delete browser history, or delete cookies.
 
 Current-tab summary reads visible page text only after the user clicks Summarize Current Tab. For sensitive contexts such as bank, billing, health, medical, password, admin, Stripe, AWS, Cloudflare, internal, or localhost pages, the sidebar asks for an extra confirmation before the background script executes content extraction. If the user cancels, no page body is read.
 
-Sidebar metadata Agent answers use the locally saved DeepSeek key only when the user has enabled AI. This path sends minimized current run metadata only: tab title, hostname, path, window id, active/pinned/audible/discarded state, current group state, and duplicate-review counts. It must not send page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, chat history, or cloud memory. The answer is rendered as a chat message. Optional action chips are restricted to a safe allowlist and route through user-clicked chat commands; they do not apply browser actions automatically.
+Sidebar metadata Agent answers use DeepSeek only when a local key is available from extension storage or the ignored private-beta config file generated from `.env.local`. This path sends minimized current run metadata only: tab title, hostname, path, window id, active/pinned/audible/discarded state, current group state, and duplicate-review counts. It must not send page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, saved workspace contents, chat history, or cloud memory. The answer is rendered as a chat message. Optional action chips are restricted to a safe allowlist and route through user-clicked chat commands; they do not apply browser actions automatically.
 
 ## 6. Sensitive Sites
 
@@ -126,7 +126,7 @@ Dashboard 设置必须提供：
 CONFIRMED BY IMPLEMENTATION:
 
 ```text
-Dashboard -> Settings includes Clear Local Data.
+Hidden private-beta Settings includes Clear Local Data.
 The action asks for browser confirmation before deleting local data.
 It clears:
 - latest organize result

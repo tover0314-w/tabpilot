@@ -108,7 +108,9 @@ actionsApplied
 - Hosted AI key 只在后端。
 - 不在日志中写入完整 URL 或 page text。
 
-Dashboard `Clear Local Data` removes the local API key along with local rules, saved workspace snapshots, run state, Undo/Restore snapshots, chat draft, local error log, duplicate close safety audit, and privacy acceptance. It does not touch tabs, cookies, browser history, or any cloud account data.
+Hidden private-beta `Clear Local Data` removes the local API key along with local rules, saved workspace snapshots, run state, Undo/Restore snapshots, chat draft, local error log, duplicate close safety audit, and privacy acceptance. It does not touch tabs, cookies, browser history, or any cloud account data.
+
+For local private-beta testing, `tools/write_private_beta_ai_config.js` may copy a DeepSeek key from `.env.local` into ignored `extension/private-beta-ai-settings.json` so the unpacked extension can use DeepSeek without manual Settings entry. The script does not print the key, the file is git-ignored, and release package verification rejects it if it appears in a zip.
 
 ## 7. Logging
 
@@ -146,15 +148,15 @@ summary_requested
 
 CONFIRMED BY IMPLEMENTATION:
 
-Dashboard Settings includes `Permissions & Data Use`, which explains the current manifest permissions and DeepSeek host permission in user-facing English/Chinese copy. It also explicitly says the extension does not request all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
+Hidden private-beta Settings includes `Permissions & Data Use`, which explains the current manifest permissions and DeepSeek host permission in user-facing English/Chinese copy. It also explicitly says the extension does not request all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
 
-Dashboard Settings also includes `Beta Diagnostics`, a user-triggered local clipboard copy of a redacted QA snapshot and beta feedback Markdown template. It is not analytics and does not upload data. The sanitizer excludes URLs, tab titles, hostnames, rule patterns, group names, page text, emails, bearer tokens, and API keys.
+Hidden private-beta Settings also includes `Beta Diagnostics`, a user-triggered local clipboard copy of a redacted QA snapshot and beta feedback Markdown template. It is not analytics and does not upload data. The sanitizer excludes URLs, tab titles, hostnames, rule patterns, group names, page text, emails, bearer tokens, and API keys.
 
 Current-tab summary is local and user-triggered. Before content extraction, the side panel asks the background script to check current-tab metadata. If hostname, path, or title indicates a sensitive page, the user must confirm before visible text is read; cancellation means no page body is read. The background script also re-checks the active tab and requires the confirmed tab ID before executing `chrome.scripting.executeScript`.
 
 The local `currentRun` state used by the sidebar/dashboard strips restore URLs, URL hashes, raw/full URLs, and page text before storing UI state. It may keep tab title, hostname, and path because those are the documented P0 metadata used for local grouping review. Undo snapshots keep only tab IDs, window IDs, indices, and previous group IDs.
 
-The local `savedWorkspaces` state is created only when the user clicks Save in Dashboard. It stores a minimized local snapshot for the folded Saved Workspaces list: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It strips full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, and cloud IDs. Copied diagnostics report only a saved workspace count, not names or browsing metadata.
+The local `savedWorkspaces` state is created only from hidden/private-beta workspace save paths. It stores a minimized local snapshot for future workspace features: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It strips full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, and cloud IDs. Copied diagnostics report only a saved workspace count, not names or browsing metadata.
 
 Dashboard can delete an individual saved workspace snapshot after browser confirmation. The background handler only removes the matching item from `tabmosaic.savedWorkspaces`; it does not call `chrome.tabs`, `chrome.tabGroups`, `chrome.windows`, AI provider requests, cloud APIs, or broad local-data removal.
 

@@ -28,6 +28,7 @@ const FORBIDDEN_ZIP_ENTRY_PATTERNS = [
   { name: "env file", pattern: /(^|\/)\.env($|\.)/ },
   { name: "node_modules", pattern: /(^|\/)node_modules($|\/)/ },
   { name: "source map", pattern: /\.map$/ },
+  { name: "private beta AI config", pattern: /(^|\/)private-beta-ai-settings\.json$/ },
   { name: "macOS metadata", pattern: /(^|\/)(\.DS_Store|__MACOSX)($|\/)/ },
   { name: "git metadata", pattern: /(^|\/)\.git($|\/)/ }
 ];

@@ -50,6 +50,7 @@ defaultModel: deepseek-v4-flash
 - `extension/` 已接入可选 DeepSeek 分类，request format 保持 OpenAI-compatible。
 - Private beta 保留 OpenAI-compatible 协议抽象，但网络 host 限制在 `https://api.deepseek.com/*`，避免为了任意 provider 申请更宽 host permissions。
 - API key 仅保存到 `chrome.storage.local`。
+- For private local testing, `tools/write_private_beta_ai_config.js` can copy `.env.local` DeepSeek settings into ignored `extension/private-beta-ai-settings.json` so a locally loaded unpacked extension can use DeepSeek without manual Dashboard Settings entry. This file must never be committed or included in release zips.
 - 分类输入只包含 title、hostname、path、window id 和 tab state，不发送页面正文或完整 URL。
 - API 不可用时自动 fallback 到 built-in rules。
 - Dashboard 已接入 user-triggered `Test AI Connection`，只调用 DeepSeek host 的 `/models` endpoint 检查 API key 和 model 是否可用，不发送 tab data、page text、full URL 或 request body。

@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.107
+Source state verified: v0.108
 
 ### Unified Preflight
 
@@ -134,7 +134,7 @@ Covered:
 - Dashboard Duplicate Center detail guard: expandable duplicate groups, local tab rows, safe focus existing tab action, and no direct tab close action.
 - Dashboard same-window tab move/drag-drop guard: target group selection, drag/drop event wiring, background action reuse, same-window enforcement, and no tab close action.
 - Dashboard Undo/Restore guard: compact action buttons, latest-run availability checks, existing background action reuse, and no direct tab close action.
-- Dashboard simple MVP UI guard: no default P1 placeholders, advanced Settings folded.
+- Dashboard simple MVP UI guard: no default P1 placeholders; Saved Workspaces, Auto Organize, and Settings hidden from the default commercial UI.
 - Disposable manual QA checklist coverage guard: Tab Agent chat UI, latest organize result as one assistant message bubble, bottom composer, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive summary, privacy outputs, and local QA notes in copied Markdown reports.
 - 180-tab synthetic local planning guard: duplicate detection, safe-close planning, group-plan validation, bounded runtime, and sanitized run snapshots without reading real browser tabs.
 - AI host guardrail aligned with manifest host permission.
@@ -153,12 +153,12 @@ Covered:
 - AI connection and classification fetches carry abort signals.
 - AI classification status stays lightweight in the sidebar completion message while Dashboard retains fuller AI status.
 - Dashboard Smart Group cards and local favicon-backed tab-row rendering from sanitized run data, with expandable hidden tab rows and edit/move controls folded/contextual by default.
-- Dashboard local workspace save/delete guard: minimized local snapshot, no full URL, no restore URL, no URL hashes, no favicon URL, no page text, and delete only updates local saved workspace storage.
+- Hidden/private-beta local workspace save/delete guard: minimized local snapshot, no full URL, no restore URL, no URL hashes, no favicon URL, no page text, and delete only updates local saved workspace storage.
 - Store screenshot draft guard: five 1280x800 local draft screenshots, output to ignored artifacts, marked DO NOT SUBMIT YET, and sourced from mock UI screenshots only.
 - Standalone privacy policy draft guard: unpublished status, confirmation gate, developer/support/website placeholders, saved workspace disclosure, DeepSeek optional-sharing boundary, no all-URLs permission, no cloud/account/analytics paths, local data deletion, and Limited Use disclosure.
 - Standalone Chrome Web Store data disclosure draft guard: unsubmitted status, confirmation gate, conservative data category mapping, optional DeepSeek sharing boundary, no-sale posture, no analytics upload, and privacy policy draft linkage.
 - Sidebar Agent optimization answer guard: latest-run optimization/memory-relief questions are answered locally as assistant message cards and avoid inventing exact memory MB.
-- Dashboard Settings first screen shows compact AI Classification; provider details, privacy defaults, permission, diagnostics, and local reset controls remain available under folded sections.
+- Hidden private-beta Settings keeps provider details, privacy defaults, permission, diagnostics, and local reset controls behind folded sections.
 - AI connection test without tab data.
 - Dashboard rule deletion confirmation.
 - Dashboard scoped AI key clearing.
@@ -296,7 +296,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=863f5c453dc5667660475aa061f920bdb0b9e792539239e65f164988179fce70
+sha256=1ff9dc3be766ee99e27bb8558c15d987ecb29acc19af04f1563ae070e5b1b469
 ```
 
 Evidence notes:
@@ -376,18 +376,17 @@ artifacts/ui-screenshots/sidepanel-chat.png
 artifacts/ui-screenshots/sidepanel-result-zh.png
 artifacts/ui-screenshots/dashboard-overview.png
 artifacts/ui-screenshots/dashboard-mobile.png
-artifacts/ui-screenshots/dashboard-ai-settings.png
 PASS store screenshot drafts captured
 artifacts/store-screenshots/01-one-click-native-groups.png
 artifacts/store-screenshots/02-tab-agent-sidebar.png
 artifacts/store-screenshots/03-smart-groups-dashboard.png
-artifacts/store-screenshots/04-privacy-ai-settings.png
+artifacts/store-screenshots/04-agent-actions.png
 artifacts/store-screenshots/05-mobile-dashboard.png
 ```
 
 Evidence notes:
 
-- Screenshots use mock extension data only, including side panel result/chat states and Dashboard desktop, mobile, and AI Settings views.
+- Screenshots use mock extension data only, including side panel result/chat states and Dashboard desktop/mobile views.
 - The scripts do not read real browser tabs.
 - The scripts do not read `.env.local`.
 - Store screenshot drafts are 1280x800 PNGs generated for review. They are not final Chrome Web Store listing assets and must not be submitted without user approval.

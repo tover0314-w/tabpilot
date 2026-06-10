@@ -9,7 +9,7 @@ P0 first slice supports saving the current organized browser state as a local-on
 The saved snapshot is stored in chrome.storage.local under tabmosaic.savedWorkspaces.
 It keeps minimized local metadata needed to show a saved workspace list: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts.
 It does not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
-Dashboard shows saved workspaces inside a folded Saved Workspaces section so the default Smart Groups board stays simple.
+Saved workspace UI is hidden from the default Dashboard because restore/history/workspace chat are not wired yet; the local snapshot storage path remains available for private-beta testing and future P1 workspace work.
 Users can delete an individual saved local snapshot from Dashboard after browser confirmation. This only removes the selected item from tabmosaic.savedWorkspaces and does not restore, close, or move tabs.
 Restore workspace, workspace history management, export, cloud sync, and workspace chat remain P1/Pro and are not wired yet.
 ```
@@ -116,8 +116,8 @@ P0 可以只支持新窗口恢复。
 ```gherkin
 Given 用户已整理一个窗口
 When 用户点击 Save Workspace
-Then 系统保存当前 tabs、groups、顺序和摘要
-And dashboard 的 folded Saved Workspaces 区域出现该 workspace
+Then 系统保存当前 tabs、groups、顺序和摘要到本地 snapshot
+And default Dashboard 不显示 Saved Workspaces 入口，直到 restore/history/workspace chat 打通
 And saved snapshot 不包含 full URL、restore URL、page text 或 cloud data
 And Pro 用户后续可以恢复或聊天
 

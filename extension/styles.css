@@ -23,6 +23,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -3453,7 +3457,24 @@ summary {
 
 .agent-thread {
   gap: 8px;
-  padding: 2px 0 8px;
+  padding: 2px 0 96px;
+  scrollbar-color: rgba(47, 116, 105, 0.24) transparent;
+  scrollbar-width: thin;
+}
+
+.agent-thread::-webkit-scrollbar {
+  width: 8px;
+}
+
+.agent-thread::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agent-thread::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(47, 116, 105, 0.24);
+  background-clip: padding-box;
 }
 
 .chat-thread-message {
@@ -3560,6 +3581,15 @@ summary {
 
 .agent-composer-section {
   padding-top: 10px;
+}
+
+.agent-composer-section::before {
+  display: block;
+  height: 22px;
+  margin: -30px 0 8px;
+  background: linear-gradient(180deg, rgba(239, 246, 243, 0), rgba(239, 246, 243, 0.88));
+  content: "";
+  pointer-events: none;
 }
 
 .agent-composer {

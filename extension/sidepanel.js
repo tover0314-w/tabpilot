@@ -10,7 +10,7 @@ const groupsList = document.querySelector("#groupsList");
 const protectedList = document.querySelector("#protectedList");
 const duplicatesList = document.querySelector("#duplicatesList");
 const privacyPanel = document.querySelector("#privacyPanel");
-const scanButton = document.querySelector("#scanButton");
+const dashboardTopButton = document.querySelector("#dashboardTopButton");
 const organizeButton = document.querySelector("#organizeButton");
 const undoButton = document.querySelector("#undoButton");
 const restoreButton = document.querySelector("#restoreButton");
@@ -28,7 +28,7 @@ let chatMessages = [];
 
 applyI18n();
 
-scanButton.addEventListener("click", organizeNow);
+dashboardTopButton.addEventListener("click", openDashboard);
 organizeButton.addEventListener("click", () => runQuickChatCommand("organize again", msg("organizeAgain")));
 undoButton.addEventListener("click", () => runQuickChatCommand("undo", msg("undo")));
 restoreButton.addEventListener("click", () => runQuickChatCommand("restore closed", msg("restoreClosed")));
@@ -1488,7 +1488,7 @@ function renderLatestRunMessage(run) {
   const title = status === "idle" ? msg("readyWhenYouAre") : getRunMessageTitle(run);
   const body = getRunMessageBody(run);
   const summary = run.summary || null;
-  const metrics = summary && ["completed", "undone", "closed-restored"].includes(status)
+  const metrics = summary && ["undone", "closed-restored"].includes(status)
     ? buildRunMessageMetrics(summary, status)
     : [];
   const actions = buildRunMessageActions(summary, status);
@@ -1518,7 +1518,7 @@ function getRunMessageTitle(run) {
 function getRunMessageBody(run) {
   const status = run?.status || "idle";
 
-  if (status === "completed") return getCompletedMessage(run);
+  if (status === "completed") return getCompletedAgentReply(run);
   if (status === "undone") return msg("restoredTabsGroups", [run?.summary?.restoredTabs ?? 0, run?.summary?.restoredGroups ?? 0]);
   if (status === "closed-restored") {
     return msg("restoredClosedTabsCount", [
@@ -1561,8 +1561,7 @@ function buildRunMessageActions(summary, status) {
 
   const actions = [
     { label: msg("organizeAgain"), command: "organize again" },
-    { label: msg("askCurrentPage"), command: "summarize this page" },
-    { label: msg("openDashboard"), command: "open dashboard" }
+    { label: msg("askCurrentPage"), command: "summarize this page" }
   ];
 
   if (status === "completed" && summary?.undoAvailable) {
@@ -1581,15 +1580,24 @@ function renderRunMessageCard({ title, body, metrics, actions, status }) {
     <article class="run-message-card" data-run-message-status="${escapeHtml(status || "")}">
       <div class="run-message-heading">
         <span class="status-dot" aria-hidden="true"></span>
-        <div>
-          <h2>${escapeHtml(title || "")}</h2>
-          <p class="chat-answer">${escapeHtml(body || "")}</p>
-        </div>
+        <p class="chat-answer">${escapeHtml(formatRunMessageText(title, body, status))}</p>
       </div>
       ${metrics.length ? `<div class="agent-result-list">${metrics.map((metric) => renderImpactMetric(metric.label, metric.value)).join("")}</div>` : ""}
       ${actions.length ? renderQuickCommandActions(actions) : ""}
     </article>
   `;
+}
+
+function formatRunMessageText(title, body, status) {
+  const cleanTitle = String(title || "").trim();
+  const cleanBody = String(body || "").trim();
+
+  if (status === "completed" && cleanBody) return cleanBody;
+  if (!cleanTitle) return cleanBody;
+  if (!cleanBody) return cleanTitle;
+  if (cleanBody.startsWith(cleanTitle)) return cleanBody;
+
+  return `${cleanTitle}. ${cleanBody}`;
 }
 
 function renderQuickCommandActions(actions) {
@@ -2086,14 +2094,14 @@ function renderRestore(isAvailable) {
 function renderPrivacy(isVisible) {
   privacyPanel.hidden = !isVisible;
   organizeButton.disabled = isVisible;
-  scanButton.disabled = isVisible;
+  dashboardTopButton.disabled = isVisible;
   summaryButton.disabled = isVisible;
   chatInput.disabled = isVisible;
   chatSendButton.disabled = isVisible;
 }
 
 function setBusy(isBusy) {
-  scanButton.disabled = isBusy;
+  dashboardTopButton.disabled = isBusy;
   organizeButton.disabled = isBusy;
   undoButton.disabled = isBusy || undoButton.disabled;
   restoreButton.disabled = isBusy || restoreButton.disabled;
@@ -2160,6 +2168,37 @@ function getCompletedMessage(run) {
     aiCopy,
     fallbackCopy,
     skippedCopy
+  ]).replace(/\s+/g, " ").trim();
+}
+
+function getCompletedAgentReply(run) {
+  if (run?.summary?.skippedReason === "tabs-too-few") {
+    return msg("tabsTooFewCompleted");
+  }
+
+  const groupsCreated = run?.summary?.groupsCreated ?? 0;
+  const tabsMoved = run?.summary?.tabsMoved ?? 0;
+  const reviewGroups = run?.summary?.reviewDuplicateGroups ?? 0;
+  const memoryRelief = run?.summary?.safeDuplicatesClosed ?? 0;
+  const aiStatus = run?.summary?.aiClassificationStatus || "not-configured";
+  const aiCopy = aiStatus === "applied" ? msg("deepSeekHelped") : "";
+  const fallbackCopy = String(aiStatus).startsWith("fallback:") ? msg("aiFellBackLocal") : "";
+  const duplicateCopy = memoryRelief > 0
+    ? msg("closedSafeDuplicates", [memoryRelief])
+    : msg("noTabsWereClosed");
+
+  if (groupsCreated === 0) {
+    return msg("scannedNoGroupableTabs", [duplicateCopy]);
+  }
+
+  return msg("completedAgentReply", [
+    groupsCreated,
+    tabsMoved,
+    duplicateCopy,
+    memoryRelief,
+    reviewGroups,
+    aiCopy,
+    fallbackCopy
   ]).replace(/\s+/g, " ").trim();
 }
 

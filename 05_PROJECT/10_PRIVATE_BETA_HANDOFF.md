@@ -23,7 +23,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Sidebar Chat Refine local preview/apply
 - Sidebar quick actions routed through the local chat thread
 - Sidebar ephemeral in-memory user/Agent message thread
-- Sidebar latest organize result as one assistant message bubble with metrics and quick actions inside it
+- Sidebar latest organize result as one assistant reply with plain-language impact text and quick action chips below it
 - Sidebar local capability/help answer
 - Sidebar local next-step guidance answer
 - Sidebar composer direct commands for current-page summary, organize, Undo, Restore Closed, and Dashboard
@@ -40,7 +40,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Sidebar DeepSeek metadata-only Agent validated `move_tabs` Apply/Cancel drafts for explicit regroup/move requests
 - local user rules and Rules & Memory
 - current-tab local extractive summary after user click, with sensitive-page confirmation
-- Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
+- Dashboard Smart Groups and Duplicate Center as the default commercial UI
 - Dashboard Duplicate Center tab details and safe focus existing tab action
 - Chat-first Tab Agent side panel with message thread, compact actions, and bottom composer
 - Dashboard Smart Groups default page with no Latest Result, timestamp, Current Workspace card, or result metrics area
@@ -48,15 +48,16 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard expandable Smart Group tab rows for hidden group tabs
 - Dashboard Smart Groups filter chips for All / AI groups / Rule groups
 - Dashboard tab title focus back to the existing browser tab/window
-- Dashboard default UI hides unwired P1/prototype actions and folds advanced Settings content
+- Dashboard default UI hides unwired P1/prototype actions, Saved Workspaces, Auto Organize, Settings, and Save Workspace
 - Dashboard group title/color apply back to real native tab groups
 - Dashboard same-window tab move into existing native tab groups
 - Dashboard same-window drag/drop tab assignment into existing native tab groups
-- Dashboard local workspace save/delete snapshot
+- Dashboard local workspace save/delete snapshot path remains available but hidden from the default UI
 - Dashboard compact Undo / Restore Closed actions
 - Sidepanel/Dashboard actionable safe organize error states
 - optional DeepSeek AI classification through OpenAI-compatible request format
 - optional DeepSeek metadata-only Agent answers through OpenAI-compatible request format
+- local private-beta DeepSeek config injection from `.env.local` into ignored `extension/private-beta-ai-settings.json` for full-flow unpacked-extension testing without manual Settings entry
 - DeepSeek connection test without tab data
 - AI classification timeout fallback to local rules
 - AI classification status and suggested group count visible in Sidebar and Dashboard
@@ -93,8 +94,8 @@ Verified:
 - real native tab groups in runtime smoke
 - safe duplicate close and Restore Closed in runtime smoke
 - Chat Refine in runtime smoke
-- Dashboard local workspace save/delete in runtime smoke
-- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, local workspace save/delete, Duplicate Center focus, Undo, and Restore Closed in runtime smoke
+- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, Duplicate Center focus, Undo, and Restore Closed in runtime smoke
+- Dashboard local workspace save/delete in runtime smoke remains covered as a hidden private-beta path, not a default visible UI
 - Sidebar composer direct commands in runtime smoke
 - Sidebar quick-action chat routing in runtime smoke
 - Sidebar ephemeral chat thread in runtime smoke
@@ -111,7 +112,7 @@ Verified:
 - Sidebar tab search and Open existing tab in runtime smoke
 - DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer, including safe action chips and a validated Apply/Cancel move draft
 - DeepSeek metadata-only Agent payload minimization, invented-tab-id filtering, and destructive-action rejection in extension smoke
-- mock-data UI screenshot capture, including side panel result/chat states and Dashboard desktop/mobile/AI Settings
+- mock-data UI screenshot capture, including side panel result/chat states and Dashboard desktop/mobile states
 - disposable manual QA checklist coverage for optional DeepSeek Agent open-answer / move-draft checks
 - mock-data Chrome Web Store screenshot drafts, generated as five 1280x800 local PNGs
 - disposable manual QA profile self-test with synthetic QA tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
@@ -227,11 +228,12 @@ Before using a real work profile, open a disposable manual QA profile:
 
 ```bash
 node tools/open_manual_qa_profile.js --dry-run
+node tools/write_private_beta_ai_config.js
 node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
 ```
 
-This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes for review before sharing plus the blank real-profile QA template for the next manual pass. The checklist includes Tab Agent chat UI, latest organize result as one assistant message bubble, optional DeepSeek Agent open-answer / move-draft checks, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`. `--self-test` opens the disposable browser, verifies setup, checklist report controls, and the real-profile template copy control, then closes and removes the temporary profile automatically.
+This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes for review before sharing plus the blank real-profile QA template for the next manual pass. The checklist includes Tab Agent chat UI, latest organize result as one assistant message bubble, optional DeepSeek Agent open-answer / move-draft checks, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`; if `tools/write_private_beta_ai_config.js` was run first, the copied local extension can use the ignored DeepSeek private-beta config. `--self-test` opens the disposable browser, verifies setup, checklist report controls, and the real-profile template copy control, then closes and removes the temporary profile automatically.
 
 For the real-profile path, print or open synthetic QA tabs:
 

@@ -18,18 +18,15 @@ CONFIRMED BY USER: Sidebar must be a ChatGPT-style Tab Agent. The default screen
 
 ```text
 TabMosaic AI
-Tab Agent
+                                  [Dashboard]
 
-[system]
-Organize complete.
-Created 8 native groups and moved 61 tabs.
+[assistant]
+我已经整理好了：创建 8 个原生分组，移动 61 个标签页。
+内存压力降低：释放 9 个重复标签页。待看重复：4 组。
+这次使用 DeepSeek / 本地规则完成分类，具体取决于本地私测配置是否可用。
 
-[agent result]
-Browser cleaned up
-Groups 8 · Tabs moved 61 · Memory relief 9 · Review 4
-
-[agent action]
-Organize · Ask page · Undo · Restore · Dashboard
+[quick messages]
+重新整理 · 问页面 · 撤销 · 恢复
 
 Ask TabMosaic about your tabs...
 [GitHub PR] [Current tab] [Rename]
@@ -41,9 +38,11 @@ Ask TabMosaic about your tabs...
 
 默认显示对话消息流。整理结果、动作草稿、页面总结都作为 agent messages 出现。
 
-P0 UI rule: The latest organize result, impact metrics, and quick actions should appear inside one assistant chat message card, not as separate top status/result/action cards or a dashboard-like toolbar.
+P0 UI rule: The latest organize result should appear as one assistant chat message with plain-language impact text. It should not render a separate metric wall, status card, or dashboard-like toolbar.
 
 P0 UI rule: Assistant actions should look like lightweight chat chips inside the message bubble. They should not look like a settings form or dashboard control panel.
+
+P0 UI rule: Dashboard entry is a small top-right icon button. The old header refresh button and visible `Tab Agent` title are removed from the default sidebar chrome.
 
 ### B. Group Overview
 
@@ -283,9 +282,10 @@ CONFIRMED BY USER / CONFIRMED BY IMPLEMENTATION:
 Sidebar default UI uses a minimal glass Tab Agent layout.
 First screen shows a conversation thread and bottom composer.
 Organize output appears as an agent message, not as a dashboard panel.
-Latest organize result, core impact metrics, and quick actions are rendered as one assistant message bubble in the conversation thread.
-The default result metrics include groups created, tabs organized, duplicate-tab memory relief proxy, and review duplicates.
-Quick actions are compact chips inside the assistant message bubble: Organize, Ask page, Undo, Restore, Dashboard.
+Latest organize result and quick actions are rendered as one assistant message bubble in the conversation thread.
+The completion message mentions groups created, tabs organized, duplicate-tab memory relief proxy, review duplicates, and whether DeepSeek or local fallback was used.
+Quick actions are compact chips inside the assistant message bubble: Organize, Ask page, Undo, Restore when relevant.
+Dashboard opens from a dedicated top-right icon button, not from a crowded result card.
 Technical lists are hidden from the default chat surface.
 Composer messages stay in a short local in-memory thread, with user messages and Agent replies shown as separate chat bubbles.
 Quick action chips route through the same chat command path as typed commands, so clicking Organize / Ask page / Undo / Restore / Dashboard also appears in the message thread.

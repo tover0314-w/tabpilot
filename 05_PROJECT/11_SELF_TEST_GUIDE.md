@@ -84,40 +84,26 @@ node tools/open_manual_qa_profile.js
 12. Dashboard tab title 可以聚焦回原 tab。
 13. Dashboard same-window tab move 可以把 tab 移进同窗口已有 group。
 14. 如果出现整理错误，Sidebar/Dashboard 明确说明没有移动或关闭标签页。
-15. Copy Diagnostic Snapshot 不包含 URL、tab title、页面正文、API key。
+15. 如打开隐藏私测诊断路径，Copy Diagnostic Snapshot 不包含 URL、tab title、页面正文、API key。
 ```
 
 ## 4. 可选 AI 测试
 
-在一次性测试浏览器里打开 Dashboard：
+先确认项目根目录的 `.env.local` 里有 `DEEPSEEK_API_KEY=...` 或单行 `sk-...` DeepSeek key，然后运行：
 
-```text
-Dashboard -> Settings -> AI Classification
-```
-
-填写：
-
-```text
-Base URL: https://api.deepseek.com
-Model: deepseek-v4-flash
-API key: 你的 DeepSeek key
-```
-
-点击：
-
-```text
-Test AI Connection
+```bash
+node tools/write_private_beta_ai_config.js
 ```
 
 预期：
 
 ```text
-- 连接测试成功或给出明确错误
-- 连接测试不发送 tab 数据
-- 非 DeepSeek base URL 会被拒绝
+- 生成 extension/private-beta-ai-settings.json
+- 终端不会打印 API key
+- 这个文件被 git 忽略，也不会进入正式 zip
 ```
 
-然后重新整理一次，检查 Sidebar / Dashboard 是否显示 AI status 和 AI groups。
+然后重新加载 unpacked extension，再重新整理一次，检查 Sidebar 是否显示 AI status / AI groups。
 
 再测一条 Agent 对话：
 

@@ -3,6 +3,7 @@ const LAST_UNDO_KEY = "tabmosaic.lastUndo";
 const LAST_CLOSED_TABS_KEY = "tabmosaic.lastClosedTabs";
 const PRIVACY_ACCEPTED_KEY = "tabmosaic.privacyAccepted";
 const AI_SETTINGS_KEY = "tabmosaic.aiSettings";
+const PRIVATE_BETA_AI_SETTINGS_PATH = "private-beta-ai-settings.json";
 const USER_RULES_KEY = "tabmosaic.userRules";
 const CHAT_DRAFT_KEY = "tabmosaic.chatDraft";
 const ERROR_LOG_KEY = "tabmosaic.errorLog";
@@ -30,6 +31,7 @@ const DEFAULT_AI_SETTINGS = {
   model: "deepseek-v4-flash",
   apiKey: ""
 };
+let privateBetaAISettingsPromise = null;
 const SUPPORTED_AI_HOSTNAME = "api.deepseek.com";
 const AI_CONNECTION_TIMEOUT_MS = 8000;
 const AI_CLASSIFICATION_TIMEOUT_MS = 12000;
@@ -438,9 +440,54 @@ async function classifyTabsWithAIIfConfigured(snapshot) {
 
 async function getAISettings() {
   const result = await chrome.storage.local.get(AI_SETTINGS_KEY);
-  return {
+  const storedSettings = {
     ...DEFAULT_AI_SETTINGS,
     ...(result[AI_SETTINGS_KEY] || {})
+  };
+
+  if (storedSettings.enabled && storedSettings.apiKey) {
+    return storedSettings;
+  }
+
+  const privateBetaSettings = await loadPrivateBetaAISettings();
+
+  if (!privateBetaSettings?.apiKey) {
+    return storedSettings;
+  }
+
+  return {
+    ...storedSettings,
+    ...privateBetaSettings,
+    enabled: true,
+    provider: "deepseek",
+    source: "private-beta-config"
+  };
+}
+
+async function loadPrivateBetaAISettings() {
+  if (!privateBetaAISettingsPromise) {
+    privateBetaAISettingsPromise = fetch(chrome.runtime.getURL(PRIVATE_BETA_AI_SETTINGS_PATH), {
+      cache: "no-store"
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return sanitizePrivateBetaAISettings(await response.json());
+      })
+      .catch(() => null);
+  }
+
+  return privateBetaAISettingsPromise;
+}
+
+function sanitizePrivateBetaAISettings(settings = {}) {
+  const apiKey = String(settings.apiKey || "").trim();
+
+  if (!apiKey) return null;
+
+  return {
+    apiKey,
+    baseUrl: normalizeAIBaseUrl(settings.baseUrl || DEFAULT_AI_SETTINGS.baseUrl),
+    model: String(settings.model || DEFAULT_AI_SETTINGS.model).trim() || DEFAULT_AI_SETTINGS.model
   };
 }
 

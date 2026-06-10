@@ -211,7 +211,7 @@ Current beta features:
 - Review-only handling for hash/query duplicate candidates
 - Local rules from sidebar refinement
 - Current-tab summary after user click
-- Dashboard for Smart Groups, Duplicate Center, Rules & Memory, Settings, privacy controls, and beta diagnostics
+- Dashboard for Smart Groups and Duplicate Center, with private-beta diagnostics/settings hidden from the default commercial UI
 - Optional DeepSeek classification with the user's own API key using an OpenAI-compatible request format
 
 Privacy-first defaults:
@@ -234,7 +234,7 @@ Chrome Web Store dashboard guidance currently asks for at least one 1280x800 scr
 artifacts/store-screenshots/01-one-click-native-groups.png
 artifacts/store-screenshots/02-tab-agent-sidebar.png
 artifacts/store-screenshots/03-smart-groups-dashboard.png
-artifacts/store-screenshots/04-privacy-ai-settings.png
+artifacts/store-screenshots/04-agent-actions.png
 artifacts/store-screenshots/05-mobile-dashboard.png
 ```
 

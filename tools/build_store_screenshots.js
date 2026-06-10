@@ -39,11 +39,11 @@ const SCREENSHOTS = [
     accent: "#8b6bb1"
   },
   {
-    name: "04-privacy-ai-settings.png",
-    source: "dashboard-ai-settings.png",
-    title: "Privacy-first AI controls",
-    subtitle: "AI classification is optional. Page text is read only after the user asks for a current-tab summary.",
-    note: "Settings - mock beta data",
+    name: "04-agent-actions.png",
+    source: "sidepanel-chat.png",
+    title: "Ask the Agent to keep working",
+    subtitle: "TabMosaic answers from tab metadata, drafts safe actions, and waits for Apply before changing groups.",
+    note: "Agent chat - mock beta data",
     frame: { left: 184, top: 178, width: 912, height: 532, position: "top" },
     accent: "#b46b7d"
   },

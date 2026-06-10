@@ -6,14 +6,14 @@ CONFIRMED BY IMPLEMENTATION:
 
 ```text
 P0 dashboard is an extension page.
-It now follows a minimal glass Smart Groups layout: top bar, compact navigation, organize action, filter chips, Smart Groups board, Auto Organize rules page, and Settings page.
+It now follows a minimal glass Smart Groups layout: top bar, compact navigation, filter chips, Smart Groups board, and folded Duplicate Center.
 It no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area on the default Dashboard page.
-It shows simplified glass Smart Group cards with local tab rows, softer row dividers, expandable hidden tab rows, folded Duplicate Center with non-destructive duplicate tab details, folded Settings Snapshot, compact AI Settings, and Rules & Memory.
+It shows simplified glass Smart Group cards with local tab rows, softer row dividers, expandable hidden tab rows, and folded Duplicate Center with non-destructive duplicate tab details.
 Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
-Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, Restore Closed, and saving/deleting local-only workspace snapshots. Edit/Move controls and saved workspace history remain folded by default.
+Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, and Restore Closed. Saved workspace UI, Auto Organize, Save Workspace, and Settings are hidden from the default commercial view until they become real user-facing workflows.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.
 Workspace restore/history management, manual group creation, new rule creation, group chat, billing/usage, templates, and multi-tab chat are not wired and are not shown as primary default actions.
-Settings default view is intentionally simple: AI Classification and Privacy Defaults first; permissions, diagnostics, and local reset are folded under advanced sections.
+Settings still exists for private-beta diagnostics/local reset paths, but it is not a primary Dashboard navigation item.
 ```
 
 ### 0.1 Design Prototype Wiring Status
@@ -23,7 +23,7 @@ Wired now:
 ```text
 - minimal glass Smart Groups shell: topbar, compact navigation, Smart Groups board
 - Smart Groups filter chips for All / AI groups / Rule groups
-- one-click organize from Dashboard
+- Dashboard organize action exists as a hidden/private-beta path, not a default commercial control
 - compact Dashboard Undo / Restore Closed actions when available
 - folded native group title/color Apply back to browser
 - simplified group cards using sanitized local run snapshot data
@@ -32,12 +32,12 @@ Wired now:
 - folded same-window tab move into an existing native group
 - drag/drop tabs between existing groups in the same Chrome window
 - folded Duplicate Center with expandable duplicate tab details and safe Open tab actions
-- Save current workspace local snapshot and folded Saved Workspaces list
-- Delete individual saved local workspace snapshot with confirmation
-- Rules & Memory enable/disable/delete with confirmation
-- DeepSeek API key save/test/clear
-- folded compact privacy defaults
-- advanced folded permissions, diagnostics, feedback template, and local data reset
+- Save current workspace local snapshot and Saved Workspaces list remain hidden/private-beta paths
+- Delete individual saved local workspace snapshot with confirmation remains a hidden/private-beta path
+- Rules & Memory enable/disable/delete with confirmation remains available behind hidden navigation
+- DeepSeek API key save/test/clear remains available behind hidden private-beta Settings, but normal private testing uses `tools/write_private_beta_ai_config.js`
+- folded compact privacy defaults remain behind hidden private-beta Settings
+- advanced folded permissions, diagnostics, feedback template, and local data reset remain behind hidden private-beta Settings
 ```
 
 Not wired yet:
@@ -119,7 +119,7 @@ CONFIRMED BY USER:
 ```text
 Dashboard must feel extremely simple, not like a dense admin dashboard.
 Default UI should emphasize Smart Groups, not latest-result summaries or workspace status cards.
-Settings must stay compact; low-frequency provider details, permissions, diagnostics, and local reset stay folded.
+Settings must not be primary default UI; hidden/private-beta settings keep low-frequency provider details, permissions, diagnostics, and local reset folded.
 Smart Group cards should show enough tab context to be useful, but edit and move controls should not dominate the default view.
 Visual direction: light glassmorphism, quiet controls, low border contrast, no heavy metric wall.
 ```

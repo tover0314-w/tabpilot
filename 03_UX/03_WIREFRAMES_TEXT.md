@@ -23,20 +23,15 @@ CONFIRMED BY USER: Sidebar 首屏必须是类似 OpenAI 的对话框，用作 Ta
 
 ```text
 ┌─────────────────────────────┐
-│ TabMosaic AI            ↻    │
-│ Tab Agent                   │
+│ TabMosaic AI            ⊟    │
 ├─────────────────────────────┤
-│ TabMosaic                    │
-│ Organize complete            │
-│ Created 8 native groups...   │
-│                             │
-│ Browser cleaned up           │
-│ Groups 8 · Moved 61         │
-│ Closed 9 · Review 4          │
-├─────────────────────────────┤
-│ TabMosaic                    │
-│ [Organize] [Ask page]       │
-│ [Undo] [Restore] [Dashboard]│
+│ AI                           │
+│ 我已经整理好了：创建 8 个原生 │
+│ 分组，移动 61 个标签页。      │
+│ 内存压力降低：释放 9 个重复   │
+│ 标签页。待看重复：4 组。      │
+│ [重新整理] [问页面] [撤销]    │
+│ [恢复]                       │
 ├─────────────────────────────┤
 │ Ask TabMosaic about tabs...  │
 │ [GitHub PR] [Current] [Rename]│
@@ -73,12 +68,9 @@ CONFIRMED BY USER: Dashboard 默认不要 Latest Result、时间、Current Works
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ TabMosaic                  Local · Refresh    │
+│ TabMosaic                         Local       │
 ├──────────────────────────────────────────────┤
-│ [Project Space] [Auto Organize] [Settings]    │
-│ [Organize Browser]                            │
-├──────────────────────────────────────────────┤
-│ [All 6] [AI groups 2] [Rule groups 1] Refresh │
+│ [All 6] [AI groups 2] [Rule groups 1]         │
 │                                              │
 │ Smart Groups                                 │
 │ Product Planning                         Edit │
@@ -95,7 +87,7 @@ CONFIRMED BY USER: Dashboard 默认不要 Latest Result、时间、Current Works
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ Smart Groups    [All] [AI] [Rules] [Refresh] │
+│ Smart Groups          [All] [AI] [Rules]      │
 ├──────────────────────────────────────────────┤
 │ Product Planning                         Edit │
 │ 8 tabs · docs.google.com · notion.so           │

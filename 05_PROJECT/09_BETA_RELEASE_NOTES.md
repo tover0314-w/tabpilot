@@ -17,7 +17,7 @@ Click extension icon
 → first-run privacy gate appears
 → after Start Organizing, normal Chrome windows are scanned
 → real Chrome native tab groups appear in the top tab bar
-→ sidebar shows groups, protected tabs, duplicate candidates, Undo, Restore Closed, Chat Refine, and current-tab summary
+→ sidebar shows one assistant reply with what changed, quick action chips, Undo/Restore when available, and current-tab chat actions
 ```
 
 ## Included Capabilities
@@ -35,8 +35,8 @@ Click extension icon
 - Sidebar Chat Refine for safe local actions and local rule creation.
 - Sidebar quick action chips route through the same local chat thread as typed commands.
 - Sidebar keeps recent user and Agent messages in a local in-memory chat thread.
-- Sidebar latest organize result now appears as one assistant message bubble with impact metrics and quick actions inside it.
-- Sidebar latest organize result includes a memory-relief proxy and lightweight chat chips instead of heavy result-panel controls.
+- Sidebar latest organize result now appears as one assistant reply with plain-language impact text and quick action chips below it.
+- Sidebar latest organize result includes groups moved, duplicate-tab memory relief, review duplicate count, and DeepSeek/local fallback status without a heavy metric panel.
 - Sidebar answers `what can you do` / `你能做什么` with local wired-command guidance.
 - Sidebar answers `what should I do next` / `下一步` with local guidance from the latest organize state.
 - Current-page summary and local page questions return inside the Sidebar Agent chat message flow.
@@ -47,18 +47,20 @@ Click extension icon
 - Sidebar DeepSeek Agent answers can include compact validated safe action chips, routed through the normal user-triggered chat command path and continuing the same chat thread after click.
 - Sidebar DeepSeek Agent can return a validated `move_tabs` draft for explicit regroup/move requests; the user must click Apply before native Chrome groups change.
 - Current-tab summary only after user click.
-- Dashboard Smart Groups, folded Saved Workspaces, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
+- Dashboard Smart Groups and Duplicate Center as the default commercial UI.
+- Dashboard hides Saved Workspaces, Auto Organize, Settings, and Save Workspace from the default view until those workflows are real user-facing value.
 - Dashboard expandable Smart Group tab rows for groups with more than three visible tabs.
 - Dashboard Duplicate Center expands duplicate groups and can focus existing duplicate tabs for review.
 - Dashboard same-window drag/drop tab assignment between existing native groups.
 - Dashboard compact Undo / Restore Closed actions when available.
 - Side panel and Dashboard organize errors explain that no tabs were moved or closed and suggest retrying or copying redacted diagnostics.
-- Optional DeepSeek classification with a user-provided API key through an OpenAI-compatible request format.
+- Optional DeepSeek classification and metadata-only Agent answers through an OpenAI-compatible request format.
+- Local private-beta DeepSeek config can be generated from `.env.local` into ignored `extension/private-beta-ai-settings.json`, so local unpacked-extension testing does not require manual Settings entry.
 - AI connection test that calls DeepSeek `/models` only and sends no tab data.
 - Redacted local error summaries and count-only duplicate safety audit for beta diagnostics.
 - Standalone privacy policy draft marked `DO NOT PUBLISH YET`.
 - Standalone Chrome Web Store data disclosure draft marked `DO NOT SUBMIT YET`.
-- Mock-data UI screenshots include side panel result/chat states and Dashboard desktop/mobile/AI Settings; Chrome Web Store screenshot drafts are generated locally as five 1280x800 PNGs.
+- Mock-data UI screenshots include side panel result/chat states and Dashboard desktop/mobile states; Chrome Web Store screenshot drafts are generated locally as five 1280x800 PNGs.
 
 ## Privacy Defaults
 
@@ -67,8 +69,9 @@ Click extension icon
 - No incognito processing by default.
 - No automatic page-body reading.
 - No cloud sync or account requirement.
-- Optional AI classification is off until the user enables it and saves a local API key.
+- Optional AI classification is off unless a local key is present in extension storage or the ignored private-beta config file.
 - Private beta AI network access is limited to `https://api.deepseek.com/*`; other OpenAI-compatible hosts require a later permission confirmation.
+- The ignored private-beta AI config is for local unpacked testing only, must not be committed, and is rejected by release package verification if it appears in a zip.
 - AI classification sends tab title, hostname, path, window ID, and tab state only; it does not send page text or full URL by default.
 - Metadata-only Agent answers use the same minimized tab metadata boundary and do not send page body, full URL, restore URL, favicon URL, browser history, chat history, saved workspace contents, or cloud memory.
 - Metadata-only Agent answers do not apply browser actions automatically; safe action chips require a user click, `move_tabs` drafts require Apply, and close/delete actions are rejected.
@@ -135,6 +138,7 @@ Run:
 
 ```bash
 node tools/preflight.js
+node tools/write_private_beta_ai_config.js
 node tools/beta_readiness_check.js
 node tools/open_manual_qa_profile.js --dry-run
 node tools/open_manual_qa_profile.js --self-test
@@ -161,7 +165,7 @@ Minimum manual checks:
 - Undo restores group state for still-open tabs.
 - Dashboard group title/color apply updates real Chrome tab groups.
 - Current-tab summary reads page content only after click.
-- Copy Diagnostic Snapshot and Copy Feedback Template exclude sensitive data.
+- Optional diagnostics/feedback copies exclude sensitive data when opened from the hidden private-beta Settings path.
 
 ## Known Limits
 
@@ -170,7 +174,7 @@ Minimum manual checks:
 - Standalone Chrome Web Store data disclosure draft exists, but final data category checkboxes and Limited Use wording are not approved yet.
 - P0 manual QA runbook has not been completed on the user's real Chrome profile.
 - Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, Dashboard local workspace save/delete, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open. A separate DeepSeek Agent-flow runtime check has passed through the real Sidebar composer, and a separate large-tab runtime probe has also passed with 96 synthetic tabs. These do not replace real-profile manual QA.
-- Dashboard apply supports group title/color edits, tab focus, same-window tab moves into existing groups, same-window drag/drop tab assignment, and local-only Save/Delete workspace snapshots; it does not support manual new groups, saved workspace restore, cloud sync, or cross-window tab moves.
+- Dashboard apply supports group title/color edits, tab focus, same-window tab moves into existing groups, and same-window drag/drop tab assignment; it does not support manual new groups, saved workspace restore, cloud sync, or cross-window tab moves. Local workspace snapshot code remains hidden from the default UI.
 - Current-tab summary is local extractive summary, not cloud AI summary.
 - Sidebar DeepSeek open answers are metadata-only tab-management answers, not cloud page-content chat.
 - Multi-tab chat is P1/Pro and not part of this beta slice.
@@ -194,10 +198,10 @@ Minimum manual checks:
 
 ## Feedback Path
 
-For beta feedback:
+For beta feedback during private testing, open the hidden Settings path from a development build and use:
 
 ```text
-Dashboard -> Settings -> Copy Feedback Template
+Hidden private-beta Settings -> Copy Feedback Template
 ```
 
 The copied template includes manual quality labels and a redacted diagnostic snapshot. It does not upload automatically.
