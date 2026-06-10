@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.93 beta readiness large-runtime guard in this commit
+Source state verified: v0.94 real-profile QA result template in this commit
 
 ### Unified Preflight
 
@@ -25,7 +25,7 @@ PASS secret scan checked 98 tracked files
 33 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 230ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 480ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS controlled private beta readiness evidence checked
@@ -43,6 +43,7 @@ Evidence notes:
 - Runtime smoke can still `SKIP` on branded Google Chrome CLI extension loading, but this run auto-detected Chrome for Testing through Playwright and passed.
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
 - Beta readiness check confirms controlled local/private beta evidence is present, including the large-runtime evidence, while public Chrome Web Store launch remains blocked.
+- Beta readiness check also verifies that the real-profile QA result template exists and includes privacy redaction rules.
 - GitHub Actions runs the same beta readiness check after release package verification.
 - Beta readiness check requires the beginner self-test guide and its controlled-beta/public-launch boundary.
 

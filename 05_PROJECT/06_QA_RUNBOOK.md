@@ -302,32 +302,17 @@ Expected:
 
 ## 14. Result Log Template
 
+Use:
+
 ```text
-Date:
-Chrome version:
-Extension version:
-Tabs/windows tested:
+05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md
+```
 
-Pass:
-- One-click sidebar open:
-- Native groups:
-- Safe duplicate close:
-- Duplicate review:
-- Undo:
-- Restore Closed:
-- Chat Refine:
-- Current tab summary:
-- Dashboard apply:
-- UI screenshot preview:
-- Beta diagnostics:
-- Feedback template:
-- Local error redaction:
-- Duplicate safety audit:
-- Privacy guardrails:
+Rules:
 
-Issues:
-- 
-
-Decision gates triggered:
-- 
+```text
+- Do not paste full URLs, real tab titles, page text, API keys, bearer tokens, cookies, private screenshots, private emails, private rule patterns, or confidential customer/company names.
+- Prefer keeping completed real-profile QA notes outside git.
+- If a completed result must be shared, manually redact it first.
+- Keep READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no until the public-launch blockers are resolved.
 ```

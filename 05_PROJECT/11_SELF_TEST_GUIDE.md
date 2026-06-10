@@ -183,6 +183,14 @@ chrome://extensions
 - 如果分组不满意，先点 Undo。
 ```
 
+真实 profile 测完以后，可以参考：
+
+```text
+05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md
+```
+
+但不要把真实 full URL、真实 tab title、页面正文、API key、私密截图、邮箱或私有 rule pattern 写进 git。完成版 QA 记录最好先放在本地私密位置，确认脱敏后再分享。
+
 ## 7. 通过标准
 
 可以进入小范围内测的标准：

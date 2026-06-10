@@ -10,7 +10,8 @@ const requiredFiles = [
   "05_PROJECT/08_QA_EVIDENCE.md",
   "05_PROJECT/09_BETA_RELEASE_NOTES.md",
   "05_PROJECT/10_PRIVATE_BETA_HANDOFF.md",
-  "05_PROJECT/11_SELF_TEST_GUIDE.md"
+  "05_PROJECT/11_SELF_TEST_GUIDE.md",
+  "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md"
 ];
 
 main();
@@ -37,6 +38,7 @@ function main() {
   const releaseNotes = readText("05_PROJECT/09_BETA_RELEASE_NOTES.md", failures);
   const handoff = readText("05_PROJECT/10_PRIVATE_BETA_HANDOFF.md", failures);
   const selfTestGuide = readText("05_PROJECT/11_SELF_TEST_GUIDE.md", failures);
+  const realProfileQaTemplate = readText("05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md", failures);
   const readme = readText("README.md", failures);
   const topVersion = getTopChangelogVersion(changelog);
   const packageBase = `tabmosaic-ai-extension-v${version}`;
@@ -98,6 +100,7 @@ function main() {
       "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore",
       "PASS Chrome runtime large-tab probe organized 96 synthetic tabs",
       "fixtureGroupCount=3",
+      "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md",
       "Public Chrome Web Store submission is not approved yet.",
       "P0 manual QA runbook has not been completed on the user's real Chrome profile."
     ],
@@ -110,6 +113,7 @@ function main() {
       "READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes",
       "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
       "node tools/open_manual_qa_profile.js",
+      "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md",
       "Local QA Notes",
       "不要公开发布，不要提交 Chrome Web Store。"
     ],
@@ -123,7 +127,23 @@ function main() {
       "node tools/preflight.js --large-runtime",
       "controlled local/private beta",
       "not ready for public Chrome Web Store launch",
-      "05_PROJECT/11_SELF_TEST_GUIDE.md"
+      "05_PROJECT/11_SELF_TEST_GUIDE.md",
+      "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md"
+    ],
+    failures
+  );
+  requireIncludes(
+    "05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md",
+    realProfileQaTemplate,
+    [
+      "Status: BLANK TEMPLATE - NOT A COMPLETED QA RESULT",
+      "Do not commit a completed real-profile QA result unless it has been manually redacted.",
+      "full URLs",
+      "real tab titles",
+      "page text",
+      "API keys",
+      "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
+      "0 dangerous auto-close mistakes"
     ],
     failures
   );

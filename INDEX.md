@@ -94,6 +94,7 @@
 - `09_BETA_RELEASE_NOTES.md`：v0.1.0 私测发布说明、安装步骤、验证证据和已知限制。
 - `10_PRIVATE_BETA_HANDOFF.md`：私测交接包，汇总已就绪内容、验证证据、人工 QA 路径、剩余缺口和确认门。
 - `11_SELF_TEST_GUIDE.md`：小白自测指南，覆盖一次性 QA profile、可选 AI 测试、真实 Chrome profile 测试和剩余上线阻塞项。
+- `12_REAL_PROFILE_QA_RESULT_TEMPLATE.md`：真实 Chrome profile QA 结果记录模板，要求先脱敏，避免把真实浏览数据写进 git。
 
 ## 06_REFERENCES
 

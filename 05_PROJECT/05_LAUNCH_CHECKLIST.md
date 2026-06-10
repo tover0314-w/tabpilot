@@ -37,6 +37,7 @@
 - [x] smoke tests。
 - [x] automated runtime smoke（temporary Chrome for Testing profile + synthetic tabs）。
 - [x] disposable manual QA profile launcher。
+- [x] real-profile QA result template（blank redaction-safe template；completed real-profile QA not yet run）。
 - [x] QA seed tabs。
 
 ## Privacy / Compliance

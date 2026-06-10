@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.94 — 2026-06-10
+
+Changed:
+
+- Added `05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md` as a redaction-safe template for future real Chrome profile QA results.
+- QA runbook and self-test guide now point real-profile testers to the template and warn against committing sensitive browsing data.
+- Beta readiness now verifies that the real-profile QA template exists and contains the required privacy redlines.
+
+Safety:
+
+- This is documentation and readiness enforcement only. It does not read a real Chrome profile, store real browsing data, call AI, upload data, move tabs, close tabs, or request new permissions.
+
 ## v0.93 — 2026-06-10
 
 Changed:

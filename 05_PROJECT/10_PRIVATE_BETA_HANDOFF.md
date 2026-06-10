@@ -55,6 +55,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard Clear AI Key
 - Dashboard Clear Local Data
 - local redacted diagnostics and feedback template
+- redaction-safe real-profile QA result template
 - GitHub private beta issue forms with privacy redlines
 ```
 
@@ -95,6 +96,7 @@ Verified:
 - Sidebar tab search and Open existing tab in runtime smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
 - disposable manual QA profile self-test with synthetic QA tabs and current MVP Dashboard checklist coverage
+- real-profile QA result template exists, but completed real-profile QA is still pending
 - extension package generation
 - release package verification
 - beta readiness check: controlled local/private beta ready, public Chrome Web Store launch not ready
