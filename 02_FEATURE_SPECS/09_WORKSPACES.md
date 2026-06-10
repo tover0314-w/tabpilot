@@ -1,5 +1,18 @@
 # 功能规格：Workspaces
 
+## 0. 当前实现状态
+
+CONFIRMED BY IMPLEMENTATION:
+
+```text
+P0 first slice supports saving the current organized browser state as a local-only workspace snapshot from Dashboard.
+The saved snapshot is stored in chrome.storage.local under tabmosaic.savedWorkspaces.
+It keeps minimized local metadata needed to show a saved workspace list: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts.
+It does not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
+Dashboard shows saved workspaces inside a folded Saved Workspaces section so the default Smart Groups board stays simple.
+Restore workspace, workspace history management, export, cloud sync, and workspace chat remain P1/Pro and are not wired yet.
+```
+
 ## 1. 目标
 
 让用户保存、恢复和管理一组 tabs + groups + summaries + chat history。
@@ -31,7 +44,7 @@ created/updated time
 
 ### P0
 
-- Save current workspace locally。
+- Save current workspace locally（first slice implemented as local snapshot；restore not wired yet）。
 - Dashboard 查看当前 workspace。
 - Apply current dashboard changes to browser。
 
@@ -102,6 +115,7 @@ P0 可以只支持新窗口恢复。
 Given 用户已整理一个窗口
 When 用户点击 Save Workspace
 Then 系统保存当前 tabs、groups、顺序和摘要
-And dashboard Workspaces 页面出现该 workspace
-And Pro 用户可以恢复或聊天
+And dashboard 的 folded Saved Workspaces 区域出现该 workspace
+And saved snapshot 不包含 full URL、restore URL、page text 或 cloud data
+And Pro 用户后续可以恢复或聊天
 ```

@@ -10,9 +10,9 @@ It now follows a minimal glass Smart Groups layout: top bar, compact navigation,
 It no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area on the default Dashboard page.
 It shows simplified Smart Group cards with local tab rows, expandable hidden tab rows, folded Duplicate Center with non-destructive duplicate tab details, folded Settings Snapshot, compact AI Settings, and Rules & Memory.
 Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
-Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, and Restore Closed. Edit/Move controls remain folded by default.
+Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, Restore Closed, and saving the current workspace as a local-only snapshot. Edit/Move controls and saved workspace history remain folded by default.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.
-Workspace history, manual group creation, new rule creation, group chat, saved workspaces, billing/usage, templates, and multi-tab chat are not wired and are not shown as primary default actions.
+Workspace restore/history management, manual group creation, new rule creation, group chat, billing/usage, templates, and multi-tab chat are not wired and are not shown as primary default actions.
 Settings default view is intentionally simple: AI Classification and Privacy Defaults first; permissions, diagnostics, and local reset are folded under advanced sections.
 ```
 
@@ -32,6 +32,7 @@ Wired now:
 - folded same-window tab move into an existing native group
 - drag/drop tabs between existing groups in the same Chrome window
 - folded Duplicate Center with expandable duplicate tab details and safe Open tab actions
+- Save current workspace local snapshot and folded Saved Workspaces list
 - Rules & Memory enable/disable/delete with confirmation
 - DeepSeek API key save/test/clear
 - folded compact privacy defaults
@@ -43,7 +44,7 @@ Not wired yet:
 ```text
 - cross-window tab moves
 - manual new group creation
-- workspace history/save/restore
+- workspace restore / historical workspace management
 - group/workspace chat
 - billing and usage UI
 - templates

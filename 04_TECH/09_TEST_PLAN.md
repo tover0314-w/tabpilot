@@ -36,13 +36,13 @@ Coverage:
 - AI classification request includes minimized metadata only and excludes full URL, restore URL, favicon URL, query token, and page text
 - AI classification request carries an abort signal and falls back to local rules on timeout
 - AI classification status remains lightweight in the sidebar completion message, while Dashboard retains the fuller AI status view
-- Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, filter chips, expanded group cards, and favicon-backed tab rows
+- Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, filter chips, expanded group cards, favicon-backed tab rows, compact Save action, and folded Saved Workspaces list
 - Side panel opens as a chat-first Tab Agent UI, not a result metrics panel
 - Side panel organize error states disclose that no tabs were moved or closed and show a retry/diagnostics next step
 - Side panel composer preserves recent user and Agent messages in an in-memory local thread
 - Side panel disables stale Chat Refine Apply/Cancel buttons when a newer draft appears or a draft is cancelled
 - Side panel quick action chips route through the same chat command path and append user/Agent messages to the local thread
-- Side panel composer routes direct safe agent commands for current-tab summary, organize, Undo, Restore Closed, and Dashboard before falling back to chat-refine preview
+- Side panel composer routes direct safe agent commands for current-tab summary, organize, Undo, Restore Closed, Dashboard, and local workspace save before falling back to chat-refine preview
 - Side panel composer answers local capability/help questions without requiring page reads or an organize run
 - Side panel current-page summary and local page question answers render inside the chat message flow and keep the legacy summary panel hidden
 - Background current-page summary accepts an optional question and answers from visible page text with local sentence matching
@@ -57,6 +57,7 @@ Coverage:
 - Dashboard Duplicate Center expands duplicate groups into local tab details and focuses existing tabs without close actions
 - Dashboard stored organize errors render as a compact safe error card instead of an empty workspace
 - Dashboard tab title focus activates the existing browser tab/window without storage writes or destructive tab actions
+- Dashboard local workspace save stores a minimized local snapshot and excludes full URLs, restore URLs, URL hashes, favicon URLs, and page text
 - Dashboard same-window tab move UI calls the background action, limits target groups to the same window, and avoids tab close actions
 - Dashboard drag/drop tab assignment reuses the same same-window background move action and avoids tab close actions
 - Dashboard Undo and Restore Closed actions reuse existing background actions, enable only from latest run state, and avoid direct destructive tab actions
@@ -76,7 +77,7 @@ Coverage:
 - Dashboard AI settings copy explains the private-beta DeepSeek host limit
 - Dashboard local rule deletion requires confirmation and does not move or close tabs
 - Dashboard Clear AI Key removes only the local API key, disables AI classification, keeps other local data, and does not move or close tabs
-- Dashboard Clear Local Data removes local rules, AI key/settings, run state, Undo/Restore snapshots, privacy acceptance, chat draft, and local error log
+- Dashboard Clear Local Data removes local rules, saved workspace snapshots, AI key/settings, run state, Undo/Restore snapshots, privacy acceptance, chat draft, and local error log
 ```
 
 Optional provider smoke test:
@@ -109,7 +110,7 @@ node tools/open_manual_qa_profile.js --self-test
 
 The runtime script uses a temporary browser profile and synthetic tabs. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome.
 
-Runtime coverage includes one-click organize, safe duplicate close, Restore Closed, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, Dashboard drag/drop tab assignment into an existing native group, Dashboard tab focus, Dashboard Duplicate Center tab focus, Dashboard Restore Closed, Dashboard Undo, and real Sidebar composer command submission for Open Dashboard, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, next-step answer, current-page chat summary response, current-page question rendering, Restore Closed, Undo, Organize Again, group-status answer, AI-status answer, duplicate-review answer, closed-duplicate answer, active-tab answer, protected-tab answer, read-later candidate answer, tab search, and opening a matching existing tab.
+Runtime coverage includes one-click organize, safe duplicate close, Restore Closed, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, Dashboard drag/drop tab assignment into an existing native group, Dashboard tab focus, Dashboard local workspace save, Dashboard Duplicate Center tab focus, Dashboard Restore Closed, Dashboard Undo, and real Sidebar composer command submission for Open Dashboard, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, local workspace save command, next-step answer, current-page chat summary response, current-page question rendering, Restore Closed, Undo, Organize Again, group-status answer, AI-status answer, duplicate-review answer, closed-duplicate answer, active-tab answer, protected-tab answer, read-later candidate answer, tab search, and opening a matching existing tab.
 
 The optional large-tab runtime probe opens a temporary Chrome profile with synthetic URLs only and verifies the real native tab group path against 96 tabs by default. It checks organize completion, moved tabs, safe duplicate closes, review duplicate groups, expected group titles, bounded runtime, and sanitized run snapshots. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 

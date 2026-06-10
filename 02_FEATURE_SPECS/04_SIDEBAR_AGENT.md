@@ -192,6 +192,7 @@ organize again / 重新整理
 undo / 撤销
 restore closed / 恢复已关闭
 open dashboard / 打开 Dashboard
+save workspace / 保存工作区
 ```
 
 Read-only status questions:
@@ -243,12 +244,13 @@ Technical lists are hidden from the default chat surface.
 Composer messages stay in a short local in-memory thread, with user messages and Agent replies shown as separate chat bubbles.
 Quick action chips route through the same chat command path as typed commands, so clicking Organize / Ask page / Undo / Restore / Dashboard also appears in the message thread.
 Current tab summary and first-slice local page Q&A are compact Ask page actions and render back as chat messages in the same conversation flow.
-The bottom composer can trigger summary, organize, undo, restore, and dashboard commands directly.
+The bottom composer can trigger summary, organize, undo, restore, dashboard, and local save workspace commands directly.
 The bottom composer can parse `ask page: ...` / `问页面：...`, read only the current page after the existing user-triggered privacy flow, and answer from visible page text with local sentence matching.
 The bottom composer can answer help/capability questions locally so first-time users understand the wired MVP commands.
 The bottom composer can answer latest-result, group, duplicate, duplicate-review, closed-duplicate, AI status, active-tab, protected-tab, and read-later questions without reading page content.
 The bottom composer can answer “what should I do next / 下一步” locally from the latest organize state.
 The bottom composer can find tabs from the latest local snapshot and focus a selected existing tab.
+The bottom composer can save the latest organized result as a local-only workspace snapshot without full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud data, summaries, or chat history.
 The old separate summary panel remains hidden after composer-triggered summaries.
 No internal next-build / QA copy is shown in the side panel.
 ```

@@ -69,9 +69,9 @@ Hash/query/same-page review candidates are never auto-closed.
 
 Chat does not call AI, read page body content, or close tabs in this slice.
 
-Dashboard apply currently edits group title/color, focuses existing tabs, supports same-window tab moves into existing groups, supports lightweight drag/drop tab assignment between existing groups in the same window, and exposes compact Undo / Restore Closed actions when available. It does not close tabs directly, create new groups manually, or move tabs across windows.
+Dashboard apply currently edits group title/color, focuses existing tabs, supports same-window tab moves into existing groups, supports lightweight drag/drop tab assignment between existing groups in the same window, saves the current workspace as a local-only snapshot, and exposes compact Undo / Restore Closed actions when available. It does not close tabs directly, create new groups manually, restore saved workspaces, sync cloud data, or move tabs across windows.
 
-Dashboard design-prototype features that are not wired yet: manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
+Dashboard design-prototype features that are not wired yet: manual new groups, workspace restore/history management, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 
 Current tab summaries and current-page questions do not call AI yet, do not upload page content, and require an extra confirmation before reading sensitive pages.
 
@@ -134,7 +134,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English/Chinese localization, chat-first Tab Agent UI, quick-action chat routing, ephemeral chat thread rendering, stale draft button guards, direct composer commands, local capability/help answers, local next-step guidance, current-page chat summary/question rendering, latest-run read-only answers, duplicate-review/closed-tab local answers, active/protected/read-later local answers, local tab search/focus, minimal glass Dashboard layout, Dashboard Smart Groups filters, Dashboard tab focus, Dashboard same-window tab move and drag/drop guardrails, Dashboard Undo/Restore guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat action parsing, user-rule priority, duplicate safety policy, 180-tab synthetic local planning guard, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
+It checks manifest permissions, English/Chinese localization, chat-first Tab Agent UI, quick-action chat routing, ephemeral chat thread rendering, stale draft button guards, direct composer commands including local workspace save, local capability/help answers, local next-step guidance, current-page chat summary/question rendering, latest-run read-only answers, duplicate-review/closed-tab local answers, active/protected/read-later local answers, local tab search/focus, minimal glass Dashboard layout, Dashboard Smart Groups filters, Dashboard local workspace save guardrails, Dashboard tab focus, Dashboard same-window tab move and drag/drop guardrails, Dashboard Undo/Restore guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat action parsing, user-rule priority, duplicate safety policy, 180-tab synthetic local planning guard, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 

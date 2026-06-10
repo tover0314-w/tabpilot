@@ -72,6 +72,8 @@ Local error summaries are kept in a capped `chrome.storage.local` ring buffer an
 
 Duplicate close safety audit entries are kept locally as count-only events for beta validation. They may record whitelisted event types such as `auto_safe_close`, `manual_review_close`, and `restore_closed_tabs`, plus counts for requested, closed, restored, failed, and skipped tabs. They must not include URLs, hostnames, tab titles, page text, duplicate labels, rule patterns, group names, or API keys. This is not browsing analytics and has no upload path.
 
+Saved workspace snapshots are created only when the user clicks Save in Dashboard. They are local-only, stored in `chrome.storage.local`, and keep minimized workspace metadata: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. They must not include full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud data, summaries, or chat history. Copied diagnostics expose only the saved workspace count.
+
 `Clear AI Key` removes only the locally saved AI API key, disables AI classification, and keeps local rules, recent organize results, Undo/Restore snapshots, privacy acceptance, chat drafts, diagnostics, and duplicate safety audit counts. It asks for browser confirmation and does not move or close tabs, call the AI provider, delete browser history, or delete cookies.
 
 Current-tab summary reads visible page text only after the user clicks Summarize Current Tab. For sensitive contexts such as bank, billing, health, medical, password, admin, Stripe, AWS, Cloudflare, internal, or localhost pages, the sidebar asks for an extra confirmation before the background script executes content extraction. If the user cancels, no page body is read.
@@ -130,6 +132,9 @@ It clears:
 - AI settings and local API key
 - user rules
 - chat refine draft
+- saved workspace snapshots
+- local error log
+- duplicate close safety audit counts
 ```
 
 It does not:
@@ -168,6 +173,7 @@ When 诊断快照被复制
 Then 快照不包含 URL、tab title、hostname、rule pattern、group name、page text、email、bearer token 或 API key
 And 快照只包含脱敏后的最近本地错误摘要
 And 误关恢复安全审计只包含计数和白名单事件类型
+And saved workspace 只显示数量，不包含 workspace 名称或浏览元数据
 
 Given 用户点击 Copy Feedback Template
 When 反馈模板被复制
@@ -183,6 +189,6 @@ And 不调用 AI provider
 
 Given 用户点击 Clear Local Data
 When 用户确认
-Then 本地 rules、API key、Undo/Restore snapshot、最近整理结果、本地错误日志、本地误关恢复安全审计被删除
+Then 本地 rules、saved workspace snapshots、API key、Undo/Restore snapshot、最近整理结果、本地错误日志、本地误关恢复安全审计被删除
 And 不关闭、不移动任何 tabs
 ```

@@ -76,12 +76,16 @@
               <span id="ruleGroupsCount" class="dashboard-chip-count">0</span>
             </button>
             <button id="workspaceRefreshButton" class="dashboard-chip" type="button" data-i18n="refresh">Refresh</button>
+            <button id="saveWorkspaceButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="saveWorkspace" disabled>
+              Save
+            </button>
             <button id="dashboardUndoButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="undo" disabled>
               Undo
             </button>
             <button id="dashboardRestoreButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="restoreClosed" disabled>
               Restore Closed
             </button>
+            <span id="workspaceActionStatus" class="dashboard-chip-status" role="status"></span>
           </div>
 
           <section id="smart-groups" class="dashboard-section">
@@ -92,6 +96,14 @@
             </div>
             <div id="dashboardGroups" class="dashboard-group-grid"></div>
           </section>
+
+          <details id="saved-workspaces" class="dashboard-section dashboard-details-section">
+            <summary>
+              <span class="section-title" data-i18n="savedWorkspaces">Saved Workspaces</span>
+              <small data-i18n="savedWorkspacesCopy">Local snapshots only. Restore, cloud sync, and workspace chat come later.</small>
+            </summary>
+            <div id="dashboardWorkspaces" class="dashboard-list"></div>
+          </details>
 
           <details id="duplicates" class="dashboard-section dashboard-details-section">
             <summary>

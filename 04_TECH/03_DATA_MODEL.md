@@ -152,6 +152,58 @@ export type ClosedTabSnapshot = {
 
 ## Workspace
 
+Current P0 implementation stores a local-only minimized snapshot:
+
+```ts
+export type SavedWorkspaceSnapshot = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  source: 'dashboard' | string;
+  summary: {
+    tabCount: number;
+    groupCount: number;
+    windowCount: number;
+    safeDuplicatesClosed: number;
+    reviewDuplicateGroups: number;
+    aiClassificationStatus: string;
+  };
+  groups: Array<{
+    id: number;
+    windowId: number;
+    name: string;
+    color: ChromeTabGroupColor;
+    tabCount: number;
+    reason: string;
+    tabIds: number[];
+  }>;
+  tabs: Array<{
+    id: number;
+    windowId: number;
+    index: number;
+    title: string;
+    hostname: string;
+    path: string;
+    groupId: number;
+    active: boolean;
+    pinned: boolean;
+    audible: boolean;
+    discarded: boolean;
+  }>;
+};
+```
+
+Storage key:
+
+```text
+tabmosaic.savedWorkspaces
+```
+
+P0 saved workspace snapshots do not include full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud IDs, summaries, or chat history. Restore/export/chat are P1.
+
+Long-term target shape:
+
 ```ts
 export type Workspace = {
   id: string;

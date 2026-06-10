@@ -46,6 +46,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard group title/color apply back to real native tab groups
 - Dashboard same-window tab move into existing native tab groups
 - Dashboard same-window drag/drop tab assignment into existing native tab groups
+- Dashboard local workspace save snapshot
 - Dashboard compact Undo / Restore Closed actions
 - Sidepanel/Dashboard actionable safe organize error states
 - optional DeepSeek AI classification through OpenAI-compatible request format
@@ -74,7 +75,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 33 extension smoke tests
+- 34 extension smoke tests
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
@@ -82,11 +83,13 @@ Verified:
 - real native tab groups in runtime smoke
 - safe duplicate close and Restore Closed in runtime smoke
 - Chat Refine in runtime smoke
-- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, Duplicate Center focus, Undo, and Restore Closed in runtime smoke
+- Dashboard local workspace save in runtime smoke
+- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, local workspace save, Duplicate Center focus, Undo, and Restore Closed in runtime smoke
 - Sidebar composer direct commands in runtime smoke
 - Sidebar quick-action chat routing in runtime smoke
 - Sidebar ephemeral chat thread in runtime smoke
 - Sidebar capability/help answer in runtime smoke
+- Sidebar workspace save command in runtime smoke
 - Sidebar next-step answer in runtime smoke
 - Sidebar current-page chat summary in runtime smoke
 - Sidebar current-page question rendering in runtime smoke
@@ -144,7 +147,7 @@ OPEN QUESTION / MANUAL QA REQUIRED:
 - Chrome Web Store submission has not been attempted.
 - Private beta with 20-50 external users has not started.
 - Store screenshots and demo video are not final.
-- Design-prototype features are not all wired yet: manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
+- Design-prototype features are not all wired yet: manual new groups, workspace restore/history management, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 ```
 
 Manual QA source of truth:

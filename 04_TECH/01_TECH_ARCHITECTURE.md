@@ -75,7 +75,7 @@ Chrome Extension MV3
 职责：
 
 - Smart Groups 看板。
-- Workspaces。
+- Workspaces（P0 local-only Save snapshot；restore/history/chat P1）。
 - Rules & Memory。
 - Tab Knowledge。
 - Billing/Settings。

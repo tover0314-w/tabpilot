@@ -108,7 +108,7 @@ actionsApplied
 - Hosted AI key 只在后端。
 - 不在日志中写入完整 URL 或 page text。
 
-Dashboard `Clear Local Data` removes the local API key along with local rules, run state, Undo/Restore snapshots, chat draft, local error log, duplicate close safety audit, and privacy acceptance. It does not touch tabs, cookies, browser history, or any cloud account data.
+Dashboard `Clear Local Data` removes the local API key along with local rules, saved workspace snapshots, run state, Undo/Restore snapshots, chat draft, local error log, duplicate close safety audit, and privacy acceptance. It does not touch tabs, cookies, browser history, or any cloud account data.
 
 ## 7. Logging
 
@@ -154,6 +154,8 @@ Current-tab summary is local and user-triggered. Before content extraction, the 
 
 The local `currentRun` state used by the sidebar/dashboard strips restore URLs, URL hashes, raw/full URLs, and page text before storing UI state. It may keep tab title, hostname, and path because those are the documented P0 metadata used for local grouping review. Undo snapshots keep only tab IDs, window IDs, indices, and previous group IDs.
 
+The local `savedWorkspaces` state is created only when the user clicks Save in Dashboard. It stores a minimized local snapshot for the folded Saved Workspaces list: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It strips full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, and cloud IDs. Copied diagnostics report only a saved workspace count, not names or browsing metadata.
+
 Restore Closed snapshots are the intentional local-only exception: they store the minimum restorable URL/title/window/index/group metadata needed to reopen safely closed duplicate tabs. They are never included in copied diagnostics or feedback templates, are cleared by `Restore Closed` / `Clear Local Data`, and have no upload path.
 
 The extension keeps a small local-only redacted error log ring buffer for beta debugging. Error entries are stored in `chrome.storage.local`, capped, cleared by `Clear Local Data`, and included in copied diagnostics only after redaction. There is no remote log endpoint or automatic telemetry path.
@@ -167,6 +169,7 @@ The extension also keeps a local-only duplicate close safety audit for beta vali
 - 确认 incognito 不被自动处理。
 - 确认敏感页面 summary 前有二次确认，取消时不读取正文。
 - 确认 currentRun、logs、诊断、反馈模板、AI payload 不含完整 URL/page text。
+- 确认 savedWorkspaces 不含完整 URL、restore URL、URL hashes、favicon URL 或 page text。
 - 确认 Undo snapshot 只保存恢复分组所需的最小字段。
 - 确认 API key 不出现在客户端日志。
 - 确认 Clear Local Data 删除本地 API key 和 rules，但不关闭/移动 tabs。

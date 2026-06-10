@@ -14,6 +14,7 @@
 - user rules。
 - learned rules。
 - recent workspaces metadata。
+- saved workspace snapshots（P0 local-only minimized snapshot）。
 - privacy preferences。
 
 ### chrome.storage.session
@@ -30,7 +31,7 @@
 
 - 大量 tab summaries。
 - chat history。
-- workspace snapshots。
+- larger workspace snapshots / P1 restore history。
 - restore history。
 
 ## 3. P1 云同步
@@ -82,9 +83,14 @@ tabmosaic.privacyAccepted
 tabmosaic.aiSettings
 tabmosaic.userRules
 tabmosaic.chatDraft
+tabmosaic.errorLog
+tabmosaic.duplicateSafetyAudit
+tabmosaic.savedWorkspaces
 ```
 
 After clearing, the extension publishes an idle run state and first-run privacy onboarding appears again before the next organize.
+
+Current `tabmosaic.savedWorkspaces` P0 snapshot is local-only and minimized. It stores group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It does not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
 
 ## 6. Sync 冲突
 

@@ -74,7 +74,7 @@ node tools/beta_readiness_check.js
 node tools/extension_smoke_test.js
 ```
 
-它会检查 manifest 权限、英文/中文本地化、极简玻璃拟态 side panel / Dashboard 守卫、侧边栏快捷动作进入聊天、侧边栏临时消息流、侧边栏 direct commands、本地能力说明回答、当前页 summary / page question 聊天消息渲染、latest-run 只读问答、duplicate-review/closed-tab 本地回答、active/protected/read-later 本地回答、tab search/focus、权限解释、脱敏本地错误日志、本地误关恢复安全审计计数、脱敏 beta 诊断快照和反馈模板、Chat action parser、用户规则优先级、重复项安全策略、180-tab synthetic local planning guard、AI 输出校验、AI 连接测试不发送 tab 数据，以及本地数据清除。
+它会检查 manifest 权限、英文/中文本地化、极简玻璃拟态 side panel / Dashboard 守卫、Dashboard 本地保存 workspace 快照的隐私边界、侧边栏快捷动作进入聊天、侧边栏临时消息流、侧边栏 direct commands（含本地保存 workspace）、本地能力说明回答、当前页 summary / page question 聊天消息渲染、latest-run 只读问答、duplicate-review/closed-tab 本地回答、active/protected/read-later 本地回答、tab search/focus、权限解释、脱敏本地错误日志、本地误关恢复安全审计计数、脱敏 beta 诊断快照和反馈模板、Chat action parser、用户规则优先级、重复项安全策略、180-tab synthetic local planning guard、AI 输出校验、AI 连接测试不发送 tab 数据，以及本地数据清除。
 
 ```bash
 node tools/issue_form_smoke_test.js

@@ -81,7 +81,7 @@
 
 ## Sprint 5：Sidebar Chat + Current Tab Summary
 
-状态：已实现 local Chat Refine preview/apply first slice、local user rules、current tab local extractive summary、composer direct command router、latest-run read-only answers、duplicate review/closed-tab local answers、active/protected/read-later local answers、local tab search/focus。
+状态：已实现 local Chat Refine preview/apply first slice、local user rules、current tab local extractive summary、composer direct command router、Sidebar save workspace command、latest-run read-only answers、duplicate review/closed-tab local answers、active/protected/read-later local answers、local tab search/focus。
 
 目标：用户可纠错和总结当前页面。
 
@@ -105,10 +105,11 @@
 - 用户能问“下一步怎么办”并得到基于最新整理结果的本地建议。
 - 用户能询问最新整理结果、分组、重复项、待确认重复项、已关闭重复项、AI 状态、当前活跃标签页、受保护标签页和稍后阅读候选。
 - 用户能搜索当前 tabs 并打开匹配的已有标签页。
+- 用户能通过侧边栏输入 save workspace / 保存工作区，把当前整理结果保存成本地 workspace 快照。
 
 ## Sprint 6：Dashboard V0
 
-状态：已实现 extension page dashboard、workspace metrics、smart group cards、duplicate center、rules memory、AI settings、group title/color apply、same-window tab move、same-window drag/drop tab assignment、Dashboard Undo/Restore、Smart Group expandable tab rows、Duplicate Center tab details/focus。Save workspace 仍未实现。
+状态：已实现 extension page dashboard、workspace metrics、smart group cards、duplicate center、rules memory、AI settings、group title/color apply、same-window tab move、same-window drag/drop tab assignment、Dashboard Undo/Restore、Smart Group expandable tab rows、Duplicate Center tab details/focus、Save current workspace local snapshot first slice。Workspace restore/history/chat 仍未实现。
 
 目标：看板管理好的分组。
 
@@ -129,6 +130,7 @@
 - 用户可在 Dashboard Duplicate Center 展开重复组并打开对应 tab 检查。
 - 用户可把 tab 行拖到同窗口另一个已有分组，并同步到真实 Chrome native tab group。
 - 用户可在 dashboard 直接 Undo 或 Restore Closed。
+- 用户可把当前整理结果保存成本地 workspace 快照；恢复、云同步和 workspace chat 后续再做。
 
 ## Sprint 7：Private Beta Polish
 

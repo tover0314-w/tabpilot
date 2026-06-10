@@ -17,6 +17,7 @@
 - [x] Duplicate review（safe review first slice）。
 - [x] Undo/Restore。
 - [x] Dashboard V0（extension page first slice）。
+- [x] Dashboard local Save workspace（本地快照 first slice；restore/cloud sync 未做）。
 - [x] Privacy settings（permissions/local data/diagnostics first slice）。
 - [ ] P0 QA runbook 已跑通。
 

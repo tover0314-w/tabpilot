@@ -199,6 +199,14 @@ async function main() {
       }, "Sidebar composer did not answer capability/help question");
       assert(capabilityAnswerRendered, "Capability/help answer was not rendered in the chat thread");
 
+      await submitSidepanelComposer(cdp, "save workspace");
+      const sidepanelSaveState = await waitFor(async () => {
+        const state = await evaluate(cdp, `chrome.storage.local.get("tabmosaic.savedWorkspaces")`);
+        const savedWorkspaces = state["tabmosaic.savedWorkspaces"] || [];
+        return savedWorkspaces.length >= 1 ? savedWorkspaces : null;
+      }, "Sidebar save workspace command did not write a local workspace snapshot");
+      assert(sidepanelSaveState, "Sidebar save workspace command did not save a workspace");
+
       const preview = await evaluate(cdp, `
         chrome.runtime.sendMessage({ type: "PREVIEW_CHAT_REFINE", text: "GitHub PR to PR Review" })
       `);
@@ -262,6 +270,22 @@ async function main() {
       assert(dashboardFocus && dashboardFocus.ok, `Dashboard tab focus failed: ${JSON.stringify(dashboardFocus)}`);
       const activeTabs = await evaluate(cdp, `chrome.tabs.query({ active: true, windowId: ${movedTab.windowId} })`);
       assert(activeTabs.some((tab) => tab.id === movedTab.id), "Dashboard tab focus did not activate the requested tab");
+
+      const dashboardSave = await evaluate(cdp, `
+        chrome.runtime.sendMessage({
+          type: "SAVE_CURRENT_WORKSPACE",
+          source: "runtime-smoke"
+        })
+      `);
+      assert(dashboardSave && dashboardSave.ok, `Dashboard workspace save failed: ${JSON.stringify(dashboardSave)}`);
+      const savedWorkspaceState = await evaluate(cdp, `chrome.storage.local.get("tabmosaic.savedWorkspaces")`);
+      const savedWorkspaces = savedWorkspaceState["tabmosaic.savedWorkspaces"] || [];
+      const savedWorkspaceJson = JSON.stringify(savedWorkspaces);
+      assert(savedWorkspaces.length >= 1, "Dashboard workspace save did not write local workspace state");
+      assert(!savedWorkspaceJson.includes("restoreUrl"), "Saved workspaces must not contain restoreUrl");
+      assert(!savedWorkspaceJson.includes("fullUrl"), "Saved workspaces must not contain fullUrl");
+      assert(!savedWorkspaceJson.includes("pageText"), "Saved workspaces must not contain page text");
+      assert(!savedWorkspaceJson.includes("https://"), "Saved workspaces must not contain full URLs");
 
       const dashboardUiPage = await createTarget(port, `chrome-extension://${extensionId}/dashboard.html`);
       const dashboardCdp = await CDPSession.connect(dashboardUiPage.webSocketDebuggerUrl);
@@ -588,7 +612,7 @@ async function main() {
         dashboardActionsCdp.close();
       }
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
     } finally {
       cdp.close();
     }

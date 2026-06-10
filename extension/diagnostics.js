@@ -21,6 +21,7 @@ export function buildDiagnosticSnapshot({
   aiSettings,
   errorLog,
   duplicateSafetyAudit,
+  savedWorkspaces,
   uiLanguage,
   now = new Date()
 }) {
@@ -43,6 +44,7 @@ export function buildDiagnosticSnapshot({
       aiProvider: aiSettings?.provider || "deepseek",
       aiModel: aiSettings?.model || "",
       hasLocalApiKey: Boolean(aiSettings?.apiKey),
+      savedWorkspaceCount: Array.isArray(savedWorkspaces) ? savedWorkspaces.length : 0,
       errorCount: Array.isArray(errorLog) ? errorLog.length : 0,
       duplicateSafetyEventCount: Array.isArray(duplicateSafetyAudit) ? duplicateSafetyAudit.length : 0
     },

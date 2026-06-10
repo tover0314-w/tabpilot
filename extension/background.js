@@ -7,8 +7,10 @@ const USER_RULES_KEY = "tabmosaic.userRules";
 const CHAT_DRAFT_KEY = "tabmosaic.chatDraft";
 const ERROR_LOG_KEY = "tabmosaic.errorLog";
 const DUPLICATE_SAFETY_AUDIT_KEY = "tabmosaic.duplicateSafetyAudit";
+const SAVED_WORKSPACES_KEY = "tabmosaic.savedWorkspaces";
 const MAX_ERROR_LOG_ENTRIES = 12;
 const MAX_DUPLICATE_SAFETY_AUDIT_ENTRIES = 20;
+const MAX_SAVED_WORKSPACES = 12;
 const LOCAL_DATA_KEYS = [
   CURRENT_RUN_KEY,
   LAST_UNDO_KEY,
@@ -18,7 +20,8 @@ const LOCAL_DATA_KEYS = [
   USER_RULES_KEY,
   CHAT_DRAFT_KEY,
   ERROR_LOG_KEY,
-  DUPLICATE_SAFETY_AUDIT_KEY
+  DUPLICATE_SAFETY_AUDIT_KEY,
+  SAVED_WORKSPACES_KEY
 ];
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
@@ -174,6 +177,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     focusDashboardTab(message)
       .then((result) => sendResponse({ ok: true, result }))
       .catch((error) => sendErrorResponse(sendResponse, "FOCUS_DASHBOARD_TAB", error));
+    return true;
+  }
+
+  if (message.type === "SAVE_CURRENT_WORKSPACE") {
+    saveCurrentWorkspace(message)
+      .then((result) => sendResponse({ ok: true, result }))
+      .catch((error) => sendErrorResponse(sendResponse, "SAVE_CURRENT_WORKSPACE", error));
     return true;
   }
 
@@ -646,6 +656,111 @@ async function clearLocalData() {
 
   await publishRun(run);
   return run;
+}
+
+async function saveCurrentWorkspace(message = {}) {
+  const result = await chrome.storage.local.get([CURRENT_RUN_KEY, SAVED_WORKSPACES_KEY]);
+  const run = result[CURRENT_RUN_KEY];
+
+  if (!isWorkspaceSaveableRun(run)) {
+    throw new Error("Organize the browser before saving a workspace.");
+  }
+
+  const workspace = buildSavedWorkspace(run, {
+    source: message.source || "dashboard"
+  });
+  const previousWorkspaces = Array.isArray(result[SAVED_WORKSPACES_KEY])
+    ? result[SAVED_WORKSPACES_KEY]
+    : [];
+  const nextWorkspaces = [workspace, ...previousWorkspaces]
+    .filter((item, index, items) => items.findIndex((candidate) => candidate.id === item.id) === index)
+    .slice(0, MAX_SAVED_WORKSPACES);
+
+  await chrome.storage.local.set({ [SAVED_WORKSPACES_KEY]: nextWorkspaces });
+
+  return {
+    workspace,
+    workspaces: nextWorkspaces
+  };
+}
+
+function isWorkspaceSaveableRun(run) {
+  return Boolean(
+    run &&
+      ["completed", "closed-restored", "undone"].includes(run.status) &&
+      Array.isArray(run.groups) &&
+      Array.isArray(run.snapshot?.tabs)
+  );
+}
+
+function buildSavedWorkspace(run, { source = "dashboard", now = new Date() } = {}) {
+  const savedAt = now instanceof Date ? now.toISOString() : new Date(now).toISOString();
+  const groups = sanitizeWorkspaceGroups(run.groups || []);
+  const tabs = sanitizeWorkspaceTabs(run.snapshot?.tabs || []);
+  const summary = sanitizeWorkspaceSummary(run.summary || {}, {
+    tabCount: tabs.length,
+    groupCount: groups.length
+  });
+
+  return {
+    id: `ws_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    name: buildWorkspaceName(groups, savedAt),
+    createdAt: savedAt,
+    updatedAt: savedAt,
+    source: String(source || "dashboard").slice(0, 32),
+    summary,
+    groups,
+    tabs
+  };
+}
+
+function buildWorkspaceName(groups, savedAt) {
+  const groupNames = groups.map((group) => group.name).filter(Boolean).slice(0, 2);
+
+  if (groupNames.length) {
+    return groupNames.join(" + ").slice(0, 72);
+  }
+
+  return `Workspace ${savedAt.slice(0, 10)}`;
+}
+
+function sanitizeWorkspaceGroups(groups) {
+  return groups.slice(0, 32).map((group) => ({
+    id: Number.isInteger(Number(group.id)) ? Number(group.id) : NO_GROUP_ID,
+    windowId: Number.isInteger(Number(group.windowId)) ? Number(group.windowId) : 0,
+    name: cleanGroupName(group.name || group.title || "Untitled Group") || "Untitled Group",
+    color: SUPPORTED_GROUP_COLORS.has(group.color) ? group.color : "grey",
+    tabCount: nonNegativeInt(group.tabCount),
+    reason: String(group.reason || "").slice(0, 80),
+    tabIds: Array.isArray(group.tabIds) ? group.tabIds.map((id) => Number(id)).filter(Number.isInteger) : []
+  }));
+}
+
+function sanitizeWorkspaceTabs(tabs) {
+  return tabs.slice(0, 400).map((tab) => ({
+    id: Number.isInteger(Number(tab.id)) ? Number(tab.id) : 0,
+    windowId: Number.isInteger(Number(tab.windowId)) ? Number(tab.windowId) : 0,
+    index: nonNegativeInt(tab.index),
+    title: String(tab.title || "Untitled").slice(0, 160),
+    hostname: String(tab.hostname || "").slice(0, 120),
+    path: String(tab.path || "").slice(0, 160),
+    groupId: Number.isInteger(tab.groupId) ? tab.groupId : NO_GROUP_ID,
+    active: Boolean(tab.active),
+    pinned: Boolean(tab.pinned),
+    audible: Boolean(tab.audible),
+    discarded: Boolean(tab.discarded)
+  }));
+}
+
+function sanitizeWorkspaceSummary(summary, fallback = {}) {
+  return {
+    tabCount: nonNegativeInt(summary.tabCount ?? fallback.tabCount),
+    groupCount: nonNegativeInt(fallback.groupCount),
+    windowCount: nonNegativeInt(summary.windowCount),
+    safeDuplicatesClosed: nonNegativeInt(summary.safeDuplicatesClosed),
+    reviewDuplicateGroups: nonNegativeInt(summary.reviewDuplicateGroups),
+    aiClassificationStatus: String(summary.aiClassificationStatus || "not-configured").slice(0, 48)
+  };
 }
 
 async function previewChatRefine(message) {

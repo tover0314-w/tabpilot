@@ -357,6 +357,9 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("await undoLast()"), "Chat command should support Undo");
   assert(sidepanelJs.includes("await restoreClosed()"), "Chat command should support Restore Closed");
   assert(sidepanelJs.includes("await openDashboard()"), "Chat command should support opening Dashboard");
+  assert(sidepanelJs.includes("await saveCurrentWorkspace()"), "Chat command should support local workspace save");
+  assert(sidepanelJs.includes("isSaveWorkspaceCommand(normalized)"), "Save workspace commands should be recognized before chat refine");
+  assert(sidepanelJs.includes('type: "SAVE_CURRENT_WORKSPACE"'), "Sidepanel save workspace should use the background action");
   assert(css.includes(".agent-action-message"), "Quick action message card should have scoped styling");
   assert(css.includes(".chat-thread-message.user"), "User chat messages should have scoped styling");
   assert(css.includes(".chat-thread-message.assistant"), "Assistant chat messages should have scoped styling");
@@ -377,6 +380,8 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(en.agentProtectedTabsAnswer?.message && zh.agentProtectedTabsAnswer?.message, "Protected-tab answer copy should be localized");
   assert(en.agentReadLaterAnswer?.message && zh.agentReadLaterAnswer?.message, "Read-later answer copy should be localized");
   assert(en.agentFindTabsAnswer?.message && zh.agentFindTabsAnswer?.message, "Tab search answer copy should be localized");
+  assert(en.agentCommandSaveWorkspace?.message && zh.agentCommandSaveWorkspace?.message, "Save workspace command copy should be localized");
+  assert(en.agentWorkspaceSaved?.message && zh.agentWorkspaceSaved?.message, "Saved workspace result copy should be localized");
   assert(en.moreBrowserDetails?.message && zh.moreBrowserDetails?.message, "Folded detail summary should be localized");
 });
 
@@ -406,9 +411,14 @@ test("dashboard follows minimal glass workbench structure", () => {
   assert(dashboardJs.includes("hiddenTabs.map((tab) => renderGroupTabRow"), "Expanded Dashboard rows should reuse normal tab row actions");
   assert(dashboardJs.includes("function renderTabFavicon"), "Dashboard should render real tab favicons when available");
   assert(dashboardJs.includes("favIconUrl"), "Dashboard tab rows should read favIconUrl from the local snapshot");
+  assert(dashboardHtml.includes("saveWorkspaceButton"), "Dashboard should expose a compact save workspace action");
+  assert(dashboardHtml.includes("saved-workspaces"), "Dashboard should keep saved workspaces folded");
+  assert(dashboardJs.includes("function renderSavedWorkspaces"), "Dashboard should render saved local workspace snapshots");
   assert(dashboardCss.includes(".dashboard-favicon img"), "Dashboard should style favicon image assets");
+  assert(dashboardCss.includes(".dashboard-workspace-row"), "Dashboard should style saved workspace rows");
   assert(dashboardCss.includes(".dashboard-more-tabs"), "Dashboard expandable tab rows should have scoped styling");
   assert(dashboardJs.includes("type: \"ORGANIZE_NOW\""), "Dashboard primary CTA should use existing organize action");
+  assert(dashboardJs.includes("SAVE_CURRENT_WORKSPACE"), "Dashboard save should use the background workspace action");
   assert(!dashboardHtml.includes("dashboard-sidebar"), "Dashboard should not use the old basic sidebar layout");
   assert(!dashboardHtml.includes("editable-group-card"), "Dashboard should not use the old settings-card group UI");
   assert(!dashboardHtml.includes("dashboard-sort-label"), "Dashboard should avoid nonessential sort/status clutter");
@@ -427,6 +437,75 @@ test("dashboard removes latest-result and workspace clutter from the default pag
   assert(!dashboardJs.includes("latestResultWithDate"), "Dashboard should not format latest-result timestamps");
   assert(!dashboardJs.includes("renderResultSummary"), "Dashboard should not keep the old latest-result renderer");
   assert(!dashboardJs.includes("dashboardMetrics"), "Dashboard JS should not write a metrics wall");
+});
+
+test("dashboard saves local workspace snapshots without full URLs or page text", () => {
+  const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+  const run = {
+    status: "completed",
+    summary: {
+      tabCount: 1,
+      windowCount: 1,
+      safeDuplicatesClosed: 0,
+      reviewDuplicateGroups: 0,
+      aiClassificationStatus: "not-configured"
+    },
+    groups: [
+      {
+        id: 7,
+        windowId: 1,
+        name: "Research",
+        color: "blue",
+        tabCount: 1,
+        reason: "Current Chrome group",
+        tabIds: [21]
+      }
+    ],
+    snapshot: {
+      tabs: [
+        {
+          id: 21,
+          windowId: 1,
+          index: 0,
+          title: "Private planning doc",
+          hostname: "private.example",
+          path: "/secret",
+          groupId: 7,
+          restoreUrl: "https://private.example/secret?token=abc#fragment",
+          url: "https://private.example/secret?token=abc#fragment",
+          fullUrl: "https://private.example/secret?token=abc#fragment",
+          pageText: "Confidential page body",
+          favIconUrl: "https://private.example/favicon.ico?token=abc#fragment",
+          exactUrlHash: "exact-secret",
+          trackingUrlHash: "tracking-secret",
+          reviewUrlHash: "review-secret"
+        }
+      ]
+    }
+  };
+  const workspace = context.buildSavedWorkspace(run, {
+    source: "test",
+    now: new Date("2026-06-10T00:00:00.000Z")
+  });
+  const serialized = JSON.stringify(workspace);
+
+  assert(context.isWorkspaceSaveableRun(run), "Completed run should be saveable");
+  assertEqual(workspace.summary.tabCount, 1, "Saved workspace tab count");
+  assertEqual(workspace.summary.groupCount, 1, "Saved workspace group count");
+  assertEqual(workspace.groups[0].tabIds[0], 21, "Saved workspace keeps local tab id mapping");
+  assertEqual(workspace.tabs[0].hostname, "private.example", "Saved workspace can keep local hostname metadata");
+  assert(!serialized.includes("https://private.example/secret"), "Saved workspace must not include full URL");
+  assert(!serialized.includes("token=abc"), "Saved workspace must not include query token");
+  assert(!serialized.includes("Confidential page body"), "Saved workspace must not include page text");
+  assert(!serialized.includes("favicon.ico"), "Saved workspace must not include favicon URL");
+  assert(!serialized.includes("exact-secret"), "Saved workspace must not include URL hash identifiers");
+  assert(dashboardHtml.includes("data-i18n=\"savedWorkspaces\""), "Saved workspaces section should be localized");
+  assert(dashboardJs.includes("SAVED_WORKSPACES_KEY"), "Dashboard should load saved workspaces from local storage");
+  assert(en.savedWorkspacesCopy?.message.includes("Local snapshots only"), "English saved workspace copy should set local-only scope");
+  assert(zh.savedWorkspacesCopy?.message.includes("仅本地快照"), "Chinese saved workspace copy should set local-only scope");
 });
 
 test("dashboard can move tabs between existing groups without adding destructive actions", () => {
@@ -830,6 +909,12 @@ test("diagnostics and feedback template redact browsing content and secrets", as
       model: "deepseek-v4-flash",
       apiKey: "sk-secret"
     },
+    savedWorkspaces: [
+      {
+        name: "Secret Project",
+        tabs: [{ title: "Private planning doc", hostname: "private.example" }]
+      }
+    ],
     errorLog: [
       {
         at: "2026-06-09T00:30:00.000Z",
@@ -867,6 +952,7 @@ test("diagnostics and feedback template redact browsing content and secrets", as
   assertEqual(snapshot.latestRun.duplicateGroupCount, 1, "Diagnostic duplicate group count");
   assertEqual(snapshot.localState.ruleCount, 1, "Diagnostic rule count");
   assertEqual(snapshot.localState.hasLocalApiKey, true, "Diagnostic API key presence flag");
+  assertEqual(snapshot.localState.savedWorkspaceCount, 1, "Diagnostic saved workspace count");
   assertEqual(snapshot.localState.errorCount, 1, "Diagnostic error count");
   assertEqual(snapshot.localState.duplicateSafetyEventCount, 2, "Diagnostic duplicate safety event count");
   assertEqual(snapshot.recentErrors.length, 1, "Diagnostic recent errors");
@@ -1379,7 +1465,8 @@ test("clear local data removes sensitive local keys and resets run state", async
     "tabmosaic.userRules",
     "tabmosaic.chatDraft",
     "tabmosaic.errorLog",
-    "tabmosaic.duplicateSafetyAudit"
+    "tabmosaic.duplicateSafetyAudit",
+    "tabmosaic.savedWorkspaces"
   ];
 
   assertDeepEqual(removedKeys.sort(), expectedKeys.sort(), "Clear local data keys");

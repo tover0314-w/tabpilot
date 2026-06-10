@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.96 — 2026-06-10
+
+Changed:
+
+- Added a Dashboard `Save` action that stores the current organized workspace as a local-only snapshot in `chrome.storage.local`.
+- Added a Sidebar Tab Agent `save workspace` / `保存工作区` command that uses the same local-only snapshot path.
+- Added a folded Saved Workspaces section so saved snapshots do not clutter the default Smart Groups board.
+- Local workspace snapshots store minimized metadata and exclude full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud data, summaries, and chat history.
+- Smoke/runtime coverage now verifies local workspace save behavior, diagnostics count saved workspaces without exposing names/content, and Clear Local Data removes saved snapshots.
+
+Safety:
+
+- This is local-only storage. It does not restore workspaces yet, sync to cloud, call AI, upload data, read page bodies, close tabs, move tabs, add analytics, or request new permissions.
+
 ## v0.95 — 2026-06-10
 
 Changed:

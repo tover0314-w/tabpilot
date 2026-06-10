@@ -29,6 +29,7 @@
 - [x] sidebar duplicate review / closed duplicate local answers。
 - [x] sidebar active/protected/read-later local answers。
 - [x] sidebar local tab search and focus existing tab。
+- [x] sidebar save workspace command（local snapshot first slice）。
 - [x] current tab summary（local extractive first slice）。
 - [x] dashboard V0 smart groups（read-only local first slice）。
 - [x] dashboard Duplicate Center tab details / focus existing tab。
@@ -36,13 +37,14 @@
 - [x] dashboard expandable Smart Group tab rows。
 - [x] dashboard drag/drop tab assignment（same-window existing groups first slice）。
 - [x] dashboard Undo / Restore Closed actions。
+- [x] save current workspace locally（Dashboard local snapshot first slice）。
 - [x] privacy onboarding。
 - [x] actionable safe error states（Sidepanel + Dashboard first slice）。
 - [x] local data deletion（Dashboard first slice）。
 
 ## P1 Should-have
 
-- [ ] saved workspace history。
+- [ ] saved workspace history / restore。
 - [ ] group summary。
 - [ ] multi-tab chat。
 - [ ] workspace chat。

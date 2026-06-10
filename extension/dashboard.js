@@ -6,6 +6,7 @@ const AI_SETTINGS_KEY = "tabmosaic.aiSettings";
 const USER_RULES_KEY = "tabmosaic.userRules";
 const ERROR_LOG_KEY = "tabmosaic.errorLog";
 const DUPLICATE_SAFETY_AUDIT_KEY = "tabmosaic.duplicateSafetyAudit";
+const SAVED_WORKSPACES_KEY = "tabmosaic.savedWorkspaces";
 const GROUP_COLORS = ["grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan"];
 const DEFAULT_AI_SETTINGS = {
   enabled: false,
@@ -19,9 +20,11 @@ const GROUP_FILTERS = new Set(["all", "ai", "rules"]);
 
 const refreshButton = document.querySelector("#refreshButton");
 const workspaceRefreshButton = document.querySelector("#workspaceRefreshButton");
+const saveWorkspaceButton = document.querySelector("#saveWorkspaceButton");
 const organizeNowButton = document.querySelector("#organizeNowButton");
 const dashboardUndoButton = document.querySelector("#dashboardUndoButton");
 const dashboardRestoreButton = document.querySelector("#dashboardRestoreButton");
+const workspaceActionStatus = document.querySelector("#workspaceActionStatus");
 const rulesCountBadge = document.querySelector("#rulesCountBadge");
 const rulesSubtitle = document.querySelector("#rulesSubtitle");
 const allGroupsCount = document.querySelector("#allGroupsCount");
@@ -29,6 +32,7 @@ const aiGroupsCount = document.querySelector("#aiGroupsCount");
 const ruleGroupsCount = document.querySelector("#ruleGroupsCount");
 const dashboardGroups = document.querySelector("#dashboardGroups");
 const dashboardDuplicates = document.querySelector("#dashboardDuplicates");
+const dashboardWorkspaces = document.querySelector("#dashboardWorkspaces");
 const dashboardRules = document.querySelector("#dashboardRules");
 const settingsSnapshot = document.querySelector("#settingsSnapshot");
 const aiSettingsForm = document.querySelector("#aiSettingsForm");
@@ -53,6 +57,7 @@ applyI18n();
 refreshButton.addEventListener("click", loadDashboard);
 workspaceRefreshButton.addEventListener("click", loadDashboard);
 organizeNowButton.addEventListener("click", organizeFromDashboard);
+saveWorkspaceButton.addEventListener("click", saveWorkspaceFromDashboard);
 dashboardUndoButton.addEventListener("click", undoFromDashboard);
 dashboardRestoreButton.addEventListener("click", restoreClosedFromDashboard);
 aiSettingsForm.addEventListener("submit", saveAISettings);
@@ -80,13 +85,18 @@ loadDashboard();
 loadAISettings();
 
 async function loadDashboard() {
-  const result = await chrome.storage.local.get([CURRENT_RUN_KEY, USER_RULES_KEY]);
-  renderDashboard(result[CURRENT_RUN_KEY], result[USER_RULES_KEY] || []);
+  const result = await chrome.storage.local.get([CURRENT_RUN_KEY, USER_RULES_KEY, SAVED_WORKSPACES_KEY]);
+  renderDashboard(
+    result[CURRENT_RUN_KEY],
+    result[USER_RULES_KEY] || [],
+    result[SAVED_WORKSPACES_KEY] || []
+  );
 }
 
-function renderDashboard(run, rules = []) {
+function renderDashboard(run, rules = [], workspaces = []) {
   latestRun = run || null;
   renderRules(rules);
+  renderSavedWorkspaces(workspaces);
   syncGroupFilterButtons();
   syncDashboardActionButtons(run);
   renderRuleCount(rules);
@@ -138,8 +148,18 @@ function syncGroupFilterButtons() {
 
 function syncDashboardActionButtons(run = latestRun) {
   const summary = run?.summary || {};
+  saveWorkspaceButton.disabled = !isWorkspaceSaveableRun(run);
   dashboardUndoButton.disabled = !summary.undoAvailable;
   dashboardRestoreButton.disabled = !summary.closedTabsRestoreAvailable;
+}
+
+function isWorkspaceSaveableRun(run) {
+  return Boolean(
+    run &&
+      ["completed", "closed-restored", "undone"].includes(run.status) &&
+      Array.isArray(run.groups) &&
+      Array.isArray(run.snapshot?.tabs)
+  );
 }
 
 async function organizeFromDashboard() {
@@ -153,7 +173,7 @@ async function organizeFromDashboard() {
       dashboardGroups.innerHTML = renderDashboardError(response?.error || msg("scanDidNotFinish"));
       return;
     }
-    renderDashboard(response.run, await loadRules());
+    renderDashboard(response.run, await loadRules(), await loadSavedWorkspaces());
   } catch (error) {
     dashboardGroups.innerHTML = renderDashboardError(error?.message || msg("scanDidNotFinish"));
   } finally {
@@ -174,7 +194,7 @@ async function undoFromDashboard() {
       return;
     }
 
-    renderDashboard(response.run, await loadRules());
+    renderDashboard(response.run, await loadRules(), await loadSavedWorkspaces());
   } catch (error) {
     window.alert(error?.message || msg("couldNotUndo"));
   } finally {
@@ -195,7 +215,7 @@ async function restoreClosedFromDashboard() {
       return;
     }
 
-    renderDashboard(response.run, await loadRules());
+    renderDashboard(response.run, await loadRules(), await loadSavedWorkspaces());
   } catch (error) {
     window.alert(error?.message || msg("couldNotRestoreClosed"));
   } finally {
@@ -204,9 +224,40 @@ async function restoreClosedFromDashboard() {
   }
 }
 
+async function saveWorkspaceFromDashboard() {
+  saveWorkspaceButton.disabled = true;
+  saveWorkspaceButton.textContent = msg("saving");
+  workspaceActionStatus.textContent = "";
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: "SAVE_CURRENT_WORKSPACE",
+      source: "dashboard"
+    });
+
+    if (!response?.ok) {
+      workspaceActionStatus.textContent = response?.error || msg("couldNotSaveWorkspace");
+      return;
+    }
+
+    renderSavedWorkspaces(response.result?.workspaces || []);
+    workspaceActionStatus.textContent = msg("workspaceSaved");
+  } catch (error) {
+    workspaceActionStatus.textContent = `${msg("couldNotSaveWorkspace")} ${error?.message || ""}`.trim();
+  } finally {
+    saveWorkspaceButton.textContent = msg("saveWorkspace");
+    syncDashboardActionButtons(latestRun);
+  }
+}
+
 async function loadRules() {
   const result = await chrome.storage.local.get(USER_RULES_KEY);
   return Array.isArray(result[USER_RULES_KEY]) ? result[USER_RULES_KEY] : [];
+}
+
+async function loadSavedWorkspaces() {
+  const result = await chrome.storage.local.get(SAVED_WORKSPACES_KEY);
+  return Array.isArray(result[SAVED_WORKSPACES_KEY]) ? result[SAVED_WORKSPACES_KEY] : [];
 }
 
 function renderRuleCount(rules = []) {
@@ -615,7 +666,8 @@ async function loadDiagnosticSnapshot() {
     USER_RULES_KEY,
     AI_SETTINGS_KEY,
     ERROR_LOG_KEY,
-    DUPLICATE_SAFETY_AUDIT_KEY
+    DUPLICATE_SAFETY_AUDIT_KEY,
+    SAVED_WORKSPACES_KEY
   ]);
   return buildDiagnosticSnapshot({
     manifest: chrome.runtime.getManifest(),
@@ -624,6 +676,7 @@ async function loadDiagnosticSnapshot() {
     aiSettings: result[AI_SETTINGS_KEY] || {},
     errorLog: result[ERROR_LOG_KEY] || [],
     duplicateSafetyAudit: result[DUPLICATE_SAFETY_AUDIT_KEY] || [],
+    savedWorkspaces: result[SAVED_WORKSPACES_KEY] || [],
     uiLanguage: chrome.i18n?.getUILanguage?.() || ""
   });
 }
@@ -697,6 +750,50 @@ function renderGroups(groups, run = latestRun) {
   dashboardGroups.innerHTML = filteredGroups
     .map((group, index) => renderGroupCard(group, run, index))
     .join("");
+}
+
+function renderSavedWorkspaces(workspaces = []) {
+  if (!Array.isArray(workspaces) || !workspaces.length) {
+    dashboardWorkspaces.innerHTML = `<p class="empty">${escapeHtml(msg("noSavedWorkspaces"))}</p>`;
+    return;
+  }
+
+  dashboardWorkspaces.innerHTML = workspaces
+    .slice(0, 6)
+    .map((workspace) => renderSavedWorkspaceRow(workspace))
+    .join("");
+}
+
+function renderSavedWorkspaceRow(workspace) {
+  const summary = workspace.summary || {};
+  const savedAt = formatSavedWorkspaceDate(workspace.updatedAt || workspace.createdAt);
+  const tabCount = Number(summary.tabCount ?? workspace.tabs?.length ?? 0);
+  const groupCount = Number(summary.groupCount ?? workspace.groups?.length ?? 0);
+
+  return `
+    <article class="dashboard-workspace-row">
+      <div>
+        <strong>${escapeHtml(workspace.name || msg("savedWorkspace"))}</strong>
+        <small>${escapeHtml(msg("workspaceSavedMeta", [tabCount, groupCount, savedAt]))}</small>
+      </div>
+      <span>${escapeHtml(msg("localSnapshot"))}</span>
+    </article>
+  `;
+}
+
+function formatSavedWorkspaceDate(value) {
+  if (!value) return msg("unknownTime");
+
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date(value));
+  } catch {
+    return msg("unknownTime");
+  }
 }
 
 function renderDashboardError(errorText) {

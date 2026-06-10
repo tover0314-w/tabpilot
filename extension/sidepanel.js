@@ -136,6 +136,30 @@ async function openDashboard() {
   });
 }
 
+async function saveCurrentWorkspace() {
+  setBusy(true);
+  const response = await chrome.runtime.sendMessage({
+    type: "SAVE_CURRENT_WORKSPACE",
+    source: "sidepanel"
+  });
+  setBusy(false);
+
+  if (!response?.ok) {
+    renderChatPanel({
+      status: "error",
+      answer: response?.error || msg("couldNotSaveWorkspace")
+    });
+    return;
+  }
+
+  renderChatPanel({
+    status: "applied",
+    answer: msg("agentWorkspaceSaved", [
+      response.result?.workspace?.name || msg("savedWorkspace")
+    ])
+  });
+}
+
 async function summarizeCurrentTab(question = "") {
   setBusy(true);
   renderSummary({
@@ -332,7 +356,8 @@ async function handleAgentCommand(text) {
     organize: msg("agentCommandOrganize"),
     undo: msg("agentCommandUndo"),
     restore: msg("agentCommandRestore"),
-    dashboard: msg("agentCommandDashboard")
+    dashboard: msg("agentCommandDashboard"),
+    saveWorkspace: msg("agentCommandSaveWorkspace")
   };
 
   renderChatPanel({
@@ -365,6 +390,11 @@ async function handleAgentCommand(text) {
     return true;
   }
 
+  if (command === "saveWorkspace") {
+    await saveCurrentWorkspace();
+    return true;
+  }
+
   return false;
 }
 
@@ -372,6 +402,7 @@ function parseAgentCommand(text) {
   const normalized = normalizeAgentText(text);
 
   if (isSummaryCommand(normalized)) return "summarize";
+  if (isSaveWorkspaceCommand(normalized)) return "saveWorkspace";
   if (isDashboardCommand(normalized)) return "dashboard";
   if (isRestoreCommand(normalized)) return "restore";
   if (isUndoCommand(normalized)) return "undo";
@@ -434,6 +465,14 @@ function isGenericPageSummaryQuestion(value) {
 
 function isDashboardCommand(text) {
   return /\bdashboard\b/.test(text) || /打开\s*dashboard|打开工作台|去工作台|看工作台/.test(text);
+}
+
+function isSaveWorkspaceCommand(text) {
+  return (
+    /\b(save|store)\s+(this\s+|current\s+)?workspace\b/.test(text) ||
+    /\bsave\s+(this\s+|current\s+)?browser\b/.test(text) ||
+    /保存.*(工作区|当前整理|浏览器)/.test(text)
+  );
 }
 
 function isRestoreCommand(text) {
