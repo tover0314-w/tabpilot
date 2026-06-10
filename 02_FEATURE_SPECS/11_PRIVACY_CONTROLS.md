@@ -74,6 +74,8 @@ Duplicate close safety audit entries are kept locally as count-only events for b
 
 Saved workspace snapshots are created only when the user clicks Save in Dashboard. They are local-only, stored in `chrome.storage.local`, and keep minimized workspace metadata: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. They must not include full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud data, summaries, or chat history. Copied diagnostics expose only the saved workspace count.
 
+An individual saved workspace snapshot can be deleted from Dashboard after browser confirmation. This deletes only the selected local snapshot and must not restore, close, move, or regroup tabs.
+
 `Clear AI Key` removes only the locally saved AI API key, disables AI classification, and keeps local rules, recent organize results, Undo/Restore snapshots, privacy acceptance, chat drafts, diagnostics, and duplicate safety audit counts. It asks for browser confirmation and does not move or close tabs, call the AI provider, delete browser history, or delete cookies.
 
 Current-tab summary reads visible page text only after the user clicks Summarize Current Tab. For sensitive contexts such as bank, billing, health, medical, password, admin, Stripe, AWS, Cloudflare, internal, or localhost pages, the sidebar asks for an extra confirmation before the background script executes content extraction. If the user cancels, no page body is read.
@@ -191,4 +193,9 @@ Given 用户点击 Clear Local Data
 When 用户确认
 Then 本地 rules、saved workspace snapshots、API key、Undo/Restore snapshot、最近整理结果、本地错误日志、本地误关恢复安全审计被删除
 And 不关闭、不移动任何 tabs
+
+Given 用户删除单个 saved workspace snapshot
+When 用户确认删除
+Then 只有该本地 snapshot 从 tabmosaic.savedWorkspaces 移除
+And 不关闭、不移动、不恢复任何 tabs
 ```

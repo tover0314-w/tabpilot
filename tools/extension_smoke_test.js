@@ -504,8 +504,80 @@ test("dashboard saves local workspace snapshots without full URLs or page text",
   assert(!serialized.includes("exact-secret"), "Saved workspace must not include URL hash identifiers");
   assert(dashboardHtml.includes("data-i18n=\"savedWorkspaces\""), "Saved workspaces section should be localized");
   assert(dashboardJs.includes("SAVED_WORKSPACES_KEY"), "Dashboard should load saved workspaces from local storage");
+  assert(dashboardJs.includes("DELETE_SAVED_WORKSPACE"), "Dashboard should support deleting a local workspace snapshot");
+  assert(dashboardJs.includes("deleteWorkspaceConfirm"), "Dashboard should confirm before deleting a local workspace snapshot");
+  assert(dashboardJs.includes('data-workspace-action="delete"'), "Saved workspace rows should expose a delete action");
   assert(en.savedWorkspacesCopy?.message.includes("Local snapshots only"), "English saved workspace copy should set local-only scope");
   assert(zh.savedWorkspacesCopy?.message.includes("仅本地快照"), "Chinese saved workspace copy should set local-only scope");
+  assert(en.deleteWorkspaceConfirm?.message.includes("does not restore, close, or move tabs"), "English delete workspace confirm should state tab safety");
+  assert(zh.deleteWorkspaceConfirm?.message.includes("不会恢复、关闭或移动标签页"), "Chinese delete workspace confirm should state tab safety");
+});
+
+test("saved workspace deletion only updates local workspace storage", async () => {
+  const originalStorageLocal = context.chrome.storage.local;
+  const originalTabs = context.chrome.tabs;
+  const originalTabGroups = context.chrome.tabGroups;
+  const originalWindows = context.chrome.windows;
+  const setValues = [];
+
+  context.chrome.storage.local = {
+    async get(key) {
+      assertEqual(key, "tabmosaic.savedWorkspaces", "Workspace deletion should read only saved workspace storage");
+      return {
+        "tabmosaic.savedWorkspaces": [
+          { id: "ws_keep", name: "Keep" },
+          { id: "ws_delete", name: "Delete" }
+        ]
+      };
+    },
+    async set(value) {
+      setValues.push(value);
+    },
+    async remove() {
+      throw new Error("Workspace deletion should not remove unrelated local data");
+    }
+  };
+  context.chrome.tabs = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error("Workspace deletion must not call tabs APIs");
+      }
+    }
+  );
+  context.chrome.tabGroups = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error("Workspace deletion must not call tabGroups APIs");
+      }
+    }
+  );
+  context.chrome.windows = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error("Workspace deletion must not call windows APIs");
+      }
+    }
+  );
+
+  try {
+    const result = await context.deleteSavedWorkspace({ workspaceId: "ws_delete" });
+
+    assertEqual(result.deletedWorkspaceId, "ws_delete", "Deleted workspace id");
+    assertDeepEqual(result.workspaces.map((workspace) => workspace.id), ["ws_keep"], "Remaining workspaces");
+    assertDeepEqual(
+      setValues[0]["tabmosaic.savedWorkspaces"].map((workspace) => workspace.id),
+      ["ws_keep"],
+      "Stored remaining workspaces"
+    );
+  } finally {
+    context.chrome.storage.local = originalStorageLocal;
+    context.chrome.tabs = originalTabs;
+    context.chrome.tabGroups = originalTabGroups;
+    context.chrome.windows = originalWindows;
+  }
 });
 
 test("dashboard can move tabs between existing groups without adding destructive actions", () => {

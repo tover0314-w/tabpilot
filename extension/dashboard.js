@@ -66,6 +66,7 @@ clearAIKeyButton.addEventListener("click", clearAIKey);
 dashboardRules.addEventListener("click", handleRuleAction);
 dashboardGroups.addEventListener("click", handleGroupAction);
 dashboardDuplicates.addEventListener("click", handleGroupAction);
+dashboardWorkspaces.addEventListener("click", handleSavedWorkspaceAction);
 dashboardGroups.addEventListener("dragstart", handleDashboardTabDragStart);
 dashboardGroups.addEventListener("dragover", handleDashboardTabDragOver);
 dashboardGroups.addEventListener("dragleave", handleDashboardTabDragLeave);
@@ -298,6 +299,48 @@ async function handleRuleAction(event) {
 
   await chrome.storage.local.set({ [USER_RULES_KEY]: nextRules });
   await loadDashboard();
+}
+
+async function handleSavedWorkspaceAction(event) {
+  const button = event.target.closest("[data-workspace-action]");
+  if (!button) return;
+
+  if (button.dataset.workspaceAction !== "delete") return;
+
+  await deleteSavedWorkspaceFromDashboard(button);
+}
+
+async function deleteSavedWorkspaceFromDashboard(button) {
+  const workspaceId = button.dataset.workspaceId || "";
+
+  if (!workspaceId) return;
+
+  const confirmed = window.confirm(msg("deleteWorkspaceConfirm"));
+  if (!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = msg("deleting");
+  workspaceActionStatus.textContent = "";
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: "DELETE_SAVED_WORKSPACE",
+      workspaceId
+    });
+
+    if (!response?.ok) {
+      workspaceActionStatus.textContent = response?.error || msg("couldNotDeleteWorkspace");
+      return;
+    }
+
+    renderSavedWorkspaces(response.result?.workspaces || []);
+    workspaceActionStatus.textContent = msg("workspaceDeleted");
+  } catch (error) {
+    workspaceActionStatus.textContent = `${msg("couldNotDeleteWorkspace")} ${error?.message || ""}`.trim();
+  } finally {
+    button.disabled = false;
+    button.textContent = msg("delete");
+  }
 }
 
 async function handleGroupAction(event) {
@@ -777,6 +820,12 @@ function renderSavedWorkspaceRow(workspace) {
         <small>${escapeHtml(msg("workspaceSavedMeta", [tabCount, groupCount, savedAt]))}</small>
       </div>
       <span>${escapeHtml(msg("localSnapshot"))}</span>
+      <button
+        class="mini-button"
+        type="button"
+        data-workspace-action="delete"
+        data-workspace-id="${escapeHtml(String(workspace.id || ""))}"
+      >${escapeHtml(msg("delete"))}</button>
     </article>
   `;
 }

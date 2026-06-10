@@ -38,6 +38,7 @@
 - [x] dashboard drag/drop tab assignment（same-window existing groups first slice）。
 - [x] dashboard Undo / Restore Closed actions。
 - [x] save current workspace locally（Dashboard local snapshot first slice）。
+- [x] delete individual saved workspace snapshot（Dashboard local snapshot first slice）。
 - [x] privacy onboarding。
 - [x] actionable safe error states（Sidepanel + Dashboard first slice）。
 - [x] local data deletion（Dashboard first slice）。

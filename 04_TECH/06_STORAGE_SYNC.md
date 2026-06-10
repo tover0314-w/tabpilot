@@ -92,6 +92,8 @@ After clearing, the extension publishes an idle run state and first-run privacy 
 
 Current `tabmosaic.savedWorkspaces` P0 snapshot is local-only and minimized. It stores group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It does not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
 
+Dashboard can delete an individual saved workspace snapshot after browser confirmation. The delete path rewrites only `tabmosaic.savedWorkspaces` with the selected snapshot removed. It does not touch current tabs, groups, Undo/Restore snapshots, rules, browser history, cookies, cloud data, or AI settings.
+
 ## 6. Sync 冲突
 
 P1 问题：

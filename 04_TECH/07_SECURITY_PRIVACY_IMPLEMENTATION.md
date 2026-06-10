@@ -156,6 +156,8 @@ The local `currentRun` state used by the sidebar/dashboard strips restore URLs, 
 
 The local `savedWorkspaces` state is created only when the user clicks Save in Dashboard. It stores a minimized local snapshot for the folded Saved Workspaces list: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It strips full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, and cloud IDs. Copied diagnostics report only a saved workspace count, not names or browsing metadata.
 
+Dashboard can delete an individual saved workspace snapshot after browser confirmation. The background handler only removes the matching item from `tabmosaic.savedWorkspaces`; it does not call `chrome.tabs`, `chrome.tabGroups`, `chrome.windows`, AI provider requests, cloud APIs, or broad local-data removal.
+
 Restore Closed snapshots are the intentional local-only exception: they store the minimum restorable URL/title/window/index/group metadata needed to reopen safely closed duplicate tabs. They are never included in copied diagnostics or feedback templates, are cleared by `Restore Closed` / `Clear Local Data`, and have no upload path.
 
 The extension keeps a small local-only redacted error log ring buffer for beta debugging. Error entries are stored in `chrome.storage.local`, capped, cleared by `Clear Local Data`, and included in copied diagnostics only after redaction. There is no remote log endpoint or automatic telemetry path.
@@ -178,3 +180,4 @@ The extension also keeps a local-only duplicate close safety audit for beta vali
 - 确认 Beta Feedback Template 仅本地复制，不自动提交数据。
 - 确认本地错误日志只保存脱敏摘要、可被 Clear Local Data 删除，且没有上传路径。
 - 确认本地误关恢复安全审计只保存计数和白名单事件类型、可被 Clear Local Data 删除，且没有上传路径。
+- 确认单个 saved workspace 删除需要确认、只更新本地 savedWorkspaces，不调用 tabs/tabGroups/windows API。

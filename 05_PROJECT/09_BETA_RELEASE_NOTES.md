@@ -70,7 +70,7 @@ Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 ```text
 node tools/preflight.js --runtime --large-runtime --screenshots
 PASS preflight completed
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs with real native tab groups, safe duplicate closes, and review duplicate groups
 PASS UI screenshots captured
 PASS controlled private beta readiness evidence checked
@@ -153,8 +153,8 @@ Minimum manual checks:
 
 - Public Chrome Web Store submission is not approved yet.
 - P0 manual QA runbook has not been completed on the user's real Chrome profile.
-- Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, Dashboard local workspace save, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open. A separate large-tab runtime probe has also passed with 96 synthetic tabs. These do not replace real-profile manual QA.
-- Dashboard apply supports group title/color edits, tab focus, same-window tab moves into existing groups, same-window drag/drop tab assignment, and local-only Save workspace snapshots; it does not support manual new groups, saved workspace restore, cloud sync, or cross-window tab moves.
+- Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, Dashboard local workspace save/delete, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open. A separate large-tab runtime probe has also passed with 96 synthetic tabs. These do not replace real-profile manual QA.
+- Dashboard apply supports group title/color edits, tab focus, same-window tab moves into existing groups, same-window drag/drop tab assignment, and local-only Save/Delete workspace snapshots; it does not support manual new groups, saved workspace restore, cloud sync, or cross-window tab moves.
 - Current-tab summary is local extractive summary, not cloud AI summary.
 - Multi-tab chat is P1/Pro and not part of this beta slice.
 - Hosted AI, accounts, billing, cloud sync, and analytics are not included.

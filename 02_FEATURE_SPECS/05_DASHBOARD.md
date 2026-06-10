@@ -10,7 +10,7 @@ It now follows a minimal glass Smart Groups layout: top bar, compact navigation,
 It no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area on the default Dashboard page.
 It shows simplified Smart Group cards with local tab rows, expandable hidden tab rows, folded Duplicate Center with non-destructive duplicate tab details, folded Settings Snapshot, compact AI Settings, and Rules & Memory.
 Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
-Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, Restore Closed, and saving the current workspace as a local-only snapshot. Edit/Move controls and saved workspace history remain folded by default.
+Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, Restore Closed, and saving/deleting local-only workspace snapshots. Edit/Move controls and saved workspace history remain folded by default.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.
 Workspace restore/history management, manual group creation, new rule creation, group chat, billing/usage, templates, and multi-tab chat are not wired and are not shown as primary default actions.
 Settings default view is intentionally simple: AI Classification and Privacy Defaults first; permissions, diagnostics, and local reset are folded under advanced sections.
@@ -33,6 +33,7 @@ Wired now:
 - drag/drop tabs between existing groups in the same Chrome window
 - folded Duplicate Center with expandable duplicate tab details and safe Open tab actions
 - Save current workspace local snapshot and folded Saved Workspaces list
+- Delete individual saved local workspace snapshot with confirmation
 - Rules & Memory enable/disable/delete with confirmation
 - DeepSeek API key save/test/clear
 - folded compact privacy defaults

@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.97 — 2026-06-10
+
+Changed:
+
+- Added a Dashboard `Delete` action for individual saved workspace snapshots.
+- Saved workspace deletion goes through the background `DELETE_SAVED_WORKSPACE` action and removes only the selected item from `tabmosaic.savedWorkspaces`.
+- Dashboard deletion requires browser confirmation and clearly states that it does not restore, close, or move tabs.
+- Smoke/runtime coverage now verifies local workspace save/delete behavior and confirms deletion does not call tab, tab group, or window APIs.
+
+Safety:
+
+- This is local-only snapshot management. It does not restore workspaces, sync to cloud, call AI, upload data, read page bodies, close tabs, move tabs, add analytics, or request new permissions.
+
 ## v0.96 — 2026-06-10
 
 Changed:

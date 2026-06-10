@@ -10,6 +10,7 @@ The saved snapshot is stored in chrome.storage.local under tabmosaic.savedWorksp
 It keeps minimized local metadata needed to show a saved workspace list: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts.
 It does not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
 Dashboard shows saved workspaces inside a folded Saved Workspaces section so the default Smart Groups board stays simple.
+Users can delete an individual saved local snapshot from Dashboard after browser confirmation. This only removes the selected item from tabmosaic.savedWorkspaces and does not restore, close, or move tabs.
 Restore workspace, workspace history management, export, cloud sync, and workspace chat remain P1/Pro and are not wired yet.
 ```
 
@@ -45,6 +46,7 @@ created/updated time
 ### P0
 
 - Save current workspace locally（first slice implemented as local snapshot；restore not wired yet）。
+- Delete individual local saved workspace snapshot with confirmation.
 - Dashboard 查看当前 workspace。
 - Apply current dashboard changes to browser。
 
@@ -118,4 +120,9 @@ Then 系统保存当前 tabs、groups、顺序和摘要
 And dashboard 的 folded Saved Workspaces 区域出现该 workspace
 And saved snapshot 不包含 full URL、restore URL、page text 或 cloud data
 And Pro 用户后续可以恢复或聊天
+
+Given 用户在 Dashboard 删除一个 saved workspace snapshot
+When 用户确认删除
+Then 仅删除该本地 snapshot
+And 不恢复、不关闭、不移动任何 tabs
 ```

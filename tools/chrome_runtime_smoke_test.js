@@ -287,6 +287,27 @@ async function main() {
       assert(!savedWorkspaceJson.includes("pageText"), "Saved workspaces must not contain page text");
       assert(!savedWorkspaceJson.includes("https://"), "Saved workspaces must not contain full URLs");
 
+      const savedWorkspaceIdToDelete = savedWorkspaces[0]?.id;
+      assert(savedWorkspaceIdToDelete, "Dashboard workspace save did not create a deletable workspace id");
+      const dashboardDelete = await evaluate(cdp, `
+        chrome.runtime.sendMessage({
+          type: "DELETE_SAVED_WORKSPACE",
+          workspaceId: ${JSON.stringify(savedWorkspaceIdToDelete)}
+        })
+      `);
+      assert(dashboardDelete && dashboardDelete.ok, `Dashboard workspace delete failed: ${JSON.stringify(dashboardDelete)}`);
+      const savedWorkspaceAfterDeleteState = await evaluate(cdp, `chrome.storage.local.get("tabmosaic.savedWorkspaces")`);
+      const savedWorkspacesAfterDelete = savedWorkspaceAfterDeleteState["tabmosaic.savedWorkspaces"] || [];
+      assertEqual(
+        savedWorkspacesAfterDelete.length,
+        savedWorkspaces.length - 1,
+        "Dashboard workspace delete should remove one local workspace snapshot"
+      );
+      assert(
+        !savedWorkspacesAfterDelete.some((workspace) => workspace.id === savedWorkspaceIdToDelete),
+        "Dashboard workspace delete should remove the requested local snapshot id"
+      );
+
       const dashboardUiPage = await createTarget(port, `chrome-extension://${extensionId}/dashboard.html`);
       const dashboardCdp = await CDPSession.connect(dashboardUiPage.webSocketDebuggerUrl);
 
@@ -612,7 +633,7 @@ async function main() {
         dashboardActionsCdp.close();
       }
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
     } finally {
       cdp.close();
     }

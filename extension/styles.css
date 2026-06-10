@@ -2672,7 +2672,7 @@ summary {
 
 .dashboard-workspace-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 12px;
   min-height: 48px;
@@ -2698,6 +2698,11 @@ summary {
 
 .dashboard-workspace-row span {
   font-family: var(--mono);
+}
+
+.dashboard-workspace-row .mini-button {
+  min-height: 30px;
+  padding: 0 10px;
 }
 
 .dashboard-duplicate-group {
@@ -2876,6 +2881,20 @@ summary {
   .dashboard-tab-move {
     grid-column: 2;
     justify-content: flex-start;
+  }
+
+  .dashboard-workspace-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 10px;
+  }
+
+  .dashboard-workspace-row span {
+    grid-column: 1;
+  }
+
+  .dashboard-workspace-row .mini-button {
+    grid-column: 2;
+    grid-row: 1 / span 2;
   }
 }
 

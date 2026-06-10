@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.96 dashboard local workspace save in this commit
+Source state verified: v0.97 dashboard local workspace save/delete in this commit
 
 ### Unified Preflight
 
@@ -22,10 +22,10 @@ Result:
 
 ```text
 PASS secret scan checked 99 tracked files
-34 smoke tests passed
+35 smoke tests passed
 PASS issue form smoke checked 2 forms
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 587ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 735ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS controlled private beta readiness evidence checked
@@ -37,7 +37,7 @@ PASS preflight completed
 Evidence notes:
 
 - This preflight run did not call DeepSeek classification and did not read real browser tabs.
-- `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
+- `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/workspace save/delete/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, Sidebar workspace save command, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
 - `--large-runtime` used a separate temporary Chrome for Testing profile with 96 synthetic tabs and verified the real native group path, safe duplicate closes, review duplicate groups, bounded runtime, and sanitized run snapshots.
 - `--screenshots` generated mock-data UI screenshots for the chat-first Tab Agent side panel and Smart Groups Dashboard and did not read real browser tabs or `.env.local`.
 - Runtime smoke can still `SKIP` on branded Google Chrome CLI extension loading, but this run auto-detected Chrome for Testing through Playwright and passed.
@@ -47,7 +47,7 @@ Evidence notes:
 - GitHub Actions runs the same beta readiness check after release package verification.
 - Beta readiness check requires the beginner self-test guide and its controlled-beta/public-launch boundary.
 - Disposable manual QA checklist self-test verifies that testers can copy the blank redaction-safe real-profile QA template before testing a non-critical real profile.
-- Dashboard local workspace save stores only minimized local snapshot metadata and excludes full URLs, restore URLs, URL hashes, favicon URLs, and page text.
+- Dashboard local workspace save stores only minimized local snapshot metadata and excludes full URLs, restore URLs, URL hashes, favicon URLs, and page text; Dashboard local workspace delete removes only the selected local snapshot.
 
 ### DeepSeek / OpenAI-Compatible Provider
 
@@ -95,7 +95,7 @@ node tools/extension_smoke_test.js
 Result:
 
 ```text
-34 smoke tests passed
+35 smoke tests passed
 ```
 
 Covered:
@@ -138,7 +138,7 @@ Covered:
 - AI connection and classification fetches carry abort signals.
 - AI classification status stays lightweight in the sidebar completion message while Dashboard retains fuller AI status.
 - Dashboard Smart Group cards and local favicon-backed tab-row rendering from sanitized run data, with expandable hidden tab rows and edit/move controls folded/contextual by default.
-- Dashboard local workspace save guard: minimized local snapshot, no full URL, no restore URL, no URL hashes, no favicon URL, and no page text.
+- Dashboard local workspace save/delete guard: minimized local snapshot, no full URL, no restore URL, no URL hashes, no favicon URL, no page text, and delete only updates local saved workspace storage.
 - Dashboard Settings first screen shows compact AI Classification; provider details, privacy defaults, permission, diagnostics, and local reset controls remain available under folded sections.
 - AI connection test without tab data.
 - Dashboard rule deletion confirmation.
@@ -159,7 +159,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 ```
 
 Evidence notes:
@@ -178,7 +178,7 @@ Evidence notes:
 - It submitted `find github` through the real Sidebar composer and verified the Open action focused an existing GitHub tab.
 - Test tabs were synthetic QA URLs only.
 - It verified organize, safe duplicate close, Restore Closed, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, Dashboard drag/drop tab assignment, Dashboard tab focus, Dashboard Duplicate Center tab focus, Dashboard Restore Closed, and Dashboard Undo against real Chrome native tab groups.
-- It verified Dashboard local workspace save writes a minimized local snapshot without full URLs, restore URLs, URL hashes, favicon URLs, or page text.
+- It verified Dashboard local workspace save writes a minimized local snapshot without full URLs, restore URLs, URL hashes, favicon URLs, or page text, then Dashboard local workspace delete removes only the selected local snapshot.
 - Restore Closed used a local restore snapshot containing the synthetic duplicate URL and increased the open synthetic tab count in the temporary profile.
 - It did not read the user's real Chrome profile or real browser tabs.
 
@@ -195,7 +195,7 @@ Result:
 ```text
 Loaded extension <temporary-extension-id>
 Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 587ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 735ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 ```
 
 Evidence notes:
@@ -249,7 +249,7 @@ dist/tabmosaic-ai-extension-v0.1.0.zip generated
 dist/tabmosaic-ai-extension-v0.1.0.sha256 generated
 dist/tabmosaic-ai-extension-v0.1.0.package.json generated
 PASS release package verified for v0.1.0
-sha256=cfdb285d115d22c8b5c91411bb1dfd06e3007bf7dcd310fe90faf85dd0bd8f94
+sha256=77dccb4d7f391b7abe37f77e4d52bbe1b0db23dd542a4221987a7d9995101109
 ```
 
 Evidence notes:

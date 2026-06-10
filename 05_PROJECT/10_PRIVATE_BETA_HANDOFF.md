@@ -46,7 +46,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard group title/color apply back to real native tab groups
 - Dashboard same-window tab move into existing native tab groups
 - Dashboard same-window drag/drop tab assignment into existing native tab groups
-- Dashboard local workspace save snapshot
+- Dashboard local workspace save/delete snapshot
 - Dashboard compact Undo / Restore Closed actions
 - Sidepanel/Dashboard actionable safe organize error states
 - optional DeepSeek AI classification through OpenAI-compatible request format
@@ -75,7 +75,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 34 extension smoke tests
+- 35 extension smoke tests
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
@@ -83,8 +83,8 @@ Verified:
 - real native tab groups in runtime smoke
 - safe duplicate close and Restore Closed in runtime smoke
 - Chat Refine in runtime smoke
-- Dashboard local workspace save in runtime smoke
-- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, local workspace save, Duplicate Center focus, Undo, and Restore Closed in runtime smoke
+- Dashboard local workspace save/delete in runtime smoke
+- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, local workspace save/delete, Duplicate Center focus, Undo, and Restore Closed in runtime smoke
 - Sidebar composer direct commands in runtime smoke
 - Sidebar quick-action chat routing in runtime smoke
 - Sidebar ephemeral chat thread in runtime smoke

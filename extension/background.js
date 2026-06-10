@@ -187,6 +187,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "DELETE_SAVED_WORKSPACE") {
+    deleteSavedWorkspace(message)
+      .then((result) => sendResponse({ ok: true, result }))
+      .catch((error) => sendErrorResponse(sendResponse, "DELETE_SAVED_WORKSPACE", error));
+    return true;
+  }
+
   if (message.type === "TEST_AI_CONNECTION") {
     testAIConnection(message)
       .then((result) => sendResponse({ ok: true, result }))
@@ -680,6 +687,31 @@ async function saveCurrentWorkspace(message = {}) {
 
   return {
     workspace,
+    workspaces: nextWorkspaces
+  };
+}
+
+async function deleteSavedWorkspace(message = {}) {
+  const workspaceId = String(message.workspaceId || "");
+
+  if (!workspaceId) {
+    throw new Error("A saved workspace id is required.");
+  }
+
+  const result = await chrome.storage.local.get(SAVED_WORKSPACES_KEY);
+  const workspaces = Array.isArray(result[SAVED_WORKSPACES_KEY])
+    ? result[SAVED_WORKSPACES_KEY]
+    : [];
+  const nextWorkspaces = workspaces.filter((workspace) => workspace?.id !== workspaceId);
+
+  if (nextWorkspaces.length === workspaces.length) {
+    throw new Error("This saved workspace was not found.");
+  }
+
+  await chrome.storage.local.set({ [SAVED_WORKSPACES_KEY]: nextWorkspaces });
+
+  return {
+    deletedWorkspaceId: workspaceId,
     workspaces: nextWorkspaces
   };
 }
