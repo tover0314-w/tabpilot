@@ -81,7 +81,7 @@
 
 ## Sprint 5：Sidebar Chat + Current Tab Summary
 
-状态：已实现 local Chat Refine preview/apply first slice、local user rules、current tab local extractive summary。
+状态：已实现 local Chat Refine preview/apply first slice、local user rules、current tab local extractive summary、composer direct command router、latest-run read-only answers、duplicate review/closed-tab local answers、active/protected/read-later local answers、local tab search/focus。
 
 目标：用户可纠错和总结当前页面。
 
@@ -97,11 +97,18 @@
 交付：
 
 - 用户能说“GitHub PR 放 Code Review”。
-- 用户能总结当前页面。
+- 用户能总结当前页面，也能问当前页面一个问题，并在聊天消息流里看到本地结果。
+- 用户最近几条输入和 Agent 回复会保留在侧边栏临时消息流里。
+- 用户点击快捷动作按钮时，也会进入同一条聊天消息流。
+- 用户能问“你能做什么”并得到本地能力说明。
+- 用户能在聊天框直接说 summarize / organize / undo / restore / open dashboard。
+- 用户能问“下一步怎么办”并得到基于最新整理结果的本地建议。
+- 用户能询问最新整理结果、分组、重复项、待确认重复项、已关闭重复项、AI 状态、当前活跃标签页、受保护标签页和稍后阅读候选。
+- 用户能搜索当前 tabs 并打开匹配的已有标签页。
 
 ## Sprint 6：Dashboard V0
 
-状态：已实现 extension page dashboard、workspace metrics、smart group cards、duplicate center、rules memory、AI settings、group title/color apply。Drag/drop tab assignment 和 save workspace 仍未实现。
+状态：已实现 extension page dashboard、workspace metrics、smart group cards、duplicate center、rules memory、AI settings、group title/color apply、same-window tab move、same-window drag/drop tab assignment、Dashboard Undo/Restore、Smart Group expandable tab rows。Save workspace 仍未实现。
 
 目标：看板管理好的分组。
 
@@ -118,6 +125,9 @@
 交付：
 
 - 用户可在 dashboard 调整分组并同步到浏览器。
+- 用户可展开 Smart Group 的 `+ N tabs` 行，查看并操作更多本地 tab 行。
+- 用户可把 tab 行拖到同窗口另一个已有分组，并同步到真实 Chrome native tab group。
+- 用户可在 dashboard 直接 Undo 或 Restore Closed。
 
 ## Sprint 7：Private Beta Polish
 

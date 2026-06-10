@@ -52,8 +52,7 @@ function main() {
     [
       "Status: PASSED for local private-beta evidence",
       `Source state verified: ${topVersion}`,
-      "28 smoke tests passed",
-      "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus",
+      "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/undo/restore",
       "PASS UI screenshots captured",
       "PASS release package verified for v0.1.0",
       "PASS synthetic classification fixture completed",
@@ -63,16 +62,27 @@ function main() {
     ],
     failures
   );
+  requireMatches(
+    "05_PROJECT/08_QA_EVIDENCE.md",
+    qaEvidence,
+    [/\b\d+ smoke tests passed\b/],
+    failures
+  );
   requireIncludes(
     "05_PROJECT/10_PRIVATE_BETA_HANDOFF.md",
     handoff,
     [
       "Status: READY FOR CONTROLLED LOCAL PRIVATE BETA",
-      "28 extension smoke tests",
       "safe duplicate close and Restore Closed in runtime smoke",
       "P0 manual QA has not been run on the user's real day-to-day Chrome profile.",
       "Do not submit to Chrome Web Store until confirmation gates are resolved."
     ],
+    failures
+  );
+  requireMatches(
+    "05_PROJECT/10_PRIVATE_BETA_HANDOFF.md",
+    handoff,
+    [/\b\d+ extension smoke tests\b/],
     failures
   );
   requireIncludes(
@@ -80,7 +90,7 @@ function main() {
     releaseNotes,
     [
       "Status: PRIVATE BETA ONLY",
-      "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus",
+      "PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/undo/restore",
       "fixtureGroupCount=3",
       "Public Chrome Web Store submission is not approved yet.",
       "P0 manual QA runbook has not been completed on the user's real Chrome profile."
@@ -170,6 +180,14 @@ function requireIncludes(file, content, tokens, failures) {
   for (const token of tokens) {
     if (!content.includes(token)) {
       failures.push(`${file} is missing required readiness evidence: ${token}`);
+    }
+  }
+}
+
+function requireMatches(file, content, patterns, failures) {
+  for (const pattern of patterns) {
+    if (!pattern.test(content)) {
+      failures.push(`${file} is missing required readiness evidence matching: ${pattern}`);
     }
   }
 }

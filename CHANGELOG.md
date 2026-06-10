@@ -1,5 +1,194 @@
 # Changelog
 
+## v0.87 — 2026-06-10
+
+Changed:
+
+- Dashboard Smart Group cards now let users expand the `+ N tabs` row to reveal the remaining local tab rows.
+- Expanded rows reuse the normal Dashboard tab title focus, Move, and drag/drop affordances.
+- Smoke coverage now guards that hidden tab rows are expandable instead of becoming a dead `+ N tabs` label.
+
+Safety:
+
+- This is a local UI reveal only. It uses the latest sanitized run snapshot and does not read page content, call AI, upload data, move tabs automatically, close tabs, add analytics, or request new permissions.
+
+## v0.86 — 2026-06-10
+
+Changed:
+
+- Added compact Dashboard Undo and Restore Closed actions to the Smart Groups toolbar.
+- Dashboard action buttons enable only when the latest local run says an Undo snapshot or closed-tab restore snapshot is available.
+- Runtime smoke now clicks Dashboard Restore Closed and Dashboard Undo from the real Dashboard page and verifies both actions through Chrome/local run state.
+
+Safety:
+
+- Dashboard Undo/Restore reuse the existing `UNDO_LAST` and `RESTORE_CLOSED_DUPLICATES` background actions. They do not close tabs directly, create groups, read page content, call AI, upload data, add analytics, or request new permissions.
+
+## v0.85 — 2026-06-10
+
+Changed:
+
+- Added lightweight Dashboard drag/drop tab assignment between existing native groups in the same Chrome window.
+- Draggable tab rows now use the same `APPLY_DASHBOARD_TAB_MOVE` background action as the folded Move control, so native Chrome tab groups are updated directly.
+- Runtime smoke now opens the Dashboard page, dispatches a real drag/drop flow, and verifies the moved tab's native group through Chrome APIs.
+
+Safety:
+
+- Drag/drop is explicit user interaction and reuses the existing same-window backend guard plus Undo snapshot. It does not create new groups, move tabs across windows, close tabs, read page content, call AI, upload data, add analytics, or request new permissions.
+
+## v0.84 — 2026-06-10
+
+Changed:
+
+- Added a local Sidebar Agent next-step answer for prompts such as `what should I do next`, `what next`, and `下一步`.
+- The answer prioritizes duplicate review when review groups exist, then Restore Closed guidance, then practical use of the new groups.
+- Runtime smoke now verifies the next-step answer renders in the real Sidebar composer.
+
+Safety:
+
+- Next-step answers read only the latest local organize state. They do not read page content, call AI, upload data, request permissions, move tabs, close tabs, or change privacy/default duplicate behavior.
+
+## v0.83 — 2026-06-10
+
+Changed:
+
+- Added a local Sidebar Agent capability/help answer for prompts such as `what can you do`, `help`, and `你能做什么`.
+- The help answer explains the currently wired MVP actions: organize tabs, explain results, review duplicates, restore closed duplicates, find/open tabs, current-page summary/Q&A, and safe Chat Refine previews.
+- Runtime smoke now verifies the capability answer renders in the real Sidebar composer.
+
+Safety:
+
+- Help answers are static local copy. They do not read page content, call AI, upload data, request permissions, move tabs, close tabs, or change privacy defaults.
+
+## v0.82 — 2026-06-10
+
+Changed:
+
+- Sidebar quick action chips now route through the same chat command path as typed commands.
+- Clicking Organize, Ask page, Undo, Restore, or Dashboard in the side panel adds a user message and Agent reply to the local chat thread.
+- Runtime smoke now verifies the Ask page quick action enters the message thread instead of bypassing chat.
+
+Safety:
+
+- This is a UI routing change only. It reuses existing actions, confirmations, and local-only message state. No new permissions, cloud storage, AI calls, analytics, page-body storage, or tab-closing behavior changed.
+
+## v0.81 — 2026-06-10
+
+Changed:
+
+- Sidebar composer responses now render into an ephemeral multi-message chat thread instead of replacing the previous answer.
+- User messages render as right-aligned chat bubbles and Agent replies render as left-aligned message cards.
+- Older Apply/Cancel buttons are disabled when a newer draft appears or a draft is cancelled, so stale action buttons cannot apply the wrong draft.
+- Runtime smoke verifies the Sidebar preserves both user and Agent messages after a page question.
+
+Safety:
+
+- The chat thread is local and in-memory for the current side panel session. It does not add cloud chat history, analytics, page-body storage, new permissions, AI calls, or tab-closing behavior.
+
+## v0.80 — 2026-06-10
+
+Changed:
+
+- Added a local current-page question flow for prompts such as `ask page: what does this page say about tabs`.
+- The Sidebar Agent extracts the question, keeps the existing current-page privacy check, and renders the question plus a local answer in the chat summary card.
+- The background summary path now accepts an optional question and answers from visible page text using local sentence matching.
+- Smoke coverage now verifies local page Q&A with synthetic page text, and runtime smoke verifies page questions render in the real Sidebar composer.
+
+Safety:
+
+- This is local extractive page Q&A only. It reuses the user-triggered current-tab summary permission path and sensitive-page confirmation. It does not add AI calls, cloud upload, multi-tab page reading, new permissions, analytics, or tab-closing behavior.
+
+## v0.79 — 2026-06-10
+
+Changed:
+
+- Current-page summary results now render as a Sidebar Agent chat message instead of the old separate summary panel.
+- The legacy summary panel stays hidden so the side panel remains a single-message-flow interface.
+- Runtime smoke now verifies `summarize this page` returns a chat summary response and keeps the legacy summary panel hidden.
+
+Safety:
+
+- Reuses the existing current-tab summary permission flow and sensitive-page confirmation. No page body is read without a user action, no AI call or cloud upload was added, and no extension permissions or tab-closing behavior changed.
+
+## v0.78 — 2026-06-10
+
+Changed:
+
+- Added Sidebar Agent read-only answers for duplicate review queues and closed duplicate tabs available to restore.
+- Runtime smoke now opens a synthetic same-page hash duplicate pair, asks `what did you close` and `what needs review` through the real Sidebar composer, and verifies both answers.
+- Fixed runtime test tab creation to URL-encode CDP `/json/new` targets so hash/query duplicate scenarios are represented correctly.
+
+Safety:
+
+- Answers use only latest local run metadata and the existing local Restore Closed snapshot. They avoid rendering full restore URLs and do not read page bodies, call AI, move tabs, close tabs, save workspaces, upload data, request new permissions, or change duplicate-close policy.
+
+## v0.77 — 2026-06-10
+
+Changed:
+
+- Added Sidebar Agent read-only answers for active-tab state, protected-tab state, and possible read-later candidates from the latest local snapshot.
+- Runtime smoke now submits `what tab am I on`, `protected tabs`, and `read later` through the real Sidebar composer.
+- Smoke coverage now guards the new local-only answer path and English/Chinese copy.
+
+Safety:
+
+- These answers use only sanitized local run metadata. They do not read page bodies, call AI, move tabs, close tabs, save workspaces, upload data, request new permissions, or change duplicate-close policy.
+
+## v0.76 — 2026-06-10
+
+Changed:
+
+- Added Sidebar Agent tab search from the latest local snapshot for commands such as `find github`, `open chrome docs`, or `找 GitHub`.
+- Search results render as message-card tab rows with an `Open tab` action that focuses an existing browser tab.
+- Runtime smoke now submits `find github` through the real Sidebar composer and verifies the Open action focuses a matching GitHub tab.
+
+Safety:
+
+- Tab search uses only the latest sanitized local run snapshot and the existing focus-tab action; it does not read page bodies, call AI, create tabs, close tabs, move tabs, request new permissions, upload data, or change privacy defaults.
+
+## v0.75 — 2026-06-10
+
+Changed:
+
+- Added read-only Sidebar Agent answers for latest organize overview, current groups, duplicate handling, and AI classification status.
+- Runtime smoke now submits `show groups` and `did AI classify this?` through the real Sidebar composer after an organize run.
+
+Safety:
+
+- Answers are generated from the latest local run state only; no page body reading, AI call, tab movement, tab closing, new permissions, analytics, or cloud storage changed.
+
+## v0.74 — 2026-06-10
+
+Changed:
+
+- Added a direct command router to the Sidebar composer so typed commands can trigger current-page summary, organize again, Undo, Restore Closed, and Open Dashboard.
+- Added English/Chinese agent response copy for those direct commands.
+- Updated smoke coverage so direct composer commands run before the older chat-refine preview path.
+- Extended Chrome runtime smoke to submit commands through the real Sidebar composer and verify Dashboard open, current-page summary response, Restore Closed, Undo, and Organize Again.
+
+Safety:
+
+- Uses existing sidebar actions and current-tab summary privacy checks; no new permissions, no multi-tab page reading, no cloud page-body upload, no analytics, and no automatic non-duplicate tab closing changed.
+
+## v0.73 — 2026-06-09
+
+Changed:
+
+- Reworked the side panel into a ChatGPT-style Tab Agent surface with a conversation thread, compact action chips, and a bottom composer.
+- Kept organize output as an agent message instead of a dashboard-like result panel.
+- Moved side-panel quick actions into a lightweight agent message card and hid technical lists from the default chat surface.
+- Removed Dashboard homepage clutter: Latest Result, timestamp, Current Workspace card, and result metrics area are no longer shown.
+- Reworked Dashboard into a lighter glass Smart Groups page with compact navigation, simplified Settings, folded Duplicate Center, and lower-noise Smart Group cards.
+- Wired Dashboard tab rows to sanitized local `favIconUrl` data so real tab favicons render when Chrome provides them, with letter fallback only when unavailable.
+- Folded Dashboard group edit controls and per-tab move controls behind small contextual entries instead of showing every control by default.
+- Added smoke coverage to prevent the side panel from regressing into a result panel and Dashboard from regressing into Latest Result/current-workspace clutter.
+- Updated beta readiness evidence checks so they accept the current smoke-test count instead of requiring a stale fixed number.
+
+Safety:
+
+- UI hierarchy and local display metadata change only; no extension permissions, AI payload fields, storage defaults, analytics upload, cloud storage, or automatic tab-closing policy changed.
+- Existing Undo/Restore, title/color Apply, same-window tab move, tab focus, AI status, privacy confirmation, diagnostics, and local reset behavior remain wired.
+
 ## v0.72 — 2026-06-09
 
 Changed:

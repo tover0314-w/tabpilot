@@ -46,6 +46,25 @@ const SENSITIVE_SUMMARY_TERMS = [
   "paypal",
   "stripe"
 ];
+const QUESTION_STOP_WORDS = new Set([
+  "about",
+  "again",
+  "current",
+  "does",
+  "from",
+  "have",
+  "into",
+  "page",
+  "please",
+  "show",
+  "that",
+  "this",
+  "what",
+  "when",
+  "where",
+  "which",
+  "with"
+]);
 const SUPPORTED_GROUP_COLORS = new Set([
   "grey",
   "blue",
@@ -1791,6 +1810,7 @@ async function getSummaryPrivacyCheck(message, sender) {
 
 async function summarizeCurrentTab(message, sender) {
   const tab = await getCurrentTabForSummary(message.activeWindowId ?? sender?.tab?.windowId);
+  const question = sanitizePageQuestion(message.question);
 
   if (!tab?.id) {
     throw new Error("No active tab is available to summarize.");
@@ -1801,14 +1821,20 @@ async function summarizeCurrentTab(message, sender) {
   const privacyCheck = buildSummaryPrivacyCheck(tab, parsedUrl);
 
   if (!isRestorableUrl(rawUrl, parsedUrl)) {
-    return buildUnreadableSummary(tab, parsedUrl, "This page type cannot be read by the extension.");
+    return {
+      ...buildUnreadableSummary(tab, parsedUrl, "This page type cannot be read by the extension."),
+      question
+    };
   }
 
   if (
     privacyCheck.requiresConfirmation &&
     Number(message.confirmedSensitiveTabId) !== tab.id
   ) {
-    return buildSensitiveSummaryConfirmation(tab, parsedUrl, privacyCheck);
+    return {
+      ...buildSensitiveSummaryConfirmation(tab, parsedUrl, privacyCheck),
+      question
+    };
   }
 
   const [injectionResult] = await chrome.scripting.executeScript({
@@ -1818,13 +1844,17 @@ async function summarizeCurrentTab(message, sender) {
   const page = injectionResult?.result;
 
   if (!page?.text && !page?.description && !page?.headings?.length) {
-    return buildUnreadableSummary(tab, parsedUrl, "I could not find readable visible content on this page.");
+    return {
+      ...buildUnreadableSummary(tab, parsedUrl, "I could not find readable visible content on this page."),
+      question
+    };
   }
 
   return buildLocalPageSummary({
     tab,
     parsedUrl,
-    page
+    page,
+    question
   });
 }
 
@@ -1979,10 +2009,12 @@ function buildSensitiveSummaryConfirmation(tab, parsedUrl, privacyCheck) {
   };
 }
 
-function buildLocalPageSummary({ tab, parsedUrl, page }) {
+function buildLocalPageSummary({ tab, parsedUrl, page, question = "" }) {
   const title = page.title || tab.title || "Untitled";
   const sentences = splitSentences([page.description, page.text].filter(Boolean).join("\n\n"));
-  const summary = buildSummaryText(page.description, sentences);
+  const summary = question
+    ? buildLocalPageQuestionAnswer(question, sentences, page)
+    : buildSummaryText(page.description, sentences);
   const keyPoints = buildKeyPoints(page.headings, sentences);
   const classification = classifyTab({
     title,
@@ -1995,6 +2027,7 @@ function buildLocalPageSummary({ tab, parsedUrl, page }) {
     status: "completed",
     title,
     hostname: parsedUrl.hostname,
+    question,
     summary,
     keyPoints,
     suggestedGroup: classification.name,
@@ -2002,6 +2035,67 @@ function buildLocalPageSummary({ tab, parsedUrl, page }) {
     confidence: Math.min(0.9, Math.max(0.55, classification.confidence || 0.65)),
     extractedChars: (page.text || "").length
   };
+}
+
+function sanitizePageQuestion(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[?？。.!！]+$/g, "")
+    .slice(0, 240);
+}
+
+function buildLocalPageQuestionAnswer(question, sentences, page) {
+  const ranked = rankSentencesForQuestion(question, [
+    page.description || "",
+    ...(Array.isArray(page.headings) ? page.headings : []),
+    ...sentences
+  ]);
+
+  if (ranked.length && ranked[0].score > 0) {
+    return ranked
+      .slice(0, 2)
+      .map((item) => item.sentence)
+      .join(" ")
+      .slice(0, 460);
+  }
+
+  const fallback = buildSummaryText(page.description, sentences);
+  return `I did not find a direct answer in the visible page text. Closest useful context: ${fallback}`;
+}
+
+function rankSentencesForQuestion(question, candidates) {
+  const tokens = getQuestionTokens(question);
+
+  return (Array.isArray(candidates) ? candidates : [])
+    .map((sentence) => String(sentence || "").replace(/\s+/g, " ").trim())
+    .filter((sentence) => sentence.length >= 8)
+    .map((sentence) => ({
+      sentence,
+      score: scoreSentenceForQuestion(sentence, tokens)
+    }))
+    .sort((a, b) => b.score - a.score || b.sentence.length - a.sentence.length);
+}
+
+function getQuestionTokens(question) {
+  const asciiTokens = String(question || "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 3 && !QUESTION_STOP_WORDS.has(token));
+  const cjkTokens = Array.from(String(question || "").matchAll(/[\u4e00-\u9fff]{2,}/g), (match) => match[0]);
+  return Array.from(new Set([...asciiTokens, ...cjkTokens])).slice(0, 12);
+}
+
+function scoreSentenceForQuestion(sentence, tokens) {
+  const text = sentence.toLowerCase();
+  let score = 0;
+
+  for (const token of tokens) {
+    if (text.includes(token.toLowerCase())) score += token.length >= 6 ? 3 : 2;
+  }
+
+  if (sentence.length <= 220) score += 0.5;
+  return score;
 }
 
 function splitSentences(text) {
@@ -2150,6 +2244,7 @@ function buildTabSnapshot(tab, window, groupById) {
     windowId: window.id,
     index: tab.index,
     title: tab.title || "Untitled",
+    favIconUrl: sanitizeFavIconUrl(tab.favIconUrl),
     restoreUrl: isRestorableUrl(rawUrl, parsedUrl) ? rawUrl : "",
     lastAccessed: typeof tab.lastAccessed === "number" ? tab.lastAccessed : 0,
     hostname: parsedUrl.hostname,
@@ -2219,6 +2314,34 @@ function parseUrl(rawUrl) {
       trackingHash: simpleHash(rawUrl),
       reviewHash: simpleHash(rawUrl)
     };
+  }
+}
+
+function sanitizeFavIconUrl(value) {
+  const rawValue = String(value || "").trim();
+
+  if (!rawValue) {
+    return "";
+  }
+
+  if (rawValue.startsWith("data:image/")) {
+    return rawValue.slice(0, 8192);
+  }
+
+  try {
+    const url = new URL(rawValue);
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      return "";
+    }
+
+    url.username = "";
+    url.password = "";
+    url.search = "";
+    url.hash = "";
+    return url.toString().slice(0, 512);
+  } catch {
+    return "";
   }
 }
 
@@ -2818,7 +2941,18 @@ function sanitizeSnapshotForRun(snapshot) {
       fullUrl,
       pageText,
       ...tab
-    }) => tab)
+    }) => {
+      const sanitizedTab = {
+        ...tab,
+        favIconUrl: sanitizeFavIconUrl(tab.favIconUrl)
+      };
+
+      if (!sanitizedTab.favIconUrl) {
+        delete sanitizedTab.favIconUrl;
+      }
+
+      return sanitizedTab;
+    })
   };
 }
 

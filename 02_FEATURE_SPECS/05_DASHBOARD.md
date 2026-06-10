@@ -6,12 +6,12 @@ CONFIRMED BY IMPLEMENTATION:
 
 ```text
 P0 dashboard is an extension page.
-It follows the HTML prototype workbench layout: top bar, left project rail, current workspace card, action block, filter chips, Smart Groups board, Auto Organize rules page, and Settings page.
-It shows a Latest Result benefit summary, expanded Smart Group cards with local tab rows, Duplicate Center, Settings Snapshot, AI Settings, and Rules & Memory.
+It now follows a minimal glass Smart Groups layout: top bar, compact navigation, organize action, filter chips, Smart Groups board, Auto Organize rules page, and Settings page.
+It no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area on the default Dashboard page.
+It shows simplified Smart Group cards with local tab rows, expandable hidden tab rows, folded Duplicate Center, folded Settings Snapshot, compact AI Settings, and Rules & Memory.
 Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
-Dashboard apply-back-to-browser supports native group title/color updates and same-window tab moves into existing groups, with Undo.
+Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, and Restore Closed. Edit/Move controls remain folded by default.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.
-Dashboard drag/drop tab movement and manual new group creation are still not implemented.
 Workspace history, manual group creation, new rule creation, group chat, saved workspaces, billing/usage, templates, and multi-tab chat are not wired and are not shown as primary default actions.
 Settings default view is intentionally simple: AI Classification and Privacy Defaults first; permissions, diagnostics, and local reset are folded under advanced sections.
 ```
@@ -21,24 +21,26 @@ Settings default view is intentionally simple: AI Classification and Privacy Def
 Wired now:
 
 ```text
-- workbench shell: topbar, project rail, Latest Result benefit summary, Smart Groups board
+- minimal glass Smart Groups shell: topbar, compact navigation, Smart Groups board
 - Smart Groups filter chips for All / AI groups / Rule groups
 - one-click organize from Dashboard
-- native group title/color Apply back to browser
-- expanded group cards using sanitized local run snapshot data
+- compact Dashboard Undo / Restore Closed actions when available
+- folded native group title/color Apply back to browser
+- simplified group cards using sanitized local run snapshot data
+- expandable `+ N tabs` rows that reveal remaining local tab rows on demand
 - tab title focus back to the existing browser tab/window
-- same-window tab move into an existing native group
-- Duplicate Center summary
+- folded same-window tab move into an existing native group
+- drag/drop tabs between existing groups in the same Chrome window
+- folded Duplicate Center summary
 - Rules & Memory enable/disable/delete with confirmation
 - DeepSeek API key save/test/clear
-- compact privacy defaults
+- folded compact privacy defaults
 - advanced folded permissions, diagnostics, feedback template, and local data reset
 ```
 
 Not wired yet:
 
 ```text
-- drag/drop tabs between groups
 - cross-window tab moves
 - manual new group creation
 - workspace history/save/restore
@@ -49,13 +51,14 @@ Not wired yet:
 - dashboard-hosted cloud sync or account login
 ```
 
-### 0.2 Latest Result Information Hierarchy
+### 0.2 Deprecated Latest Result Information Hierarchy
 
-CONFIRMED BY USER:
+SUPERSEDED BY USER:
 
 ```text
 Decision Gate: D-021 Dashboard Latest Result 信息层级
-Decision: replace the previous metrics wall with a simpler user-benefit summary.
+Previous decision: replace the previous metrics wall with a simpler user-benefit summary.
+Current decision: remove Latest Result/timestamp/Current Workspace from Dashboard default view because it occupies space without enough value.
 ```
 
 Confirmed first screen:
@@ -103,7 +106,20 @@ Memory wording:
 
 ```text
 CONFIRMED: Use "Memory relief" / "内存压力已降低" in MVP.
+Do not show this block in the default Dashboard UI. If needed later, it can appear as a folded diagnostic/history detail after confirmation.
 Do not show exact MB saved until the product has a verified memory measurement or tab discard/sleep feature.
+```
+
+### 0.3 Minimal Glass UI Direction
+
+CONFIRMED BY USER:
+
+```text
+Dashboard must feel extremely simple, not like a dense admin dashboard.
+Default UI should emphasize Smart Groups, not latest-result summaries or workspace status cards.
+Settings must stay compact; low-frequency provider details, permissions, diagnostics, and local reset stay folded.
+Smart Group cards should show enough tab context to be useful, but edit and move controls should not dominate the default view.
+Visual direction: light glassmorphism, quiet controls, low border contrast, no heavy metric wall.
 ```
 
 ## 1. 定位
@@ -212,6 +228,8 @@ last accessed
 group assignment
 actions
 ```
+
+P0 UI rule: Tab rows should render the current browser tab favicon when a sanitized local `favIconUrl` is available. If Chrome does not provide a safe icon URL, the row falls back to a one-letter mark.
 
 Tab actions：
 

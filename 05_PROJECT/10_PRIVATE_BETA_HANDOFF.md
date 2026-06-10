@@ -1,6 +1,6 @@
 # Private Beta Handoff
 
-Date: 2026-06-09
+Date: 2026-06-10
 Status: READY FOR CONTROLLED LOCAL PRIVATE BETA
 Release package: `dist/tabmosaic-ai-extension-v0.1.0.zip`
 
@@ -21,16 +21,31 @@ CONFIRMED BY IMPLEMENTATION:
 - hash/query/same-page duplicate review
 - Undo grouping changes
 - Sidebar Chat Refine local preview/apply
+- Sidebar quick actions routed through the local chat thread
+- Sidebar ephemeral in-memory user/Agent message thread
+- Sidebar local capability/help answer
+- Sidebar local next-step guidance answer
+- Sidebar composer direct commands for current-page summary, organize, Undo, Restore Closed, and Dashboard
+- Sidebar current-page summary rendered as a chat message
+- Sidebar local current-page question answering rendered as a chat message
+- Sidebar composer read-only answers for latest result, groups, duplicates, and AI status
+- Sidebar composer read-only answers for duplicate review queue and closed duplicate restore state
+- Sidebar composer read-only answers for active tabs, protected tabs, and possible read-later tabs
+- Sidebar composer local tab search and focus existing tab
 - local user rules and Rules & Memory
 - current-tab local extractive summary after user click, with sensitive-page confirmation
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
-- Dashboard Latest Result benefit summary with Review duplicates, Undo, conservative memory relief, and technical Details
+- Chat-first Tab Agent side panel with message thread, compact actions, and bottom composer
+- Dashboard Smart Groups default page with no Latest Result, timestamp, Current Workspace card, or result metrics area
 - Dashboard HTML-prototype workbench layout with expanded local tab rows
+- Dashboard expandable Smart Group tab rows for hidden group tabs
 - Dashboard Smart Groups filter chips for All / AI groups / Rule groups
 - Dashboard tab title focus back to the existing browser tab/window
 - Dashboard default UI hides unwired P1/prototype actions and folds advanced Settings content
 - Dashboard group title/color apply back to real native tab groups
 - Dashboard same-window tab move into existing native tab groups
+- Dashboard same-window drag/drop tab assignment into existing native tab groups
+- Dashboard compact Undo / Restore Closed actions
 - optional DeepSeek AI classification through OpenAI-compatible request format
 - DeepSeek connection test without tab data
 - AI classification timeout fallback to local rules
@@ -56,13 +71,24 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 28 extension smoke tests
+- 30 extension smoke tests
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
 - real native tab groups in runtime smoke
 - safe duplicate close and Restore Closed in runtime smoke
 - Chat Refine in runtime smoke
-- Dashboard apply, same-window tab move, and tab focus in runtime smoke
+- Dashboard apply, same-window tab move, drag/drop tab assignment, tab focus, Undo, and Restore Closed in runtime smoke
+- Sidebar composer direct commands in runtime smoke
+- Sidebar quick-action chat routing in runtime smoke
+- Sidebar ephemeral chat thread in runtime smoke
+- Sidebar capability/help answer in runtime smoke
+- Sidebar next-step answer in runtime smoke
+- Sidebar current-page chat summary in runtime smoke
+- Sidebar current-page question rendering in runtime smoke
+- Sidebar latest-run read-only answers in runtime smoke
+- Sidebar duplicate-review/closed-tab local answers in runtime smoke
+- Sidebar active/protected/read-later local answers in runtime smoke
+- Sidebar tab search and Open existing tab in runtime smoke
 - mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
 - disposable manual QA profile self-test with synthetic QA tabs and current MVP Dashboard checklist coverage
 - extension package generation
@@ -112,7 +138,7 @@ OPEN QUESTION / MANUAL QA REQUIRED:
 - Chrome Web Store submission has not been attempted.
 - Private beta with 20-50 external users has not started.
 - Store screenshots and demo video are not final.
-- Design-prototype features are not all wired yet: drag/drop tab movement, manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
+- Design-prototype features are not all wired yet: manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 ```
 
 Manual QA source of truth:
@@ -153,7 +179,7 @@ node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
 ```
 
-This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes for review before sharing. The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Latest Result, Dashboard tab focus/move/apply, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`. `--self-test` opens the disposable browser, verifies setup and checklist report controls, then closes and removes the temporary profile automatically.
+This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes for review before sharing. The checklist includes Tab Agent UI, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard tab focus/move/apply, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`. `--self-test` opens the disposable browser, verifies setup and checklist report controls, then closes and removes the temporary profile automatically.
 
 For the real-profile path, print or open synthetic QA tabs:
 

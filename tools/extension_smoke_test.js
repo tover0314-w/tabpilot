@@ -84,6 +84,7 @@ function tab(overrides) {
     windowId: overrides.windowId || 1,
     index: overrides.index || 0,
     title: overrides.title || "Untitled",
+    favIconUrl: overrides.favIconUrl || "",
     restoreUrl: context.isRestorableUrl(overrides.url || "", parsed) ? overrides.url : "",
     lastAccessed: overrides.lastAccessed || 0,
     hostname: parsed.hostname,
@@ -206,7 +207,89 @@ test("dashboard permission explanation matches manifest permissions", () => {
   }
 });
 
-test("dashboard follows workbench HTML prototype structure", () => {
+test("sidepanel opens as a chat-first Tab Agent UI", () => {
+  const sidepanelHtml = fs.readFileSync(path.join(EXTENSION_DIR, "sidepanel.html"), "utf8");
+  const sidepanelJs = fs.readFileSync(path.join(EXTENSION_DIR, "sidepanel.js"), "utf8");
+  const css = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(sidepanelHtml.includes("tab-agent-shell"), "Sidepanel should use the Tab Agent layout shell");
+  assert(sidepanelHtml.includes("agent-thread"), "Sidepanel should render a conversation thread");
+  assert(sidepanelHtml.includes("agent-composer"), "Sidepanel should use a bottom chat composer");
+  assert(sidepanelHtml.includes("agent-action-message"), "Quick actions should appear as an agent message card");
+  assert(sidepanelHtml.includes('data-i18n="tabAgentTitle"'), "Sidepanel should title the surface as a Tab Agent");
+  assert(sidepanelHtml.includes('data-i18n="ask"'), "Chat action should read like a conversation, not a settings preview");
+  assert(sidepanelHtml.indexOf("agent-thread") < sidepanelHtml.indexOf("chatForm"), "Conversation should sit before the composer");
+  assert(sidepanelHtml.indexOf("agent-quick-actions") < sidepanelHtml.indexOf("chatForm"), "Quick actions should stay inside the message flow");
+  assert(!sidepanelHtml.includes('data-i18n="browserResult"'), "Sidepanel should not expose a dashboard-like Browser Result section");
+  assert(sidepanelHtml.includes('<details class="glass-details sidepanel-details" hidden>'), "Technical browser lists should be hidden from the default chat surface");
+  assert(!sidepanelHtml.includes("next-card"), "Sidepanel should not expose internal next-build QA copy");
+  assert(sidepanelJs.includes("function renderImpactMetric"), "Sidepanel should render a compact impact summary");
+  assert(sidepanelJs.includes("agent-result-card"), "Organize output should appear as an agent message");
+  assert(sidepanelJs.includes("function parseAgentCommand"), "Sidepanel chat should route direct agent commands");
+  assert(sidepanelJs.includes("let chatMessages = []"), "Sidepanel should keep an ephemeral chat message thread");
+  assert(sidepanelJs.includes("appendUserChatMessage(text)"), "Sidepanel should render user messages in the chat thread");
+  assert(sidepanelJs.includes("function runQuickChatCommand"), "Sidepanel quick actions should enter the chat thread");
+  assert(sidepanelJs.includes('runQuickChatCommand("summarize this page"'), "Ask page quick action should route through chat command handling");
+  assert(sidepanelJs.includes('runQuickChatCommand("restore closed"'), "Restore quick action should route through chat command handling");
+  assert(sidepanelJs.includes("function renderChatThread"), "Sidepanel should render a multi-message chat thread");
+  assert(sidepanelJs.includes("disableStaleChatDraftButtons"), "Sidepanel should disable stale draft Apply/Cancel buttons");
+  assert(sidepanelJs.indexOf("handleAgentCommand(text)") < sidepanelJs.indexOf('type: "PREVIEW_CHAT_REFINE"'), "Direct agent commands should run before chat-refine preview");
+  assert(sidepanelJs.includes("function buildReadOnlyAgentAnswer"), "Sidepanel chat should answer read-only result questions");
+  assert(sidepanelJs.indexOf("buildReadOnlyAgentAnswer(text, latestRun)") < sidepanelJs.indexOf('type: "PREVIEW_CHAT_REFINE"'), "Read-only agent answers should run before chat-refine preview");
+  assert(sidepanelJs.includes("isCapabilityQuestion(normalized)"), "Sidepanel should answer capability/help questions before requiring an organize run");
+  assert(sidepanelJs.includes("isNextStepQuestion(normalized)"), "Sidepanel should answer next-step questions from latest run state");
+  assert(sidepanelJs.includes("function buildNextStepAnswer"), "Sidepanel agent should build local next-step recommendations");
+  assert(sidepanelJs.includes("buildGroupsAnswer"), "Sidepanel agent should answer group questions from latest run state");
+  assert(sidepanelJs.includes("buildDuplicateAnswer"), "Sidepanel agent should answer duplicate questions from latest run state");
+  assert(sidepanelJs.includes("buildDuplicateReviewAnswer"), "Sidepanel agent should answer duplicate review questions from latest run state");
+  assert(sidepanelJs.includes("buildClosedTabsAnswer"), "Sidepanel agent should answer closed-duplicate questions from local restore state");
+  assert(sidepanelJs.includes("buildAIStatusAnswer"), "Sidepanel agent should answer AI status questions from latest run state");
+  assert(sidepanelJs.includes("buildActiveTabsAnswer"), "Sidepanel agent should answer active-tab questions from latest run state");
+  assert(sidepanelJs.includes("buildProtectedTabsAnswer"), "Sidepanel agent should answer protected-tab questions from latest run state");
+  assert(sidepanelJs.includes("buildReadLaterAnswer"), "Sidepanel agent should suggest read-later candidates from latest local tab metadata");
+  assert(sidepanelJs.includes("function buildTabSearchResult"), "Sidepanel chat should search latest local tab snapshot");
+  assert(sidepanelJs.indexOf("buildReadOnlyAgentAnswer(text, latestRun)") < sidepanelJs.indexOf("buildTabSearchResult(text, latestRun)"), "Run-state answers should win over broad tab search phrases");
+  assert(sidepanelJs.includes("isActiveTabQuestion(normalized)"), "Active-tab questions should be recognized as read-only run-state questions");
+  assert(sidepanelJs.includes("getSnapshotTabs(run)"), "Read-only tab answers should use the latest sanitized run snapshot");
+  assert(sidepanelJs.includes("LAST_CLOSED_TABS_KEY"), "Closed-duplicate answers should use the existing local restore snapshot");
+  assert(sidepanelJs.includes("getHostnameFromUrl(tab.url)"), "Closed-duplicate chat answers should avoid rendering full restore URLs");
+  assert(sidepanelJs.includes('data-chat-action="focus-tab"'), "Sidepanel tab search results should expose safe focus actions");
+  assert(sidepanelJs.includes('type: "FOCUS_DASHBOARD_TAB"'), "Sidepanel tab search should reuse the existing tab focus action");
+  assert(sidepanelJs.includes("await summarizeCurrentTab(pageQuestion)"), "Chat command should support current-page summary and page questions");
+  assert(sidepanelJs.includes("extractPageQuestion(text)"), "Chat command should extract current-page questions");
+  assert(sidepanelJs.includes("function renderChatSummary"), "Current-page summary should render as a chat message");
+  assert(sidepanelJs.includes('status: "summary"'), "Summary rendering should use the chat panel summary state");
+  assert(sidepanelJs.includes("summaryPanel.hidden = true"), "Legacy summary panel should stay hidden when summary is mirrored into chat");
+  assert(sidepanelJs.includes("await organizeNow()"), "Chat command should support organize again");
+  assert(sidepanelJs.includes("await undoLast()"), "Chat command should support Undo");
+  assert(sidepanelJs.includes("await restoreClosed()"), "Chat command should support Restore Closed");
+  assert(sidepanelJs.includes("await openDashboard()"), "Chat command should support opening Dashboard");
+  assert(css.includes(".agent-action-message"), "Quick action message card should have scoped styling");
+  assert(css.includes(".chat-thread-message.user"), "User chat messages should have scoped styling");
+  assert(css.includes(".chat-thread-message.assistant"), "Assistant chat messages should have scoped styling");
+  assert(css.includes(".chat-summary-card"), "Current-page summary chat message should have scoped styling");
+  assert(css.includes(".chat-summary-question"), "Current-page question should have scoped chat styling");
+  assert(css.includes("backdrop-filter: blur"), "Minimal UI should use glass blur styling");
+  assert(en.tabAgentTitle?.message && zh.tabAgentTitle?.message, "Tab Agent title should be localized");
+  assert(en.agentCommandSummarize?.message && zh.agentCommandSummarize?.message, "Agent command response copy should be localized");
+  assert(en.agentCommandAskPage?.message && zh.agentCommandAskPage?.message, "Ask-page command response copy should be localized");
+  assert(en.currentPageAnswer?.message && zh.currentPageAnswer?.message, "Current-page chat summary label should be localized");
+  assert(en.currentPageQuestion?.message && zh.currentPageQuestion?.message, "Current-page question label should be localized");
+  assert(en.agentCapabilitiesAnswer?.message && zh.agentCapabilitiesAnswer?.message, "Agent capability answer should be localized");
+  assert(en.agentNextStepReview?.message && zh.agentNextStepReview?.message, "Agent next-step answer should be localized");
+  assert(en.agentOverviewAnswer?.message && zh.agentOverviewAnswer?.message, "Read-only agent answer copy should be localized");
+  assert(en.agentReviewDuplicatesAnswer?.message && zh.agentReviewDuplicatesAnswer?.message, "Duplicate review answer copy should be localized");
+  assert(en.agentClosedTabsAnswer?.message && zh.agentClosedTabsAnswer?.message, "Closed duplicate answer copy should be localized");
+  assert(en.agentActiveTabsAnswer?.message && zh.agentActiveTabsAnswer?.message, "Active-tab answer copy should be localized");
+  assert(en.agentProtectedTabsAnswer?.message && zh.agentProtectedTabsAnswer?.message, "Protected-tab answer copy should be localized");
+  assert(en.agentReadLaterAnswer?.message && zh.agentReadLaterAnswer?.message, "Read-later answer copy should be localized");
+  assert(en.agentFindTabsAnswer?.message && zh.agentFindTabsAnswer?.message, "Tab search answer copy should be localized");
+  assert(en.moreBrowserDetails?.message && zh.moreBrowserDetails?.message, "Folded detail summary should be localized");
+});
+
+test("dashboard follows minimal glass workbench structure", () => {
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
@@ -215,37 +298,44 @@ test("dashboard follows workbench HTML prototype structure", () => {
     "dashboard-topbar",
     "dashboard-workbench",
     "dashboard-rail",
-    "dashboard-workspace-card",
+    "dashboard-nav-segment",
     "dashboard-filter-chips",
-    "dashboard-group-grid"
+    "dashboard-group-grid",
+    "dashboard-details-section"
   ]) {
     assert(dashboardHtml.includes(selector), `Dashboard missing prototype shell class: ${selector}`);
     assert(dashboardCss.includes(`.${selector}`), `Dashboard missing CSS for prototype class: ${selector}`);
   }
 
+  assert(dashboardCss.includes("backdrop-filter: blur"), "Dashboard should use glass blur styling");
   assert(dashboardJs.includes("function renderGroupCard"), "Dashboard should render workbench group cards");
   assert(dashboardJs.includes("function renderGroupTabs"), "Dashboard should render expanded group tab rows");
   assert(dashboardJs.includes("getTabsForGroup"), "Dashboard should connect group cards to local tab rows");
+  assert(dashboardJs.includes('details class="dashboard-more-tabs"'), "Dashboard should let users expand hidden tab rows");
+  assert(dashboardJs.includes("hiddenTabs.map((tab) => renderGroupTabRow"), "Expanded Dashboard rows should reuse normal tab row actions");
+  assert(dashboardJs.includes("function renderTabFavicon"), "Dashboard should render real tab favicons when available");
+  assert(dashboardJs.includes("favIconUrl"), "Dashboard tab rows should read favIconUrl from the local snapshot");
+  assert(dashboardCss.includes(".dashboard-favicon img"), "Dashboard should style favicon image assets");
+  assert(dashboardCss.includes(".dashboard-more-tabs"), "Dashboard expandable tab rows should have scoped styling");
   assert(dashboardJs.includes("type: \"ORGANIZE_NOW\""), "Dashboard primary CTA should use existing organize action");
   assert(!dashboardHtml.includes("dashboard-sidebar"), "Dashboard should not use the old basic sidebar layout");
   assert(!dashboardHtml.includes("editable-group-card"), "Dashboard should not use the old settings-card group UI");
+  assert(!dashboardHtml.includes("dashboard-sort-label"), "Dashboard should avoid nonessential sort/status clutter");
 });
 
-test("dashboard latest result shows user benefit summary instead of metrics wall", () => {
+test("dashboard removes latest-result and workspace clutter from the default page", () => {
+  const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
-  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
-  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
-  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
 
-  assert(dashboardJs.includes("function renderResultSummary"), "Dashboard should render a benefit summary");
-  assert(dashboardJs.includes("memoryRelief"), "Dashboard summary should include conservative memory relief wording");
-  assert(dashboardJs.includes('data-result-action="review-duplicates"'), "Dashboard summary should expose Review duplicates action");
-  assert(dashboardJs.includes('data-result-action="undo"'), "Dashboard summary should expose Undo action");
-  assert(dashboardJs.includes("dashboard-result-details"), "Dashboard should move technical metrics into details");
-  assert(!dashboardJs.includes("function renderMetrics"), "Dashboard should not keep the old metrics wall renderer");
-  assert(dashboardCss.includes(".dashboard-result-summary"), "Dashboard benefit summary should have scoped styling");
-  assert(en.browserCleanedUp?.message && zh.browserCleanedUp?.message, "Benefit summary headline should be localized");
-  assert(en.memoryRelief?.message && zh.memoryRelief?.message, "Memory relief copy should be localized");
+  assert(!dashboardHtml.includes("workspaceTitle"), "Dashboard should not reserve space for a Latest result title");
+  assert(!dashboardHtml.includes("workspaceSubtitle"), "Dashboard should not reserve space for latest-result subtitle copy");
+  assert(!dashboardHtml.includes("dashboardMetrics"), "Dashboard should not render a Latest result metrics area");
+  assert(!dashboardHtml.includes('data-i18n="latestOrganizeResult"'), "Dashboard should not show Latest result in the default UI");
+  assert(!dashboardHtml.includes('data-i18n="currentWorkspace"'), "Dashboard should not show a Current Workspace card");
+  assert(!dashboardHtml.includes("dashboard-workspace-card"), "Dashboard should remove the workspace card from the default UI");
+  assert(!dashboardJs.includes("latestResultWithDate"), "Dashboard should not format latest-result timestamps");
+  assert(!dashboardJs.includes("renderResultSummary"), "Dashboard should not keep the old latest-result renderer");
+  assert(!dashboardJs.includes("dashboardMetrics"), "Dashboard JS should not write a metrics wall");
 });
 
 test("dashboard can move tabs between existing groups without adding destructive actions", () => {
@@ -257,13 +347,45 @@ test("dashboard can move tabs between existing groups without adding destructive
   assert(dashboardJs.includes('data-group-action="move-tab"'), "Dashboard tab rows should expose a move action");
   assert(dashboardJs.includes("APPLY_DASHBOARD_TAB_MOVE"), "Dashboard should call the tab move background action");
   assert(dashboardJs.includes("data-tab-target-group"), "Dashboard should render target group selection");
+  assert(dashboardJs.includes('dashboardGroups.addEventListener("dragstart"'), "Dashboard should support drag-start for tab assignment");
+  assert(dashboardJs.includes('dashboardGroups.addEventListener("drop"'), "Dashboard should support dropping tabs onto groups");
+  assert(dashboardJs.includes('data-tab-draggable="${canDrag ? "true" : "false"}"'), "Dashboard should mark only movable tab rows as draggable");
+  assert(dashboardJs.includes("function getDashboardTabMoveTargets"), "Dashboard drag/drop should reuse same-window move target logic");
+  assert(dashboardJs.includes("moveDashboardTab(dragState.tabId"), "Dashboard drop should use the existing tab move action");
   assert(dashboardJs.includes("Number(group.windowId) === Number(currentGroup.windowId)"), "Dashboard should limit move choices to the same window");
   assert(dashboardCss.includes(".dashboard-tab-move"), "Dashboard tab move controls should have scoped styling");
+  assert(dashboardCss.includes(".dashboard-group-card.drag-over"), "Dashboard drop targets should have scoped drag-over styling");
+  assert(dashboardCss.includes(".dashboard-tabrow.dragging"), "Dashboard dragged tab rows should have scoped styling");
   assert(backgroundCode.includes("APPLY_DASHBOARD_TAB_MOVE"), "Background should handle Dashboard tab moves");
   assert(backgroundCode.includes("groupId: targetGroupId"), "Background should move tabs into an existing native group");
   assert(backgroundCode.includes("Dashboard can only move tabs between groups in the same window."), "Background should enforce same-window tab moves");
   assert(!dashboardJs.includes("chrome.tabs.remove"), "Dashboard tab move UI must not close tabs");
   assert(en.move?.message && zh.move?.message, "Dashboard tab move copy should be localized");
+  assert(en.dragTabToGroup?.message && zh.dragTabToGroup?.message, "Dashboard tab drag copy should be localized");
+});
+
+test("dashboard exposes compact undo and restore actions without adding destructive actions", () => {
+  const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(dashboardHtml.includes("dashboardUndoButton"), "Dashboard should expose an Undo action");
+  assert(dashboardHtml.includes("dashboardRestoreButton"), "Dashboard should expose a Restore Closed action");
+  assert(dashboardJs.includes("function undoFromDashboard"), "Dashboard should implement Undo through the background action");
+  assert(dashboardJs.includes("function restoreClosedFromDashboard"), "Dashboard should implement Restore Closed through the background action");
+  assert(dashboardJs.includes('type: "UNDO_LAST"'), "Dashboard Undo should reuse the existing Undo action");
+  assert(dashboardJs.includes('type: "RESTORE_CLOSED_DUPLICATES"'), "Dashboard Restore Closed should reuse the existing restore action");
+  assert(dashboardJs.includes("syncDashboardActionButtons"), "Dashboard should enable actions from latest run state");
+  assert(dashboardJs.includes("summary.undoAvailable"), "Dashboard Undo should be enabled only when an undo snapshot is available");
+  assert(dashboardJs.includes("summary.closedTabsRestoreAvailable"), "Dashboard Restore should be enabled only when closed tabs are available");
+  assert(dashboardJs.includes('.dashboard-chip[data-filter]'), "Dashboard action chips should not change the group filter");
+  assert(dashboardCss.includes(".dashboard-chip:disabled"), "Dashboard action buttons should have disabled styling");
+  assert(!dashboardJs.includes("chrome.tabs.remove"), "Dashboard Undo/Restore UI must not directly close tabs");
+  assert(en.undo?.message && zh.undo?.message, "Dashboard Undo copy should be localized");
+  assert(en.restoreClosed?.message && zh.restoreClosed?.message, "Dashboard Restore Closed copy should be localized");
+  assert(en.restoring?.message && zh.restoring?.message, "Dashboard restoring state copy should be localized");
 });
 
 test("dashboard tab titles focus existing browser tabs", () => {
@@ -317,13 +439,14 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
   const manualQaTool = fs.readFileSync(path.join(ROOT_DIR, "tools", "open_manual_qa_profile.js"), "utf8");
 
   for (const token of [
-    "Latest Result leads with Browser cleaned up",
-    "Review duplicates jumps to Duplicate Center",
-    "Undo from Latest Result restores group state",
+    "Dashboard opens directly to Smart Groups without Latest Result",
+    "Duplicate Center stays folded until opened",
+    "Dashboard Undo and Restore Closed are compact and enabled only when available.",
     "Smart Groups filters switch between All, AI groups, and Rule groups",
     "Clicking a tab title focuses the existing browser tab/window.",
     "Same-window Move sends a tab into an existing native group and does not close tabs.",
-    "Dashboard Latest Result Details and Settings Snapshot show AI status and AI groups.",
+    "Dragging a tab row into another same-window group updates the native Chrome group.",
+    "Sidebar Tab Agent completion message lightly mentions DeepSeek help or local fallback.",
     "Local QA Notes",
     "data-qa-notes",
     "Copy Diagnostic Snapshot excludes URLs",
@@ -445,6 +568,7 @@ test("current run snapshot strips restorable URLs and page text", () => {
       id: 21,
       title: "Private planning doc",
       url: "https://private.example/secret?token=abc#fragment",
+      favIconUrl: "https://private.example/favicon.ico?token=abc#fragment",
       groupId: 7,
       groupTitle: "Secret Project"
     })
@@ -466,6 +590,7 @@ test("current run snapshot strips restorable URLs and page text", () => {
   assert(!("exactUrlHash" in runTab), "Current run snapshot must not keep exact URL hash");
   assert(!("trackingUrlHash" in runTab), "Current run snapshot must not keep tracking URL hash");
   assert(!("reviewUrlHash" in runTab), "Current run snapshot must not keep review URL hash");
+  assertEqual(runTab.favIconUrl, "https://private.example/favicon.ico", "Current run snapshot should keep only sanitized favicon display URL");
   assert(!runSnapshotJson.includes("https://private.example/secret"), "Current run snapshot must not include full URL");
   assert(!runSnapshotJson.includes("token=abc"), "Current run snapshot must not include query token");
   assert(!runSnapshotJson.includes("Confidential page body"), "Current run snapshot must not include page text");
@@ -498,6 +623,17 @@ test("current tab summary confirms sensitive pages before extraction", () => {
     sensitiveParsed,
     sensitiveCheck
   );
+  const questionAnswer = context.buildLocalPageSummary({
+    tab: { title: "Pricing guide" },
+    parsedUrl: context.parseUrl("https://example.com/pricing"),
+    question: "What does the Pro plan include?",
+    page: {
+      title: "Pricing guide",
+      description: "Compare the Free and Pro plans for TabMosaic.",
+      headings: ["Plans", "Pro plan"],
+      text: "The Free plan includes local tab grouping. The Pro plan includes workspace history, multi-tab summaries, and advanced rules. Enterprise plans add team controls."
+    }
+  });
   const sensitiveSerialized = JSON.stringify({ sensitiveCheck, blockedSummary });
 
   assertEqual(sensitiveCheck.requiresConfirmation, true, "Sensitive summary should require confirmation");
@@ -509,6 +645,8 @@ test("current tab summary confirms sensitive pages before extraction", () => {
   assertEqual(normalCheck.requiresConfirmation, false, "Normal docs summary should not require confirmation");
   assertEqual(blockedSummary.status, "needs-confirmation", "Sensitive summary should block extraction first");
   assert(blockedSummary.keyPoints.includes("No page body was read."), "Blocked sensitive summary should state no body was read");
+  assertEqual(questionAnswer.question, "What does the Pro plan include?", "Local page Q&A should preserve the user question");
+  assert(questionAnswer.summary.includes("Pro plan includes workspace history"), "Local page Q&A should answer from visible page text");
   assert(!sensitiveSerialized.includes("https://billing.stripe.com/customer/secret"), "Sensitive confirmation must not expose full URL");
   assert(!sensitiveSerialized.includes("token=abc"), "Sensitive confirmation must not expose query token");
 
@@ -873,6 +1011,7 @@ test("AI classification request sends minimized tab metadata only", async () => 
         path: "/secret",
         fullUrl: "https://private.example/secret?token=abc",
         restoreUrl: "https://private.example/secret?token=abc",
+        favIconUrl: "https://private.example/favicon.ico?token=abc",
         pageText: "Confidential page body",
         windowId: 1,
         active: true,
@@ -902,8 +1041,10 @@ test("AI classification request sends minimized tab metadata only", async () => 
   assertEqual(firstTab.active, true, "AI payload should include tab state");
   assert(!("fullUrl" in firstTab), "AI payload must not include fullUrl field");
   assert(!("restoreUrl" in firstTab), "AI payload must not include restoreUrl field");
+  assert(!("favIconUrl" in firstTab), "AI payload must not include favIconUrl field");
   assert(!("pageText" in firstTab), "AI payload must not include pageText field");
   assert(!bodyText.includes("https://private.example/secret?token=abc"), "AI payload must not include full URL");
+  assert(!bodyText.includes("favicon.ico"), "AI payload must not include favicon URL");
   assert(!bodyText.includes("token=abc"), "AI payload must not include URL query token");
   assert(!bodyText.includes("Confidential page body"), "AI payload must not include page text");
   assert(bodyText.includes("No page body or full URL"), "AI payload should include privacy note");
@@ -962,21 +1103,20 @@ test("AI classification timeout falls back to local rules", async () => {
   assertEqual(result.groupCount, 0, "Timed out AI classification should not count groups");
 });
 
-test("AI classification status is visible in sidebar and dashboard", () => {
+test("AI classification status stays lightweight in sidebar and dashboard", () => {
   const sidepanelJs = fs.readFileSync(path.join(EXTENSION_DIR, "sidepanel.js"), "utf8");
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const screenshotTool = fs.readFileSync(path.join(ROOT_DIR, "tools", "capture_ui_screenshots.js"), "utf8");
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
   const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
 
-  assert(sidepanelJs.includes('msg("aiStatus")'), "Sidepanel metrics should show AI status");
-  assert(sidepanelJs.includes('msg("aiGroups")'), "Sidepanel metrics should show AI group count");
-  assert(sidepanelJs.includes("summary?.aiGroupsSuggested"), "Sidepanel should read AI suggested group count");
+  assert(sidepanelJs.includes('msg("deepSeekHelped")'), "Sidepanel completion message should mention when DeepSeek helped");
+  assert(sidepanelJs.includes('msg("aiFellBackLocal")'), "Sidepanel completion message should mention AI fallback without a metrics panel");
+  assert(!sidepanelJs.includes("summary?.aiGroupsSuggested"), "Sidepanel should keep AI group count out of the minimal result card");
   assert(dashboardJs.includes('msg("aiStatus")'), "Dashboard result details should show AI status");
   assert(dashboardJs.includes('msg("aiGroups")'), "Dashboard should show AI group count");
   assert(dashboardJs.includes("summary.aiGroupsSuggested"), "Dashboard should read AI suggested group count");
   assert(dashboardJs.includes('status === "empty"'), "Dashboard should format empty AI output");
-  assert(sidepanelJs.includes('status === "empty"'), "Sidepanel should format empty AI output");
   assert(screenshotTool.includes("aiGroupsSuggested: 3"), "Screenshot mock should render AI group count");
   assert(en.aiStatus?.message, "English AI status label");
   assert(en.aiGroups?.message, "English AI group label");

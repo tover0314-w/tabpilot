@@ -22,6 +22,8 @@ export type TabSnapshot = {
 };
 ```
 
+`favIconUrl` is local display metadata only. Runtime snapshots sanitize it by allowing `data:image/*` or stripping query/hash from `http(s)` favicon URLs. It is not included in AI classification payloads.
+
 ## GroupSnapshot
 
 ```ts

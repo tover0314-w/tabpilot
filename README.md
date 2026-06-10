@@ -73,7 +73,7 @@ node tools/beta_readiness_check.js
 node tools/extension_smoke_test.js
 ```
 
-它会检查 manifest 权限、英文/中文本地化、权限解释、脱敏本地错误日志、本地误关恢复安全审计计数、脱敏 beta 诊断快照和反馈模板、Chat Refine parser、用户规则优先级、重复项安全策略、AI 输出校验、AI 连接测试不发送 tab 数据，以及本地数据清除。
+它会检查 manifest 权限、英文/中文本地化、极简玻璃拟态 side panel / Dashboard 守卫、侧边栏快捷动作进入聊天、侧边栏临时消息流、侧边栏 direct commands、本地能力说明回答、当前页 summary / page question 聊天消息渲染、latest-run 只读问答、duplicate-review/closed-tab 本地回答、active/protected/read-later 本地回答、tab search/focus、权限解释、脱敏本地错误日志、本地误关恢复安全审计计数、脱敏 beta 诊断快照和反馈模板、Chat action parser、用户规则优先级、重复项安全策略、AI 输出校验、AI 连接测试不发送 tab 数据，以及本地数据清除。
 
 ```bash
 node tools/issue_form_smoke_test.js
@@ -139,7 +139,7 @@ node tools/preflight.js --runtime
 node tools/chrome_runtime_smoke_test.js
 ```
 
-这个脚本会尝试用临时 profile 加载 unpacked extension，打开合成测试 tabs，并验证 organize、safe duplicate close、Restore Closed、Chat Refine 和 Dashboard apply/move/focus 能操作真实 Chrome native tab groups。它会优先使用 `CHROME_PATH`，其次自动探测 Playwright / Chrome for Testing / Chromium，最后才回退到系统 Google Chrome。
+这个脚本会尝试用临时 profile 加载 unpacked extension，打开合成测试 tabs，并验证 organize、safe duplicate close、same-page duplicate review、Restore Closed、Chat action、侧边栏快捷动作进入聊天、侧边栏临时消息流、本地能力说明回答、本地下一步建议、当前页 summary / page question 聊天消息、Sidebar 本地问答、tab search/open 和 Dashboard apply/move/drag-drop/focus/undo/restore 能操作真实 Chrome native tab groups。它会优先使用 `CHROME_PATH`，其次自动探测 Playwright / Chrome for Testing / Chromium，最后才回退到系统 Google Chrome。
 
 如果当前 Google Chrome 构建不允许 CLI 加载扩展，会输出 `SKIP`，仍需要手动在 `chrome://extensions` 使用 `Load unpacked` 验收。也可以手动指定 Chrome for Testing 或 Chromium：
 
@@ -180,7 +180,7 @@ node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
 ```
 
-它会加载 extension，打开本地 Manual QA Checklist、合成 QA tabs、sidepanel 和 dashboard 页面，只使用 `artifacts/manual-qa-profiles/` 下的一次性 Chrome profile，不读取你的真实 Chrome profile、真实 tabs 或 `.env.local`。Checklist 覆盖一键整理、AI 状态、敏感页 summary 确认、Undo/Restore、Dashboard Latest Result、Dashboard tab focus/move/apply 和隐私输出；勾选状态与本地 QA notes 只保存在这个一次性 profile 里，并可复制一份带 notes 的 Markdown QA 结果。`--self-test` 会打开后自动关闭并清理。
+它会加载 extension，打开本地 Manual QA Checklist、合成 QA tabs、sidepanel 和 dashboard 页面，只使用 `artifacts/manual-qa-profiles/` 下的一次性 Chrome profile，不读取你的真实 Chrome profile、真实 tabs 或 `.env.local`。Checklist 覆盖一键整理、Tab Agent UI、AI 状态、敏感页 summary 确认、Undo/Restore、Dashboard Smart Groups、Dashboard tab focus/move/apply 和隐私输出；勾选状态与本地 QA notes 只保存在这个一次性 profile 里，并可复制一份带 notes 的 Markdown QA 结果。`--self-test` 会打开后自动关闭并清理。
 
 ## 立即阅读建议
 

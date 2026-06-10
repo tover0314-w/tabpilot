@@ -17,33 +17,29 @@
 └─────────────────────────────┘
 ```
 
-## 2. Sidebar：整理完成
+## 2. Sidebar：Tab Agent / 整理完成
+
+CONFIRMED BY USER: Sidebar 首屏必须是类似 OpenAI 的对话框，用作 Tab Agent。整理结果只能作为消息出现，不做复杂结果面板。
 
 ```text
 ┌─────────────────────────────┐
-│ ✅ Organized 73 tabs         │
+│ TabMosaic AI            ↻    │
+│ Tab Agent                   │
 ├─────────────────────────────┤
-│ 8 groups created            │
-│ 61 tabs moved               │
-│ 9 safe duplicates closed    │
-│ 4 duplicates need review    │
+│ TabMosaic                    │
+│ Organize complete            │
+│ Created 8 native groups...   │
 │                             │
-│ [Undo] [Review] [Dashboard] │
+│ Browser cleaned up           │
+│ Groups 8 · Moved 61         │
+│ Closed 9 · Review 4          │
 ├─────────────────────────────┤
-│ Smart Groups                │
-│ ▸ AI Tab Manager Research 14│
-│ ▸ Chrome Extension Docs   9 │
-│ ▸ GitHub Projects        12 │
-│ ▸ Product Planning        8 │
-│ ▸ Reading                10 │
-│ ▸ Misc                    4 │
+│ TabMosaic                    │
+│ [Organize] [Ask page]       │
+│ [Undo] [Restore] [Dashboard]│
 ├─────────────────────────────┤
-│ Try asking:                 │
-│ [按项目重新分类]             │
-│ [把 GitHub PR 单独分组]     │
-│ [总结当前页面]               │
-│                             │
-│ Ask TabMosaic...             │
+│ Ask TabMosaic about tabs...  │
+│ [GitHub PR] [Current] [Rename]│
 └─────────────────────────────┘
 ```
 
@@ -73,22 +69,25 @@
 
 ## 4. Dashboard：Home
 
-CONFIRMED BY USER: Latest Result 使用简洁收益版，技术指标收进 Details。
+CONFIRMED BY USER: Dashboard 默认不要 Latest Result、时间、Current Workspace 这类占空间信息。默认直接进入 Smart Groups。
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ Sidebar nav          │ 浏览器已整理            │
-│ Project Space        │ 42 个标签页归入 6 个分组 │
-│ Auto Organize        │                        │
-│ Settings             │ 本次优化                │
-│                      │ 关闭 4 个重复标签页      │
-│                      │ 整理 31 个标签页         │
-│                      │ 2 组疑似重复待确认       │
-│                      │ 内存压力已降低            │
-│                      │                        │
-│                      │ [处理重复项] [撤销]      │
-│                      │                        │
-│                      │ Details: windows / AI   │
+│ TabMosaic                  Local · Refresh    │
+├──────────────────────────────────────────────┤
+│ [Project Space] [Auto Organize] [Settings]    │
+│ [Organize Browser]                            │
+├──────────────────────────────────────────────┤
+│ [All 6] [AI groups 2] [Rule groups 1] Refresh │
+│                                              │
+│ Smart Groups                                 │
+│ Product Planning                         Edit │
+│   Q3 planning doc                            │
+│   Product roadmap                            │
+│                                              │
+│ Code Review                              Edit │
+│   PR #24 - Add sidebar control center        │
+│   PR #26 - Privacy copy                      │
 └──────────────────────────────────────────────┘
 ```
 
@@ -96,16 +95,22 @@ CONFIRMED BY USER: Latest Result 使用简洁收益版，技术指标收进 Deta
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ Smart Groups                                 │
+│ Smart Groups    [All] [AI] [Rules] [Refresh] │
 ├──────────────────────────────────────────────┤
-│ [AI Tab Manager Research] 14 tabs             │
-│ Summary: open-source and competitor research  │
-│ Domains: github.com, chromewebstore, blogs    │
-│ [Chat] [Summarize] [Rename] [Apply]           │
+│ Product Planning                         Edit │
+│ 8 tabs · docs.google.com · notion.so           │
+│   Q3 planning doc                              │
+│   Product roadmap                              │
+│   MVP private beta checklist                   │
+│   +5 tabs  (expand)                            │
 │                                              │
-│ [Chrome Extension Docs] 9 tabs                │
-│ Summary: API docs for extension development   │
-│ [Chat] [Summarize] [Rename] [Apply]           │
+│ Code Review                              Edit │
+│ 7 tabs · github.com                            │
+│   PR #24 - Add sidebar control center          │
+│   PR #26 - Privacy copy                        │
+│   PR #29 - Dashboard apply                     │
+│   +4 tabs  (expand)                            │
+│   (drag a tab row to another same-window group)│
 └──────────────────────────────────────────────┘
 ```
 
@@ -122,6 +127,6 @@ CONFIRMED BY USER: Latest Result 使用简洁收益版，技术指标收进 Deta
 │ □ Chrome Web Store listing   │               │
 │ □ Blog article               │ [Send]        │
 │                              │               │
-│ [Move] [Close] [Protect]     │               │
+│ [Open tab] [Move] [Drag]     │               │
 └──────────────────────────────┴───────────────┘
 ```

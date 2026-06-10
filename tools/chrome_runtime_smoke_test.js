@@ -15,7 +15,9 @@ const TEST_URLS = [
   "https://docs.google.com/document/d/tabmosaic-one/edit",
   "https://docs.google.com/document/d/tabmosaic-two/edit",
   "https://example.com/tabmosaic-duplicate",
-  "https://example.com/tabmosaic-duplicate"
+  "https://example.com/tabmosaic-duplicate",
+  "https://example.com/tabmosaic-review#one",
+  "https://example.com/tabmosaic-review#two"
 ];
 
 class SkipError extends Error {}
@@ -96,6 +98,100 @@ async function main() {
       assert(groupTitles.includes("Chrome Extension Docs"), `Missing Chrome Extension Docs group: ${groupTitles.join(", ")}`);
       assert(groupTitles.includes("Docs & Notes"), `Missing Docs & Notes group: ${groupTitles.join(", ")}`);
 
+      const tabsBeforeDashboardCommand = await evaluate(cdp, "chrome.tabs.query({})");
+      await submitSidepanelComposer(cdp, "open dashboard");
+      const dashboardTabs = await waitFor(async () => {
+        const tabs = await evaluate(cdp, "chrome.tabs.query({})");
+        return tabs.some((tab) => String(tab.url || "").endsWith("/dashboard.html")) ? tabs : null;
+      }, "Sidebar composer did not open Dashboard");
+      assert(dashboardTabs.length >= tabsBeforeDashboardCommand.length + 1, "Open Dashboard command did not create a Dashboard tab");
+
+      await submitSidepanelComposer(cdp, "summarize this page");
+      const summaryRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const legacyPanel = document.querySelector("#summaryPanel");
+            const text = panel?.textContent || "";
+            return Boolean(
+              panel &&
+              !panel.hidden &&
+              legacyPanel?.hidden &&
+              /Current page|当前页面/.test(text) &&
+              /cannot be read|could not|classify it from title/i.test(text)
+            );
+          })()`
+        );
+      }, "Sidebar composer summary command did not render a chat summary response");
+      assert(summaryRendered, "Summary command did not render expected local chat summary state");
+
+      await submitSidepanelComposer(cdp, "ask page: what does this page say about tabs");
+      const pageQuestionRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const legacyPanel = document.querySelector("#summaryPanel");
+            const text = panel?.textContent || "";
+            return Boolean(
+              panel &&
+              !panel.hidden &&
+              legacyPanel?.hidden &&
+              /Question|问题/.test(text) &&
+              /what does this page say about tabs/.test(text)
+            );
+          })()`
+        );
+      }, "Sidebar composer page question did not render in the chat summary card");
+      assert(pageQuestionRendered, "Page question was not rendered in the local chat summary card");
+
+      const threadedChatRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const userMessages = Array.from(panel?.querySelectorAll(".chat-thread-message.user") || []);
+            const assistantMessages = Array.from(panel?.querySelectorAll(".chat-thread-message.assistant") || []);
+            return Boolean(
+              userMessages.some((node) => /ask page: what does this page say about tabs/.test(node.textContent || "")) &&
+              assistantMessages.length >= 2
+            );
+          })()`
+        );
+      }, "Sidebar composer did not preserve user and assistant chat messages");
+      assert(threadedChatRendered, "Chat thread did not preserve user and assistant messages");
+
+      await evaluate(cdp, `document.querySelector("#summaryButton")?.click()`);
+      const quickActionThreaded = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const userMessages = Array.from(panel?.querySelectorAll(".chat-thread-message.user") || []);
+            const assistantMessages = Array.from(panel?.querySelectorAll(".chat-thread-message.assistant") || []);
+            return Boolean(
+              userMessages.some((node) => /Summarize Current Tab|总结当前标签页/.test(node.textContent || "")) &&
+              assistantMessages.some((node) => /Current page|当前页面/.test(node.textContent || ""))
+            );
+          })()`
+        );
+      }, "Sidebar quick action did not enter the chat message thread");
+      assert(quickActionThreaded, "Quick action did not preserve user and assistant messages in the chat thread");
+
+      await submitSidepanelComposer(cdp, "what can you do");
+      const capabilityAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /I can organize your tabs|我可以整理标签页/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer capability/help question");
+      assert(capabilityAnswerRendered, "Capability/help answer was not rendered in the chat thread");
+
       const preview = await evaluate(cdp, `
         chrome.runtime.sendMessage({ type: "PREVIEW_CHAT_REFINE", text: "GitHub PR to PR Review" })
       `);
@@ -160,6 +256,71 @@ async function main() {
       const activeTabs = await evaluate(cdp, `chrome.tabs.query({ active: true, windowId: ${movedTab.windowId} })`);
       assert(activeTabs.some((tab) => tab.id === movedTab.id), "Dashboard tab focus did not activate the requested tab");
 
+      const dashboardUiPage = await createTarget(port, `chrome-extension://${extensionId}/dashboard.html`);
+      const dashboardCdp = await CDPSession.connect(dashboardUiPage.webSocketDebuggerUrl);
+
+      try {
+        await waitForPageReady(dashboardCdp);
+        await waitForExtensionApis(dashboardCdp);
+        const dashboardDragMove = await waitFor(async () => {
+          return evaluate(
+            dashboardCdp,
+            `new Promise((resolve) => {
+              const delay = (ms) => new Promise((done) => setTimeout(done, ms));
+
+              (async () => {
+                await delay(250);
+                const row = document.querySelector('.dashboard-tabrow[data-tab-draggable="true"]');
+
+                if (!row) {
+                  resolve(null);
+                  return;
+                }
+
+                const sourceGroupId = Number(row.dataset.currentGroupId);
+                const sourceWindowId = Number(row.dataset.windowId);
+                const targetCard = Array.from(document.querySelectorAll('.dashboard-group-card[data-group-id][data-window-id]')).find((card) => {
+                  return Number(card.dataset.groupId) !== sourceGroupId && Number(card.dataset.windowId) === sourceWindowId;
+                });
+
+                if (!targetCard || typeof DataTransfer !== "function") {
+                  resolve(null);
+                  return;
+                }
+
+                const tabId = Number(row.dataset.tabId);
+                const targetGroupId = Number(targetCard.dataset.groupId);
+                const transfer = new DataTransfer();
+                row.dispatchEvent(new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+                targetCard.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+                targetCard.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+                row.dispatchEvent(new DragEvent("dragend", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+
+                const startedAt = Date.now();
+                while (Date.now() - startedAt < 5000) {
+                  const tab = await chrome.tabs.get(tabId);
+
+                  if (tab.groupId === targetGroupId) {
+                    resolve({ ok: true, tabId, targetGroupId });
+                    return;
+                  }
+
+                  await delay(100);
+                }
+
+                resolve(null);
+              })().catch((error) => resolve({ ok: false, error: error?.message || String(error) }));
+            })`
+          );
+        }, "Dashboard drag/drop did not move a tab into the target native group");
+        assert(dashboardDragMove?.ok, `Dashboard drag/drop failed: ${JSON.stringify(dashboardDragMove)}`);
+
+        const draggedTab = await evaluate(cdp, `chrome.tabs.get(${dashboardDragMove.tabId})`);
+        assertEqual(draggedTab.groupId, dashboardDragMove.targetGroupId, "Dashboard drag/drop did not update the native tab group");
+      } finally {
+        dashboardCdp.close();
+      }
+
       const tabsBeforeRestore = await evaluate(cdp, "chrome.tabs.query({})");
       const restoreSnapshotState = await evaluate(cdp, `
         chrome.storage.local.get("tabmosaic.lastClosedTabs")
@@ -170,19 +331,209 @@ async function main() {
         "Restore snapshot did not include the synthetic duplicate URL"
       );
 
-      const restoreClosed = await evaluate(cdp, `
-        chrome.runtime.sendMessage({ type: "RESTORE_CLOSED_DUPLICATES" })
-      `);
-      assert(restoreClosed && restoreClosed.ok, `Restore Closed failed: ${JSON.stringify(restoreClosed)}`);
-      assert(restoreClosed.run.summary.restoredClosedTabs >= 1, "Restore Closed did not restore any duplicate tabs");
-      assertEqual(restoreClosed.run.summary.closedTabsRestoreAvailable, false, "Restore Closed should clear restore availability");
+      await submitSidepanelComposer(cdp, "what did you close");
+      const closedTabsAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /Closed duplicates available|可恢复的已关闭重复标签页/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer closed duplicate state");
+      assert(closedTabsAnswerRendered, "Closed duplicate answer was not rendered from local restore state");
+
+      await submitSidepanelComposer(cdp, "what needs review");
+      const duplicateReviewAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /Review queue|待确认重复项/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer duplicate review state");
+      assert(duplicateReviewAnswerRendered, "Duplicate review answer was not rendered from latest run state");
+
+      await submitSidepanelComposer(cdp, "restore closed");
+      const restoreClosedRun = await waitForCurrentRunStatus(cdp, "closed-restored", "Sidebar composer Restore Closed command did not complete");
+      assert(restoreClosedRun.summary.restoredClosedTabs >= 1, "Restore Closed did not restore any duplicate tabs");
+      assertEqual(restoreClosedRun.summary.closedTabsRestoreAvailable, false, "Restore Closed should clear restore availability");
 
       const tabsAfterRestore = await evaluate(cdp, "chrome.tabs.query({})");
       assert(
-        tabsAfterRestore.length >= tabsBeforeRestore.length + restoreClosed.run.summary.restoredClosedTabs,
+        tabsAfterRestore.length >= tabsBeforeRestore.length + restoreClosedRun.summary.restoredClosedTabs,
         "Restore Closed did not increase the open tab count"
       );
-      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus");
+
+      await submitSidepanelComposer(cdp, "undo");
+      const undoRun = await waitForCurrentRunStatus(cdp, "undone", "Sidebar composer Undo command did not complete");
+      assertEqual(undoRun.summary.undoAvailable, false, "Undo command should clear undo availability");
+
+      await submitSidepanelComposer(cdp, "organize again");
+      const organizeAgainRun = await waitForCurrentRunStatus(cdp, "completed", "Sidebar composer Organize Again command did not complete");
+      assert(organizeAgainRun.summary.tabCount >= 6, "Organize Again command should scan the synthetic tabs");
+
+      await submitSidepanelComposer(cdp, "what should I do next");
+      const nextStepAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /Next:|下一步/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer next-step guidance");
+      assert(nextStepAnswerRendered, "Next-step answer was not rendered from latest run state");
+
+      await submitSidepanelComposer(cdp, "what tab am I on");
+      const activeTabAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /Current active tab|当前活跃标签页/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer active-tab state");
+      assert(activeTabAnswerRendered, "Active-tab answer was not rendered from latest run state");
+
+      await submitSidepanelComposer(cdp, "protected tabs");
+      const protectedTabsAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /protected tabs|受保护标签页/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer protected-tab state");
+      assert(protectedTabsAnswerRendered, "Protected-tab answer was not rendered from latest run state");
+
+      await submitSidepanelComposer(cdp, "read later");
+      const readLaterAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /read-later tabs|稍后看的标签页|稍后阅读候选/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer read-later candidates");
+      assert(readLaterAnswerRendered, "Read-later answer was not rendered from latest local snapshot");
+
+      await submitSidepanelComposer(cdp, "show groups");
+      const groupAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /Current groups|当前分组/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer latest group state");
+      assert(groupAnswerRendered, "Group answer was not rendered from latest run state");
+
+      await submitSidepanelComposer(cdp, "did AI classify this?");
+      const aiAnswerRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(panel && !panel.hidden && /AI classification is not active|没有启用 AI 分类/.test(text));
+          })()`
+        );
+      }, "Sidebar composer did not answer AI status from latest run state");
+      assert(aiAnswerRendered, "AI status answer was not rendered from latest run state");
+
+      await submitSidepanelComposer(cdp, "find github");
+      const tabSearchRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            return Boolean(
+              panel &&
+              !panel.hidden &&
+              /matching|匹配/.test(text) &&
+              panel.querySelector('[data-chat-action="focus-tab"]')
+            );
+          })()`
+        );
+      }, "Sidebar composer did not render tab search results");
+      assert(tabSearchRendered, "Tab search results were not rendered");
+
+      await evaluate(
+        cdp,
+        `document.querySelector('[data-chat-action="focus-tab"]')?.click()`
+      );
+      const focusedGithubTab = await waitFor(async () => {
+        const activeTabsAfterSearch = await evaluate(cdp, "chrome.tabs.query({ active: true })");
+        return activeTabsAfterSearch.some((tab) => String(tab.url || "").includes("github.com")) ? activeTabsAfterSearch : null;
+      }, "Sidebar tab search Open action did not focus a matching tab");
+      assert(focusedGithubTab, "Tab search Open action did not focus a GitHub tab");
+
+      const dashboardActionsPage = await createTarget(port, `chrome-extension://${extensionId}/dashboard.html`);
+      const dashboardActionsCdp = await CDPSession.connect(dashboardActionsPage.webSocketDebuggerUrl);
+
+      try {
+        await waitForPageReady(dashboardActionsCdp);
+        await waitForExtensionApis(dashboardActionsCdp);
+
+        const dashboardRestoreClicked = await waitFor(async () => {
+          return evaluate(
+            dashboardActionsCdp,
+            `(() => {
+              const button = document.querySelector("#dashboardRestoreButton");
+
+              if (!button || button.disabled) return false;
+
+              button.click();
+              return true;
+            })()`
+          );
+        }, "Dashboard Restore Closed action was not enabled");
+        assert(dashboardRestoreClicked, "Dashboard Restore Closed action was not clicked");
+
+        const dashboardRestoreRun = await waitForCurrentRunStatus(cdp, "closed-restored", "Dashboard Restore Closed action did not complete");
+        assert(dashboardRestoreRun.summary.restoredClosedTabs >= 1, "Dashboard Restore Closed did not restore any duplicate tabs");
+
+        await submitSidepanelComposer(cdp, "organize again");
+        const dashboardUndoSeedRun = await waitForCurrentRunStatus(cdp, "completed", "Organize Again before Dashboard Undo did not complete");
+        assert(dashboardUndoSeedRun.summary.undoAvailable, "Organize Again should make Dashboard Undo available");
+
+        await evaluate(dashboardActionsCdp, `document.querySelector("#workspaceRefreshButton")?.click()`);
+        const dashboardUndoClicked = await waitFor(async () => {
+          return evaluate(
+            dashboardActionsCdp,
+            `(() => {
+              const button = document.querySelector("#dashboardUndoButton");
+
+              if (!button || button.disabled) return false;
+
+              button.click();
+              return true;
+            })()`
+          );
+        }, "Dashboard Undo action was not enabled");
+        assert(dashboardUndoClicked, "Dashboard Undo action was not clicked");
+
+        const dashboardUndoRun = await waitForCurrentRunStatus(cdp, "undone", "Dashboard Undo action did not complete");
+        assertEqual(dashboardUndoRun.summary.undoAvailable, false, "Dashboard Undo should clear undo availability");
+      } finally {
+        dashboardActionsCdp.close();
+      }
+
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
     } finally {
       cdp.close();
     }
@@ -293,7 +644,7 @@ async function waitForExtensionId(port, getChromeLog) {
 }
 
 async function createTarget(port, targetUrl) {
-  return fetchJson(port, `/json/new?${targetUrl}`, { method: "PUT" });
+  return fetchJson(port, `/json/new?${encodeURIComponent(targetUrl)}`, { method: "PUT" });
 }
 
 async function fetchJson(port, route, options = {}) {
@@ -343,6 +694,33 @@ async function evaluate(cdp, expression) {
   }
 
   return result.result.value;
+}
+
+async function submitSidepanelComposer(cdp, text) {
+  return evaluate(
+    cdp,
+    `(() => {
+      const input = document.querySelector("#chatInput");
+      const form = document.querySelector("#chatForm");
+
+      if (!input || !form) {
+        throw new Error("Sidepanel composer is not available");
+      }
+
+      input.value = ${JSON.stringify(text)};
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      return true;
+    })()`
+  );
+}
+
+async function waitForCurrentRunStatus(cdp, status, message) {
+  return waitFor(async () => {
+    const result = await evaluate(cdp, 'chrome.storage.local.get("tabmosaic.currentRun")');
+    const run = result["tabmosaic.currentRun"];
+    return run?.status === status ? run : null;
+  }, message);
 }
 
 async function waitFor(fn, message, timeoutMs = 15000) {

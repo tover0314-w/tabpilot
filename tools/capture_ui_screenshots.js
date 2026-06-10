@@ -197,6 +197,7 @@ function mockTab(id, windowId, title, hostname, path, overrides = {}) {
     title,
     hostname,
     path,
+    favIconUrl: mockFaviconDataUrl(hostname),
     urlScheme: "https",
     active: false,
     pinned: false,
@@ -206,6 +207,32 @@ function mockTab(id, windowId, title, hostname, path, overrides = {}) {
     groupId: -1,
     ...overrides
   };
+}
+
+function mockFaviconDataUrl(hostname) {
+  const colors = ["#2f7469", "#4c6fff", "#a14c89", "#b4762a", "#5a6978", "#3f7f4d"];
+  const cleanHost = String(hostname || "tab").replace(/^www\./, "");
+  const label = (cleanHost.charAt(0) || "t").toUpperCase();
+  const color = colors[Math.abs(hashString(cleanHost)) % colors.length];
+  const svg = [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">',
+    `<rect width="32" height="32" rx="7" fill="${color}"/>`,
+    `<text x="16" y="21" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">${label}</text>`,
+    "</svg>"
+  ].join("");
+
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function hashString(value) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+
+  return hash;
 }
 
 main().catch((error) => {
@@ -529,7 +556,7 @@ async function assertPageReady(page, pathname) {
     return;
   }
 
-  await page.waitForSelector("#dashboardMetrics .dashboard-result-summary", { timeout: 5000 });
+  await page.waitForSelector("#dashboardGroups .dashboard-group-card", { timeout: 5000 });
   await page.waitForFunction(
     () => document.querySelector("#aiBaseUrlInput")?.value === "https://api.deepseek.com",
     null,

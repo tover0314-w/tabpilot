@@ -32,20 +32,36 @@ Coverage:
 - protected duplicate tabs not auto-closed
 - current-tab summary confirms sensitive pages before visible text extraction
 - AI output validation for invented/repeated tab IDs
-- AI classification request includes minimized metadata only and excludes full URL, restore URL, query token, and page text
+- AI classification request includes minimized metadata only and excludes full URL, restore URL, favicon URL, query token, and page text
 - AI classification request carries an abort signal and falls back to local rules on timeout
-- AI classification status and suggested group count are visible in sidebar and dashboard
-- Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, workspace card, filter chips, and expanded group cards
-- Dashboard Latest Result shows a benefit summary instead of the old metrics wall; technical metrics live under Details
+- AI classification status remains lightweight in the sidebar completion message, while Dashboard retains the fuller AI status view
+- Dashboard workbench layout keeps the HTML prototype shell: top bar, project rail, filter chips, expanded group cards, and favicon-backed tab rows
+- Side panel opens as a chat-first Tab Agent UI, not a result metrics panel
+- Side panel composer preserves recent user and Agent messages in an in-memory local thread
+- Side panel disables stale Chat Refine Apply/Cancel buttons when a newer draft appears or a draft is cancelled
+- Side panel quick action chips route through the same chat command path and append user/Agent messages to the local thread
+- Side panel composer routes direct safe agent commands for current-tab summary, organize, Undo, Restore Closed, and Dashboard before falling back to chat-refine preview
+- Side panel composer answers local capability/help questions without requiring page reads or an organize run
+- Side panel current-page summary and local page question answers render inside the chat message flow and keep the legacy summary panel hidden
+- Background current-page summary accepts an optional question and answers from visible page text with local sentence matching
+- Side panel composer answers latest organize status, group, duplicate, and AI-status questions from local run state before falling back to chat-refine preview
+- Side panel composer answers next-step questions from latest local organize state before falling back to chat-refine preview
+- Side panel composer answers duplicate review queue and closed duplicate restore questions from latest local run state / local restore state without rendering full restore URLs
+- Side panel composer answers active-tab, protected-tab, and read-later candidate questions from the latest sanitized local run snapshot
+- Side panel composer finds tabs from the latest local snapshot and focuses an existing matching tab through the existing focus action
+- Dashboard default page opens directly to Smart Groups and does not show Latest Result, timestamp, Current Workspace card, or result metrics area
 - Dashboard Smart Groups filter chips render All / AI groups / Rule groups views and localized empty states
+- Dashboard Smart Groups keep first rows compact while expandable `+ N tabs` rows reveal remaining local tab rows and actions
 - Dashboard tab title focus activates the existing browser tab/window without storage writes or destructive tab actions
 - Dashboard same-window tab move UI calls the background action, limits target groups to the same window, and avoids tab close actions
+- Dashboard drag/drop tab assignment reuses the same same-window background move action and avoids tab close actions
+- Dashboard Undo and Restore Closed actions reuse existing background actions, enable only from latest run state, and avoid direct destructive tab actions
 - Dashboard keeps unwired P1/prototype placeholders out of the default UI and folds advanced Settings content
-- Disposable manual QA checklist covers the current MVP flows: Latest Result, Review duplicates, Undo, Smart Groups filters, tab focus, same-window tab move, Dashboard apply, AI status, sensitive summary, privacy outputs, and local QA notes in copied Markdown reports
+- Disposable manual QA checklist covers the current MVP flows: Tab Agent UI, Smart Groups filters, tab focus, same-window tab move, Dashboard apply, AI status, sensitive summary, privacy outputs, and local QA notes in copied Markdown reports
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types
-- current run snapshot strips restore URLs, URL hashes, raw/full URLs, and page text before storing UI state
+- current run snapshot strips restore URLs, URL hashes, raw/full URLs, page text, and favicon query/hash data before storing UI state
 - Undo snapshot stores only the minimum IDs, window, index, and group fields needed to restore grouping
 - Beta diagnostic snapshot and feedback template redact URLs, tab titles, hostnames, rules, group names, page text, and API keys
 - Beta feedback template includes English/Chinese classification quality labeling for the 70/20/10/0 target
@@ -87,7 +103,7 @@ node tools/open_manual_qa_profile.js --self-test
 
 The runtime script uses a temporary browser profile and synthetic tabs. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome.
 
-Runtime coverage includes one-click organize, safe duplicate close, Restore Closed, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, and Dashboard tab focus.
+Runtime coverage includes one-click organize, safe duplicate close, Restore Closed, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, Dashboard drag/drop tab assignment into an existing native group, Dashboard tab focus, Dashboard Restore Closed, Dashboard Undo, and real Sidebar composer command submission for Open Dashboard, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, next-step answer, current-page chat summary response, current-page question rendering, Restore Closed, Undo, Organize Again, group-status answer, AI-status answer, duplicate-review answer, closed-duplicate answer, active-tab answer, protected-tab answer, read-later candidate answer, tab search, and opening a matching existing tab.
 
 The manual QA profile launcher opens a disposable browser only when run without `--dry-run`; dry-run validates browser discovery, profile paths, extension path, and synthetic tab count without opening Chrome. Self-test opens the disposable browser, verifies setup, opens a local checklist page, verifies local checklist report controls, verifies the checklist includes AI and sensitive-summary checks, then closes and removes the temporary profile automatically.
 
@@ -167,7 +183,7 @@ node tools/open_manual_qa_profile.js --self-test
 Expected outcomes:
 
 ```text
-PASS: Chrome/Chromium allowed CLI unpacked extension loading and the script verified organize, safe duplicate close, Restore Closed, Chat Refine, Dashboard Apply, same-window tab move, and tab focus against real native tab groups.
+PASS: Chrome/Chromium allowed CLI unpacked extension loading and the script verified organize, safe duplicate close, Restore Closed, Chat Refine, Dashboard Apply, same-window tab move, drag/drop tab assignment, tab focus, Dashboard Undo/Restore, and Sidebar composer direct commands against real native tab groups.
 SKIP: The local Google Chrome build does not allow CLI unpacked extension loading. Use Chrome for Testing/Chromium for automated runtime QA, or run manual Load unpacked QA.
 FAIL: Runtime behavior regressed.
 ```
@@ -297,7 +313,7 @@ hash/query/same-page candidates
 Safety:
 
 ```text
-Dashboard apply supports title/color edits and same-window moves into existing groups.
+Dashboard apply supports title/color edits, same-window moves into existing groups, and same-window drag/drop tab assignment.
 Dashboard apply 不跨窗口移动 tabs。
 Dashboard apply 不关闭 tabs。
 Dashboard apply 不读取页面正文。

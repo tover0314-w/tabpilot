@@ -11,24 +11,38 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - First run shows a lightweight privacy gate before any organizing happens.
 - Background service worker scans all non-incognito normal Chrome windows.
 - Built-in rules apply native Chrome tab groups across all normal windows.
-- Side panel shows window count, tab count, protected-tab counts, top hosts, native groups, and duplicate candidates.
+- Side panel uses a ChatGPT-style Tab Agent UI with a message thread, compact action chips, and a bottom composer.
+- Organize status and impact appear as agent messages instead of a dashboard-like result panel.
+- Side panel hides technical browser lists from the default Tab Agent chat surface.
+- Side panel quick action chips route through the same local chat thread as typed commands.
 - Undo restores the previous group state for still-open tabs.
 - Exact and tracking-parameter duplicates are closed only when the tab itself is safe to close.
 - Restore Closed reopens safely closed duplicate tabs from a local restore snapshot.
 - Review-only duplicate candidates show candidate tabs in the side panel.
 - Review candidates can be marked `Keep All` or closed one tab at a time only after a confirmation prompt.
-- Chat Refine previews local tab actions before applying them.
+- Chat previews local tab actions before applying them.
+- The bottom composer can directly run safe commands such as summarize current page, organize again, Undo, Restore Closed, and Open Dashboard.
+- The bottom composer keeps recent user and Agent messages in a local in-memory thread for the current side panel session.
+- Older Chat Refine Apply/Cancel buttons are disabled when a newer draft appears or the draft is cancelled.
+- Current-page summary results render as a chat message in the Tab Agent flow, while the old separate summary panel stays hidden.
+- The bottom composer can answer latest organize overview, groups, duplicate handling, and AI status from local run state.
+- The bottom composer can answer duplicate review queue and closed duplicate restore questions from local run / restore state without showing full restore URLs.
+- The bottom composer can answer active-tab, protected-tab, and possible read-later questions from the latest sanitized local run snapshot.
+- The bottom composer can answer `what can you do` / `你能做什么` locally so first-time testers can discover wired commands.
+- The bottom composer can answer `what should I do next` / `下一步` locally from the latest organize state.
+- The bottom composer can find tabs from the latest local snapshot and focus an existing matching tab.
 - Chat Refine can create local rules like `GitHub PR to Code Review` or `把 docs.google.com 放到文档笔记`.
 - Chat Refine supports first English/Chinese local commands for current-tab move, domain rule creation, and group rename.
 - User rules apply before AI and built-in rules on future organize runs.
 - Summarize Current Tab reads visible page text only after a user click, asks for an extra confirmation on sensitive pages, and generates a local extractive summary.
-- Open Dashboard shows a local workbench page with a top bar, project rail, Latest Result benefit summary, expanded smart group cards, duplicate center, Rules & Memory, and settings.
-- Dashboard Latest Result emphasizes tabs organized, duplicates removed, duplicates needing review, conservative memory relief, Review duplicates, Undo, and a collapsed Details section for technical metrics.
+- The composer can answer `ask page: ...` questions from the current page with local visible-text matching after the same current-page privacy flow.
+- Open Dashboard shows a minimal glass Smart Groups page with a top bar, compact navigation, smart group cards, folded Duplicate Center, Rules & Memory, and settings.
+- Dashboard default page no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area.
 - Dashboard Smart Groups filter chips can show all groups, AI-source groups, or rule-source groups.
 - Dashboard Smart Groups tab titles can focus the existing browser tab and window.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
-- Dashboard Smart Groups can move a tab into another existing group in the same window, with Undo available.
-- Dashboard Smart Groups show local tab rows from the latest sanitized run snapshot when group membership is available.
+- Dashboard Smart Groups can move a tab into another existing group in the same window, with Undo available; the move control is folded/contextual by default.
+- Dashboard Smart Groups show local tab rows from the latest sanitized run snapshot when group membership is available, with folded `+ N tabs` rows that expand on demand.
 - Dashboard keeps unwired design-prototype features out of the default UI so users see only working MVP actions.
 - Dashboard Rules & Memory shows local rules and supports Enable, Disable, and confirmed Delete.
 - Dashboard can save a local DeepSeek API key for AI tab classification through an OpenAI-compatible request format.
@@ -38,7 +52,7 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Side panel and Dashboard show how many AI groups were suggested in the latest organize run.
 - AI connection testing and AI classification use request timeouts; classification timeout or provider failure falls back to local rules.
 - Dashboard Settings explains each Chrome permission and what data it supports.
-- Dashboard Settings keeps AI Classification and Privacy Defaults visible first; permissions, diagnostics, and local reset live under advanced folded sections.
+- Dashboard Settings keeps AI Classification visible first; provider details, privacy defaults, permissions, diagnostics, and local reset live under folded sections.
 - Dashboard Settings can copy a redacted local diagnostic snapshot for beta bug reports.
 - Dashboard diagnostics include recent local error summaries after redaction.
 - Dashboard diagnostics include local duplicate close safety audit counts for beta validation.
@@ -51,13 +65,13 @@ Protected tabs are never closed: active, pinned, audible, incognito, internal pa
 
 Hash/query/same-page review candidates are never auto-closed.
 
-Chat Refine does not call AI, read page body content, or close tabs in this slice.
+Chat does not call AI, read page body content, or close tabs in this slice.
 
-Dashboard apply currently edits group title/color, focuses existing tabs, and supports same-window tab moves into existing groups. It does not close tabs, create new groups manually, or move tabs across windows.
+Dashboard apply currently edits group title/color, focuses existing tabs, supports same-window tab moves into existing groups, supports lightweight drag/drop tab assignment between existing groups in the same window, and exposes compact Undo / Restore Closed actions when available. It does not close tabs directly, create new groups manually, or move tabs across windows.
 
-Dashboard design-prototype features that are not wired yet: drag/drop tab movement, manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
+Dashboard design-prototype features that are not wired yet: manual new groups, workspace history/save/restore, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
 
-Current tab summaries do not call AI yet, do not upload page content, and require an extra confirmation before reading sensitive pages.
+Current tab summaries and current-page questions do not call AI yet, do not upload page content, and require an extra confirmation before reading sensitive pages.
 
 AI classification sends tab title, hostname, path, and tab state only. It does not send page body or full URL.
 
@@ -118,7 +132,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English/Chinese localization, Dashboard workbench layout, Dashboard Latest Result benefit summary, Dashboard filter chips, Dashboard tab focus, Dashboard same-window tab move guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat Refine parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
+It checks manifest permissions, English/Chinese localization, chat-first Tab Agent UI, quick-action chat routing, ephemeral chat thread rendering, stale draft button guards, direct composer commands, local capability/help answers, local next-step guidance, current-page chat summary/question rendering, latest-run read-only answers, duplicate-review/closed-tab local answers, active/protected/read-later local answers, local tab search/focus, minimal glass Dashboard layout, Dashboard Smart Groups filters, Dashboard tab focus, Dashboard same-window tab move and drag/drop guardrails, Dashboard Undo/Restore guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat action parsing, user-rule priority, duplicate safety policy, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 
@@ -136,7 +150,7 @@ Optional runtime smoke test:
 node tools/chrome_runtime_smoke_test.js
 ```
 
-This starts a temporary Chrome profile, loads the unpacked extension, opens synthetic test tabs, and verifies organize, safe duplicate close, Restore Closed, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, and Dashboard tab focus against real Chrome native tab groups. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome. It may print `SKIP` on Google Chrome builds that do not allow CLI unpacked extension loading; manual `Load unpacked` QA is still required in that case.
+This starts a temporary Chrome profile, loads the unpacked extension, opens synthetic test tabs, and verifies organize, safe duplicate close, same-page duplicate review, Restore Closed, Chat Refine, quick-action chat routing, ephemeral chat thread rendering, local capability/help answers, local next-step guidance, current-page chat summary/question rendering, Dashboard title/color apply, Dashboard same-window tab move, Dashboard drag/drop tab assignment, Dashboard tab focus, Dashboard Undo/Restore, Sidebar local answers, and tab search/open against real Chrome native tab groups. It prefers `CHROME_PATH`, then auto-detects Playwright / Chrome for Testing / Chromium before falling back to system Google Chrome. It may print `SKIP` on Google Chrome builds that do not allow CLI unpacked extension loading; manual `Load unpacked` QA is still required in that case.
 
 To run automated runtime QA, use Chrome for Testing or Chromium:
 
@@ -152,7 +166,7 @@ node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
 ```
 
-This opens a temporary Chrome for Testing / Chromium profile with a local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard pages. The checklist covers one-click organize, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Latest Result, Dashboard tab focus/move/apply, and privacy outputs. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
+This opens a temporary Chrome for Testing / Chromium profile with a local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard pages. The checklist covers one-click organize, Tab Agent UI, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard tab focus/move/apply, and privacy outputs. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 
 Optional DeepSeek/OpenAI-compatible request-format provider smoke test:
 

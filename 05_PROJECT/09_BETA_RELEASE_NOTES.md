@@ -5,7 +5,7 @@ Status: PRIVATE BETA ONLY
 Package: `dist/tabmosaic-ai-extension-v0.1.0.zip`  
 Checksum: `dist/tabmosaic-ai-extension-v0.1.0.sha256`  
 Package manifest: `dist/tabmosaic-ai-extension-v0.1.0.package.json`  
-Date: 2026-06-09
+Date: 2026-06-10
 
 This release is ready for controlled local/private testing. It is not ready for public Chrome Web Store submission until the confirmation gates in `05_PROJECT/07_STORE_SUBMISSION_DRAFT.md` are approved and the manual QA runbook is completed.
 
@@ -33,8 +33,17 @@ Click extension icon
 - Active, pinned, audible, incognito, internal, and non-restorable tabs are protected from auto-close.
 - Undo for grouping changes.
 - Sidebar Chat Refine for safe local actions and local rule creation.
+- Sidebar quick action chips route through the same local chat thread as typed commands.
+- Sidebar keeps recent user and Agent messages in a local in-memory chat thread.
+- Sidebar answers `what can you do` / `你能做什么` with local wired-command guidance.
+- Sidebar answers `what should I do next` / `下一步` with local guidance from the latest organize state.
+- Current-page summary and local page questions return inside the Sidebar Agent chat message flow.
+- Sidebar composer local answers for latest result, groups, duplicates, duplicate review queue, closed duplicate restore state, AI status, active tabs, protected tabs, possible read-later tabs, and tab search/open.
 - Current-tab summary only after user click.
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
+- Dashboard expandable Smart Group tab rows for groups with more than three visible tabs.
+- Dashboard same-window drag/drop tab assignment between existing native groups.
+- Dashboard compact Undo / Restore Closed actions when available.
 - Optional DeepSeek classification with a user-provided API key through an OpenAI-compatible request format.
 - AI connection test that calls DeepSeek `/models` only and sends no tab data.
 - Redacted local error summaries and count-only duplicate safety audit for beta diagnostics.
@@ -59,7 +68,7 @@ Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 ```text
 node tools/preflight.js --runtime --screenshots
 PASS preflight completed
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/tab focus
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
 PASS UI screenshots captured
 PASS controlled private beta readiness evidence checked
 
@@ -141,8 +150,8 @@ Minimum manual checks:
 
 - Public Chrome Web Store submission is not approved yet.
 - P0 manual QA runbook has not been completed on the user's real Chrome profile.
-- Automated runtime smoke has passed with a temporary Chrome for Testing profile and synthetic tabs, but this does not replace real-profile manual QA.
-- Dashboard apply supports group title/color edits, tab focus, and same-window tab moves into existing groups; it does not support drag/drop, manual new groups, or cross-window tab moves.
+- Automated runtime smoke has passed with a temporary Chrome for Testing profile, synthetic tabs, real Sidebar composer command submission, Dashboard Undo/Restore, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open, but this does not replace real-profile manual QA.
+- Dashboard apply supports group title/color edits, tab focus, same-window tab moves into existing groups, and same-window drag/drop tab assignment; it does not support manual new groups or cross-window tab moves.
 - Current-tab summary is local extractive summary, not cloud AI summary.
 - Multi-tab chat is P1/Pro and not part of this beta slice.
 - Hosted AI, accounts, billing, cloud sync, and analytics are not included.

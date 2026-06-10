@@ -210,20 +210,21 @@ function renderChecklistHtml(details) {
         "If testing AI, use only a disposable DeepSeek key in this disposable profile.",
         "Test AI Connection calls /models and does not send tab data.",
         "A non-DeepSeek base URL is rejected before any network request.",
-        "After AI organize, Sidebar Browser Result shows AI status and AI groups.",
-        "Dashboard Latest Result Details and Settings Snapshot show AI status and AI groups.",
+        "After AI organize, Sidebar Tab Agent completion message lightly mentions DeepSeek help or local fallback.",
+        "Dashboard folded settings/details still expose fuller AI status when opened.",
         "AI classification falls back to local rules if the API fails."
       ]
     },
     {
       title: "Dashboard",
       items: [
-        "Latest Result leads with Browser cleaned up, tabs organized, duplicates removed, duplicate groups needing review, and Memory relief.",
-        "Review duplicates jumps to Duplicate Center when review groups exist.",
-        "Undo from Latest Result restores group state when available.",
+        "Dashboard opens directly to Smart Groups without Latest Result, timestamp, or Current Workspace clutter.",
+        "Duplicate Center stays folded until opened.",
+        "Dashboard Undo and Restore Closed are compact and enabled only when available.",
         "Smart Groups filters switch between All, AI groups, and Rule groups.",
         "Clicking a tab title focuses the existing browser tab/window.",
         "Same-window Move sends a tab into an existing native group and does not close tabs.",
+        "Dragging a tab row into another same-window group updates the native Chrome group.",
         "Group title/color Apply updates real Chrome native groups."
       ]
     },
@@ -694,7 +695,8 @@ function assertChecklistHtml(checklistPath) {
     "Local QA Notes",
     "tabmosaic.manualQaChecklist.v1",
     "AI Verification",
-    "Dashboard Latest Result",
+    "Dashboard opens directly to Smart Groups",
+    "Dashboard Undo and Restore Closed are compact and enabled only when available.",
     "Clicking a tab title focuses the existing browser tab/window.",
     "Same-window Move sends a tab into an existing native group and does not close tabs.",
     "billing-dashboard",

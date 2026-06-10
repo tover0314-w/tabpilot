@@ -18,9 +18,23 @@
 - [x] sidebar group overview。
 - [x] duplicate review。
 - [x] chat refine（local preview/apply first slice）。
+- [x] sidebar composer direct commands（summary / organize / undo / restore / dashboard）。
+- [x] sidebar quick actions route through chat thread。
+- [x] sidebar ephemeral user/agent message thread。
+- [x] sidebar current-page summary as chat message。
+- [x] sidebar local current-page question answer。
+- [x] sidebar latest-run read-only answers（overview / groups / duplicates / AI status）。
+- [x] sidebar local capability/help answer。
+- [x] sidebar local next-step guidance answer。
+- [x] sidebar duplicate review / closed duplicate local answers。
+- [x] sidebar active/protected/read-later local answers。
+- [x] sidebar local tab search and focus existing tab。
 - [x] current tab summary（local extractive first slice）。
 - [x] dashboard V0 smart groups（read-only local first slice）。
 - [x] dashboard apply to browser（group title/color first slice）。
+- [x] dashboard expandable Smart Group tab rows。
+- [x] dashboard drag/drop tab assignment（same-window existing groups first slice）。
+- [x] dashboard Undo / Restore Closed actions。
 - [x] privacy onboarding。
 - [x] local data deletion（Dashboard first slice）。
 

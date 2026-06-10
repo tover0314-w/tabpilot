@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <header class="app-header">
+    <main class="app-shell tab-agent-shell">
+      <header class="agent-header">
         <div>
           <p class="eyebrow">TabMosaic AI</p>
-          <h1 data-i18n="sidepanelHeadline">Work tabs, organized.</h1>
+          <h1 data-i18n="tabAgentTitle">Tab Agent</h1>
         </div>
         <button
           id="scanButton"
@@ -26,8 +26,6 @@
         </button>
       </header>
 
-      <section id="statusPanel" class="status-panel" aria-live="polite"></section>
-
       <section id="privacyPanel" class="privacy-panel" hidden>
         <p class="section-title" data-i18n="firstRunPrivacyTitle">First Run Privacy</p>
         <h2 data-i18n="firstRunPrivacyHeading">Before TabMosaic organizes your tabs</h2>
@@ -40,16 +38,22 @@
         <button id="startButton" class="primary-button" type="button" data-i18n="startOrganizing">Start Organizing</button>
       </section>
 
-      <div class="action-row">
-        <button id="organizeButton" class="primary-button" type="button" data-i18n="organizeAgain">Organize Again</button>
-        <button id="undoButton" class="secondary-button" type="button" disabled data-i18n="undo">Undo</button>
-        <button id="restoreButton" class="secondary-button" type="button" disabled data-i18n="restoreClosed">Restore Closed</button>
-        <button id="dashboardButton" class="secondary-button" type="button" data-i18n="openDashboard">Open Dashboard</button>
-      </div>
+      <section class="agent-thread" aria-label="Tab agent conversation" data-i18n-aria-label="tabAgentConversation">
+        <section id="statusPanel" class="status-panel agent-message agent-message-system" aria-live="polite"></section>
+        <div id="metricsGrid" class="metrics-grid agent-message agent-result-message"></div>
+        <section class="agent-quick-actions agent-message agent-action-message" aria-label="Tab agent actions" data-i18n-aria-label="tabAgentActions">
+          <button id="organizeButton" class="agent-chip primary" type="button" data-i18n="organizeAgain">Organize</button>
+          <button id="summaryButton" class="agent-chip" type="button" data-i18n="askCurrentPage">Ask page</button>
+          <button id="undoButton" class="agent-chip" type="button" disabled data-i18n="undo">Undo</button>
+          <button id="restoreButton" class="agent-chip" type="button" disabled data-i18n="restoreClosed">Restore</button>
+          <button id="dashboardButton" class="agent-chip" type="button" data-i18n="openDashboard">Dashboard</button>
+        </section>
+        <div id="chatPanel" class="chat-panel agent-message agent-chat-message" hidden></div>
+        <div id="summaryPanel" class="summary-panel agent-message agent-chat-message" hidden></div>
+      </section>
 
-      <section class="section chat-section">
-        <div class="section-title" data-i18n="chatRefine">Chat Refine</div>
-        <form id="chatForm" class="chat-form">
+      <section class="agent-composer-section">
+        <form id="chatForm" class="chat-form agent-composer">
           <input
             id="chatInput"
             type="text"
@@ -57,58 +61,34 @@
             data-i18n-placeholder="chatPlaceholder"
             autocomplete="off"
           />
-          <button id="chatSendButton" class="secondary-button" type="submit" data-i18n="preview">Preview</button>
+          <button id="chatSendButton" class="secondary-button" type="submit" data-i18n="ask">Ask</button>
         </form>
         <div class="prompt-row" aria-label="Suggested refinements" data-i18n-aria-label="suggestedRefinements">
           <button class="prompt-chip" type="button" data-prompt="GitHub PR to Code Review" data-i18n="promptGithubPr">GitHub PR</button>
           <button class="prompt-chip" type="button" data-prompt="current tab to Reading" data-i18n="promptCurrentTab">Current tab</button>
           <button class="prompt-chip" type="button" data-prompt="rename Misc to Reading" data-i18n="promptRename">Rename</button>
         </div>
-        <div id="chatPanel" class="chat-panel" hidden></div>
       </section>
 
-      <section class="section summary-section">
-        <div class="section-title" data-i18n="currentTabSummary">Current Tab Summary</div>
-        <p class="section-copy" data-i18n="summaryDescription">
-          Reads visible text from the active page only after you click.
-        </p>
-        <button id="summaryButton" class="secondary-button full-width-button" type="button" data-i18n="summarizeCurrentTab">
-          Summarize Current Tab
-        </button>
-        <div id="summaryPanel" class="summary-panel" hidden></div>
-      </section>
-
-      <section class="section">
-        <div class="section-title" data-i18n="browserResult">Browser Result</div>
-        <div id="metricsGrid" class="metrics-grid"></div>
-      </section>
-
-      <section class="section">
-        <div class="section-title" data-i18n="topHosts">Top Hosts</div>
-        <div id="hostsList" class="list"></div>
-      </section>
-
-      <section class="section">
-        <div class="section-title" data-i18n="nativeGroups">Native Groups</div>
-        <div id="groupsList" class="list"></div>
-      </section>
-
-      <section class="section">
-        <div class="section-title" data-i18n="protectedTabs">Protected Tabs</div>
-        <div id="protectedList" class="list compact"></div>
-      </section>
-
-      <section class="section">
-        <div class="section-title" data-i18n="duplicateCandidates">Duplicate Candidates</div>
-        <div id="duplicatesList" class="list compact"></div>
-      </section>
-
-      <section class="next-card">
-        <p class="next-label" data-i18n="nextBuildSlice">Next build slice</p>
-        <p class="next-copy" data-i18n="nextBuildCopy">
-          Run real Chrome QA with multi-window work tabs.
-        </p>
-      </section>
+      <details class="glass-details sidepanel-details" hidden>
+        <summary data-i18n="moreBrowserDetails">More browser details</summary>
+        <section class="section">
+          <div class="section-title" data-i18n="nativeGroups">Native Groups</div>
+          <div id="groupsList" class="list"></div>
+        </section>
+        <section class="section">
+          <div class="section-title" data-i18n="duplicateCandidates">Duplicate Candidates</div>
+          <div id="duplicatesList" class="list compact"></div>
+        </section>
+        <section class="section">
+          <div class="section-title" data-i18n="topHosts">Top Hosts</div>
+          <div id="hostsList" class="list"></div>
+        </section>
+        <section class="section">
+          <div class="section-title" data-i18n="protectedTabs">Protected Tabs</div>
+          <div id="protectedList" class="list compact"></div>
+        </section>
+      </details>
     </main>
 
     <script type="module" src="sidepanel.js"></script>
