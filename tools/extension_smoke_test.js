@@ -776,6 +776,8 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
     "The bottom composer remains visible and works like a normal chat input.",
     "Asking how much memory was saved returns an honest optimization answer without invented exact MB.",
     "Sidebar Tab Agent completion message lightly mentions DeepSeek help or local fallback.",
+    "Ask the Sidebar Agent to move Chrome extension docs tabs into Extension Planning",
+    "The AI move draft updates real Chrome native tab groups only after Apply and does not close tabs.",
     "Local QA Notes",
     "data-qa-notes",
     "data-copy-real-profile-template",

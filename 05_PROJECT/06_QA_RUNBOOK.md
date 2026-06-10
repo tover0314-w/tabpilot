@@ -188,7 +188,41 @@ Expected:
 - Future organize runs apply user rules before AI/built-in rules.
 ```
 
-## 9. Current Tab Summary
+## 9. Optional DeepSeek Agent Flow
+
+Only run this in a disposable or non-critical profile with a disposable DeepSeek key.
+
+1. Open Dashboard -> Settings -> AI Classification.
+2. Save `https://api.deepseek.com`, `deepseek-v4-flash`, and the disposable API key.
+3. Click `Test AI Connection`.
+4. Organize the browser again.
+5. In the Sidebar composer, ask an open tab-management question, such as `Which tabs should I focus on for Chrome extension planning?`.
+6. Confirm the answer renders as a normal assistant message, not as a raw parser error.
+7. Ask `Move the Chrome extension docs tabs into Extension Planning`.
+8. Confirm the Agent shows a move draft with Apply / Cancel.
+9. Click `Apply`.
+
+Expected:
+
+```text
+- Test AI Connection calls /models and does not send tab data.
+- The open answer uses minimized tab metadata only, not page body or full URLs.
+- The move draft requires Apply before browser changes.
+- Apply updates real Chrome native tab groups.
+- No tabs are closed by the AI move draft.
+- Unknown/destructive AI actions are not rendered as browser actions.
+```
+
+Fail if:
+
+```text
+- AI moves tabs before Apply.
+- AI closes tabs.
+- AI asks for broad permissions or page text for this metadata-only flow.
+- Full URLs or page bodies are required for the answer.
+```
+
+## 10. Current Tab Summary
 
 1. Select a normal web page.
 2. Click `Summarize Current Tab`.
@@ -203,12 +237,12 @@ Expected:
 - No cloud AI request is made in this slice.
 ```
 
-## 10. Dashboard
+## 11. Dashboard
 
 1. Click `Open Dashboard`.
 2. Review Smart Groups, Duplicate Center, Rules & Memory, and Settings.
-3. Confirm `Latest Result` leads with the benefit summary, not a metrics wall.
-4. Click `Review duplicates` when review groups exist and confirm it jumps to Duplicate Center.
+3. Confirm the default Dashboard opens to Smart Groups without Latest Result, timestamp, or Current Workspace clutter.
+4. Open Duplicate Center when review groups exist.
 5. Click a Smart Group tab title and confirm the existing browser tab/window is focused.
 6. Move one tab into another group in the same window.
 7. Edit a Smart Group title/color and click `Apply`.
@@ -218,7 +252,7 @@ Expected:
 Expected:
 
 ```text
-- Dashboard shows the Latest Result benefit summary: tabs organized, duplicates removed, duplicate groups needing review, conservative memory relief, Review duplicates, Undo, and technical Details.
+- Dashboard opens directly to Smart Groups and keeps Latest Result, timestamp, Current Workspace, and metric-wall clutter out of the default page.
 - Rules & Memory can enable, disable, and delete local rules.
 - Deleting a local rule asks for confirmation and does not move or close tabs.
 - Clicking a tab title focuses the existing tab/window and does not create or close tabs.
@@ -231,7 +265,7 @@ Expected:
 - Clear AI Key asks for confirmation, removes only the local API key, disables AI classification, keeps rules and recent results, and does not move or close tabs.
 ```
 
-## 11. Optional UI Screenshot Preview
+## 12. Optional UI Screenshot Preview
 
 Run before or after manual QA when a visual snapshot is useful:
 

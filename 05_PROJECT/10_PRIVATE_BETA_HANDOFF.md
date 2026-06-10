@@ -112,6 +112,7 @@ Verified:
 - DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer, including safe action chips and a validated Apply/Cancel move draft
 - DeepSeek metadata-only Agent payload minimization, invented-tab-id filtering, and destructive-action rejection in extension smoke
 - mock-data UI screenshot capture, including side panel result/chat states and Dashboard desktop/mobile/AI Settings
+- disposable manual QA checklist coverage for optional DeepSeek Agent open-answer / move-draft checks
 - mock-data Chrome Web Store screenshot drafts, generated as five 1280x800 local PNGs
 - disposable manual QA profile self-test with synthetic QA tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
 - real-profile QA result template exists, but completed real-profile QA is still pending
@@ -230,7 +231,7 @@ node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
 ```
 
-This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes for review before sharing plus the blank real-profile QA template for the next manual pass. The checklist includes Tab Agent chat UI, latest organize result as one assistant message bubble, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`. `--self-test` opens the disposable browser, verifies setup, checklist report controls, and the real-profile template copy control, then closes and removes the temporary profile automatically.
+This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes for review before sharing plus the blank real-profile QA template for the next manual pass. The checklist includes Tab Agent chat UI, latest organize result as one assistant message bubble, optional DeepSeek Agent open-answer / move-draft checks, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`. `--self-test` opens the disposable browser, verifies setup, checklist report controls, and the real-profile template copy control, then closes and removes the temporary profile automatically.
 
 For the real-profile path, print or open synthetic QA tabs:
 

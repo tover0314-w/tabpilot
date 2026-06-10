@@ -228,6 +228,9 @@ function renderChecklistHtml(details) {
         "Test AI Connection calls /models and does not send tab data.",
         "A non-DeepSeek base URL is rejected before any network request.",
         "After AI organize, Sidebar Tab Agent completion message lightly mentions DeepSeek help or local fallback.",
+        "Ask the Sidebar Agent an open tab-management question and confirm the reply is a normal assistant message.",
+        "Ask the Sidebar Agent to move Chrome extension docs tabs into Extension Planning, confirm a move draft appears, then click Apply.",
+        "The AI move draft updates real Chrome native tab groups only after Apply and does not close tabs.",
         "Dashboard folded settings/details still expose fuller AI status when opened.",
         "AI classification falls back to local rules if the API fails."
       ]
@@ -753,6 +756,8 @@ function assertChecklistHtml(checklistPath) {
     "Tab Agent Chat UI",
     "Latest organize result appears as one assistant message bubble",
     "AI Verification",
+    "Ask the Sidebar Agent to move Chrome extension docs tabs into Extension Planning",
+    "The AI move draft updates real Chrome native tab groups only after Apply and does not close tabs.",
     "Dashboard opens directly to Smart Groups",
     "Error States",
     "If organize fails, Sidebar says no tabs were moved or closed.",

@@ -119,6 +119,29 @@ Test AI Connection
 
 然后重新整理一次，检查 Sidebar / Dashboard 是否显示 AI status 和 AI groups。
 
+再测一条 Agent 对话：
+
+```text
+Which tabs should I focus on for Chrome extension planning?
+```
+
+预期：Sidebar 里出现普通 AI 消息卡片，不是错误提示。
+
+再测一条需要 Apply 的操作：
+
+```text
+Move the Chrome extension docs tabs into Extension Planning
+```
+
+预期：
+
+```text
+- 先出现 Apply / Cancel 草稿
+- 点击 Apply 后才改变 Chrome 原生 tab group
+- 不会关闭任何 tab
+- 不需要读取页面正文或完整 URL
+```
+
 ## 5. 记录问题
 
 在 Manual QA Checklist 里的 `Local QA Notes` 写：

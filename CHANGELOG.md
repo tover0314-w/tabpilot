@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.107 — 2026-06-10
+
+Changed:
+
+- Disposable Manual QA Checklist now includes optional DeepSeek Agent open-answer and `move_tabs` draft checks.
+- The real-profile QA template now records whether DeepSeek Agent open answers and move drafts were tested.
+- Manual QA runbook and self-test guide now explain how to verify the Agent move-draft flow without reading page bodies or full URLs.
+- Dashboard manual QA wording now matches the simplified Smart Groups default page.
+
+Safety:
+
+- This is QA/documentation coverage only.
+- It does not change AI behavior, tab-closing policy, permissions, data upload boundaries, analytics, or page-content reading.
+
 ## v0.106 — 2026-06-10
 
 Changed:

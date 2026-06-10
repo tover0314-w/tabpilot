@@ -47,6 +47,8 @@ Windows tested:
 Approx tab count:
 AI mode: local rules / DeepSeek with user key
 DeepSeek connection tested: yes / no / skipped
+DeepSeek Agent open answer tested: yes / no / skipped
+DeepSeek Agent move draft tested: yes / no / skipped
 ```
 
 ## Required Checks
@@ -66,6 +68,9 @@ Hash/query duplicates stayed in review: pass / fail / not applicable
 Restore Closed worked: pass / fail / not applicable
 Undo restored grouping state as expected: pass / fail
 Sidebar stayed chat-first and simple: pass / fail
+Sidebar DeepSeek Agent open answer rendered as chat: pass / fail / not tested
+Sidebar DeepSeek Agent move draft required Apply: pass / fail / not tested
+Sidebar DeepSeek Agent move draft did not close tabs: pass / fail / not tested
 Sidebar Ask page required user-triggered page read: pass / fail / not tested
 Sensitive page summary asked for extra confirmation: pass / fail / not tested
 Dashboard opened to Smart Groups: pass / fail

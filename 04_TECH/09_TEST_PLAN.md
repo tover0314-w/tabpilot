@@ -70,7 +70,7 @@ Coverage:
 - Dashboard drag/drop tab assignment reuses the same same-window background move action and avoids tab close actions
 - Dashboard Undo and Restore Closed actions reuse existing background actions, enable only from latest run state, and avoid direct destructive tab actions
 - Dashboard keeps unwired P1/prototype placeholders out of the default UI and folds advanced Settings content
-- Disposable manual QA checklist covers the current MVP flows: Tab Agent chat UI, latest organize result as one assistant message bubble, bottom composer, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive summary, privacy outputs, local QA notes in copied Markdown reports, and one-click copying of the blank redaction-safe real-profile QA template
+- Disposable manual QA checklist covers the current MVP flows: Tab Agent chat UI, latest organize result as one assistant message bubble, bottom composer, DeepSeek Agent open answer / move draft when tested, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive summary, privacy outputs, local QA notes in copied Markdown reports, and one-click copying of the blank redaction-safe real-profile QA template
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types
@@ -127,7 +127,7 @@ The optional DeepSeek Agent-flow runtime check opens a temporary Chrome profile 
 
 The optional large-tab runtime probe opens a temporary Chrome profile with synthetic URLs only and verifies the real native tab group path against 96 tabs by default. It checks organize completion, moved tabs, safe duplicate closes, review duplicate groups, expected group titles, bounded runtime, and sanitized run snapshots. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 
-The manual QA profile launcher opens a disposable browser only when run without `--dry-run`; dry-run validates browser discovery, profile paths, extension path, real-profile QA template path, and synthetic tab count without opening Chrome. Self-test opens the disposable browser, verifies setup, opens a local checklist page, verifies local checklist report controls, verifies the checklist includes Tab Agent chat UI, AI, sensitive-summary, Dashboard, Duplicate Center, safe error-state checks, and the blank real-profile QA template copy control, then closes and removes the temporary profile automatically.
+The manual QA profile launcher opens a disposable browser only when run without `--dry-run`; dry-run validates browser discovery, profile paths, extension path, real-profile QA template path, and synthetic tab count without opening Chrome. Self-test opens the disposable browser, verifies setup, opens a local checklist page, verifies local checklist report controls, verifies the checklist includes Tab Agent chat UI, AI connection plus DeepSeek Agent move-draft checks, sensitive-summary, Dashboard, Duplicate Center, safe error-state checks, and the blank real-profile QA template copy control, then closes and removes the temporary profile automatically.
 
 Optional UI screenshot capture:
 

@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.106
+Source state verified: v0.107
 
 ### Unified Preflight
 
@@ -58,7 +58,7 @@ Evidence notes:
 - Beta readiness check also verifies that the standalone Chrome Web Store data disclosure draft exists, remains unsubmitted, keeps the final dashboard confirmation gate, maps sensitive data categories, and records the optional DeepSeek/no-analytics boundaries.
 - GitHub Actions runs the same beta readiness check after release package verification.
 - Beta readiness check requires the beginner self-test guide and its controlled-beta/public-launch boundary.
-- Disposable manual QA checklist self-test verifies that testers can copy the blank redaction-safe real-profile QA template before testing a non-critical real profile.
+- Disposable manual QA checklist self-test verifies that testers can copy the blank redaction-safe real-profile QA template before testing a non-critical real profile, and now includes DeepSeek Agent open-answer / move-draft checks for optional AI QA.
 - Dashboard local workspace save stores only minimized local snapshot metadata and excludes full URLs, restore URLs, URL hashes, favicon URLs, and page text; Dashboard local workspace delete removes only the selected local snapshot.
 
 ### DeepSeek / OpenAI-Compatible Provider
@@ -163,7 +163,7 @@ Covered:
 - Dashboard rule deletion confirmation.
 - Dashboard scoped AI key clearing.
 - Local data deletion.
-- Disposable manual QA checklist includes current MVP Sidebar chat UI checks, Dashboard workflow checks, Duplicate Center, safe error states, AI status, sensitive-summary confirmation, privacy-output checks, and local QA notes.
+- Disposable manual QA checklist includes current MVP Sidebar chat UI checks, DeepSeek Agent open-answer / move-draft checks, Dashboard workflow checks, Duplicate Center, safe error states, AI status, sensitive-summary confirmation, privacy-output checks, and local QA notes.
 
 ### Chrome Runtime Smoke
 
@@ -275,7 +275,7 @@ Evidence notes:
 
 - The script used Chrome for Testing with a disposable profile under `artifacts/manual-qa-profiles/`.
 - It loaded a copied unpacked extension, opened the local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard.
-- The checklist now covers Tab Agent chat UI, latest organize result as one assistant message bubble, bottom composer behavior, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive-summary confirmation, privacy outputs, local QA notes, and one-click copying of the blank real-profile QA result template.
+- The checklist now covers Tab Agent chat UI, latest organize result as one assistant message bubble, bottom composer behavior, optional DeepSeek Agent open-answer / move-draft checks, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive-summary confirmation, privacy outputs, local QA notes, and one-click copying of the blank real-profile QA result template.
 - QA notes are stored only in the disposable profile localStorage and copied into the local Markdown report; the tool does not upload them.
 - It did not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 - This proves the disposable manual QA tooling opens and cleans up correctly; it does not replace the remaining real-profile manual QA pass.
