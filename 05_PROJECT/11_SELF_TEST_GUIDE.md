@@ -137,6 +137,14 @@ Test AI Connection
 Copy QA Result
 ```
 
+如果一次性 QA profile 跑通，准备进入真实 profile 测试，可以点击：
+
+```text
+Copy Real-Profile Template
+```
+
+它会复制空白脱敏模板，方便记录真实 profile 测试结果。完成版仍然不要直接提交到 git，除非你已经人工脱敏。
+
 不要把这些内容放进公开 issue：
 
 ```text
@@ -189,7 +197,7 @@ chrome://extensions
 05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md
 ```
 
-但不要把真实 full URL、真实 tab title、页面正文、API key、私密截图、邮箱或私有 rule pattern 写进 git。完成版 QA 记录最好先放在本地私密位置，确认脱敏后再分享。
+一次性 QA checklist 里也可以直接点击 `Copy Real-Profile Template` 复制同一份空白模板。但不要把真实 full URL、真实 tab title、页面正文、API key、私密截图、邮箱或私有 rule pattern 写进 git。完成版 QA 记录最好先放在本地私密位置，确认脱敏后再分享。
 
 ## 7. 通过标准
 

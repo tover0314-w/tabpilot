@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.95 — 2026-06-10
+
+Changed:
+
+- Disposable manual QA checklist now includes a `Copy Real-Profile Template` action that copies the blank redaction-safe real-profile QA result template.
+- `open_manual_qa_profile.js --dry-run` prints the real-profile QA template path, and `--self-test` verifies the template copy control plus key privacy/public-launch markers.
+- README, QA runbook, self-test guide, extension README, and test plan now describe the template copy path.
+
+Safety:
+
+- This is QA tooling and documentation only. It does not read a real Chrome profile, read real tabs, call AI, upload data, move tabs, close tabs, add analytics, or request new permissions.
+
 ## v0.94 — 2026-06-10
 
 Changed:

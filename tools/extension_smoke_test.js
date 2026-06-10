@@ -578,6 +578,10 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
     "Sidebar Tab Agent completion message lightly mentions DeepSeek help or local fallback.",
     "Local QA Notes",
     "data-qa-notes",
+    "data-copy-real-profile-template",
+    "Copy Real-Profile Template",
+    "Status: BLANK TEMPLATE - NOT A COMPLETED QA RESULT",
+    "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
     "Copy Diagnostic Snapshot excludes URLs",
     "Does not read your real Chrome profile, real browser tabs, or .env.local"
   ]) {

@@ -8,7 +8,7 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.94 real-profile QA result template in this commit
+Source state verified: v0.95 manual QA checklist real-profile template copy in this commit
 
 ### Unified Preflight
 
@@ -21,11 +21,11 @@ node tools/preflight.js --runtime --large-runtime --screenshots
 Result:
 
 ```text
-PASS secret scan checked 98 tracked files
+PASS secret scan checked 99 tracked files
 33 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 480ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 285ms with 8 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS controlled private beta readiness evidence checked
@@ -46,6 +46,7 @@ Evidence notes:
 - Beta readiness check also verifies that the real-profile QA result template exists and includes privacy redaction rules.
 - GitHub Actions runs the same beta readiness check after release package verification.
 - Beta readiness check requires the beginner self-test guide and its controlled-beta/public-launch boundary.
+- Disposable manual QA checklist self-test verifies that testers can copy the blank redaction-safe real-profile QA template before testing a non-critical real profile.
 
 ### DeepSeek / OpenAI-Compatible Provider
 
@@ -215,6 +216,7 @@ Result:
 
 ```text
 PASS manual QA profile opened
+realProfileQaTemplate=/Users/bytedance/个人项目/aitab/05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md
 seedTabs=20
 PASS self-test closed and cleaned up disposable QA profile
 ```
@@ -223,7 +225,7 @@ Evidence notes:
 
 - The script used Chrome for Testing with a disposable profile under `artifacts/manual-qa-profiles/`.
 - It loaded a copied unpacked extension, opened the local Manual QA Checklist, synthetic QA tabs, sidepanel, and dashboard.
-- The checklist now covers Tab Agent UI, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive-summary confirmation, privacy outputs, and local QA notes.
+- The checklist now covers Tab Agent UI, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive-summary confirmation, privacy outputs, local QA notes, and one-click copying of the blank real-profile QA result template.
 - QA notes are stored only in the disposable profile localStorage and copied into the local Markdown report; the tool does not upload them.
 - It did not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 - This proves the disposable manual QA tooling opens and cleans up correctly; it does not replace the remaining real-profile manual QA pass.

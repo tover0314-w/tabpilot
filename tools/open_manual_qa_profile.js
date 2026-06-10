@@ -10,6 +10,7 @@ const { urls } = require("./qa_seed_tabs");
 const ROOT_DIR = path.resolve(__dirname, "..");
 const EXTENSION_DIR = path.join(ROOT_DIR, "extension");
 const ARTIFACT_DIR = path.join(ROOT_DIR, "artifacts", "manual-qa-profiles");
+const REAL_PROFILE_QA_TEMPLATE_PATH = path.join(ROOT_DIR, "05_PROJECT", "12_REAL_PROFILE_QA_RESULT_TEMPLATE.md");
 const IS_DRY_RUN = process.argv.includes("--dry-run");
 const IS_SELF_TEST = process.argv.includes("--self-test");
 
@@ -38,6 +39,7 @@ async function main() {
   const runDir = path.join(ARTIFACT_DIR, runId);
   const profileDir = path.join(runDir, "profile");
   const extensionDir = path.join(runDir, "extension");
+  const realProfileQaTemplate = fs.readFileSync(REAL_PROFILE_QA_TEMPLATE_PATH, "utf8");
   const port = await findFreePort();
 
   if (IS_DRY_RUN) {
@@ -50,6 +52,7 @@ async function main() {
       checklistUrl: "file://<run-dir>/manual-qa-checklist.html",
       sidepanelUrl: "chrome-extension://<extension-id>/sidepanel.html",
       dashboardUrl: "chrome-extension://<extension-id>/dashboard.html",
+      realProfileQaTemplatePath: REAL_PROFILE_QA_TEMPLATE_PATH,
       dryRun: true
     });
     return;
@@ -99,7 +102,8 @@ async function main() {
         extensionDir,
         extensionId,
         sidepanelUrl,
-        dashboardUrl
+        dashboardUrl,
+        realProfileQaTemplate
       })
     );
 
@@ -128,6 +132,7 @@ async function main() {
       checklistUrl,
       sidepanelUrl,
       dashboardUrl,
+      realProfileQaTemplatePath: REAL_PROFILE_QA_TEMPLATE_PATH,
       dryRun: false
     });
 
@@ -164,6 +169,7 @@ function printPlan(details) {
   console.log(`checklist=${details.checklistUrl}`);
   console.log(`sidepanel=${details.sidepanelUrl}`);
   console.log(`dashboard=${details.dashboardUrl}`);
+  console.log(`realProfileQaTemplate=${details.realProfileQaTemplatePath}`);
   console.log("");
   console.log("Safety:");
   console.log("- Uses a disposable Chrome profile under artifacts/.");
@@ -184,6 +190,7 @@ function printPlan(details) {
 }
 
 function renderChecklistHtml(details) {
+  const realProfileQaTemplateJson = serializeForScript(details.realProfileQaTemplate);
   const sections = [
     {
       title: "First Run",
@@ -419,6 +426,7 @@ function renderChecklistHtml(details) {
         </div>
         <div class="toolbar">
           <button type="button" data-copy-report>Copy QA Result</button>
+          <button class="secondary" type="button" data-copy-real-profile-template>Copy Real-Profile Template</button>
           <button class="secondary" type="button" data-reset-checklist>Reset Checks</button>
         </div>
         <p class="status" data-status>Checklist state is saved in this disposable profile only.</p>
@@ -435,6 +443,10 @@ function renderChecklistHtml(details) {
       </section>
       ${sections.map(renderChecklistSection).join("")}
       <section class="warning">
+        <h2>Real Profile QA Template</h2>
+        <p>After this disposable QA profile passes, use the blank redaction-safe template for a non-critical real Chrome profile test. Keep completed real-profile notes private unless they are manually redacted.</p>
+      </section>
+      <section class="warning">
         <h2>Do Not Treat This As Public Launch Approval</h2>
         <p>This disposable QA pass does not replace a final real-profile manual QA pass, Chrome Web Store confirmation gates, privacy policy confirmation, or pricing/domain decisions.</p>
       </section>
@@ -442,6 +454,7 @@ function renderChecklistHtml(details) {
     <script>
       const storageKey = "tabmosaic.manualQaChecklist.v1";
       const notesStorageKey = storageKey + ".notes";
+      const realProfileTemplate = ${realProfileQaTemplateJson};
       const checkboxes = Array.from(document.querySelectorAll("input[type='checkbox']"));
       const notes = document.querySelector("[data-qa-notes]");
       const report = document.querySelector("[data-report]");
@@ -488,6 +501,21 @@ function renderChecklistHtml(details) {
           status.textContent = copied
             ? "QA result copied. Review it before sharing."
             : "Clipboard blocked. Select and copy the report manually.";
+        }
+      });
+
+      document.querySelector("[data-copy-real-profile-template]").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(realProfileTemplate);
+          status.textContent = "Blank real-profile QA template copied. Keep completed results private or redacted.";
+        } catch {
+          report.value = realProfileTemplate;
+          report.focus();
+          report.select();
+          const copied = document.execCommand("copy");
+          status.textContent = copied
+            ? "Blank real-profile QA template copied. Keep completed results private or redacted."
+            : "Clipboard blocked. Select and copy the template manually.";
         }
       });
 
@@ -592,6 +620,10 @@ function escapeJs(value) {
     .replace(/"/g, '\\"')
     .replace(/`/g, "\\`")
     .replace(/\$/g, "\\$");
+}
+
+function serializeForScript(value) {
+  return JSON.stringify(String(value)).replace(/</g, "\\u003c");
 }
 
 function findChromePath() {
@@ -699,9 +731,14 @@ function assertChecklistHtml(checklistPath) {
   const required = [
     "TabMosaic Manual QA Checklist",
     "data-copy-report",
+    "data-copy-real-profile-template",
     "data-reset-checklist",
     "data-qa-notes",
     "Local QA Notes",
+    "Real Profile QA Template",
+    "Status: BLANK TEMPLATE - NOT A COMPLETED QA RESULT",
+    "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
+    "Keep completed real-profile notes private unless they are manually redacted.",
     "tabmosaic.manualQaChecklist.v1",
     "AI Verification",
     "Dashboard opens directly to Smart Groups",

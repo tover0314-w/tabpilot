@@ -135,7 +135,7 @@ Then follow:
 05_PROJECT/06_QA_RUNBOOK.md
 ```
 
-Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with a local Manual QA Checklist, synthetic tabs, sidepanel, and dashboard. The checklist covers the current Smart Groups Dashboard, Duplicate Center focus, safe error states, AI/sensitive-summary checks, privacy outputs, and local notes. Checklist state and local QA notes stay in the disposable profile, and the checklist can copy a Markdown QA result. It does not touch the user's real Chrome profile.
+Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with a local Manual QA Checklist, synthetic tabs, sidepanel, and dashboard. The checklist covers the current Smart Groups Dashboard, Duplicate Center focus, safe error states, AI/sensitive-summary checks, privacy outputs, and local notes. Checklist state and local QA notes stay in the disposable profile, and the checklist can copy a Markdown QA result plus the blank real-profile QA result template. It does not touch the user's real Chrome profile.
 
 Minimum manual checks:
 
@@ -159,7 +159,7 @@ Minimum manual checks:
 - Multi-tab chat is P1/Pro and not part of this beta slice.
 - Hosted AI, accounts, billing, cloud sync, and analytics are not included.
 - DeepSeek API key in `.env.local` is for local testing only and should be rotated before public or broader beta use.
-- Real-profile QA results should use `05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md` and must be manually redacted before sharing or committing.
+- Real-profile QA results should use `05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md` or the checklist's `Copy Real-Profile Template` action, and must be manually redacted before sharing or committing.
 
 ## Confirmation Gates Before Public Launch
 

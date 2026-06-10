@@ -38,11 +38,11 @@ Expected:
 - TabMosaic AI is loaded from a copied unpacked extension directory.
 - A local Manual QA Checklist tab is opened.
 - Checklist state is saved only in the disposable profile.
-- The checklist can save local QA notes in the disposable profile and copy a Markdown QA result for review before sharing.
+- The checklist can save local QA notes in the disposable profile, copy a Markdown QA result for review before sharing, and copy the blank redaction-safe real-profile QA template.
 - The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks.
 - Synthetic QA tabs are opened.
 - Sidepanel and Dashboard extension pages are opened.
-- The script prints profileDir, extensionId, checklist URL, sidepanel URL, dashboard URL, and cleanup command.
+- The script prints profileDir, extensionId, checklist URL, sidepanel URL, dashboard URL, real-profile QA template path, and cleanup command.
 - `--self-test` opens the disposable browser, verifies setup and checklist report controls, then closes and removes the temporary profile automatically.
 ```
 
