@@ -5,6 +5,7 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const SHOULD_RUN_DEEPSEEK = process.argv.includes("--deepseek");
 const SHOULD_RUN_DEEPSEEK_FIXTURE = process.argv.includes("--deepseek-fixture");
 const SHOULD_RUN_RUNTIME = process.argv.includes("--runtime");
+const SHOULD_RUN_LARGE_RUNTIME = process.argv.includes("--large-runtime");
 const SHOULD_RUN_SCREENSHOTS = process.argv.includes("--screenshots");
 
 const syntaxTargets = [
@@ -52,6 +53,12 @@ function main() {
     runStep("Chrome runtime smoke", process.execPath, ["tools/chrome_runtime_smoke_test.js"]);
   } else {
     console.log("SKIP Chrome runtime smoke; pass --runtime to run it.");
+  }
+
+  if (SHOULD_RUN_LARGE_RUNTIME) {
+    runStep("Chrome large-tab runtime probe", process.execPath, ["tools/chrome_runtime_smoke_test.js", "--large-tabs"]);
+  } else {
+    console.log("SKIP Chrome large-tab runtime probe; pass --large-runtime to run it.");
   }
 
   if (SHOULD_RUN_SCREENSHOTS) {

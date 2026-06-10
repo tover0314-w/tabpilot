@@ -68,7 +68,7 @@
 
 - [ ] 验证 Chrome Store 审核对 tabs + sidePanel + scripting 权限的接受度。
 - [ ] 测试 action.onClicked + sidePanel.open 用户手势限制。
-- [ ] 测试大量 tabs 下 tabs.group performance。
+- [x] 测试 synthetic 96 tabs 下真实 Chrome `tabs.group` performance first slice（temporary profile；real-profile manual QA 仍未完成）。
 - [ ] 调研 Chrome built-in AI extensions 支持情况。
 - [ ] 调研竞品定价。
 - [ ] 访谈 10 个重度 tabs 用户。

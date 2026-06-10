@@ -77,6 +77,7 @@ Verified:
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
+- Chrome runtime large-tab probe with 96 synthetic tabs in a temporary Chrome profile
 - real native tab groups in runtime smoke
 - safe duplicate close and Restore Closed in runtime smoke
 - Chat Refine in runtime smoke

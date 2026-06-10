@@ -8,14 +8,14 @@ Status: PASSED for local private-beta evidence
 Machine scope: local workspace  
 Real browsing data used: No  
 Secrets printed: No
-Source state verified: v0.91 synthetic large-tab planning guard in this commit
+Source state verified: v0.92 Chrome runtime large-tab probe in this commit
 
 ### Unified Preflight
 
 Command:
 
 ```bash
-node tools/preflight.js --runtime --screenshots
+node tools/preflight.js --runtime --large-runtime --screenshots
 ```
 
 Result:
@@ -25,6 +25,7 @@ PASS secret scan checked 98 tracked files
 33 smoke tests passed
 PASS issue form smoke checked 2 forms
 PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, next-step answer, chat summary/page-question answers, read-only answers, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 453ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
 PASS UI screenshots captured
 PASS release package verified for v0.1.0
 PASS controlled private beta readiness evidence checked
@@ -37,6 +38,7 @@ Evidence notes:
 
 - This preflight run did not call DeepSeek classification and did not read real browser tabs.
 - `--runtime` used a temporary Chrome for Testing profile with synthetic tabs and verified real native tab groups plus Dashboard apply/tab move/drag-drop/focus/duplicate focus/undo/restore, real Sidebar composer command submission, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, next-step answer, current-page chat summary/page-question rendering, latest-run read-only answers, duplicate-review/closed-tab answers, active/protected/read-later answers, and tab search/open.
+- `--large-runtime` used a separate temporary Chrome for Testing profile with 96 synthetic tabs and verified the real native group path, safe duplicate closes, review duplicate groups, bounded runtime, and sanitized run snapshots.
 - `--screenshots` generated mock-data UI screenshots for the chat-first Tab Agent side panel and Smart Groups Dashboard and did not read real browser tabs or `.env.local`.
 - Runtime smoke can still `SKIP` on branded Google Chrome CLI extension loading, but this run auto-detected Chrome for Testing through Playwright and passed.
 - Release package verifier checks required extension files and rejects `.env*`, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata.
@@ -174,6 +176,31 @@ Evidence notes:
 - It verified organize, safe duplicate close, Restore Closed, Chat Refine, Dashboard title/color apply, Dashboard same-window tab move, Dashboard drag/drop tab assignment, Dashboard tab focus, Dashboard Duplicate Center tab focus, Dashboard Restore Closed, and Dashboard Undo against real Chrome native tab groups.
 - Restore Closed used a local restore snapshot containing the synthetic duplicate URL and increased the open synthetic tab count in the temporary profile.
 - It did not read the user's real Chrome profile or real browser tabs.
+
+### Chrome Runtime Large-Tab Probe
+
+Command:
+
+```bash
+node tools/chrome_runtime_smoke_test.js --large-tabs
+```
+
+Result:
+
+```text
+Loaded extension <temporary-extension-id>
+Opened extension page chrome-extension://<temporary-extension-id>/sidepanel.html
+PASS Chrome runtime large-tab probe organized 96 synthetic tabs in 221ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups
+```
+
+Evidence notes:
+
+- The probe used a temporary Chrome for Testing profile and synthetic URLs only.
+- It verified the real native Chrome tab group path, not only local planning code.
+- It checked organize completion, moved tabs, safe duplicate closes, review duplicate groups, expected group titles, bounded runtime, and sanitized run snapshots.
+- It did not read the user's real Chrome profile, real browser tabs, `.env.local`, page content, or API keys.
+- It did not call DeepSeek or any AI provider.
+- This still does not replace the remaining real-profile manual QA pass.
 
 ### Disposable Manual QA Profile Self-Test
 

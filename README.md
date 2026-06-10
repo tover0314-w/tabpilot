@@ -61,7 +61,7 @@ tools/             无依赖本地验证脚本，例如 extension smoke test
 node tools/preflight.js
 ```
 
-它会运行 secret scan、JS 语法检查、extension smoke test、打包、zip env 排除检查和 beta readiness check。默认不调用 DeepSeek，不启动真实 Chrome runtime，也不生成 UI 截图。
+它会运行 secret scan、JS 语法检查、extension smoke test、打包、zip env 排除检查和 beta readiness check。默认不调用 DeepSeek，不启动真实 Chrome runtime，不运行大标签 runtime 探针，也不生成 UI 截图。
 
 ```bash
 node tools/beta_readiness_check.js
@@ -146,6 +146,15 @@ node tools/chrome_runtime_smoke_test.js
 ```bash
 CHROME_PATH="/path/to/chrome-or-chromium" node tools/chrome_runtime_smoke_test.js
 ```
+
+可选真实 Chrome 大标签 synthetic runtime 探针：
+
+```bash
+node tools/preflight.js --large-runtime
+node tools/chrome_runtime_smoke_test.js --large-tabs
+```
+
+它使用临时 Chrome profile 和 synthetic URLs 打开默认 96 个测试 tabs，验证真实 Chrome native tab groups 路径下的一键整理、重复项处理、review 队列和脱敏 run snapshot。它不读取真实 Chrome profile、真实 tabs 或 `.env.local`。这不替代真实用户 profile 的手动 QA。
 
 可选 UI 截图预览：
 

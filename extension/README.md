@@ -160,6 +160,15 @@ To run automated runtime QA, use Chrome for Testing or Chromium:
 CHROME_PATH="/path/to/chrome-or-chromium" node tools/chrome_runtime_smoke_test.js
 ```
 
+Optional large-tab runtime probe:
+
+```bash
+node tools/preflight.js --large-runtime
+node tools/chrome_runtime_smoke_test.js --large-tabs
+```
+
+This opens a temporary Chrome profile with synthetic URLs only and verifies the real native tab group path against 96 tabs by default. It checks organize completion, moved tabs, safe duplicate closes, review duplicate groups, and sanitized run snapshots. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
+
 Optional disposable manual QA browser:
 
 ```bash

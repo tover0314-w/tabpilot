@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.92 — 2026-06-10
+
+Changed:
+
+- Added an optional Chrome runtime large-tab probe: `node tools/chrome_runtime_smoke_test.js --large-tabs`.
+- Added `node tools/preflight.js --large-runtime` to run that probe through the unified preflight entry point.
+- The probe opens a temporary Chrome profile with 96 synthetic URLs by default and verifies real native tab grouping, safe duplicate close, review duplicates, bounded runtime, and sanitized run snapshots.
+- Chrome runtime cleanup now waits for the browser process to exit and retries temporary directory removal, which keeps large-tab runs from failing after a successful organize.
+
+Safety:
+
+- The large-tab probe uses synthetic URLs in a disposable Chrome profile. It does not read the user's real Chrome profile, real tabs, `.env.local`, page content, or API keys. It does not call AI or upload data.
+
 ## v0.91 — 2026-06-10
 
 Changed:

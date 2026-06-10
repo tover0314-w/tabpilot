@@ -7,6 +7,8 @@ const path = require("path");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 const EXTENSION_DIR = path.join(ROOT_DIR, "extension");
+const SHOULD_RUN_LARGE_TABS = process.argv.includes("--large-tabs");
+const LARGE_TAB_COUNT = Number(process.env.TABMOSAIC_LARGE_TAB_COUNT || 96);
 const TEST_URLS = [
   "https://github.com/acme/app/pull/42",
   "https://github.com/acme/app/pull/43",
@@ -70,6 +72,11 @@ async function main() {
     await waitForChrome(port);
     const extensionId = await waitForExtensionId(port, () => chromeLog);
     console.log(`Loaded extension ${extensionId}`);
+
+    if (SHOULD_RUN_LARGE_TABS) {
+      await runLargeTabsRuntimeProbe(port, extensionId);
+      return;
+    }
 
     for (const url of TEST_URLS) {
       await createTarget(port, url);
@@ -592,11 +599,97 @@ async function main() {
     }
     throw error;
   } finally {
-    chrome.kill();
-    await delay(500);
-    fs.rmSync(profileDir, { recursive: true, force: true });
-    fs.rmSync(extensionDir, { recursive: true, force: true });
+    await stopChrome(chrome);
+    await removePathWithRetry(profileDir);
+    await removePathWithRetry(extensionDir);
   }
+}
+
+async function runLargeTabsRuntimeProbe(port, extensionId) {
+  const testUrls = buildLargeRuntimeUrls(LARGE_TAB_COUNT);
+
+  for (const url of testUrls) {
+    await createTarget(port, url);
+  }
+
+  const extensionPage = await createTarget(port, `chrome-extension://${extensionId}/sidepanel.html`);
+  console.log(`Opened extension page ${extensionPage.url}`);
+  const cdp = await CDPSession.connect(extensionPage.webSocketDebuggerUrl);
+
+  try {
+    await waitForPageReady(cdp);
+    await waitForExtensionApis(cdp);
+    const startedAt = Date.now();
+    const organizeResult = await evaluate(cdp, `
+      chrome.runtime.sendMessage({ type: "ACCEPT_PRIVACY_AND_ORGANIZE" })
+    `);
+    const elapsedMs = Date.now() - startedAt;
+
+    assert(organizeResult && organizeResult.ok, `Large-tab organize failed: ${JSON.stringify(organizeResult)}`);
+    assertEqual(organizeResult.run.status, "completed", "Large-tab organize status");
+    assert(organizeResult.run.summary.tabCount >= testUrls.length, "Large-tab run did not scan the synthetic tabs");
+    assert(organizeResult.run.summary.groupsCreated >= 6, "Large-tab run should create several native groups");
+    assert(organizeResult.run.summary.tabsMoved >= Math.floor(testUrls.length * 0.65), "Large-tab run should move most synthetic tabs");
+    assert(organizeResult.run.summary.safeDuplicatesClosed >= 4, "Large-tab run should close safe exact/tracking duplicates");
+    assert(organizeResult.run.summary.reviewDuplicateGroups >= 2, "Large-tab run should leave hash/query duplicates in review");
+    assert(elapsedMs < 45000, `Large-tab organize took too long: ${elapsedMs}ms`);
+
+    const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
+    const groupTitles = groups.map((group) => group.title).sort();
+
+    for (const expectedTitle of ["Code Review", "Chrome Extension Docs", "Docs & Notes", "Product & Tasks"]) {
+      assert(groupTitles.includes(expectedTitle), `Large-tab run missing ${expectedTitle} group: ${groupTitles.join(", ")}`);
+    }
+
+    const runState = await evaluate(cdp, 'chrome.storage.local.get("tabmosaic.currentRun")');
+    const storedRun = runState["tabmosaic.currentRun"];
+    assert(storedRun?.snapshot?.tabs?.length >= testUrls.length, "Large-tab run should store a sanitized local snapshot");
+    assert(
+      storedRun.snapshot.tabs.every(
+        (tab) =>
+          !("restoreUrl" in tab) &&
+          !("exactUrlHash" in tab) &&
+          !("trackingUrlHash" in tab) &&
+          !("reviewUrlHash" in tab) &&
+          !("pageText" in tab) &&
+          !("fullUrl" in tab)
+      ),
+      "Large-tab runtime snapshot retained sensitive URL/body fields"
+    );
+
+    console.log(
+      `PASS Chrome runtime large-tab probe organized ${testUrls.length} synthetic tabs in ${elapsedMs}ms with ${organizeResult.run.summary.groupsCreated} groups, ${organizeResult.run.summary.tabsMoved} moved tabs, ${organizeResult.run.summary.safeDuplicatesClosed} safe duplicate closes, and ${organizeResult.run.summary.reviewDuplicateGroups} review duplicate groups`
+    );
+  } finally {
+    cdp.close();
+  }
+}
+
+function buildLargeRuntimeUrls(tabCount) {
+  const count = Number.isFinite(tabCount) && tabCount >= 24 ? Math.floor(tabCount) : 96;
+  const fixtures = [
+    (index) => `https://github.com/acme/tabmosaic/pull/${1000 + index}`,
+    (index) => `https://developer.chrome.com/docs/extensions/reference/api/tabs?sample=${index}`,
+    (index) => `https://developer.chrome.com/docs/extensions/reference/api/tabGroups?sample=${index}`,
+    (index) => `https://docs.google.com/document/d/synthetic-${index}/edit`,
+    (index) => `https://linear.app/acme/issue/TAB-${index}/private-beta-polish`,
+    (index) => `https://acme.slack.com/archives/C123/p${String(index).padStart(8, "0")}`,
+    (index) => `https://www.youtube.com/watch?v=tabmosaic${index}tutorial`,
+    (index) => `https://analytics.google.com/analytics/web/#/p${index}/reports`,
+    (index) => `https://example.com/articles/tab-workflow-${index}`,
+    (index) => `https://example.com/runtime-exact-${Math.floor(Math.floor(index / fixtures.length) / 2)}`,
+    (index) =>
+      `https://example.com/runtime-tracking-${Math.floor(Math.floor(index / fixtures.length) / 2)}?utm_source=qa&utm_campaign=${index}`,
+    (index) =>
+      `https://example.com/runtime-review-${Math.floor(Math.floor(index / fixtures.length) / 2)}#section-${Math.floor(index / fixtures.length) % 2}`
+  ];
+  const urls = [];
+
+  for (let index = 0; index < count; index += 1) {
+    urls.push(fixtures[index % fixtures.length](index));
+  }
+
+  return urls;
 }
 
 function findChromePath() {
@@ -791,6 +884,41 @@ async function waitFor(fn, message, timeoutMs = 15000) {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function stopChrome(chrome) {
+  if (chrome.exitCode !== null || chrome.signalCode) {
+    return;
+  }
+
+  chrome.kill();
+  await Promise.race([
+    new Promise((resolve) => chrome.once("exit", resolve)),
+    delay(2500)
+  ]);
+
+  if (chrome.exitCode === null && !chrome.signalCode) {
+    chrome.kill("SIGKILL");
+    await Promise.race([
+      new Promise((resolve) => chrome.once("exit", resolve)),
+      delay(1500)
+    ]);
+  }
+}
+
+async function removePathWithRetry(targetPath) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      fs.rmSync(targetPath, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (!["ENOTEMPTY", "EBUSY", "EPERM"].includes(error?.code) || attempt === 5) {
+        throw error;
+      }
+
+      await delay(250 * (attempt + 1));
+    }
+  }
 }
 
 function assert(condition, message) {
