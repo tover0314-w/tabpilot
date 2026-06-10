@@ -60,7 +60,7 @@ Coverage:
 - Dashboard drag/drop tab assignment reuses the same same-window background move action and avoids tab close actions
 - Dashboard Undo and Restore Closed actions reuse existing background actions, enable only from latest run state, and avoid direct destructive tab actions
 - Dashboard keeps unwired P1/prototype placeholders out of the default UI and folds advanced Settings content
-- Disposable manual QA checklist covers the current MVP flows: Tab Agent UI, Smart Groups filters, tab focus, same-window tab move, Dashboard apply, AI status, sensitive summary, privacy outputs, and local QA notes in copied Markdown reports
+- Disposable manual QA checklist covers the current MVP flows: Tab Agent UI, Smart Groups filters, Duplicate Center tab focus, tab focus, same-window tab move, Dashboard apply, safe error states, AI status, sensitive summary, privacy outputs, and local QA notes in copied Markdown reports
 - Dashboard permission explanation remains aligned with manifest permissions
 - local error log entries redact URLs, hostnames, emails, bearer tokens, and API keys
 - duplicate close safety audit stores only counts and whitelisted event types
@@ -108,7 +108,7 @@ The runtime script uses a temporary browser profile and synthetic tabs. It prefe
 
 Runtime coverage includes one-click organize, safe duplicate close, Restore Closed, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, Dashboard drag/drop tab assignment into an existing native group, Dashboard tab focus, Dashboard Duplicate Center tab focus, Dashboard Restore Closed, Dashboard Undo, and real Sidebar composer command submission for Open Dashboard, quick-action chat routing, ephemeral chat thread rendering, capability/help answer, next-step answer, current-page chat summary response, current-page question rendering, Restore Closed, Undo, Organize Again, group-status answer, AI-status answer, duplicate-review answer, closed-duplicate answer, active-tab answer, protected-tab answer, read-later candidate answer, tab search, and opening a matching existing tab.
 
-The manual QA profile launcher opens a disposable browser only when run without `--dry-run`; dry-run validates browser discovery, profile paths, extension path, and synthetic tab count without opening Chrome. Self-test opens the disposable browser, verifies setup, opens a local checklist page, verifies local checklist report controls, verifies the checklist includes AI and sensitive-summary checks, then closes and removes the temporary profile automatically.
+The manual QA profile launcher opens a disposable browser only when run without `--dry-run`; dry-run validates browser discovery, profile paths, extension path, and synthetic tab count without opening Chrome. Self-test opens the disposable browser, verifies setup, opens a local checklist page, verifies local checklist report controls, verifies the checklist includes AI, sensitive-summary, Dashboard, Duplicate Center, and safe error-state checks, then closes and removes the temporary profile automatically.
 
 Optional UI screenshot capture:
 

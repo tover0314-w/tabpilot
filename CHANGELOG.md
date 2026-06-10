@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.90 — 2026-06-10
+
+Changed:
+
+- Disposable manual QA checklist now includes current safe error-state checks.
+- QA runbook, extension README, and test-plan wording now match the current Smart Groups Dashboard instead of the older Latest Result flow.
+- Smoke coverage now guards that the manual QA checklist includes the new error-state coverage.
+
+Safety:
+
+- This is QA tooling and documentation alignment only. It does not change extension runtime behavior, move tabs, close tabs, read page content, call AI, upload data, add analytics, or request new permissions.
+
 ## v0.89 — 2026-06-10
 
 Changed:

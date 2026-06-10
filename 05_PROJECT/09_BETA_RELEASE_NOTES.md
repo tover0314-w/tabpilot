@@ -134,7 +134,7 @@ Then follow:
 05_PROJECT/06_QA_RUNBOOK.md
 ```
 
-Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with a local Manual QA Checklist, synthetic tabs, sidepanel, and dashboard. Checklist state and local QA notes stay in the disposable profile, and the checklist can copy a Markdown QA result. It does not touch the user's real Chrome profile.
+Use `open_manual_qa_profile.js` first when possible. It opens a disposable Chrome profile with a local Manual QA Checklist, synthetic tabs, sidepanel, and dashboard. The checklist covers the current Smart Groups Dashboard, Duplicate Center focus, safe error states, AI/sensitive-summary checks, privacy outputs, and local notes. Checklist state and local QA notes stay in the disposable profile, and the checklist can copy a Markdown QA result. It does not touch the user's real Chrome profile.
 
 Minimum manual checks:
 

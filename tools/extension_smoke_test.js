@@ -477,6 +477,8 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
     "Dashboard opens directly to Smart Groups without Latest Result",
     "Duplicate Center stays folded until opened",
     "Duplicate Center rows expand to show duplicate tabs and Open tab focuses an existing tab.",
+    "Error States",
+    "If organize fails, Sidebar says no tabs were moved or closed.",
     "Dashboard Undo and Restore Closed are compact and enabled only when available.",
     "Smart Groups filters switch between All, AI groups, and Rule groups",
     "Clicking a tab title focuses the existing browser tab/window.",

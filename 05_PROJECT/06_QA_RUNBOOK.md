@@ -39,7 +39,7 @@ Expected:
 - A local Manual QA Checklist tab is opened.
 - Checklist state is saved only in the disposable profile.
 - The checklist can save local QA notes in the disposable profile and copy a Markdown QA result for review before sharing.
-- The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Latest Result, Dashboard tab focus/move/apply, and privacy-output checks.
+- The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks.
 - Synthetic QA tabs are opened.
 - Sidepanel and Dashboard extension pages are opened.
 - The script prints profileDir, extensionId, checklist URL, sidepanel URL, dashboard URL, and cleanup command.

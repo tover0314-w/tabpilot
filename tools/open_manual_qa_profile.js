@@ -230,6 +230,14 @@ function renderChecklistHtml(details) {
       ]
     },
     {
+      title: "Error States",
+      items: [
+        "If organize fails, Sidebar says no tabs were moved or closed.",
+        "If Dashboard shows an organize error, the compact error card says no tabs were moved or closed.",
+        "Error states point to retrying or copying redacted diagnostics instead of asking for private browsing data."
+      ]
+    },
+    {
       title: "Controls",
       items: [
         "Undo restores group state for still-open tabs.",
@@ -697,6 +705,8 @@ function assertChecklistHtml(checklistPath) {
     "tabmosaic.manualQaChecklist.v1",
     "AI Verification",
     "Dashboard opens directly to Smart Groups",
+    "Error States",
+    "If organize fails, Sidebar says no tabs were moved or closed.",
     "Dashboard Undo and Restore Closed are compact and enabled only when available.",
     "Duplicate Center rows expand to show duplicate tabs and Open tab focuses an existing tab.",
     "Clicking a tab title focuses the existing browser tab/window.",
