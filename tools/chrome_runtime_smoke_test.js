@@ -216,6 +216,28 @@ async function main() {
       }, "Sidebar composer did not answer capability/help question");
       assert(capabilityAnswerRendered, "Capability/help answer was not rendered in the chat thread");
 
+      await submitSidepanelComposer(cdp, "Which tabs should I focus on for Chrome extension planning?");
+      const openChatFallbackRendered = await waitFor(async () => {
+        return evaluate(
+          cdp,
+          `(() => {
+            const panel = document.querySelector("#chatPanel");
+            const text = panel?.textContent || "";
+            const latestAssistant = Array.from(panel?.querySelectorAll(".chat-thread-message.assistant") || []).pop();
+            const latestText = latestAssistant?.textContent || "";
+
+            return Boolean(
+              panel &&
+              !panel.hidden &&
+              /Which tabs should I focus on for Chrome extension planning/.test(text) &&
+              /enable DeepSeek|启用 DeepSeek/.test(latestText) &&
+              !/could not turn that into a safe tab action|无法把这句话变成安全的标签页操作/i.test(latestText)
+            );
+          })()`
+        );
+      }, "Sidebar open-ended chat fallback did not render as a normal assistant message");
+      assert(openChatFallbackRendered, "Open-ended chat fallback was not rendered in the chat thread");
+
       await submitSidepanelComposer(cdp, "save workspace");
       const sidepanelSaveState = await waitFor(async () => {
         const state = await evaluate(cdp, `chrome.storage.local.get("tabmosaic.savedWorkspaces")`);
@@ -706,7 +728,7 @@ async function main() {
         dashboardActionsCdp.close();
       }
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
     } finally {
       cdp.close();
     }
@@ -854,8 +876,76 @@ async function runDeepSeekAgentFlow(cdp) {
     throw new Error(`${error.message}. clickedAction=${JSON.stringify(clickedAction)} chat=${JSON.stringify(chatDebug)}`);
   }
 
+  const tabsBeforeDraftApply = await evaluate(cdp, "chrome.tabs.query({})");
+  await submitSidepanelComposer(cdp, "Move the Chrome extension docs tabs into Extension Planning");
+
+  let aiDraft;
+  try {
+    aiDraft = await waitFor(async () => {
+      return evaluate(
+        cdp,
+        `(() => {
+          const messages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant"));
+          const latest = messages[messages.length - 1];
+          const text = (latest?.textContent || "").replace(/\\s+/g, " ").trim();
+          const applyButton = latest?.querySelector('[data-chat-action="apply"]');
+
+          if (!latest || !/Extension Planning/.test(text) || !applyButton) return null;
+
+          return {
+            text,
+            draftId: applyButton.dataset.draftId || "",
+            matchedRows: latest.querySelectorAll(".chat-tab-row").length,
+            applyText: applyButton.textContent.trim()
+          };
+        })()`
+      );
+    }, "DeepSeek Agent did not return a validated Apply/Cancel move draft", 30000);
+  } catch (error) {
+    const chatDebug = await evaluate(
+      cdp,
+      `(() => Array.from(document.querySelectorAll("#chatPanel .chat-thread-message"))
+        .slice(-8)
+        .map((node) => ({
+          className: node.className,
+          text: (node.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 320)
+        })))()`
+    );
+    throw new Error(`${error.message}. chat=${JSON.stringify(chatDebug)}`);
+  }
+
+  assert(aiDraft.draftId, "DeepSeek Agent move draft did not expose a draft id");
+  assert(aiDraft.matchedRows >= 1, "DeepSeek Agent move draft did not render matched tab rows");
+
+  await evaluate(
+    cdp,
+    `(() => {
+      const messages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant"));
+      const latest = messages[messages.length - 1];
+      const applyButton = latest?.querySelector('[data-chat-action="apply"]');
+      if (!applyButton) throw new Error("AI draft Apply button disappeared");
+      applyButton.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+      return true;
+    })()`
+  );
+
+  const appliedDraft = await waitFor(async () => {
+    const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
+    const tabs = await evaluate(cdp, "chrome.tabs.query({})");
+    const targetGroup = groups.find((group) => group.title === "Extension Planning");
+    const targetTabs = targetGroup
+      ? tabs.filter((tab) => tab.groupId === targetGroup.id && String(tab.url || "").includes("developer.chrome.com/docs/extensions"))
+      : [];
+
+    return targetGroup && targetTabs.length >= 1
+      ? { groupId: targetGroup.id, movedTabs: targetTabs.length, tabCount: tabs.length }
+      : null;
+  }, "DeepSeek Agent Apply did not move tabs into a native Extension Planning group");
+
+  assertEqual(appliedDraft.tabCount, tabsBeforeDraftApply.length, "AI Agent move draft must not close tabs");
+
   console.log(
-    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, actionButtons=${agentAnswer.actionButtons}, clickedAction=${clickedAction.command}, continued=${actionContinuation ? "yes" : "no"}, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
+    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, actionButtons=${agentAnswer.actionButtons}, clickedAction=${clickedAction.command}, continued=${actionContinuation ? "yes" : "no"}, aiDraft=${aiDraft.matchedRows} tabs, aiDraftApplied=${appliedDraft.movedTabs} tabs, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
   );
 }
 

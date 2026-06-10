@@ -36,13 +36,16 @@ Click extension icon
 - Sidebar quick action chips route through the same local chat thread as typed commands.
 - Sidebar keeps recent user and Agent messages in a local in-memory chat thread.
 - Sidebar latest organize result now appears as one assistant message bubble with impact metrics and quick actions inside it.
+- Sidebar latest organize result includes a memory-relief proxy and lightweight chat chips instead of heavy result-panel controls.
 - Sidebar answers `what can you do` / `你能做什么` with local wired-command guidance.
 - Sidebar answers `what should I do next` / `下一步` with local guidance from the latest organize state.
 - Current-page summary and local page questions return inside the Sidebar Agent chat message flow.
 - Sidebar composer local answers for latest result, optimization / memory relief, groups, duplicates, duplicate review queue, closed duplicate restore state, AI status, active tabs, protected tabs, possible read-later tabs, and tab search/open.
+- Sidebar open-ended fallback answer when DeepSeek is not enabled or no organize context exists, so unsupported open questions render as assistant messages instead of parser errors.
 - Sidebar optimization / memory-relief answer renders as an assistant message card with safe next-step buttons instead of plain text only.
 - Sidebar DeepSeek metadata-only Agent fallback for open-ended tab-management questions after local commands/actions do not match.
 - Sidebar DeepSeek Agent answers can include compact validated safe action chips, routed through the normal user-triggered chat command path and continuing the same chat thread after click.
+- Sidebar DeepSeek Agent can return a validated `move_tabs` draft for explicit regroup/move requests; the user must click Apply before native Chrome groups change.
 - Current-tab summary only after user click.
 - Dashboard Smart Groups, folded Saved Workspaces, Duplicate Center, Rules & Memory, Settings, local data deletion, permissions explanation, diagnostics, and feedback template.
 - Dashboard expandable Smart Group tab rows for groups with more than three visible tabs.
@@ -55,7 +58,7 @@ Click extension icon
 - Redacted local error summaries and count-only duplicate safety audit for beta diagnostics.
 - Standalone privacy policy draft marked `DO NOT PUBLISH YET`.
 - Standalone Chrome Web Store data disclosure draft marked `DO NOT SUBMIT YET`.
-- Mock-data Chrome Web Store screenshot drafts generated locally as five 1280x800 PNGs.
+- Mock-data UI screenshots include side panel result/chat states and Dashboard desktop/mobile/AI Settings; Chrome Web Store screenshot drafts are generated locally as five 1280x800 PNGs.
 
 ## Privacy Defaults
 
@@ -68,7 +71,7 @@ Click extension icon
 - Private beta AI network access is limited to `https://api.deepseek.com/*`; other OpenAI-compatible hosts require a later permission confirmation.
 - AI classification sends tab title, hostname, path, window ID, and tab state only; it does not send page text or full URL by default.
 - Metadata-only Agent answers use the same minimized tab metadata boundary and do not send page body, full URL, restore URL, favicon URL, browser history, chat history, saved workspace contents, or cloud memory.
-- Metadata-only Agent answers do not apply browser actions automatically; safe action chips require a user click and are restricted to an allowlist.
+- Metadata-only Agent answers do not apply browser actions automatically; safe action chips require a user click, `move_tabs` drafts require Apply, and close/delete actions are rejected.
 - Full URLs may be stored locally only where needed to restore closed duplicate tabs.
 - Copied diagnostics and feedback exclude URLs, hostnames, tab titles, page text, rule patterns, group names, emails, bearer tokens, and API keys.
 
@@ -79,9 +82,9 @@ Evidence file: `05_PROJECT/08_QA_EVIDENCE.md`
 ```text
 node tools/preflight.js --runtime --agent-flow --large-runtime --screenshots --deepseek-fixture
 PASS preflight completed
-40 smoke tests passed
-PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
-PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note and safe action chips
+42 smoke tests passed
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, quick-action chat routing, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, safe action chips, and a validated Apply/Cancel move draft
 PASS Chrome runtime large-tab probe organized 96 synthetic tabs with real native tab groups, safe duplicate closes, and review duplicate groups
 PASS UI screenshots captured
 PASS store screenshot drafts captured
@@ -90,7 +93,7 @@ PASS controlled private beta readiness evidence checked
 PASS DeepSeek/OpenAI-compatible /models reachable
 modelAvailable=yes
 PASS synthetic classification fixture completed
-fixtureGroupCount=3
+fixtureGroupCount=2
 fixtureAssignedTabs=3
 ```
 

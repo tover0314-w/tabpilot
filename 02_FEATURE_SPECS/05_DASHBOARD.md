@@ -8,7 +8,7 @@ CONFIRMED BY IMPLEMENTATION:
 P0 dashboard is an extension page.
 It now follows a minimal glass Smart Groups layout: top bar, compact navigation, organize action, filter chips, Smart Groups board, Auto Organize rules page, and Settings page.
 It no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area on the default Dashboard page.
-It shows simplified Smart Group cards with local tab rows, expandable hidden tab rows, folded Duplicate Center with non-destructive duplicate tab details, folded Settings Snapshot, compact AI Settings, and Rules & Memory.
+It shows simplified glass Smart Group cards with local tab rows, softer row dividers, expandable hidden tab rows, folded Duplicate Center with non-destructive duplicate tab details, folded Settings Snapshot, compact AI Settings, and Rules & Memory.
 Rules & Memory can enable, disable, and delete local chat-created rules. Delete requires confirmation because rules are user correction memory.
 Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, Restore Closed, and saving/deleting local-only workspace snapshots. Edit/Move controls and saved workspace history remain folded by default.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.

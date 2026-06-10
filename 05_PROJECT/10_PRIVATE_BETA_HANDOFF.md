@@ -34,8 +34,10 @@ CONFIRMED BY IMPLEMENTATION:
 - Sidebar composer read-only answers for duplicate review queue and closed duplicate restore state
 - Sidebar composer read-only answers for active tabs, protected tabs, and possible read-later tabs
 - Sidebar composer local tab search and focus existing tab
+- Sidebar open-ended fallback answer when DeepSeek is not enabled or no organize context exists
 - Sidebar DeepSeek metadata-only Agent fallback for open-ended tab-management answers after local commands/actions do not match
 - Sidebar DeepSeek metadata-only Agent safe action chips from a validated allowlist
+- Sidebar DeepSeek metadata-only Agent validated `move_tabs` Apply/Cancel drafts for explicit regroup/move requests
 - local user rules and Rules & Memory
 - current-tab local extractive summary after user click, with sensitive-page confirmation
 - Dashboard Smart Groups, Duplicate Center, Rules & Memory, Settings
@@ -83,7 +85,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 40 extension smoke tests
+- 42 extension smoke tests
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
@@ -103,12 +105,13 @@ Verified:
 - Sidebar current-page question rendering in runtime smoke
 - Sidebar latest-run read-only answers in runtime smoke
 - Sidebar optimization/memory-relief answer in runtime smoke
+- Sidebar open-ended chat fallback in runtime smoke
 - Sidebar duplicate-review/closed-tab local answers in runtime smoke
 - Sidebar active/protected/read-later local answers in runtime smoke
 - Sidebar tab search and Open existing tab in runtime smoke
-- DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer, including safe action chips
-- DeepSeek metadata-only Agent payload minimization and invented-tab-id filtering in extension smoke
-- mock-data UI screenshot capture, including Dashboard desktop/mobile/AI Settings
+- DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer, including safe action chips and a validated Apply/Cancel move draft
+- DeepSeek metadata-only Agent payload minimization, invented-tab-id filtering, and destructive-action rejection in extension smoke
+- mock-data UI screenshot capture, including side panel result/chat states and Dashboard desktop/mobile/AI Settings
 - mock-data Chrome Web Store screenshot drafts, generated as five 1280x800 local PNGs
 - disposable manual QA profile self-test with synthetic QA tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
 - real-profile QA result template exists, but completed real-profile QA is still pending
@@ -153,8 +156,10 @@ Verified:
 - DeepSeek metadata-only Agent returns an assistant message card
 - relevant tab rows, safe action chips, and safe next-step suggestions render
 - clicking a safe action chip continues the same Sidebar chat thread
+- DeepSeek returns a validated move draft for an explicit regroup request
+- clicking Apply moves matching synthetic tabs into a real native Chrome group without closing tabs
 - page text and full URLs are not read or sent
-- no browser actions are applied automatically from the AI answer
+- no browser actions are applied automatically from the AI answer before user Apply
 ```
 
 Disposable manual QA tooling verification:

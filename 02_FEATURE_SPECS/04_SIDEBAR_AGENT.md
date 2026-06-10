@@ -26,7 +26,7 @@ Created 8 native groups and moved 61 tabs.
 
 [agent result]
 Browser cleaned up
-Groups 8 · Tabs moved 61 · Closed 9 · Review 4
+Groups 8 · Tabs moved 61 · Memory relief 9 · Review 4
 
 [agent action]
 Organize · Ask page · Undo · Restore · Dashboard
@@ -42,6 +42,8 @@ Ask TabMosaic about your tabs...
 默认显示对话消息流。整理结果、动作草稿、页面总结都作为 agent messages 出现。
 
 P0 UI rule: The latest organize result, impact metrics, and quick actions should appear inside one assistant chat message card, not as separate top status/result/action cards or a dashboard-like toolbar.
+
+P0 UI rule: Assistant actions should look like lightweight chat chips inside the message bubble. They should not look like a settings form or dashboard control panel.
 
 ### B. Group Overview
 
@@ -159,12 +161,12 @@ CONFIRMED BY IMPLEMENTATION:
 
 ```text
 Sidebar includes a local Chat input.
-The first slice is command-to-action, not open-ended cloud chat.
+Local Chat Refine is command-to-action before cloud fallback.
 User input creates a safe action draft first.
 Browser changes require explicit Apply.
 Cancel discards the draft.
 No page body is read.
-No AI request is made.
+No AI request is made for locally parsed commands.
 No tabs are closed.
 Chinese input returns Chinese preview answer/action/risk copy.
 ```
@@ -211,6 +213,16 @@ protected tabs / 哪些标签页受保护
 read later / 哪些标签页适合稍后看
 ```
 
+Open-ended fallback:
+
+```text
+If the user types an open-ended question and local commands/actions do not match:
+- with DeepSeek + latest organize context: ask the metadata-only Agent
+- without latest organize context: answer as a normal assistant message and ask the user to organize first
+- with latest context but no DeepSeek enabled: answer as a normal assistant message and explain that freer AI conversation requires enabling DeepSeek
+- never show the raw local Chat Refine parser error as the final chat response
+```
+
 Tab search:
 
 ```text
@@ -238,9 +250,12 @@ DeepSeek metadata Agent first slice:
 - no page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, chat history, or cloud memory is sent
 - output renders as an assistant message card with optional relevant tab rows and safe next-step suggestions
 - output may include compact safe action chips from a validated allowlist: Ask page, Open Dashboard, Organize Again, Restore Closed, Review duplicates, Show groups
+- output may include a validated `move_tabs` action draft when the user explicitly asks to move or regroup existing tabs
+- AI move drafts render as the same assistant message card shape with matched tab rows and Apply / Cancel
 - output does not automatically move, close, rename, save, or read tabs
 - action chips route through the normal user-triggered chat command path
-- invented tab IDs are filtered out before rendering
+- invented tab IDs, pinned tabs, unsupported draft types, and destructive close/delete actions are filtered out before rendering
+- applying an AI move draft reuses the existing `move_tabs` path, creates native Chrome tab groups, keeps Undo, and does not close tabs
 - provider failure falls back to the existing local command/action flow
 ```
 
@@ -255,6 +270,7 @@ Supported actions:
 - answer “what should I do next / 下一步” from local organize state, prioritizing duplicate review before restore/use-group guidance
 - find matching tabs from the latest local snapshot and focus an existing tab with explicit Open
 - answer open-ended tab-management questions with DeepSeek from minimized tab metadata only when enabled
+- propose a DeepSeek-assisted `move_tabs` draft for explicit regroup/move requests; the user must click Apply before native groups change
 ```
 
 Rules created from chat are stored locally and appear in Dashboard → Rules & Memory.
@@ -268,6 +284,7 @@ Sidebar default UI uses a minimal glass Tab Agent layout.
 First screen shows a conversation thread and bottom composer.
 Organize output appears as an agent message, not as a dashboard panel.
 Latest organize result, core impact metrics, and quick actions are rendered as one assistant message bubble in the conversation thread.
+The default result metrics include groups created, tabs organized, duplicate-tab memory relief proxy, and review duplicates.
 Quick actions are compact chips inside the assistant message bubble: Organize, Ask page, Undo, Restore, Dashboard.
 Technical lists are hidden from the default chat surface.
 Composer messages stay in a short local in-memory thread, with user messages and Agent replies shown as separate chat bubbles.

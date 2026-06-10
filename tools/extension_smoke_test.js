@@ -378,6 +378,10 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes('type: "SAVE_CURRENT_WORKSPACE"'), "Sidepanel save workspace should use the background action");
   assert(sidepanelJs.includes("function askMetadataAgent"), "Sidepanel should fall back to metadata-only AI Agent answers");
   assert(sidepanelJs.indexOf('type: "PREVIEW_CHAT_REFINE"') < sidepanelJs.indexOf('type: "ASK_TAB_AGENT"'), "Safe local action drafts should run before AI Agent open answers");
+  assert(sidepanelJs.includes("function buildOpenChatFallbackAnswer"), "Open-ended chat fallback should render as a normal assistant answer");
+  assert(sidepanelJs.includes("agentChatNeedsOrganize"), "Open-ended chat fallback should explain when tab context is missing");
+  assert(sidepanelJs.includes("agentChatNeedsAI"), "Open-ended chat fallback should explain when DeepSeek is needed");
+  assert(sidepanelJs.indexOf("await askMetadataAgent(text)") < sidepanelJs.indexOf("buildOpenChatFallbackAnswer(text)"), "Open-ended fallback should run after AI Agent fallback");
   assert(sidepanelJs.includes('status: "ai-agent"'), "AI Agent answers should render as assistant messages");
   assert(sidepanelJs.includes("function renderAIAgentCard"), "AI Agent answers should use a simple assistant message card");
   assert(sidepanelJs.includes("agentMetadataPrivacy"), "AI Agent answers should disclose metadata-only context");
@@ -385,6 +389,8 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("function renderAIAgentActions"), "AI Agent answers should render validated safe action chips");
   assert(sidepanelJs.includes("getAIAgentActionLabel"), "AI Agent action chips should use localized labels");
   assert(sidepanelJs.includes("renderQuickCommandActions("), "AI Agent action chips should reuse safe chat quick commands");
+  assert(sidepanelJs.includes('response.result?.status === "draft"'), "AI Agent action drafts should render as Apply/Cancel chat drafts");
+  assert(sidepanelJs.includes("latestChatDraft = response.result.draft"), "AI Agent action drafts should become the active local draft");
   assert(css.includes(".run-message-card"), "Latest organize message card should have scoped styling");
   assert(css.includes(".run-message-heading"), "Latest organize message heading should have scoped styling");
   assert(css.includes(".tab-agent-shell .chat-panel"), "Chat panel should be a plain message stream in the side panel");
@@ -414,6 +420,9 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(en.agentFindTabsAnswer?.message && zh.agentFindTabsAnswer?.message, "Tab search answer copy should be localized");
   assert(en.agentCommandSaveWorkspace?.message && zh.agentCommandSaveWorkspace?.message, "Save workspace command copy should be localized");
   assert(en.agentWorkspaceSaved?.message && zh.agentWorkspaceSaved?.message, "Saved workspace result copy should be localized");
+  assert(en.agentChatNeedsOrganize?.message && zh.agentChatNeedsOrganize?.message, "Open-ended chat missing-context fallback should be localized");
+  assert(en.agentChatNeedsAI?.message && zh.agentChatNeedsAI?.message, "Open-ended chat AI-gated fallback should be localized");
+  assert(en.agentChatFallbackAnswer?.message && zh.agentChatFallbackAnswer?.message, "Open-ended chat generic fallback should be localized");
   assert(en.askingAIAgent?.message && zh.askingAIAgent?.message, "Metadata AI Agent loading copy should be localized");
   assert(en.agentAIAnswerFailed?.message && zh.agentAIAnswerFailed?.message, "Metadata AI Agent failure copy should be localized");
   assert(en.agentMetadataPrivacy?.message && zh.agentMetadataPrivacy?.message, "Metadata AI Agent privacy copy should be localized");
@@ -1539,6 +1548,108 @@ test("AI Agent metadata answer sends minimized tab context only", async () => {
   assert(!validated.actions.some((action) => action.type === "close_tabs"), "AI Agent validation must reject destructive unknown actions");
   assertEqual(validated.privacy.sentPageText, false, "AI Agent validation should report no page text upload");
   assertEqual(validated.privacy.sentFullUrls, false, "AI Agent validation should report no full URL upload");
+  assert(bodyText.includes("actionDraftRules"), "AI Agent prompt should include action draft safety rules");
+  assert(bodyText.includes("Never include close/delete actions"), "AI Agent prompt should reject destructive action drafts");
+});
+
+test("AI Agent move action drafts are validated before Apply", () => {
+  const state = {
+    tabs: [
+      {
+        tabId: 61,
+        title: "Chrome sidePanel docs",
+        hostname: "developer.chrome.com",
+        path: "/docs/extensions/reference/api/sidePanel",
+        windowId: 1,
+        active: false,
+        pinned: false,
+        audible: false,
+        discarded: false,
+        protectedReasons: []
+      },
+      {
+        tabId: 62,
+        title: "Pinned private spec",
+        hostname: "docs.example",
+        path: "/private-spec",
+        windowId: 1,
+        active: false,
+        pinned: true,
+        audible: false,
+        discarded: false,
+        protectedReasons: ["pinned"]
+      }
+    ],
+    groups: [],
+    summary: {}
+  };
+  const result = context.validateAIAgentAnswer(
+    {
+      answer: "I can move the relevant extension planning tabs after you approve.",
+      actionDraft: {
+        type: "MOVE_TABS",
+        groupName: "Extension Planning",
+        tabIds: [61, 62, 999, 61]
+      },
+      confidence: 0.8
+    },
+    state,
+    {
+      instruction: "Move extension planning tabs into Extension Planning",
+      language: "en"
+    }
+  );
+
+  assertEqual(result.status, "draft", "AI Agent move draft should become a chat draft");
+  assertEqual(result.draft.type, "move_tabs", "AI Agent draft should reuse the existing move_tabs apply path");
+  assertEqual(result.draft.createdFrom, "ai-agent", "AI Agent draft should record its source");
+  assertEqual(result.draft.groupName, "Extension Planning", "AI Agent draft should keep a sanitized target group");
+  assertDeepEqual(result.draft.tabIds, [61], "AI Agent draft should keep only real movable tab ids");
+  assertEqual(result.draft.matchedTabCount, 1, "AI Agent draft should count validated tabs only");
+  assert(result.draft.risk.includes("No tabs will be closed"), "AI Agent draft should disclose no-close safety");
+  assertEqual(result.privacy.sentPageText, false, "AI Agent draft should report no page text upload");
+  assertEqual(result.privacy.sentFullUrls, false, "AI Agent draft should report no full URL upload");
+});
+
+test("AI Agent destructive action drafts are ignored", () => {
+  const state = {
+    tabs: [
+      {
+        tabId: 71,
+        title: "Potential duplicate",
+        hostname: "example.com",
+        path: "/duplicate",
+        windowId: 1,
+        active: false,
+        pinned: false,
+        audible: false,
+        discarded: false,
+        protectedReasons: []
+      }
+    ],
+    groups: [],
+    summary: {}
+  };
+  const result = context.validateAIAgentAnswer(
+    {
+      answer: "I can review this, but I will not close tabs from this answer.",
+      actionDraft: {
+        type: "close_tabs",
+        tabIds: [71]
+      },
+      suggestedActions: [{ type: "close_tabs" }],
+      confidence: 0.7
+    },
+    state,
+    {
+      instruction: "Close these tabs",
+      language: "en"
+    }
+  );
+
+  assertEqual(result.status, "answered", "Destructive AI Agent draft should fall back to a safe answer");
+  assert(!result.draft, "Destructive AI Agent draft should not be exposed");
+  assert(!result.actions.some((action) => action.type === "close_tabs"), "Destructive AI Agent action chip should be rejected");
 });
 
 test("AI classification timeout falls back to local rules", async () => {

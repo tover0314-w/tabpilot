@@ -58,7 +58,7 @@ defaultModel: deepseek-v4-flash
 - Sidebar metadata Agent answers use the same DeepSeek/OpenAI-compatible chat endpoint with a 12s timeout.
 - Metadata Agent input is limited to minimized current run metadata: title, hostname, path, window id, tab state, group state, and duplicate-review counts.
 - Metadata Agent input does not include page body, full URL, restore URL, favicon URL, cookies, form data, hidden DOM, browser history, chat history, summaries, or cloud memory.
-- Metadata Agent output is validated before rendering: invented tab IDs are ignored, safe action chips are restricted to an allowlist, and no browser action is applied automatically.
+- Metadata Agent output is validated before rendering: invented tab IDs are ignored, safe action chips are restricted to an allowlist, `move_tabs` action drafts require explicit Apply, and no browser action is applied automatically.
 - Classification timeout or provider failure returns `fallback:*` status and one-click organize continues with local rules.
 - Timeout handling does not change host permission, request payload, full URL policy, page text policy, or cloud storage defaults.
 - Sidebar 和 Dashboard 已显示 latest run 的 AI 状态（DeepSeek applied / fallback / local rules）和 AI suggested group count，方便私测确认 AI 是否真的参与分类。

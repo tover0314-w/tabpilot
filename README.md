@@ -142,7 +142,7 @@ node tools/preflight.js --runtime
 node tools/chrome_runtime_smoke_test.js
 ```
 
-这个脚本会尝试用临时 profile 加载 unpacked extension，打开合成测试 tabs，并验证 organize、safe duplicate close、same-page duplicate review、Restore Closed、Chat action、侧边栏快捷动作进入聊天、侧边栏临时消息流、本地能力说明回答、本地下一步建议、当前页 summary / page question 聊天消息、Sidebar 本地问答、tab search/open 和 Dashboard apply/move/drag-drop/focus/undo/restore 能操作真实 Chrome native tab groups。它会优先使用 `CHROME_PATH`，其次自动探测 Playwright / Chrome for Testing / Chromium，最后才回退到系统 Google Chrome。
+这个脚本会尝试用临时 profile 加载 unpacked extension，打开合成测试 tabs，并验证 organize、safe duplicate close、same-page duplicate review、Restore Closed、Chat action、侧边栏快捷动作进入聊天、侧边栏临时消息流、本地能力说明回答、未启用 DeepSeek 时的开放式对话兜底、本地下一步建议、当前页 summary / page question 聊天消息、Sidebar 本地问答、tab search/open 和 Dashboard apply/move/drag-drop/focus/undo/restore 能操作真实 Chrome native tab groups。它会优先使用 `CHROME_PATH`，其次自动探测 Playwright / Chrome for Testing / Chromium，最后才回退到系统 Google Chrome。
 
 如果当前 Google Chrome 构建不允许 CLI 加载扩展，会输出 `SKIP`，仍需要手动在 `chrome://extensions` 使用 `Load unpacked` 验收。也可以手动指定 Chrome for Testing 或 Chromium：
 
@@ -157,7 +157,7 @@ node tools/preflight.js --agent-flow
 node tools/chrome_runtime_smoke_test.js --agent-flow
 ```
 
-这个脚本会用临时 Chrome profile、synthetic tabs 和 `.env.local` 里的 DeepSeek key 跑真实 sidebar composer 流程：用户输入开放式 tab 管理问题，DeepSeek metadata-only Agent 返回普通 assistant 消息卡片、相关 tab 行、安全动作按钮和下一步建议。它不会打印 API key，不读取真实 Chrome profile，不读取真实 tabs，不读取页面正文，不发送完整 URL，也不会让 AI 自动执行浏览器动作。
+这个脚本会用临时 Chrome profile、synthetic tabs 和 `.env.local` 里的 DeepSeek key 跑真实 sidebar composer 流程：用户输入开放式 tab 管理问题，DeepSeek metadata-only Agent 返回普通 assistant 消息卡片、相关 tab 行、安全动作按钮和下一步建议；随后再让 DeepSeek 生成一个受本地校验的 `move_tabs` 草稿，点击 Apply 后验证真实 Chrome native tab group 更新且没有关闭 tab。它不会打印 API key，不读取真实 Chrome profile，不读取真实 tabs，不读取页面正文，不发送完整 URL，也不会让 AI 在用户 Apply 前自动执行浏览器动作。
 
 可选真实 Chrome 大标签 synthetic runtime 探针：
 
@@ -176,7 +176,7 @@ node tools/build_store_screenshots.js
 node tools/preflight.js --screenshots
 ```
 
-它使用 mock extension 数据渲染 sidebar / dashboard，并生成 1280x800 Chrome Web Store screenshot 草稿，不读取真实浏览器 tabs，不读取 `.env.local`。这个可选脚本需要本机可用的 Playwright；Codex bundled runtime 会被自动探测。输出在本地忽略目录：
+它使用 mock extension 数据渲染 sidebar 结果态、sidebar 对话态和 dashboard，并生成 1280x800 Chrome Web Store screenshot 草稿，不读取真实浏览器 tabs，不读取 `.env.local`。这个可选脚本需要本机可用的 Playwright；Codex bundled runtime 会被自动探测。输出在本地忽略目录：
 
 ```text
 artifacts/ui-screenshots/

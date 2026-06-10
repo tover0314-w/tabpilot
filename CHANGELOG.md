@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.106 — 2026-06-10
+
+Changed:
+
+- Sidebar organize results now show the memory-relief proxy directly in the assistant message metrics.
+- Sidebar chat actions render as lighter message chips instead of heavier form-like buttons.
+- Sidebar composer now clears after local Chat Refine previews are sent.
+- Dashboard Smart Group cards and Settings panels received a lighter glass polish with softer row dividers.
+- UI screenshot capture now uses a realistic side panel viewport and includes a separate live chat-state screenshot.
+
+Safety:
+
+- This is a UI and local display behavior update only.
+- It does not change tab-closing policy, AI provider behavior, permissions, data upload boundaries, analytics, or page-content reading.
+
+## v0.105 — 2026-06-10
+
+Changed:
+
+- DeepSeek metadata Agent can now return a validated `move_tabs` action draft for explicit regroup/move requests.
+- AI move drafts render as normal assistant chat cards with matched tab rows and Apply / Cancel.
+- Open-ended sidebar questions now fall back to a normal assistant chat reply when DeepSeek is not enabled or no organize context exists, instead of surfacing the local action-parser error.
+- The real `--agent-flow` runtime check now verifies a DeepSeek-generated move draft can be applied into a real native Chrome tab group without closing tabs.
+
+Safety:
+
+- AI move drafts only use existing tab IDs from the sanitized current run state.
+- Invented tab IDs, pinned tabs, unsupported draft types, and close/delete actions are ignored before rendering.
+- Browser changes still require a user click on Apply; page text and full URLs are not sent.
+
 ## v0.104 — 2026-06-10
 
 Changed:

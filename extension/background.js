@@ -604,8 +604,21 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, lang
                     reason: "short reason"
                   }
                 ],
+                actionDraft: {
+                  type: "move_tabs",
+                  groupName: "short Chrome group name",
+                  tabIds: [123],
+                  reason: "why these existing tabs belong together"
+                },
                 confidence: 0.0
               },
+              actionDraftRules: [
+                "Only include actionDraft when the user explicitly asks to move or regroup existing tabs.",
+                "actionDraft may only use type move_tabs.",
+                "actionDraft.tabIds must be existing tabIds from state.tabs.",
+                "Never include close/delete actions.",
+                "The browser will only change after the user clicks Apply."
+              ],
               state
             })
           }
@@ -630,7 +643,7 @@ async function callOpenAICompatibleTabAgent(settings, { instruction, state, lang
   return JSON.parse(content);
 }
 
-function validateAIAgentAnswer(output, state) {
+function validateAIAgentAnswer(output, state, options = {}) {
   const answer = String(output?.answer || "")
     .replace(/\s+/g, " ")
     .trim()
@@ -649,6 +662,26 @@ function validateAIAgentAnswer(output, state) {
     .filter(Boolean)
     .slice(0, 3)
     .map((step) => step.slice(0, 160));
+  const actionDraft = buildAIAgentActionDraft(output, {
+    state,
+    instruction: options.instruction || "",
+    language: options.language || "en",
+    answer,
+    tabById
+  });
+
+  if (actionDraft) {
+    return {
+      status: "draft",
+      provider: "deepseek",
+      draft: actionDraft,
+      privacy: {
+        sentTabMetadata: true,
+        sentPageText: false,
+        sentFullUrls: false
+      }
+    };
+  }
 
   return {
     status: "answered",
@@ -665,6 +698,91 @@ function validateAIAgentAnswer(output, state) {
       sentFullUrls: false
     }
   };
+}
+
+function buildAIAgentActionDraft(output, { instruction = "", language = "en", answer = "", tabById = new Map() } = {}) {
+  if (!isAIAgentActionRequest(instruction)) {
+    return null;
+  }
+
+  const rawDraft = output?.actionDraft || output?.actionPlan;
+  const type = normalizeAIAgentDraftType(rawDraft?.type || rawDraft?.action);
+
+  if (type !== "move_tabs") {
+    return null;
+  }
+
+  const groupName = cleanGroupName(rawDraft?.groupName || rawDraft?.targetGroupName || rawDraft?.name);
+  const tabIds = extractAIAgentDraftTabIds(rawDraft)
+    .filter((tabId) => tabById.has(tabId))
+    .filter((tabId) => isAIAgentMovableTab(tabById.get(tabId)))
+    .slice(0, 24);
+
+  if (!groupName || !tabIds.length) {
+    return null;
+  }
+
+  const isChinese = language === "zh-CN" || isChineseInstruction(instruction);
+  const fallbackAnswer = isChinese
+    ? `我可以把 ${tabIds.length} 个现有标签页移动到 ${groupName}。`
+    : `I can move ${tabIds.length} existing tab(s) to ${groupName}.`;
+
+  return {
+    id: buildDraftId(`ai:${instruction}:${groupName}:${tabIds.join(",")}`),
+    type: "move_tabs",
+    createdAt: new Date().toISOString(),
+    createdFrom: "ai-agent",
+    instruction,
+    answer: addAIAgentSafetyNoteIfNeeded(answer || fallbackAnswer),
+    actionSummary: isChinese
+      ? `移动 ${tabIds.length} 个现有标签页到 ${groupName}。`
+      : `Move ${tabIds.length} existing tab(s) to ${groupName}.`,
+    groupName,
+    groupColor: inferGroupColor(groupName),
+    tabIds,
+    matchedTabs: tabIds.map((tabId) => buildAIAgentMatchedTab(tabById.get(tabId))),
+    matchedTabCount: tabIds.length,
+    risk: isChinese
+      ? "点击 Apply 前不会改动浏览器。不会关闭标签页；不会读取页面正文或发送完整 URL。"
+      : "No browser changes happen until Apply. No tabs will be closed; page text and full URLs were not sent."
+  };
+}
+
+function isAIAgentActionRequest(instruction) {
+  const text = String(instruction || "").toLowerCase();
+  return (
+    /\b(move|put|place|group|regroup|sort|send)\b/.test(text) ||
+    /放到|放进|归到|分到|移动|移到|重新分组|分组|整理到/.test(instruction)
+  );
+}
+
+function normalizeAIAgentDraftType(type) {
+  return String(type || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function extractAIAgentDraftTabIds(rawDraft) {
+  const fromIds = Array.isArray(rawDraft?.tabIds) ? rawDraft.tabIds : [];
+  const fromTabs = Array.isArray(rawDraft?.tabs)
+    ? rawDraft.tabs.map((tab) => tab?.tabId ?? tab?.id)
+    : [];
+  const seen = new Set();
+  const ids = [];
+
+  for (const value of [...fromIds, ...fromTabs]) {
+    const id = Number(value);
+    if (!Number.isInteger(id) || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+
+  return ids;
+}
+
+function isAIAgentMovableTab(tab) {
+  return Boolean(tab && Number.isInteger(tab.tabId) && !tab.pinned);
 }
 
 function buildAIAgentActions(output, { nextSteps = [], state = {} } = {}) {
@@ -1042,7 +1160,16 @@ async function askTabAgent(message = {}) {
       state,
       language: isChineseInstruction(instruction) ? "zh-CN" : "en"
     });
-    return validateAIAgentAnswer(output, state);
+    const result = validateAIAgentAnswer(output, state, {
+      instruction,
+      language: isChineseInstruction(instruction) ? "zh-CN" : "en"
+    });
+
+    if (result.status === "draft" && result.draft) {
+      await chrome.storage.local.set({ [CHAT_DRAFT_KEY]: result.draft });
+    }
+
+    return result;
   } catch (error) {
     return {
       status: "fallback",

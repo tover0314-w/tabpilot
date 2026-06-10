@@ -144,7 +144,7 @@ Optional UI screenshot capture:
 node tools/capture_ui_screenshots.js
 ```
 
-This renders the sidebar and dashboard with mock extension data, including Dashboard desktop, mobile, and AI Settings screenshots. It does not read real browser tabs or `.env.local`. It requires Playwright locally; the Codex bundled runtime is auto-detected when available. Screenshots are written to `artifacts/ui-screenshots/`.
+This renders the sidebar and dashboard with mock extension data, including side panel result/chat states and Dashboard desktop, mobile, and AI Settings screenshots. It does not read real browser tabs or `.env.local`. It requires Playwright locally; the Codex bundled runtime is auto-detected when available. Screenshots are written to `artifacts/ui-screenshots/`.
 
 Optional runtime smoke test:
 

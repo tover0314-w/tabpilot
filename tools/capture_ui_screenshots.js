@@ -9,7 +9,7 @@ const EXTENSION_DIR = path.join(ROOT_DIR, "extension");
 const OUT_DIR = path.join(ROOT_DIR, "artifacts", "ui-screenshots");
 const DEFAULT_VIEWPORT = { width: 1366, height: 980 };
 const DASHBOARD_MOBILE_VIEWPORT = { width: 390, height: 1200 };
-const SIDEPANEL_VIEWPORT = { width: 390, height: 2200 };
+const SIDEPANEL_VIEWPORT = { width: 390, height: 860 };
 
 const MOCK_RUN = {
   id: "mock-run-2026-06-09",
@@ -257,6 +257,19 @@ async function main() {
         viewport: SIDEPANEL_VIEWPORT,
         fullPage: false,
         language: "en"
+      },
+      {
+        name: "sidepanel-chat.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          await page.locator("#chatInput").fill("Move GitHub PR tabs to Code Review");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForSelector(".chat-thread-message.user", { timeout: 5000 });
+          await page.waitForSelector(".chat-thread-message.assistant.preview", { timeout: 5000 });
+        }
       },
       {
         name: "sidepanel-result-zh.png",

@@ -341,6 +341,7 @@ async function processChatText(text) {
   if (response?.ok) {
     latestChatDraft = response.draft;
     renderChatPanel(response.draft);
+    chatInput.value = "";
     return true;
   }
 
@@ -350,11 +351,31 @@ async function processChatText(text) {
     return true;
   }
 
+  latestChatDraft = null;
+  chatInput.value = "";
   renderChatPanel({
-    status: "error",
-    answer: response?.error || msg("couldNotBuildSafeAction")
+    status: "info",
+    answer: buildOpenChatFallbackAnswer(text)
   });
-  return false;
+  return true;
+}
+
+function buildOpenChatFallbackAnswer(text) {
+  if (!latestRun?.snapshot?.tabs?.length && !latestRun?.groups?.length) {
+    return msg("agentChatNeedsOrganize");
+  }
+
+  if (isAIGatedOpenChatQuestion(text)) {
+    return msg("agentChatNeedsAI");
+  }
+
+  return msg("agentChatFallbackAnswer");
+}
+
+function isAIGatedOpenChatQuestion(text) {
+  return !parseAgentCommand(text) &&
+    !buildTabSearchResult(text, latestRun) &&
+    !isCapabilityQuestion(normalizeAgentText(text));
 }
 
 async function askMetadataAgent(text) {
@@ -388,6 +409,13 @@ async function askMetadataAgent(text) {
       ...response.result,
       status: "ai-agent"
     });
+    chatInput.value = "";
+    return true;
+  }
+
+  if (response?.ok && response.result?.status === "draft" && response.result.draft) {
+    latestChatDraft = response.result.draft;
+    renderChatPanel(response.result.draft);
     chatInput.value = "";
     return true;
   }
@@ -1521,7 +1549,7 @@ function buildRunMessageMetrics(summary, status) {
   return [
     { label: msg("groups"), value: summary.groupsCreated ?? 0 },
     { label: msg("tabsOrganized"), value: summary.tabsMoved ?? 0 },
-    { label: msg("closedDupes"), value: summary.safeDuplicatesClosed ?? 0 },
+    { label: msg("memoryRelief"), value: summary.safeDuplicatesClosed ?? 0 },
     { label: msg("reviewDupes"), value: summary.reviewDuplicateGroups ?? 0 }
   ];
 }

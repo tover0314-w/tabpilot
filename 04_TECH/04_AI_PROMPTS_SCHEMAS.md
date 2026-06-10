@@ -200,8 +200,21 @@ User payload:
         "reason": "short reason"
       }
     ],
+    "actionDraft": {
+      "type": "move_tabs",
+      "groupName": "Extension Planning",
+      "tabIds": [123],
+      "reason": "These existing tabs belong in the same work group."
+    },
     "confidence": 0.0
   },
+  "actionDraftRules": [
+    "Only include actionDraft when the user explicitly asks to move or regroup existing tabs.",
+    "actionDraft may only use type move_tabs.",
+    "actionDraft.tabIds must be existing tabIds from state.tabs.",
+    "Never include close/delete actions.",
+    "The browser will only change after the user clicks Apply."
+  ],
   "state": {
     "summary": {},
     "groups": [],
@@ -218,5 +231,9 @@ Validation:
 - duplicate or invented tab IDs are ignored.
 - suggested next steps are rendered as copy only, not as automatic browser actions.
 - suggested actions must match the allowlist and are rendered as user-clicked chat command chips only.
+- `actionDraft` is accepted only for explicit move/regroup requests and only for `move_tabs`.
+- `actionDraft.tabIds` must exist in the sanitized current run state; invented IDs, pinned tabs, unsupported draft types, and close/delete actions are dropped.
+- validated AI move drafts are stored as temporary local chat drafts and require user Apply before native Chrome tab groups change.
+- AI move drafts do not read page body, send full URL, close tabs, or apply automatically.
 - unknown or destructive action types such as `close_tabs` are ignored.
 - privacy metadata reports `sentPageText: false` and `sentFullUrls: false`.
