@@ -22,6 +22,34 @@ Turn tab overload into native Chrome tab groups, page chat, and browser work con
 
 > Working name note: `TabMosaic AI` is the current internal/open-source name. The final public brand/domain is still under review because `Tab Mosaic` already exists as a nearby Chrome Web Store name.
 
+## Product Screenshots
+
+All screenshots below use mock/synthetic beta data. No real tabs, URLs, page text, emails, API keys, or private browser profile data are included.
+
+### One-click Smart Organize
+
+![One-click Smart Organize turns messy work tabs into native Chrome tab groups](assets/screenshots/01-smart-organize.png)
+
+### Sidebar Agent
+
+![Sidebar Agent explains grouped tabs, duplicate review, memory relief, and next actions](assets/screenshots/02-sidebar-agent.png)
+
+### Editable Smart Groups Dashboard
+
+![Dashboard shows editable smart groups, local workspace state, and saved work context](assets/screenshots/03-dashboard-groups.png)
+
+### Current-page Chat
+
+![Current-page chat answers from visible page text only after the user asks](assets/screenshots/04-current-page-chat.png)
+
+### Browser Workbench
+
+![Browser Workbench connects selected tabs to local todos and collections](assets/screenshots/05-browser-workbench.png)
+
+### Link-to-work Flow
+
+![Sidebar detects pasted links and lets users save or create local work items without fetching the page](assets/screenshots/06-link-to-work.png)
+
 ## Why This Exists
 
 Most tab managers help after your browser is already messy. TabMosaic starts with the browser itself:

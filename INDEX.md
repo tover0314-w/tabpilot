@@ -10,6 +10,7 @@
 - `SECURITY.md`：公开安全策略，说明浏览器数据、AI provider、权限和漏洞报告边界。
 - `VISION.md`：公开项目愿景，说明 AI browser layer、隐私、开源和长期方向。
 - `LICENSE`：Apache-2.0 开源许可证。
+- `assets/screenshots/`：公开 README 产品截图，使用 mock/synthetic beta data，不包含真实浏览数据。
 
 ## Implementation
 
