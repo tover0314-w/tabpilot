@@ -29,7 +29,7 @@ const SECRET_PATTERNS = [
     pattern: /\bBearer\s+[A-Za-z0-9._~+/=-]{16,}/g
   }
 ];
-const CONFIRMATION_BLOCKERS = [
+const SOURCE_RELEASE_BLOCKERS = [
   {
     id: "D-L01",
     label: "open-source license remains unconfirmed",
@@ -42,14 +42,28 @@ const CONFIRMATION_BLOCKERS = [
   },
   {
     id: "ARCHIVE",
-    label: "raw imported archive requires user approval before public repo launch",
+    label: "raw imported archive requires user approval before public source release",
     isBlocked: (trackedFiles) => trackedFiles.includes("06_REFERENCES/ARCHIVES/TabPilot-AI-UI.zip")
   },
   {
-    id: "REAL_PROFILE_QA",
-    label: "completed real-profile QA is not recorded as public-ready evidence",
-    isBlocked: () => true
+    id: "D-L11",
+    label: "real-profile QA is not completed or explicitly deferred for GitHub-only source release",
+    isBlocked: () => !isRealProfileQaClearedForSourceRelease()
   }
+];
+const PUBLIC_LAUNCH_BLOCKERS = [
+  "D-L03: public brand/domain not finalized",
+  "D-L04: public developer identity/support email not confirmed",
+  "D-L05: privacy policy URL not confirmed",
+  "D-L06: Chrome Web Store single-purpose wording not approved",
+  "D-L07: Chrome Web Store data-use disclosure not approved",
+  "D-L08: first public build BYOK scope not approved",
+  "D-L09: free/pro boundary not approved",
+  "D-L10: analytics policy not approved",
+  "D-L11: real-profile QA not completed",
+  "D-L12: final screenshots/demo not approved",
+  "D-L13: beta user ramp not approved",
+  "D-L14: public launch timing not approved"
 ];
 
 main();
@@ -57,7 +71,7 @@ main();
 function main() {
   const candidateFiles = listRepoCandidateFiles();
   const failures = [];
-  const blockers = [];
+  const sourceReleaseBlockers = [];
 
   assertRequiredIgnores(failures);
   assertNoUnexpectedTrackedFiles(candidateFiles, failures);
@@ -65,9 +79,9 @@ function main() {
   assertNoLicenseBeforeConfirmation(candidateFiles, failures);
   assertCleanupChecklistPresent(failures);
 
-  for (const blocker of CONFIRMATION_BLOCKERS) {
+  for (const blocker of SOURCE_RELEASE_BLOCKERS) {
     if (blocker.isBlocked(candidateFiles)) {
-      blockers.push(`${blocker.id}: ${blocker.label}`);
+      sourceReleaseBlockers.push(`${blocker.id}: ${blocker.label}`);
     }
   }
 
@@ -80,10 +94,16 @@ function main() {
   }
 
   console.log(`PASS public repo audit checked ${candidateFiles.length} tracked/unignored files`);
-  console.log("READY_PUBLIC_REPO_PUSH=no");
-  if (blockers.length) {
-    console.log(`PUBLIC_REPO_BLOCKERS=${blockers.join("; ")}`);
+  console.log(`READY_PUBLIC_SOURCE_RELEASE=${sourceReleaseBlockers.length ? "no" : "yes"}`);
+  console.log(`READY_PUBLIC_REPO_PUSH=${sourceReleaseBlockers.length ? "no" : "yes"}`);
+  console.log("READY_PUBLIC_MARKETING_LAUNCH=no");
+  console.log("READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no");
+  if (sourceReleaseBlockers.length) {
+    console.log(`PUBLIC_SOURCE_RELEASE_BLOCKERS=${sourceReleaseBlockers.join("; ")}`);
+  } else {
+    console.log("PUBLIC_SOURCE_RELEASE_BLOCKERS=none");
   }
+  console.log(`PUBLIC_LAUNCH_BLOCKERS=${PUBLIC_LAUNCH_BLOCKERS.join("; ")}`);
 }
 
 function listRepoCandidateFiles() {
@@ -175,9 +195,11 @@ function assertCleanupChecklistPresent(failures) {
 
   const checklist = fs.readFileSync(checklistPath, "utf8");
   for (const required of [
-    "Status: DRAFT - DO NOT PUSH PUBLICLY UNTIL D-L01, ARCHIVE, REAL-PROFILE QA, AND PUBLIC-LAUNCH MATERIALS ARE CLEARED",
-    "06_REFERENCES/ARCHIVES/TabPilot-AI-UI.zip",
-    "Do not delete or untrack the archive automatically without user confirmation",
+    "Status: PUBLIC SOURCE RELEASE READY AFTER FINAL AUDIT; DO NOT LAUNCH STORE/MARKETING UNTIL PUBLIC-LAUNCH MATERIALS ARE CLEARED",
+    "READY_PUBLIC_SOURCE_RELEASE=yes",
+    "READY_PUBLIC_MARKETING_LAUNCH=no",
+    "D-L11_SOURCE_RELEASE_STATUS=DEFERRED_FOR_GITHUB_SOURCE_RELEASE",
+    "No raw imported archive should be tracked in the public source release.",
     "Final public branch contains no ignored generated outputs."
   ]) {
     if (!checklist.includes(required)) {
@@ -192,6 +214,17 @@ function isPublicRepoBoundaryConfirmed() {
 
   return /D-L02\s*\|[^\n]*\|\s*CONFIRMED\b/.test(packet) ||
     /D-L02\s*\|[^\n]*\|\s*CONFIRMED BY USER\b/.test(packet);
+}
+
+function isRealProfileQaClearedForSourceRelease() {
+  const packetPath = path.join(ROOT_DIR, "05_PROJECT", "16_PUBLIC_LAUNCH_DECISION_PACKET.md");
+  const checklistPath = path.join(ROOT_DIR, "05_PROJECT", "17_PUBLIC_REPO_CLEANUP_CHECKLIST.md");
+  const packet = fs.existsSync(packetPath) ? fs.readFileSync(packetPath, "utf8") : "";
+  const checklist = fs.existsSync(checklistPath) ? fs.readFileSync(checklistPath, "utf8") : "";
+  const combined = `${packet}\n${checklist}`;
+
+  return /D-L11\s*\|[^\n]*\|\s*CONFIRMED\b/.test(packet) ||
+    /D-L11_SOURCE_RELEASE_STATUS=(COMPLETED|DEFERRED_FOR_GITHUB_SOURCE_RELEASE)\b/.test(combined);
 }
 
 function isUnexpectedTrackedEnvFile(relativePath) {

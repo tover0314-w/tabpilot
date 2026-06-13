@@ -55,7 +55,10 @@ Wired now:
 - tab title focus back to the existing browser tab/window
 - same-window selected tab rows can open Sidebar with selected-tabs context; the action stays hidden until 2+ tabs are selected
 - selected tab rows can create a local Work Queue todo or local Collection from the Dashboard Workbench
-- local Work Queue / Collection rows show linked-tab previews and can send their linked tabs back to Sidebar Agent as a selected-tabs context
+- Sidebar Agent natural-language commands can create local Work Queue todos from current tab, current group, or selected-tabs context
+- local Work Queue / Collection rows show linked-tab previews, linked-source previews, and checklist previews
+- local Work Queue / Collection rows can focus the first still-open linked source tab and can send linked tabs back to Sidebar Agent as a selected-tabs context
+- local Work Queue todos support Done / Reopen / Archive without touching browser tabs, page text, full URLs, or cloud storage
 - selecting a tab from another Chrome window resets the selected-tabs set and shows a compact status chip, keeping cross-window chat separate without making the selection feel broken
 - folded same-window tab move into an existing native group
 - drag/drop tabs between existing groups in the same Chrome window

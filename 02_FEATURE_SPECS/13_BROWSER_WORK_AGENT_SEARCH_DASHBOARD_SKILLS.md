@@ -42,7 +42,7 @@ pages, tabs, groups, links, screenshots, files, search results, todos, and safe 
 MVP must stay simple. The first agent should not expose a giant tool catalog, a multi-agent diagram, or a developer dashboard. It should solve a few obvious work problems:
 
 ```text
-- use Tavily-style web search as an internal Agent tool
+- use Tavily-style Search Tool as an internal Agent tool
 - search open tabs and saved browser work from the Agent, not from a Dashboard search box
 - understand current page / selected tabs / selected page region
 - turn browser work into todos, checklists, memos, and comparison tables
@@ -114,7 +114,7 @@ A real agent search provider usually offers:
 Product stance:
 
 ```text
-P0 search tool means an external web-search provider adapter, with Tavily as the recommended first provider.
+P0 Search Tool means an external provider-backed search adapter, with Tavily as the recommended first provider.
 Search query text is user content and must be disclosed as sent to the configured search provider.
 Search result URLs/snippets are external context; they should be session-only until the user saves them.
 ```
@@ -271,22 +271,40 @@ FIRST SLICE IMPLEMENTED:
 - Dashboard selected tabs can save a local collection.
 - Todo / collection rows show compact linked-tab previews.
 - Todo / collection rows can send linked open tabs to Sidebar Agent as selected-tabs context.
-- Storage remains local-only and metadata-only; no cloud sync, no page text, no full URL persistence.
+- Todo / collection rows can focus the first still-open linked source tab.
+- Todo rows support Done / Reopen / Archive locally.
+- Sidebar Agent can create a local todo from current tab, current group, or selected-tabs context through natural-language commands, then link the same local Work Queue object back to Dashboard.
+- Sidebar Agent can turn the current page into a local checklist todo through the existing user-triggered Page Agent visible-text flow; sensitive-page confirmation still applies.
+- Dashboard Work Queue rows can preview checklist items, linked tabs, and linked sources without turning into a heavy task manager.
+- Storage remains local-only. Tab/source todos store sanitized tab/source metadata; checklist todos store generated checklist text locally after the user explicitly asks to read the page. No full URL persistence, page-text persistence, cloud sync, or TabMosaic cloud storage is used.
 ```
 
 Search result card implementation note, 2026-06-13:
 
 ```text
 FIRST SLICE IMPLEMENTED:
-- Sidebar Agent recognizes explicit web-search requests such as "search the web for ...".
+- Sidebar Agent recognizes explicit Search Tool requests such as "search the web for ..." or "look up ...".
 - Search runs through the internal `search_web_provider` tool contract.
-- The result appears as an assistant message card with query, provider, and session-only storage disclosure.
+- The result appears as a natural assistant answer; query, provider, and session-only storage disclosure stay in the lightweight tool state.
 - Results render as compact source rows with user-triggered Open buttons.
-- Open only creates a new tab after user click; the Agent does not auto-open results.
+- Results support user-triggered Save and Todo actions. Save creates a local Collection source; Todo creates a local Work Queue item.
+- Open only creates a new tab after user click; the Agent does not auto-open results or use a browser search page.
+- Missing provider setup renders as an assistant message with one `Open settings` action, not as a Dashboard search surface.
+- Dashboard Settings contains a minimal optional `Search Tool` Tavily BYOK form. It is not shown on the default Dashboard workbench.
 - The UI screenshot fixture covers the completed Tavily-style result card.
 ```
 
 Dashboard should not include a visible search bar in MVP. Search happens when the user asks the Sidebar Agent. Dashboard may later show saved search-derived collections, but not as a primary search UI.
+
+Link input implementation note, 2026-06-13:
+
+```text
+FIRST SLICE IMPLEMENTED:
+- Sidebar recognizes pasted `http(s)` links in normal chat input.
+- It renders a normal assistant message explaining that the link was not opened or fetched.
+- The user can save the link as a local Collection source or turn it into a local Work Queue todo.
+- Persistent local source URLs strip username/password, query, and hash; no page content is fetched or stored.
+```
 
 ### 6.4 What should not appear by default
 
@@ -328,7 +346,7 @@ type ToolPolicy = {
 | `search_open_tabs` | Search current open tabs by title/hostname/path/group | Local metadata only | Build now |
 | `search_saved_work` | Search local collections/todos/workspaces | Local saved metadata only | Build now |
 | `search_current_page` | Search extracted visible text in current page/session | User-triggered page text only | P0.5 |
-| `search_web_provider` | Tavily-style web search | Sends user query to configured search provider | First Tavily adapter implemented; public provider/key UX required |
+| `search_web_provider` | Tavily-style Search Tool | Sends user query to configured search provider | First Tavily adapter and minimal BYOK Settings entry implemented |
 | `open_search_result` | Open selected result in a new tab | Browser action, user click | P0.5 |
 | `save_search_result` | Save result to collection | Local storage | P0.5 |
 
@@ -596,8 +614,10 @@ Do not build yet:
 - Dashboard still opens to a simple glass UI.
 - Top workbench does not feel like Settings.
 - Dashboard does not expose search as a primary UI.
-- Explicit web-search requests from Sidebar route to an internal `search_web_provider` tool state.
+- Explicit Search Tool requests from Sidebar route to an internal `search_web_provider` tool state.
 - If no search provider is configured, Sidebar explains that Tavily-style search needs a provider and sends only the typed query by default.
+- Missing search provider state includes one `Open settings` action that opens Dashboard Settings, while the default Dashboard workbench remains search-free.
+- When search results are available, Sidebar answers in natural language first and shows sources as a compact attachment with user-clicked Open actions, not as a search-results dashboard.
 - User can see Tasks and Collections as lightweight browser work concepts.
 - Smart Groups board remains visible and useful.
 - Duplicate Center remains folded.
@@ -627,8 +647,8 @@ Do not build yet:
 
 | ID | Decision | Recommendation | Status |
 |---|---|---|---|
-| D-039 | First external search provider | Tavily-style adapter, Tavily as first provider | CONFIRM |
-| D-040 | Search query privacy copy | Tell users web search sends query to configured provider | RECOMMENDED |
+| D-039 | First external search provider | Tavily-style BYOK adapter, Tavily as first provider, default off | CONFIRMED BY DISCUSSION |
+| D-040 | Search query privacy copy | Tell users Search Tool sends query to configured provider | RECOMMENDED |
 | D-041 | Dashboard workbench first screen | Add tasks and collections above Smart Groups; keep search inside the Agent conversation | RECOMMENDED |
 | D-042 | Dynamic third-party skill installation | Do not allow in MVP; reviewed built-in skills only | RECOMMENDED |
 | D-043 | MCP/local companion support | Design-compatible, do not build in MVP | RECOMMENDED |
@@ -644,7 +664,7 @@ Do not build yet:
 2. Update README / INDEX.
 3. Add Dashboard Workbench shell without search UI.
 4. Add Tasks and Collections preview cards.
-5. Route explicit Sidebar web-search requests to an internal tool state.
+5. Route explicit Sidebar Search Tool requests to an internal tool state.
 6. Add smoke tests for UI and privacy wording.
 ```
 
@@ -661,11 +681,11 @@ Do not build yet:
 
 ```text
 1. Add search settings storage behind private-beta/dev configuration. DONE.
-2. Request explicit provider origin permission. DONE for the internal executor.
+2. Request explicit provider origin permission. DONE for the internal executor and Settings save path.
 3. Implement Tavily adapter. DONE for POST /search with query-only payload.
-4. Render result list. DONE in Sidebar Agent message card.
+4. Render result list. DONE as natural Sidebar answer plus compact Sources attachment.
 5. Save selected results to collection. NEXT.
-6. Add redacted diagnostics and tests. PARTIAL: executor smoke test added; user-facing diagnostics still pending.
+6. Add redacted diagnostics and tests. PARTIAL: executor smoke test and minimal Settings-path smoke added; user-facing diagnostics still pending.
 ```
 
 ### Slice D: richer AI browser inputs

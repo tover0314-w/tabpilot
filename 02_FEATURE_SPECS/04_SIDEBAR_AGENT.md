@@ -41,9 +41,11 @@ Ask TabMosaic about your tabs...
 
 默认显示对话消息流。整理结果、动作草稿、页面总结都作为 agent messages 出现。
 
-P0 UI rule: The latest organize result should appear as one assistant chat message with plain-language impact text. It should not render a separate metric wall, status card, or dashboard-like toolbar.
+P0 UI rule: The latest organize result should appear as one assistant chat message formatted as Markdown text. It should not render a separate metric wall, status card, folded refinement card, dashboard-like toolbar, or metric/action chips inside the result message.
 
-P0 UI rule: Assistant actions should look like lightweight chat chips inside the message bubble. They should not look like a settings form or dashboard control panel.
+P0 UI rule: The result message may mention commands such as `undo`, `restore closed`, or `organize again` as text. Do not turn the first result message into a specialized control surface.
+
+CONFIRMED BY USER: Product-effect screenshots, classification examples, and Agent conversation examples shown for acceptance must use a real configured AI provider when `.env.local` / BYOK settings are available. Mock data is allowed only for deterministic regression tests and must be labeled as mock. Do not present mock screenshots as proof of AI quality.
 
 P0 UI rule: Current-page chat should feel like Notion AI beside the page: the composer context says which tab is being discussed, the user asks in natural language, and the assistant answers in a plain message bubble from the page context. The page-chat surface should not be dominated by tab-management controls.
 
@@ -141,9 +143,15 @@ CONFIRMED BY IMPLEMENTATION / FIRST SLICE:
 - The flow renders a tool card in the chat stream, reads at most 6 visible pages, skips unsafe/unreadable tabs, and answers from DeepSeek when local private-beta settings are available.
 - Tool-card messages are not included in AI chat memory; final context answers are included as normal assistant turns.
 - Session-only follow-up reuse is supported for the same group/selected-tabs scope.
-- Context answers now include a compact session-only group summary card with scope label, read/skipped counts, metadata/visible-text source, top hosts/themes, and safe next steps.
-- Content-assisted regrouping preview is supported from capped visible text and renders an Apply / Cancel assistant message card before native groups change.
-- Explicit web-search requests render a Sidebar Agent tool card plus a compact search result message; each result has a user-clicked Open action and the card discloses query/provider/session-only boundaries.
+- Context answers now render as natural Markdown-style assistant messages. Read/skipped counts and visible-text/session-only disclosure stay in the lightweight tool state, not in a second summary card.
+- Content-assisted regrouping preview is supported from capped visible text and renders as a Markdown-style assistant message with Apply / Cancel below the text before native groups change. It should not render nested group cards.
+- Explicit Search Tool requests render a lightweight Sidebar Agent tool state plus a natural assistant answer. Sources appear as a compact `Sources` attachment with user-clicked Open actions; query/provider/session-only boundaries stay in the tool state.
+- Search Tool does not open a browser search page. It calls the internal `search_web_provider` tool; a browser tab opens only if the user clicks a returned source.
+- If Search Tool is not configured, Sidebar renders a normal assistant message with one `Open settings` action. The settings path opens Dashboard Settings directly and keeps search out of the default Dashboard workbench.
+- Sidebar can create a local Work Queue todo from the active chat context via natural-language commands such as `make this a todo` / `把当前标签变成待办`. It stores linked tab metadata locally only and renders the result as a normal Markdown assistant message.
+- Sidebar can turn the current page into a local checklist todo after a user-triggered current-page request. It reuses the Page Agent visible-text flow, asks sensitive-page confirmation when required, stores the generated checklist locally, and does not store full URLs or use cloud storage.
+- Search Tool source rows support user-clicked `Open`, `Save`, and `Todo` actions. Save/Todo persist sanitized source metadata locally only.
+- Pasted links are recognized as local link sources without opening or fetching the page. The user can save the source or turn it into a todo first.
 
 STILL PENDING:
 - Real Chrome runtime QA for accepted optional per-site permission prompts and synthetic HTTP content extraction on this context-tabs path.

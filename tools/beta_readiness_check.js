@@ -95,7 +95,8 @@ function main() {
       "PASS UI screenshots captured",
       "PASS store screenshot drafts captured",
       "PASS public repo audit checked",
-      "READY_PUBLIC_REPO_PUSH=no",
+      "READY_PUBLIC_SOURCE_RELEASE=yes",
+      "READY_PUBLIC_REPO_PUSH=yes",
       "PASS release package verified for v0.1.0",
       "blank real-profile QA result template",
       "PASS synthetic classification fixture completed",
@@ -236,7 +237,8 @@ function main() {
       "Open-source AI browser layer for Chrome",
       "Choose Smart Organize",
       "Current status:",
-      "Full open-source direction is confirmed; license is still `CONFIRM`",
+      "Full open-source direction is confirmed; the repository is licensed under Apache-2.0.",
+      "Public GitHub source release is ready after the final secret/public repo audit passes.",
       "Public Chrome Web Store launch is not ready yet.",
       "Default Smart Organize is metadata-first",
       "Page text is read only after a user-triggered page or selected-tabs/group question.",
@@ -360,7 +362,7 @@ function main() {
       "X / Twitter Thread Draft",
       "SEO Draft",
       "Controlled local/private beta. Public Chrome Web Store launch is not ready yet.",
-      "License is still being confirmed. No LICENSE file is included yet.",
+      "License: Apache-2.0.",
       "Use synthetic tabs only.",
       "Do not show private emails, real workspaces, real URLs, real API keys, or personal Chrome profile data.",
       "Do not post until:",
@@ -374,6 +376,8 @@ function main() {
     [
       "Status: CONFIRM BEFORE PUBLIC LAUNCH",
       "READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes",
+      "READY_PUBLIC_SOURCE_RELEASE=yes",
+      "READY_PUBLIC_MARKETING_LAUNCH=no",
       "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
       "D-L01 | Open-source license",
       "Apache-2.0",
@@ -386,10 +390,12 @@ function main() {
       "D-L10 | Analytics policy",
       "First public build ships with no remote analytics involving browsing activity.",
       "D-L11 | Real-profile QA requirement",
+      "Deferred for GitHub-only source release; before Chrome Web Store submission",
+      "D-L11_SOURCE_RELEASE_STATUS=DEFERRED_FOR_GITHUB_SOURCE_RELEASE",
       "D-L12 | Final screenshots / demo",
       "D-L14 | Public launch timing",
       "Do not post Product Hunt, Hacker News, X/Twitter, or submit Chrome Web Store until D-L01 through D-L13 are resolved.",
-      "No `LICENSE` file was added"
+      "`LICENSE` is now included with Apache-2.0."
     ],
     failures
   );
@@ -397,17 +403,20 @@ function main() {
     "05_PROJECT/17_PUBLIC_REPO_CLEANUP_CHECKLIST.md",
     publicRepoCleanupChecklist,
     [
-      "Status: DRAFT - DO NOT PUSH PUBLICLY UNTIL D-L01, ARCHIVE, REAL-PROFILE QA, AND PUBLIC-LAUNCH MATERIALS ARE CLEARED",
+      "Status: PUBLIC SOURCE RELEASE READY AFTER FINAL AUDIT; DO NOT LAUNCH STORE/MARKETING UNTIL PUBLIC-LAUNCH MATERIALS ARE CLEARED",
       "READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes",
+      "READY_PUBLIC_SOURCE_RELEASE=yes",
+      "READY_PUBLIC_MARKETING_LAUNCH=no",
       "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
-      "D-L01 Open-source license confirmed.",
+      "[x] D-L01 Open-source license confirmed.",
       "D-L02 Public repo boundary confirmed.",
       "dist/",
       "artifacts/",
       "output/",
       "extension/private-beta-ai-settings.json",
       "06_REFERENCES/ARCHIVES/TabPilot-AI-UI.zip",
-      "Do not delete or untrack the archive automatically without user confirmation",
+      "No raw imported archive should be tracked in the public source release.",
+      "D-L11_SOURCE_RELEASE_STATUS=DEFERRED_FOR_GITHUB_SOURCE_RELEASE",
       "node tools/secret_scan.js",
       "node tools/public_repo_audit.js",
       "git diff --check",
@@ -429,10 +438,15 @@ function main() {
       "candidate secret",
       "OpenAI-compatible API key",
       "Bearer token literal",
-      "READY_PUBLIC_REPO_PUSH=no",
-      "PUBLIC_REPO_BLOCKERS=",
+      "READY_PUBLIC_SOURCE_RELEASE=",
+      "READY_PUBLIC_REPO_PUSH=",
+      "READY_PUBLIC_MARKETING_LAUNCH=no",
+      "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
+      "PUBLIC_SOURCE_RELEASE_BLOCKERS=",
+      "PUBLIC_LAUNCH_BLOCKERS=",
       "D-L01",
       "D-L02",
+      "D-L11",
       "06_REFERENCES/ARCHIVES/TabPilot-AI-UI.zip",
       "LICENSE is tracked but D-034-A remains unconfirmed"
     ],
@@ -465,6 +479,9 @@ function main() {
   }
 
   warnings.push("READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes");
+  warnings.push("READY_PUBLIC_SOURCE_RELEASE=yes");
+  warnings.push("PUBLIC_SOURCE_RELEASE_BLOCKERS=none");
+  warnings.push("READY_PUBLIC_MARKETING_LAUNCH=no");
   warnings.push("READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no");
   warnings.push("PUBLIC_LAUNCH_BLOCKERS=real-profile manual QA, privacy policy URL, support email, final brand/domain, store disclosures, final screenshots/demo video, beta user feedback");
 

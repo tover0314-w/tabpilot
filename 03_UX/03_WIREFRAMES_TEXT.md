@@ -25,18 +25,26 @@ CONFIRMED BY USER: Sidebar 首屏必须是类似 OpenAI 的对话框，用作 Ta
 ┌─────────────────────────────┐
 │ TabMosaic AI            ⊟    │
 ├─────────────────────────────┤
-│ AI                           │
-│ I organized the browser:     │
-│ created 8 native groups and  │
-│ moved 61 tabs. Memory relief:│
-│ 9 duplicate tabs freed.      │
-│ Duplicate review: 4 groups.  │
-│ Context · Current tab         │
-│ [Organize Again] [Undo]       │
-│ [Undo] [Restore]             │
+│ Assistant                    │
+│ Done. I cleaned up the       │
+│ browser into clearer work    │
+│ groups and left protected    │
+│ tabs untouched.              │
+│                             │
+│ Result                      │
+│ - Groups: 8                 │
+│ - Tabs organized: 61        │
+│ - Memory relief: 9 duplicate│
+│   tabs                      │
+│ - Needs review: 4 possible  │
+│   duplicate groups          │
+│                             │
+│ You can type `undo`,         │
+│ `restore closed`, or         │
+│ `organize again`.            │
 ├─────────────────────────────┤
+│ Current tab · Supabase       │
 │ Ask TabMosaic about tabs...  │
-│ [GitHub PR] [Current] [Rename]│
 └─────────────────────────────┘
 ```
 

@@ -344,6 +344,19 @@ Agent renders a tool card and reads only visible text from selected/group tabs w
 Then it proposes a new grouping plan with Apply / Cancel.
 ```
 
+CONFIRMED BY IMPLEMENTATION:
+
+```text
+Dashboard selected-tabs flow exposes a compact `Refine with AI` entry after 2+ same-window tabs are selected.
+Clicking it opens Sidebar with selected-tabs context and pre-fills:
+`Regroup these selected tabs by actual page content.`
+The prompt is not auto-submitted. The user still sends it from Sidebar, which then shows the tool card, reads capped visible text, calls the configured AI provider when available, and renders a Markdown-style assistant message with Apply / Cancel below it.
+```
+
+CONFIRMED BY IMPLEMENTATION:
+
+Content-assisted regrouping prompt behavior must split same-host or same-project tabs when their visible page text points to different work activities. The model should not collapse distinct product planning, QA/debugging, design review, research, billing, or implementation pages into one broad umbrella group merely because they share a domain or product name.
+
 ### 5.4 Page region context
 
 P1 CANDIDATE / FIRST SLICE IMPLEMENTED:
@@ -688,7 +701,7 @@ CONFIRMED BY IMPLEMENTATION / FIRST SLICE:
 - skip sensitive/protected/internal pages by default
 - answer group/selected-tabs questions from capped visible text with DeepSeek when configured
 - fall back to local visible-text / metadata summary when DeepSeek is unavailable or invalid
-- render a compact session-only group summary card with context label, source, read/skipped counts, skipped reason chips, top hosts/themes, and safe next steps
+- render final group/selected-tabs answers as Markdown-style assistant messages; keep read/skipped counts, skipped reason chips, and visible-text/session-only disclosure inside the lightweight tool state
 - when every tab is skipped/unreadable, mark the tool result as metadata-only, state that no page body was read/sent/stored, and give a concrete retry path instead of pretending to summarize page contents
 - send no full URLs to the multi-tab Page Agent
 - validate AI tab summaries against real readable tab IDs
@@ -715,7 +728,7 @@ CONFIRMED BY IMPLEMENTATION / FIRST SLICE:
 - Agent renders a tool card and reads capped group/selected pages
 - DeepSeek/OpenAI-compatible provider can produce a validated regrouping preview from capped visible text
 - fallback local visible-text keyword grouping can produce a safe preview if AI is unavailable
-- the preview renders as an assistant message card with proposed groups, reasons, matched tabs, and Apply / Cancel
+- the preview renders as a plain assistant message with Markdown-style proposed groups, reasons, matched tabs, and Apply / Cancel
 - AI tab IDs are validated against real readable tabs; invented or duplicate IDs are dropped
 - user clicks Apply before native Chrome groups change
 - no tabs are closed

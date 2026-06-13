@@ -3588,6 +3588,9 @@ Result:
 ```text
 PASS controlled private beta readiness evidence checked
 READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes
+READY_PUBLIC_SOURCE_RELEASE=yes
+PUBLIC_SOURCE_RELEASE_BLOCKERS=none
+READY_PUBLIC_MARKETING_LAUNCH=no
 READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
 PUBLIC_LAUNCH_BLOCKERS=real-profile manual QA, privacy policy URL, support email, final brand/domain, store disclosures, final screenshots/demo video, beta user feedback
 ```
@@ -3644,22 +3647,26 @@ node tools/preflight.js
 Result:
 
 ```text
-PASS secret scan checked 103 tracked files
+PASS secret scan checked 125 tracked files
 55 smoke tests passed
 PASS provider registry checked 18 presets
 PASS issue form smoke checked 5 forms
-PASS public repo audit checked 126 tracked/unignored files
-READY_PUBLIC_REPO_PUSH=no
-PUBLIC_REPO_BLOCKERS=D-L01: open-source license remains unconfirmed; ARCHIVE: raw imported archive requires user approval before public repo launch; REAL_PROFILE_QA: completed real-profile QA is not recorded as public-ready evidence
+PASS public repo audit checked 128 tracked/unignored files
+READY_PUBLIC_SOURCE_RELEASE=yes
+READY_PUBLIC_REPO_PUSH=yes
+READY_PUBLIC_MARKETING_LAUNCH=no
+READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
+PUBLIC_SOURCE_RELEASE_BLOCKERS=none
+PUBLIC_LAUNCH_BLOCKERS=D-L03: public brand/domain not finalized; D-L04: public developer identity/support email not confirmed; D-L05: privacy policy URL not confirmed; D-L06: Chrome Web Store single-purpose wording not approved; D-L07: Chrome Web Store data-use disclosure not approved; D-L08: first public build BYOK scope not approved; D-L09: free/pro boundary not approved; D-L10: analytics policy not approved; D-L11: real-profile QA not completed; D-L12: final screenshots/demo not approved; D-L13: beta user ramp not approved; D-L14: public launch timing not approved
 PASS release package verified for v0.1.0
-sha256=e4c50617c803cf2e813f2365f28e4ddeabf7b0a70aad14a800bb105a7ee71d7d
+sha256=31ce1375cdc57abf979c805866f17a35db174f94819ced09ad4ba5b41af13e80
 ```
 
 Evidence notes:
 
 - This pre-push check regenerated the local ignored package in `dist/` and verified the package contents.
 - `.env.local`, generated artifacts, private-beta AI settings, and local output directories remain ignored.
-- The public repo audit passes its safety checks but still marks public launch as not ready because license, raw archive handling, and real-profile QA approval remain confirmation-gated.
+- The public repo audit passes source-release safety checks. Public marketing and Chrome Web Store launch still remain blocked by separate confirmation gates.
 - This does not change the Chrome Web Store readiness state.
 
 ## Remaining Evidence Gaps

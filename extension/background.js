@@ -1657,7 +1657,7 @@ async function callOpenAICompatibleContextRegroupAgent(settings, { instruction, 
           {
             role: "system",
             content:
-              "You are TabMosaic's content-assisted regrouping planner. Build a safe Chrome tab grouping preview from the provided visible text and tab metadata. Return only valid JSON. Use only existing tabIds from the input. Do not invent tabIds. Do not close tabs. Do not claim changes were applied. Group by user job, project, workflow, artifact type, or page intent instead of domain. Keep group names concise and useful."
+              "You are TabMosaic's content-assisted regrouping planner. Build a safe Chrome tab grouping preview from the provided visible text and tab metadata. Return only valid JSON. Use only existing tabIds from the input. Do not invent tabIds. Do not close tabs. Do not claim changes were applied. Group by user job, project, workflow, artifact type, or page intent instead of domain. If tabs share a host or project but their visible text points to different work activities, split them into precise workflow groups instead of one broad umbrella group. Keep group names concise and useful."
           },
           {
             role: "user",
@@ -1763,6 +1763,8 @@ function buildContextRegroupPayload({ instruction, context, readableTabs, skippe
       "Use only tabIds from tabs.",
       "Do not include close, delete, archive, bookmark, history, navigation, form, or page-click actions.",
       "Prefer project/workflow/content groups over host/domain groups.",
+      "Do not merge tabs only because they share the same hostname, product, or broad project.",
+      "For a small selected context with clearly different page intents, prefer several precise task groups over one umbrella group.",
       "A tab may appear in at most one group.",
       "It is okay to leave a tab unassigned if the visible text is not enough."
     ],

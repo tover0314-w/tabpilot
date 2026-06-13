@@ -10,11 +10,13 @@ import {
 
 const CURRENT_RUN_KEY = "tabmosaic.currentRun";
 const AI_SETTINGS_KEY = "tabmosaic.aiSettings";
+const SEARCH_SETTINGS_KEY = "tabmosaic.searchSettings";
 const USER_RULES_KEY = "tabmosaic.userRules";
 const ERROR_LOG_KEY = "tabmosaic.errorLog";
 const DUPLICATE_SAFETY_AUDIT_KEY = "tabmosaic.duplicateSafetyAudit";
 const SAVED_WORKSPACES_KEY = "tabmosaic.savedWorkspaces";
 const SIDEBAR_CONTEXT_KEY = "tabmosaic.sidebarContext";
+const SIDEBAR_PENDING_PROMPT_KEY = "tabmosaic.sidebarPendingPrompt";
 const AGENT_TASKS_KEY = "tabmosaic.agentTasks";
 const SAVED_COLLECTIONS_KEY = "tabmosaic.savedCollections";
 const GROUP_COLORS = ["grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan"];
@@ -26,6 +28,7 @@ const refreshButton = document.querySelector("#refreshButton");
 const workspaceRefreshButton = document.querySelector("#workspaceRefreshButton");
 const saveWorkspaceButton = document.querySelector("#saveWorkspaceButton");
 const chatSelectedTabsButton = document.querySelector("#chatSelectedTabsButton");
+const refineSelectedTabsButton = document.querySelector("#refineSelectedTabsButton");
 const organizeNowButton = document.querySelector("#organizeNowButton");
 const dashboardUndoButton = document.querySelector("#dashboardUndoButton");
 const dashboardRestoreButton = document.querySelector("#dashboardRestoreButton");
@@ -55,6 +58,13 @@ const localModelHelp = document.querySelector("#localModelHelp");
 const aiSettingsStatus = document.querySelector("#aiSettingsStatus");
 const testAIButton = document.querySelector("#testAIButton");
 const clearAIKeyButton = document.querySelector("#clearAIKeyButton");
+const searchSettingsForm = document.querySelector("#searchSettingsForm");
+const searchEnabledInput = document.querySelector("#searchEnabledInput");
+const searchBaseUrlInput = document.querySelector("#searchBaseUrlInput");
+const searchMaxResultsInput = document.querySelector("#searchMaxResultsInput");
+const searchKeyInput = document.querySelector("#searchKeyInput");
+const searchSettingsStatus = document.querySelector("#searchSettingsStatus");
+const clearSearchKeyButton = document.querySelector("#clearSearchKeyButton");
 const copyDiagnosticsButton = document.querySelector("#copyDiagnosticsButton");
 const copyFeedbackButton = document.querySelector("#copyFeedbackButton");
 const diagnosticsStatus = document.querySelector("#diagnosticsStatus");
@@ -76,6 +86,7 @@ workspaceRefreshButton.addEventListener("click", loadDashboard);
 organizeNowButton.addEventListener("click", organizeFromDashboard);
 saveWorkspaceButton.addEventListener("click", saveWorkspaceFromDashboard);
 chatSelectedTabsButton.addEventListener("click", chatWithSelectedDashboardTabs);
+refineSelectedTabsButton?.addEventListener("click", refineSelectedDashboardTabsWithAI);
 dashboardUndoButton.addEventListener("click", undoFromDashboard);
 dashboardRestoreButton.addEventListener("click", restoreClosedFromDashboard);
 aiSettingsForm.addEventListener("submit", saveAISettings);
@@ -83,6 +94,8 @@ aiProviderPresetSelect?.addEventListener("change", applyAIProviderPreset);
 aiBaseUrlInput.addEventListener("change", () => syncAIProviderPresetSelect(aiBaseUrlInput.value));
 testAIButton.addEventListener("click", testAIConnection);
 clearAIKeyButton.addEventListener("click", clearAIKey);
+searchSettingsForm?.addEventListener("submit", saveSearchSettings);
+clearSearchKeyButton?.addEventListener("click", clearSearchKey);
 createTodoFromSelectionButton?.addEventListener("click", createTodoFromSelectedTabs);
 saveSelectionCollectionButton?.addEventListener("click", saveSelectedTabsAsCollection);
 dashboardAgentTasks?.addEventListener("click", handleBrowserWorkAction);
@@ -105,9 +118,12 @@ document.querySelectorAll(".dashboard-nav-item").forEach((button) => {
 document.querySelectorAll(".dashboard-chip[data-filter]").forEach((button) => {
   button.addEventListener("click", () => setActiveGroupFilter(button.dataset.filter || "all"));
 });
+window.addEventListener("hashchange", () => setActiveDashboardPage(getDashboardPageFromLocation()));
 
+setActiveDashboardPage(getDashboardPageFromLocation());
 loadDashboard();
 loadAISettings();
+loadSearchSettings();
 
 async function loadDashboard() {
   const result = await chrome.storage.local.get([
@@ -164,12 +180,18 @@ function renderDashboard(run, rules = [], workspaces = [], tasks = latestAgentTa
 }
 
 function setActiveDashboardPage(pageName) {
+  const nextPage = ["workspace", "rules", "settings"].includes(pageName) ? pageName : "workspace";
   document.querySelectorAll(".dashboard-nav-item").forEach((button) => {
-    button.classList.toggle("active", button.dataset.page === pageName);
+    button.classList.toggle("active", button.dataset.page === nextPage);
   });
   document.querySelectorAll(".dashboard-page").forEach((page) => {
-    page.classList.toggle("active", page.dataset.page === pageName);
+    page.classList.toggle("active", page.dataset.page === nextPage);
   });
+}
+
+function getDashboardPageFromLocation() {
+  const value = String(window.location.hash || "").replace(/^#/, "").trim();
+  return ["workspace", "rules", "settings"].includes(value) ? value : "workspace";
 }
 
 function setActiveGroupFilter(filterName) {
@@ -630,6 +652,36 @@ async function chatWithSelectedDashboardTabs() {
   markDashboardSelectedTabRows();
 }
 
+async function refineSelectedDashboardTabsWithAI() {
+  const tabs = getSelectedDashboardTabs();
+
+  if (tabs.length < 2) {
+    syncDashboardSelectedTabsButton();
+    return;
+  }
+
+  const windowId = toOptionalInteger(tabs[0]?.windowId);
+  const openSidebarPromise = openSidebarForDashboardContext(windowId);
+  await setSidebarContextFromDashboard(buildSidebarSelectedTabsContext(tabs));
+  await setSidebarPendingPrompt({
+    text: msg("refineSelectedTabsPrompt"),
+    source: "dashboard-selected-tabs",
+    createdAt: new Date().toISOString()
+  });
+  await openSidebarPromise;
+  markDashboardSelectedTabRows();
+}
+
+async function setSidebarPendingPrompt(prompt) {
+  await chrome.storage.local.set({
+    [SIDEBAR_PENDING_PROMPT_KEY]: {
+      text: String(prompt?.text || "").slice(0, 500),
+      source: String(prompt?.source || "dashboard").slice(0, 80),
+      createdAt: String(prompt?.createdAt || new Date().toISOString()).slice(0, 40)
+    }
+  });
+}
+
 function getSelectedDashboardTabs() {
   const tabsById = new Map(
     (latestRun?.snapshot?.tabs || [])
@@ -682,6 +734,12 @@ function syncDashboardSelectedTabsButton() {
   chatSelectedTabsButton.disabled = count < 2;
   chatSelectedTabsButton.textContent = count ? msg("chatSelectedTabs", [count]) : msg("chatSelectedTabsZero");
   chatSelectedTabsButton.setAttribute("aria-label", msg("chatSelectedTabs", [Math.max(count, 0)]));
+  if (refineSelectedTabsButton) {
+    refineSelectedTabsButton.hidden = count < 2;
+    refineSelectedTabsButton.disabled = count < 2;
+    refineSelectedTabsButton.textContent = count ? msg("refineSelectedTabs", [count]) : msg("refineSelectedTabsZero");
+    refineSelectedTabsButton.setAttribute("aria-label", msg("refineSelectedTabs", [Math.max(count, 0)]));
+  }
   syncDashboardWorkbenchSelectionButtons(count);
 }
 
@@ -1169,6 +1227,143 @@ async function clearAIKey() {
   }
 }
 
+async function loadSearchSettings() {
+  if (!searchSettingsForm) return;
+
+  const result = await chrome.storage.local.get(SEARCH_SETTINGS_KEY);
+  const settings = normalizeSearchSettings(result[SEARCH_SETTINGS_KEY]);
+  searchEnabledInput.checked = Boolean(settings.enabled);
+  searchBaseUrlInput.value = settings.baseUrl;
+  searchMaxResultsInput.value = String(settings.maxResults);
+  searchKeyInput.value = "";
+  searchKeyInput.placeholder = settings.apiKey
+    ? msg("apiKeySavedPlaceholder")
+    : msg("apiKeyStoredPlaceholder");
+  searchSettingsStatus.textContent = canUseSearchSettings(settings)
+    ? msg("agentSearchProviderReady", ["Tavily"])
+    : msg("agentSearchProviderNeeded");
+}
+
+async function saveSearchSettings(event) {
+  event.preventDefault();
+
+  try {
+    const existing = await chrome.storage.local.get(SEARCH_SETTINGS_KEY);
+    const previous = normalizeSearchSettings(existing[SEARCH_SETTINGS_KEY]);
+    const baseUrl = normalizeSearchBaseUrl(searchBaseUrlInput.value);
+    const apiKey = searchKeyInput.value.trim() || previous.apiKey;
+    const maxResults = normalizeSearchMaxResults(searchMaxResultsInput.value);
+
+    if (searchEnabledInput.checked && apiKey) {
+      await ensureSearchProviderPermission(baseUrl);
+    }
+
+    const next = {
+      ...previous,
+      enabled: Boolean(searchEnabledInput.checked),
+      provider: "tavily",
+      baseUrl,
+      apiKey,
+      maxResults,
+      searchDepth: "basic",
+      includeAnswer: true
+    };
+
+    await chrome.storage.local.set({ [SEARCH_SETTINGS_KEY]: next });
+    searchKeyInput.value = "";
+    await loadSearchSettings();
+    searchSettingsStatus.textContent = msg("searchSettingsSaved");
+  } catch (error) {
+    searchSettingsStatus.textContent = error?.message || msg("agentSearchProviderNeeded");
+  }
+}
+
+async function clearSearchKey() {
+  const confirmed = window.confirm(msg("clearSearchKeyConfirm"));
+
+  if (!confirmed) return;
+
+  clearSearchKeyButton.disabled = true;
+  clearSearchKeyButton.textContent = msg("clearing");
+  searchSettingsStatus.textContent = "";
+
+  try {
+    const result = await chrome.storage.local.get(SEARCH_SETTINGS_KEY);
+    const previous = normalizeSearchSettings(result[SEARCH_SETTINGS_KEY]);
+    await chrome.storage.local.set({
+      [SEARCH_SETTINGS_KEY]: {
+        ...previous,
+        enabled: false,
+        apiKey: ""
+      }
+    });
+    searchKeyInput.value = "";
+    await loadSearchSettings();
+    searchSettingsStatus.textContent = msg("searchKeyCleared");
+  } catch (error) {
+    searchSettingsStatus.textContent = `${msg("couldNotClearSearchKey")} ${error?.message || ""}`.trim();
+  } finally {
+    clearSearchKeyButton.disabled = false;
+    clearSearchKeyButton.textContent = msg("clearSearchKey");
+  }
+}
+
+function normalizeSearchSettings(settings = {}) {
+  return {
+    enabled: Boolean(settings.enabled),
+    provider: "tavily",
+    baseUrl: normalizeSearchBaseUrl(settings.baseUrl || "https://api.tavily.com"),
+    apiKey: String(settings.apiKey || "").trim(),
+    maxResults: normalizeSearchMaxResults(settings.maxResults),
+    searchDepth: String(settings.searchDepth || "basic").toLowerCase() === "advanced" ? "advanced" : "basic",
+    includeAnswer: settings.includeAnswer !== false
+  };
+}
+
+function normalizeSearchBaseUrl(baseUrl) {
+  try {
+    const parsed = new URL(String(baseUrl || "https://api.tavily.com").trim());
+    if (parsed.protocol !== "https:") return "https://api.tavily.com";
+    parsed.hash = "";
+    parsed.search = "";
+    parsed.pathname = parsed.pathname.replace(/\/+$/, "");
+    return parsed.toString().replace(/\/+$/, "");
+  } catch {
+    return "https://api.tavily.com";
+  }
+}
+
+function normalizeSearchMaxResults(value) {
+  return Math.min(8, Math.max(1, Number.parseInt(value || "3", 10) || 3));
+}
+
+function canUseSearchSettings(settings = {}) {
+  return Boolean(settings.enabled && String(settings.apiKey || "").trim());
+}
+
+async function ensureSearchProviderPermission(baseUrl) {
+  const origin = getSearchProviderPermissionOrigin(baseUrl);
+
+  if (!chrome.permissions?.contains || !chrome.permissions?.request) {
+    return { granted: true, origin, required: true, reason: "permissions-api-unavailable" };
+  }
+
+  const hasPermission = await chrome.permissions.contains({ origins: [origin] });
+  if (hasPermission) return { granted: true, origin, required: true };
+
+  const granted = await chrome.permissions.request({ origins: [origin] });
+  if (!granted) {
+    throw new Error(msg("aiProviderPermissionDenied", [origin]));
+  }
+
+  return { granted: true, origin, required: true };
+}
+
+function getSearchProviderPermissionOrigin(baseUrl) {
+  const url = new URL(normalizeSearchBaseUrl(baseUrl));
+  return `${url.protocol}//${url.hostname}/*`;
+}
+
 async function clearLocalData() {
   const confirmed = window.confirm(msg("clearLocalDataConfirm"));
 
@@ -1494,12 +1689,14 @@ function renderDashboardWorkbench() {
 function renderAgentTasks() {
   if (!dashboardAgentTasks) return;
 
-  if (!latestAgentTasks.length) {
+  const visibleTasks = latestAgentTasks.filter((task) => task.status !== "archived");
+
+  if (!visibleTasks.length) {
     dashboardAgentTasks.innerHTML = `<p class="empty">${escapeHtml(msg("noAgentTasksYet"))}</p>`;
     return;
   }
 
-  dashboardAgentTasks.innerHTML = latestAgentTasks
+  dashboardAgentTasks.innerHTML = visibleTasks
     .slice(0, 3)
     .map((task) => renderAgentTaskRow(task))
     .join("");
@@ -1508,17 +1705,32 @@ function renderAgentTasks() {
 function renderAgentTaskRow(task) {
   const count = Array.isArray(task.tabs) ? task.tabs.length : 0;
   const meta = buildBrowserWorkMeta(task);
+  const status = task.status === "done" ? "done" : "open";
+  const doneLabel = status === "done" ? msg("reopenTodo") : msg("markDone");
   return `
-    <article class="dashboard-agent-minirow" data-browser-work-kind="task" data-browser-work-id="${escapeHtml(String(task.id || ""))}">
-      <span class="dashboard-agent-minirow-icon" aria-hidden="true">✓</span>
+    <article class="dashboard-agent-minirow ${escapeHtml(status)}" data-browser-work-kind="task" data-browser-work-id="${escapeHtml(String(task.id || ""))}">
+      <span class="dashboard-agent-minirow-icon" aria-hidden="true">${status === "done" ? "✓" : "□"}</span>
       <div class="dashboard-agent-minirow-copy">
         <strong>${escapeHtml(task.title || msg("todo"))}</strong>
         <small>${escapeHtml(meta || `${msg("tabsCount", [count])} · ${msg("localOnly")}`)}</small>
+        ${renderBrowserWorkChecklistPreview(task.checklist)}
+        ${renderBrowserWorkSourcePreview(task.sources)}
         ${renderBrowserWorkTabPreview(task.tabs)}
       </div>
-      <button class="dashboard-agent-row-action" type="button" data-browser-work-action="ask">
-        ${escapeHtml(msg("askInSidebar"))}
-      </button>
+      <div class="dashboard-agent-row-actions">
+        <button class="dashboard-agent-row-action" type="button" data-browser-work-action="focus">
+          ${escapeHtml(msg("focusSource"))}
+        </button>
+        <button class="dashboard-agent-row-action" type="button" data-browser-work-action="ask">
+          ${escapeHtml(msg("askInSidebar"))}
+        </button>
+        <button class="dashboard-agent-row-action" type="button" data-browser-work-action="toggle-done">
+          ${escapeHtml(doneLabel)}
+        </button>
+        <button class="dashboard-agent-row-action quiet" type="button" data-browser-work-action="archive">
+          ${escapeHtml(msg("archiveTodo"))}
+        </button>
+      </div>
     </article>
   `;
 }
@@ -1546,11 +1758,17 @@ function renderCollectionRow(collection) {
       <div class="dashboard-agent-minirow-copy">
         <strong>${escapeHtml(collection.name || msg("collection"))}</strong>
         <small>${escapeHtml(meta || `${msg("tabsCount", [count])} · ${msg("localOnly")}`)}</small>
+        ${renderBrowserWorkSourcePreview(collection.sources)}
         ${renderBrowserWorkTabPreview(collection.tabs)}
       </div>
-      <button class="dashboard-agent-row-action" type="button" data-browser-work-action="ask">
-        ${escapeHtml(msg("askInSidebar"))}
-      </button>
+      <div class="dashboard-agent-row-actions">
+        <button class="dashboard-agent-row-action" type="button" data-browser-work-action="focus">
+          ${escapeHtml(msg("focusSource"))}
+        </button>
+        <button class="dashboard-agent-row-action" type="button" data-browser-work-action="ask">
+          ${escapeHtml(msg("askInSidebar"))}
+        </button>
+      </div>
     </article>
   `;
 }
@@ -1571,13 +1789,52 @@ function renderBrowserWorkTabPreview(tabs = []) {
   return `<div class="dashboard-agent-tab-preview" aria-label="${escapeHtml(msg("linkedTabs"))}">${preview}${more}</div>`;
 }
 
+function renderBrowserWorkSourcePreview(sources = []) {
+  const sourceList = Array.isArray(sources) ? sources : [];
+  const safeSources = sourceList
+    .map((source) => ({
+      title: String(source?.title || "").trim(),
+      hostname: String(source?.hostname || "").trim()
+    }))
+    .filter((source) => source.title || source.hostname)
+    .slice(0, 2);
+
+  if (!safeSources.length) return "";
+
+  const preview = safeSources
+    .map((source) => `<span>${escapeHtml(source.hostname || source.title)}</span>`)
+    .join("");
+  const more = sourceList.length > 2 ? `<span>${escapeHtml(msg("moreTabsInline", [sourceList.length - 2]))}</span>` : "";
+
+  return `<div class="dashboard-agent-source-preview" aria-label="${escapeHtml(msg("linkedSources"))}">${preview}${more}</div>`;
+}
+
+function renderBrowserWorkChecklistPreview(checklist = []) {
+  const items = (Array.isArray(checklist) ? checklist : [])
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  if (!items.length) return "";
+
+  return `
+    <ul class="dashboard-agent-checklist-preview" aria-label="${escapeHtml(msg("todoChecklist"))}">
+      ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+    </ul>
+  `;
+}
+
 function buildBrowserWorkMeta(item = {}) {
   const tabs = Array.isArray(item.tabs) ? item.tabs : [];
+  const sources = Array.isArray(item.sources) ? item.sources : [];
   const count = tabs.length;
+  const sourceCount = sources.length;
   const group = mostCommonValue(tabs.map((tab) => tab.groupName).filter(Boolean));
   const host = mostCommonValue(tabs.map((tab) => tab.hostname).filter(Boolean));
-  const source = group || host || msg("selectedTabsCollection");
-  return `${msg("tabsCount", [count])} · ${source} · ${msg("localOnly")}`;
+  const sourceHost = mostCommonValue(sources.map((source) => source.hostname).filter(Boolean));
+  const source = group || host || sourceHost || msg("selectedTabsCollection");
+  const countCopy = count ? msg("tabsCount", [count]) : msg("sourcesCount", [sourceCount]);
+  return `${countCopy} · ${source} · ${msg("localOnly")}`;
 }
 
 async function handleBrowserWorkAction(event) {
@@ -1590,7 +1847,24 @@ async function handleBrowserWorkAction(event) {
   const itemId = row?.dataset.browserWorkId;
   const item = findBrowserWorkItem(kind, itemId);
 
-  if (!item || action !== "ask") return;
+  if (!item) return;
+
+  if (action === "focus") {
+    await focusBrowserWorkSource(item);
+    return;
+  }
+
+  if (kind === "task" && action === "toggle-done") {
+    await toggleBrowserWorkTaskDone(item);
+    return;
+  }
+
+  if (kind === "task" && action === "archive") {
+    await archiveBrowserWorkTask(item);
+    return;
+  }
+
+  if (action !== "ask") return;
 
   await askAboutBrowserWorkItem(item);
 }
@@ -1627,6 +1901,60 @@ async function askAboutBrowserWorkItem(item) {
   await setSidebarContextFromDashboard(context);
   await openSidebarPromise;
   showDashboardSelectionNotice(msg("browserWorkSentToSidebar", [tabIds.length]));
+}
+
+async function focusBrowserWorkSource(item) {
+  const currentTabsById = new Map(
+    (latestRun?.snapshot?.tabs || [])
+      .map((tab) => [Number(tab.id), tab])
+      .filter(([tabId]) => Number.isInteger(tabId))
+  );
+  const tabIds = Array.isArray(item.tabIds)
+    ? item.tabIds.map((tabId) => Number(tabId)).filter((tabId) => currentTabsById.has(tabId))
+    : [];
+  const firstTabId = tabIds[0];
+
+  if (!Number.isInteger(firstTabId)) {
+    showDashboardSelectionNotice(msg("noOpenSourceTab"));
+    return;
+  }
+
+  const response = await chrome.runtime.sendMessage({
+    type: "FOCUS_DASHBOARD_TAB",
+    tabId: firstTabId
+  });
+
+  showDashboardSelectionNotice(response?.ok ? msg("browserWorkSourceFocused") : response?.error || msg("couldNotOpenTab"));
+}
+
+async function toggleBrowserWorkTaskDone(task) {
+  const nextStatus = task.status === "done" ? "open" : "done";
+  await updateBrowserWorkTask(task.id, (current) => ({
+    ...current,
+    status: nextStatus,
+    completedAt: nextStatus === "done" ? new Date().toISOString() : "",
+    updatedAt: new Date().toISOString()
+  }));
+  showDashboardSelectionNotice(nextStatus === "done" ? msg("todoMarkedDone") : msg("todoReopened"));
+}
+
+async function archiveBrowserWorkTask(task) {
+  await updateBrowserWorkTask(task.id, (current) => ({
+    ...current,
+    status: "archived",
+    archivedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }));
+  showDashboardSelectionNotice(msg("todoArchived"));
+}
+
+async function updateBrowserWorkTask(taskId, updater) {
+  const nextTasks = latestAgentTasks.map((task) => (
+    String(task.id || "") === String(taskId || "") ? updater(task) : task
+  ));
+  await chrome.storage.local.set({ [AGENT_TASKS_KEY]: nextTasks });
+  latestAgentTasks = nextTasks;
+  renderAgentTasks();
 }
 
 async function createTodoFromSelectedTabs() {

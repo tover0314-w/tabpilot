@@ -44,11 +44,12 @@ Coverage:
 - Agentic Classification V2 refinement should surface metadata-only split/merge suggestions in the Sidebar completion message without applying browser changes
 - Sidebar Agent tool registry should keep one validated tool contract for metadata reads, page-content reads, planning tools, and action tools
 - Dashboard selected-tabs chat entry should remain hidden until 2+ tab rows are selected, preserve `selected_tabs` scope in Sidebar/Agent context, avoid cross-window mixing, show a compact reset notice when selection moves to another window, and not read page text from Dashboard
+- Dashboard selected-tabs AI refinement entry should remain hidden until 2+ tab rows are selected, open Sidebar with `selected_tabs` context, prefill a content-regroup prompt, and not auto-submit or read page text from Dashboard
 - Group/selected-tabs visible-text reading is user-triggered and default enabled for the scoped question; it must render a tool card, cap reads at 6 tabs, skip or extra-confirm sensitive/restricted pages, and keep extracted context session-only
 - Group/selected-tabs tool disclosure must visually read as a lightweight inline assistant status, not a standalone tool panel
 - Selected-tabs running tool cards must use `Read selected tabs` / `read_selected_tabs_pages`, while current-group running tool cards use `Read group pages` / `read_group_pages`
 - Group/selected-tabs temporary site access must check existing per-origin permissions, request only missing origins, release only session-owned newly granted origins, and preserve pre-existing user/provider permissions
-- Group/selected-tabs answers render a compact session-only group summary card with context label, visible-text/metadata source, read/skipped counts, skipped reason chips, top hosts/themes, and safe next steps; missing temporary site access must render separately from restricted/unreadable pages, appear in the compact tool card when relevant, and produce a concrete Chrome site-access retry step; zero-readable batches must be marked metadata-only, state that no page body was read/sent/stored, and the group summary is not persisted
+- Group/selected-tabs answers render as Markdown-style assistant messages, while read/skipped counts, skipped reason chips, visible-text/session-only disclosure, and missing temporary site-access guidance stay in the compact tool card. Zero-readable batches must be marked metadata-only, state that no page body was read/sent/stored, and avoid persisting summaries.
 - DeepSeek multi-tab Page Agent payload should include only capped visible text, titles, hostnames, headings, selected text, skipped reasons, skipped reason breakdown counts, and tool-card counts; it must exclude full URLs/query/hash, browser history, saved workspace contents, persistent summaries, and TabMosaic cloud storage
 - Selected page-region chat must be user-triggered from Sidebar, render an `extract_selected_page_region` tool card, use a page-local click picker, send only selected element visible text plus safe lightweight structure, include bounded table headers/rows through the redaction path, remain session-only, and include only cropped screenshot metadata while excluding screenshot image bytes/data URLs from the text-only Page Agent payload
 - Content-assisted regrouping should route through `REGROUP_CONTEXT_TABS`, read capped visible text only after a user request, redact full URLs/secrets, validate proposed tab IDs against readable tabs, render an Apply / Cancel preview, and avoid native group changes until Apply
@@ -63,7 +64,11 @@ Coverage:
 - Side panel composer preserves recent user and Agent messages in an in-memory local thread
 - Side panel disables stale Chat Refine Apply/Cancel buttons when a newer draft appears or a draft is cancelled
 - Side panel quick action chips route through the same chat command path and append user/Agent messages to the local thread
-- Side panel composer routes direct safe agent commands for current-tab summary, organize, Undo, Restore Closed, Dashboard, and local workspace save before falling back to chat-refine preview
+- Side panel composer routes direct safe agent commands for current-tab summary, organize, Undo, Restore Closed, Dashboard, local workspace save, and local Work Queue todo creation before falling back to chat-refine preview
+- Sidebar natural-language todo creation stores only local tab metadata from current tab / current group / selected-tabs context, renders a Markdown assistant message, and does not read page text, store full URLs, or contact the AI/search provider
+- Sidebar current-page checklist todo creation reuses the user-triggered Page Agent visible-text flow, respects sensitive-page confirmation, stores generated checklist items locally, and does not persist raw page text or full URLs
+- Search Tool source rows support Open / Save / Todo; Save/Todo persist sanitized local sources only after user click and never auto-open search result pages
+- Pasted link handling renders a normal assistant message, strips query/hash for local persistence, and does not open, fetch, summarize, or send link content without a separate user-triggered content-read flow
 - Side panel composer answers local capability/help questions without requiring page reads or an organize run
 - Side panel composer renders open-ended fallback questions as normal assistant messages when DeepSeek is not enabled or no organize context exists, instead of surfacing the local parser error
 - Side panel current-page summary and local page question answers render inside the chat message flow and keep the legacy summary panel hidden
@@ -113,6 +118,7 @@ Coverage:
 - AI connection troubleshooting renders concise next-step codes for local server/model loading, listed-model selection, exact model-name checks, synthetic-only fallback, missing remote API key, provider-origin permission, HTTPS/localhost boundary, and generic provider settings without sending an extra probe or real user content
 - AI connection supports the configured BYOK OpenAI-compatible provider only after provider-origin permission; it sends no tab data, full URLs, page text, chat history, rules, workspace snapshots, or real user content
 - BYOK provider config tests explicit host permission UX, provider validation, local key storage, localhost endpoint handling, remote HTTP rejection, and the same minimized payload boundaries
+- Agent web search tests Tavily-style BYOK separately from the AI model provider: missing provider does not send a request, Settings stores the search key locally, provider-origin permission is requested only for the configured search host, and successful search sends only the normalized typed query with raw content/images off
 - AI host guardrail keeps background validation, Dashboard validation, Dashboard permission copy, and manifest host permissions aligned: required host stays DeepSeek-only, custom hosts stay optional/user-triggered
 - Local model presets for Ollama / LM Studio show compact setup guidance in Dashboard Settings without saving settings, calling providers, requesting permissions, reading tabs, or widening host permissions
 - Hidden private-beta AI settings copy explains BYOK provider boundaries when the Settings path is opened intentionally for testing
@@ -129,6 +135,8 @@ node tools/preflight.js --deepseek
 node tools/preflight.js --deepseek-fixture
 node tools/deepseek_smoke_test.js
 node tools/deepseek_smoke_test.js --classify-fixture
+node tools/deepseek_real_tabs_classification.js
+node tools/capture_real_ai_sidepanel_result.js
 ```
 
 Expected:
@@ -138,6 +146,9 @@ Expected:
 - no real browser tab data is sent
 - --classify-fixture sends synthetic tabs only and rejects invented tabIds
 - provider smoke uses bounded requests. DeepSeek-specific CLI smoke remains limited to DeepSeek, while extension Dashboard connection testing supports custom OpenAI-compatible hosts through explicit origin permission.
+- real-tab classification sends current Chrome tab title, hostname, path without query/hash, window index, active state, and local semantic hints to the configured model
+- real-tab classification does not send full URLs, query strings, hashes, page body text, cookies, form values, browser history, local storage, saved workspace contents, or API keys
+- real AI Sidebar screenshots use the model-produced classification result, not the deterministic UI mock fixture
 ```
 
 Optional runtime smoke test:
@@ -148,6 +159,7 @@ node tools/preflight.js --agent-flow
 node tools/preflight.js --large-runtime
 node tools/chrome_runtime_smoke_test.js
 node tools/chrome_runtime_smoke_test.js --agent-flow
+node tools/chrome_runtime_smoke_test.js --real-ai-content-regroup-screenshot
 node tools/chrome_runtime_smoke_test.js --large-tabs
 node tools/open_manual_qa_profile.js --dry-run
 node tools/open_manual_qa_profile.js --self-test
@@ -157,11 +169,13 @@ The runtime script uses a temporary browser profile and synthetic tabs. It prefe
 
 Runtime coverage includes one-click organize, safe duplicate close, Restore Closed, Chat Refine apply, Dashboard group title/color apply, Dashboard same-window tab move into an existing native group, Dashboard drag/drop tab assignment into an existing native group, Dashboard tab focus, Dashboard selected-tabs context entry UI-contract coverage, Dashboard local workspace save/delete, Dashboard Duplicate Center tab focus, Dashboard Restore Closed, Dashboard Undo, and real Sidebar composer command submission for Open Dashboard, context-aware composer state, selected-tabs context tool-card rendering, selected-tabs follow-up routing, synthetic HTTP visible-text extraction using a temporary fixture host grant, content-assisted regroup preview rendering, content-assisted regroup Apply into native Chrome groups, ephemeral chat thread rendering, capability/help answer, open-ended fallback answer without DeepSeek, local workspace save command, next-step answer, current-page chat summary response, current-page question rendering, Restore Closed, Undo, Organize Again, group-status answer, AI-status answer, duplicate-review answer, closed-duplicate answer, active-tab answer, protected-tab answer, read-later candidate answer, tab search, and opening a matching existing tab.
 
-Current local smoke coverage verifies the group/selected-tabs context path at the background/payload/UI-contract level: Dashboard selected-tabs entry, selected-tabs scope preservation in the metadata Agent, active context rendered as a stacked top row inside the Sidebar composer, selected-tabs running tool-card copy, concrete `SUMMARIZE_CONTEXT_TABS` routing, concrete `REGROUP_CONTEXT_TABS` routing, compact inline assistant tool-state rendering, compact skipped reason rendering, context answers leading with assistant prose before supporting metadata, compact group summary rendering, skipped reason chips/breakdown counts, capped extraction of at most 6 tabs, protected/restricted/missing-permission/unreadable/empty/over-cap skipped-tab reporting, missing-permission retry guidance, zero-readable metadata-only fallback copy, session-only follow-up history capped to 10 local Q/A turns, DeepSeek multi-tab payload minimization, content-assisted regroup payload minimization, redaction, no full URLs, no TabMosaic cloud storage, invented tab-summary rejection, invented regroup tab-ID rejection, and Apply-gated regroup draft rendering.
+Current local smoke coverage verifies the group/selected-tabs context path at the background/payload/UI-contract level: Dashboard selected-tabs entry, selected-tabs scope preservation in the metadata Agent, active context rendered as a stacked top row inside the Sidebar composer, selected-tabs running tool-card copy, concrete `SUMMARIZE_CONTEXT_TABS` routing, concrete `REGROUP_CONTEXT_TABS` routing, compact inline assistant tool-state rendering, compact skipped reason rendering, Markdown-style context answers without nested summary cards or tab-summary rows, skipped reason chips/breakdown counts, capped extraction of at most 6 tabs, protected/restricted/missing-permission/unreadable/empty/over-cap skipped-tab reporting, missing-permission retry guidance, zero-readable metadata-only fallback copy, session-only follow-up history capped to 10 local Q/A turns, DeepSeek multi-tab payload minimization, content-assisted regroup payload minimization, redaction, no full URLs, no TabMosaic cloud storage, invented tab-summary rejection, invented regroup tab-ID rejection, and Apply-gated regroup draft rendering.
 
 Automated runtime coverage now verifies capped extraction from synthetic HTTP pages with a temporary fixture host grant because CDP page targets cannot accept the browser-native optional permission prompt. Next beta runtime/manual coverage for group/selected-tabs page context should include: accepting the native optional per-site permission prompt in Chrome, sensitive/restricted page skip or extra confirmation, partial answer when some pages are unreadable, and no persistence of multi-tab text or summaries to local storage, diagnostics, feedback templates, or cloud paths.
 
 The optional DeepSeek Agent-flow runtime check opens a temporary Chrome profile with synthetic URLs, enables DeepSeek only inside temporary extension storage, submits an open-ended tab-management question through the real Sidebar composer, verifies that the metadata-only Agent answer renders as a plain assistant message card without relevant tab rows or action chips, then submits a follow-up question (`Why those tabs?`) to verify short-term conversation context. It verifies the card does not show a separate privacy footnote, separate suggested-next-steps block, full URLs, page-text fields, fixture token text, or internal window/tab/group IDs. It then asks DeepSeek to move Chrome extension docs tabs into `Extension Planning`, verifies a validated Apply/Cancel draft renders with matched tab rows, clicks Apply, and verifies the real native Chrome tab group updates without closing tabs. It does not read the user's real Chrome profile, real browser tabs, page text, page summaries, or full URLs, and AI answers do not apply browser actions automatically without user Apply.
+
+The optional real-AI content-regroup screenshot check opens a temporary Chrome profile, loads local synthetic HTTP pages through a temporary fixture host permission, enables DeepSeek only in temporary extension storage, submits `Regroup these selected tabs by actual page content` through the real Sidebar composer, verifies that capped visible text was read for 3/3 fixture tabs, verifies the model produced a DeepSeek-backed Apply/Cancel regroup preview rather than local fallback, and writes `artifacts/real-ai-classification/content-regroup-sidepanel.png`. It does not read the user's real Chrome profile, real tabs, real page bodies, full URLs, or browser history.
 
 The optional large-tab runtime probe opens a temporary Chrome profile with synthetic URLs only and verifies the real native tab group path against 96 tabs by default. It checks organize completion, moved tabs, safe duplicate closes, review duplicate groups, expected group titles, bounded runtime, and sanitized run snapshots. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`.
 
@@ -189,6 +203,7 @@ Expected:
 - writes screenshots only to ignored local artifacts/ui-screenshots/
 - writes store screenshot drafts only to ignored local artifacts/store-screenshots/
 - marks store screenshot drafts DO NOT SUBMIT YET until user approval
+- mock screenshots are regression fixtures only; do not use them as acceptance proof of AI classification or Agent answer quality
 ```
 
 Package check:

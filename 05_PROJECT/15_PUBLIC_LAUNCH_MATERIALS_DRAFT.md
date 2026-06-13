@@ -242,7 +242,7 @@ The local extension core is intended to be fully open source so users can inspec
 Disclosure:
 
 ```text
-License is still being confirmed. No LICENSE file is included yet.
+License: Apache-2.0.
 ```
 
 ### Final CTA
@@ -366,7 +366,7 @@ Current status: controlled local/private beta. I am looking for feedback on grou
 Do not post until:
 
 ```text
-license confirmed
+Apache-2.0 license confirmed
 public repo URL confirmed
 privacy policy URL confirmed if linked
 demo video approved
@@ -564,4 +564,3 @@ Before publishing any of this:
 [ ] Claims match the current implementation and launch checklist.
 [ ] User approves final screenshots and demo video.
 ```
-

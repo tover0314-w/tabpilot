@@ -177,6 +177,8 @@ The local `currentRun` state used by the sidebar/dashboard strips restore URLs, 
 
 The local `savedWorkspaces` state is created only from hidden/private-beta workspace save paths. It stores a minimized local snapshot for future workspace features: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. It strips full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, and cloud IDs. Copied diagnostics report only a saved workspace count, not names or browsing metadata.
 
+The local `agentTasks` and `savedCollections` Workbench states are created only after explicit user actions. Tab-linked items store tab IDs, titles, hostnames, paths, group metadata, and protected state. Source-linked items from Search Tool or pasted links store sanitized source title, hostname, path, optional snippet, and a source URL with username/password/query/hash stripped for local reference. Current-page checklist todos may store generated checklist items locally after the user-triggered Page Agent flow. They must not store raw page text, full tab URLs, query/hash, cookies, form values, browser history, cloud IDs, or TabMosaic cloud memory.
+
 Dashboard can delete an individual saved workspace snapshot after browser confirmation. The background handler only removes the matching item from `tabmosaic.savedWorkspaces`; it does not call `chrome.tabs`, `chrome.tabGroups`, `chrome.windows`, AI provider requests, cloud APIs, or broad local-data removal.
 
 Restore Closed snapshots are the intentional local-only exception: they store the minimum restorable URL/title/window/index/group metadata needed to reopen safely closed duplicate tabs. They are never included in copied diagnostics or feedback templates, are cleared by `Restore Closed` / `Clear Local Data`, and have no upload path.
@@ -195,6 +197,7 @@ The extension also keeps a local-only duplicate close safety audit for beta vali
 - 确认 group/selected-tabs 内容读取只有用户发起后运行，先显示 tool card，最多 6 tabs，敏感/受限/缺少站点权限页面跳过或额外确认，且不持久保存多页面正文/摘要。
 - 确认 group/selected-tabs 临时站点权限只请求缺失 origin，并且完成后只释放本次新授权的 origin，不撤销用户此前已有的站点/provider 权限。
 - 确认 savedWorkspaces 不含完整 URL、restore URL、URL hashes、favicon URL 或 page text。
+- 确认 agentTasks/savedCollections 只在用户点击或明确命令后创建，source URLs 去除 username/password/query/hash，且不保存原始页面正文。
 - 确认 Undo snapshot 只保存恢复分组所需的最小字段。
 - 确认 API key 不出现在客户端日志。
 - 确认 Clear Local Data 删除本地 API key 和 rules，但不关闭/移动 tabs。

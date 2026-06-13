@@ -120,6 +120,16 @@
             >
               Chat selected
             </button>
+            <button
+              id="refineSelectedTabsButton"
+              class="dashboard-chip dashboard-run-action"
+              type="button"
+              data-i18n="refineSelectedTabsZero"
+              disabled
+              hidden
+            >
+              Refine with AI
+            </button>
             <button id="dashboardUndoButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="undo" disabled>
               Undo
             </button>
@@ -179,19 +189,22 @@
           </header>
 
           <section id="settings" class="dashboard-section">
-            <form id="aiSettingsForm" class="settings-form compact-settings-form">
-              <div>
-                <h3 data-i18n="aiClassification">AI Classification</h3>
-                <p class="settings-intro" data-i18n="aiClassificationCopy">
-                  Use your own OpenAI-compatible provider for tab grouping and Agent answers. TabMosaic keeps payloads minimized.
-                </p>
+            <form id="aiSettingsForm" class="settings-form compact-settings-form settings-tool-card">
+              <div class="settings-card-head">
+                <div>
+                  <h3 data-i18n="aiClassification">AI Classification</h3>
+                  <p class="settings-intro" data-i18n="aiClassificationCopy">
+                    Use your own OpenAI-compatible provider for tab grouping and Agent answers. TabMosaic keeps payloads minimized.
+                  </p>
+                </div>
+                <span class="settings-tool-badge" data-i18n="modelTool">Model tool</span>
               </div>
-              <label class="checkbox-row">
+              <label class="checkbox-row settings-toggle-row">
                 <input id="aiEnabledInput" type="checkbox" />
                 <span data-i18n="useDeepSeek">Use my AI provider for classification and Agent answers</span>
               </label>
 
-              <label>
+              <label class="settings-field">
                 <span data-i18n="apiKey">API key</span>
                 <input
                   id="aiKeyInput"
@@ -267,6 +280,65 @@
                 </button>
               </div>
               <p id="aiSettingsStatus" class="settings-status" role="status"></p>
+            </form>
+
+            <form id="searchSettingsForm" class="settings-form compact-settings-form settings-tool-card search-tool-settings">
+              <div class="settings-card-head">
+                <div>
+                  <h3 data-i18n="agentWebSearchSettings">Search Tool</h3>
+                  <p class="settings-intro" data-i18n="agentWebSearchSettingsCopy">
+                    Add a provider-backed search tool for Agent answers. It does not open a browser search page.
+                  </p>
+                </div>
+                <span class="settings-tool-badge" data-i18n="agentTool">Agent tool</span>
+              </div>
+              <p class="settings-tool-note" data-i18n="searchToolBoundary">
+                The Agent receives sources in chat. A browser tab opens only if you click a source.
+              </p>
+              <label class="checkbox-row settings-toggle-row">
+                <input id="searchEnabledInput" type="checkbox" />
+                <span data-i18n="enableAgentWebSearch">Enable search tool</span>
+              </label>
+
+              <label class="settings-field">
+                <span data-i18n="apiKey">API key</span>
+                <input
+                  id="searchKeyInput"
+                  type="password"
+                  placeholder="Stored locally in chrome.storage.local"
+                  data-i18n-placeholder="apiKeyStoredPlaceholder"
+                  autocomplete="off"
+                />
+                <small data-i18n="searchApiKeyCopy">Required for Tavily. Stored locally and never sent to TabMosaic.</small>
+              </label>
+
+              <details class="settings-advanced settings-provider-details">
+                <summary>
+                  <span data-i18n="providerDetails">Provider details</span>
+                  <small data-i18n="agentWebSearchProviderCopy">Tavily is the first supported search tool adapter.</small>
+                </summary>
+                <div class="settings-provider-grid settings-provider-grid-compact">
+                  <label>
+                    <span data-i18n="baseUrl">Base URL</span>
+                    <input id="searchBaseUrlInput" type="url" value="https://api.tavily.com" />
+                    <small data-i18n="searchBaseUrlCopy">Custom HTTPS search hosts ask for provider-origin permission.</small>
+                  </label>
+
+                  <label>
+                    <span data-i18n="maxResults">Max results</span>
+                    <input id="searchMaxResultsInput" type="number" min="1" max="8" value="3" />
+                    <small data-i18n="maxResultsCopy">Keep this small so answers stay focused.</small>
+                  </label>
+                </div>
+              </details>
+
+              <div class="settings-actions">
+                <button class="primary-button" type="submit" data-i18n="saveSearchSettings">Save Search Tool</button>
+                <button id="clearSearchKeyButton" class="secondary-button" type="button" data-i18n="clearSearchKey">
+                  Clear Search Key
+                </button>
+              </div>
+              <p id="searchSettingsStatus" class="settings-status" role="status"></p>
             </form>
 
             <details class="settings-advanced settings-privacy-details">

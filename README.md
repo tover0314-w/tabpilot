@@ -13,8 +13,10 @@ Continue with the sidebar agent
 
 Current status:
 
-- Full open-source direction is confirmed; license is still `CONFIRM`, so no `LICENSE` file is added yet.
+- Full open-source direction is confirmed; the repository is licensed under Apache-2.0.
 - Controlled local/private beta is ready.
+- Public GitHub source release is ready after the final secret/public repo audit passes.
+- Public marketing launch is not ready yet.
 - Public Chrome Web Store launch is not ready yet.
 - Default Smart Organize is metadata-first: title, hostname, path, tab state, and group state.
 - Page text is read only after a user-triggered page or selected-tabs/group question.
@@ -206,7 +208,17 @@ node tools/secret_scan.js
 node tools/public_repo_audit.js
 ```
 
-它会检查 tracked + 未忽略的新增文件，拦截 `.env`、`dist/`、`artifacts/`、`output/`、私测 AI 配置、candidate secrets 和未确认 license 等风险，并输出 public repo 仍然阻塞的确认项。当前预期仍是 `READY_PUBLIC_REPO_PUSH=no`，直到 license、raw archive 公开处理、real-profile QA 和公开发布材料等事项确认。
+它会检查 tracked + 未忽略的新增文件，拦截 `.env`、`dist/`、`artifacts/`、`output/`、私测 AI 配置、candidate secrets、未确认 license 和未批准 raw archive 等风险，并输出 public repo / source release / launch 状态。
+
+审计输出会拆成三层：
+
+```text
+READY_PUBLIC_SOURCE_RELEASE    GitHub/source code 是否可以公开
+READY_PUBLIC_MARKETING_LAUNCH  官网/社媒/Product Hunt/HN 等公开传播是否可以开始
+READY_PUBLIC_CHROME_WEB_STORE_LAUNCH  Chrome Web Store 是否可以公开提交/发布
+```
+
+当前预期是源码开源为 `yes`，公开营销和 Chrome Web Store 仍为 `no`：商店/营销层还要额外确认品牌、支持邮箱、隐私政策 URL、商店披露、最终截图、beta ramp，并完成真实 profile QA。
 
 可选 DeepSeek/OpenAI-compatible request-format provider 检查：
 
@@ -239,7 +251,7 @@ CONTRIBUTING.md
 .github/ISSUE_TEMPLATE/ui_bug.yml
 ```
 
-这些表单都要求提交者不要提交 API key、full URL、tab title、page text、email、bearer token、私有截图或私有 rule pattern。Dashboard 复制出来的 diagnostics / feedback template 也必须先人工检查再提交。License 仍未确认，所以当前没有 `LICENSE` 文件。
+这些表单都要求提交者不要提交 API key、full URL、tab title、page text、email、bearer token、私有截图或私有 rule pattern。Dashboard 复制出来的 diagnostics / feedback template 也必须先人工检查再提交。License: Apache-2.0。
 
 生成图标和打包 beta zip：
 
@@ -277,9 +289,10 @@ CHROME_PATH="/path/to/chrome-or-chromium" node tools/chrome_runtime_smoke_test.j
 node tools/write_private_beta_ai_config.js
 node tools/preflight.js --agent-flow
 node tools/chrome_runtime_smoke_test.js --agent-flow
+node tools/chrome_runtime_smoke_test.js --real-ai-content-regroup-screenshot
 ```
 
-`write_private_beta_ai_config.js` 会从 `.env.local` 生成本地忽略的 `extension/private-beta-ai-settings.json`，让你用真实 unpacked extension 测 DeepSeek 时不用再进 Settings 手填 key。`.env.local` 可以写 `DEEPSEEK_API_KEY=...`，也兼容只有一行 `sk-...` 的本地私测格式。这个文件不会打印 key、不会进 git、也不会进正式 zip。后面两个脚本会用临时 Chrome profile、synthetic tabs 和 `.env.local`/本地私测配置跑真实 sidebar composer 流程：用户输入开放式 tab 管理问题，DeepSeek metadata-only Agent 返回纯 assistant 消息卡片，不附加 tab 行或安全动作按钮；随后再让 DeepSeek 生成一个受本地校验的 `move_tabs` 草稿，点击 Apply 后验证真实 Chrome native tab group 更新且没有关闭 tab。它不会打印 API key，不读取真实 Chrome profile，不读取真实 tabs，不读取页面正文，不发送完整 URL，也不会让 AI 在用户 Apply 前自动执行浏览器动作。
+`write_private_beta_ai_config.js` 会从 `.env.local` 生成本地忽略的 `extension/private-beta-ai-settings.json`，让你用真实 unpacked extension 测 DeepSeek 时不用再进 Settings 手填 key。`.env.local` 可以写 `DEEPSEEK_API_KEY=...`，也兼容只有一行 `sk-...` 的本地私测格式。这个文件不会打印 key、不会进 git、也不会进正式 zip。后面两个脚本会用临时 Chrome profile、synthetic tabs 和 `.env.local`/本地私测配置跑真实 sidebar composer 流程：用户输入开放式 tab 管理问题，DeepSeek metadata-only Agent 返回纯 assistant 消息卡片，不附加 tab 行或安全动作按钮；随后再让 DeepSeek 生成一个受本地校验的 `move_tabs` 草稿，点击 Apply 后验证真实 Chrome native tab group 更新且没有关闭 tab。`--real-ai-content-regroup-screenshot` 会打开本地 synthetic HTTP 页面，读取 3 个 fixture tabs 的 visible text，调用 DeepSeek 生成内容重分组 preview，并把真实 Sidebar 截图写到 `artifacts/real-ai-classification/content-regroup-sidepanel.png`。它不会打印 API key，不读取真实 Chrome profile，不读取真实 tabs，不读取真实页面正文，不发送完整 URL，也不会让 AI 在用户 Apply 前自动执行浏览器动作。
 
 可选真实 Chrome 大标签 synthetic runtime 探针：
 

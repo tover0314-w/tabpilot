@@ -11,9 +11,14 @@ const EXTENSION_DIR = path.join(ROOT_DIR, "extension");
 const ENV_PATH = path.join(ROOT_DIR, ".env.local");
 const SHOULD_RUN_LARGE_TABS = process.argv.includes("--large-tabs");
 const SHOULD_RUN_AGENT_FLOW = process.argv.includes("--agent-flow");
+const SHOULD_CAPTURE_REAL_AI_CONTENT_REGROUP = process.argv.includes("--real-ai-content-regroup-screenshot");
 const LARGE_TAB_COUNT = Number(process.env.TABMOSAIC_LARGE_TAB_COUNT || 96);
 const DEFAULT_AI_BASE_URL = "https://api.deepseek.com";
 const DEFAULT_AI_MODEL = "deepseek-v4-flash";
+const REAL_AI_ARTIFACT_DIR = path.join(ROOT_DIR, "artifacts", "real-ai-classification");
+const REAL_AI_CONTENT_REGROUP_SCREENSHOT = path.join(REAL_AI_ARTIFACT_DIR, "content-regroup-sidepanel.png");
+const REAL_AI_CONTEXT_TABS_SCREENSHOT = path.join(REAL_AI_ARTIFACT_DIR, "context-tabs-sidepanel.png");
+const SIDEPANEL_SCREENSHOT_VIEWPORT = { width: 390, height: 860 };
 const SYNTHETIC_CONTENT_HOST = "tabmosaic-runtime.test";
 const SYNTHETIC_CONTENT_PAGES = [
   {
@@ -107,6 +112,11 @@ async function main() {
     await waitForChrome(port);
     const extensionId = await waitForExtensionId(port, () => chromeLog);
     console.log(`Loaded extension ${extensionId}`);
+
+    if (SHOULD_CAPTURE_REAL_AI_CONTENT_REGROUP) {
+      await runRealAIContentRegroupScreenshot(port, extensionId, syntheticContentServer);
+      return;
+    }
 
     if (SHOULD_RUN_LARGE_TABS) {
       await runLargeTabsRuntimeProbe(port, extensionId);
@@ -1016,10 +1026,11 @@ async function runSyntheticContentRuntimeProbe(port, cdp, syntheticContentServer
   const regroupPreview = await waitFor(async () => {
     return evaluate(
       cdp,
-      `(() => {
+      `chrome.storage.local.get("tabmosaic.chatDraft").then((stored) => {
+        const draft = stored["tabmosaic.chatDraft"];
         const toolCards = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card"));
         const cards = Array.from(document.querySelectorAll("#chatPanel .content-regroup-card"));
-        if (toolCards.length <= ${Number(regroupToolCardsBefore)} || cards.length <= ${Number(contentCardsBefore)}) return null;
+        if (!draft || toolCards.length <= ${Number(regroupToolCardsBefore)} || cards.length <= ${Number(contentCardsBefore)}) return null;
 
         const toolCard = toolCards[toolCards.length - 1];
         const card = cards[cards.length - 1];
@@ -1027,10 +1038,10 @@ async function runSyntheticContentRuntimeProbe(port, cdp, syntheticContentServer
         return {
           toolText: (toolCard.textContent || "").replace(/\\s+/g, " ").trim(),
           text: (card.textContent || "").replace(/\\s+/g, " ").trim(),
-          groupCount: card.querySelectorAll(".content-regroup-group").length,
+          groupCount: Array.isArray(draft.groups) ? draft.groups.length : 0,
           draftId: applyButton?.dataset.draftId || ""
         };
-      })()`
+      })`
     );
   }, "Synthetic content regroup preview did not render", 30000);
 
@@ -1072,6 +1083,205 @@ async function runSyntheticContentRuntimeProbe(port, cdp, syntheticContentServer
   assertEqual(applied.tabs.length, tabsBeforeApply.length, "Synthetic content regroup must not close tabs");
 
   console.log("PASS Chrome runtime read synthetic HTTP page content with a temporary fixture host grant, rendered content regroup preview, and applied native groups");
+}
+
+async function runRealAIContentRegroupScreenshot(port, extensionId, syntheticContentServer) {
+  assert(syntheticContentServer?.origin, "Synthetic content server was not started");
+  const aiSettings = getDeepSeekSettingsFromEnv();
+
+  for (const page of SYNTHETIC_CONTENT_PAGES) {
+    await createTarget(port, `${syntheticContentServer.origin}${page.path}`);
+  }
+
+  const extensionPage = await createTarget(port, `chrome-extension://${extensionId}/sidepanel.html`);
+  console.log(`Opened extension page ${extensionPage.url}`);
+  const cdp = await CDPSession.connect(extensionPage.webSocketDebuggerUrl);
+
+  try {
+    await cdp.send("Page.enable");
+    await cdp.send("Emulation.setDeviceMetricsOverride", {
+      width: SIDEPANEL_SCREENSHOT_VIEWPORT.width,
+      height: SIDEPANEL_SCREENSHOT_VIEWPORT.height,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    await waitForPageReady(cdp);
+    await waitForExtensionApis(cdp);
+
+    const syntheticTabs = await waitFor(async () => {
+      const tabs = await evaluate(cdp, "chrome.tabs.query({})");
+      const tabsByPath = new Map();
+
+      for (const tab of tabs) {
+        try {
+          const url = new URL(tab.url || "");
+          if (url.hostname === SYNTHETIC_CONTENT_HOST) {
+            tabsByPath.set(url.pathname, tab);
+          }
+        } catch {
+          // Ignore non-URL extension targets.
+        }
+      }
+
+      const orderedTabs = SYNTHETIC_CONTENT_PAGES.map((page) => tabsByPath.get(page.path)).filter(Boolean);
+      return orderedTabs.length === SYNTHETIC_CONTENT_PAGES.length ? orderedTabs : null;
+    }, "Synthetic HTTP content tabs did not open");
+    const selectedTabIds = syntheticTabs.map((tab) => tab.id);
+    const selectedTabsContext = {
+      scope: "selected_tabs",
+      tabIds: selectedTabIds,
+      tabCount: selectedTabIds.length,
+      windowId: syntheticTabs[0]?.windowId || null,
+      title: "Runtime content tabs",
+      source: "real-ai-content-regroup-screenshot"
+    };
+
+    await evaluate(
+      cdp,
+      `chrome.storage.local.set({
+        "tabmosaic.aiSettings": {
+          enabled: true,
+          provider: "deepseek",
+          baseUrl: ${JSON.stringify(aiSettings.baseUrl)},
+          model: ${JSON.stringify(aiSettings.model)},
+          apiKey: ${JSON.stringify(aiSettings.apiKey)}
+        },
+        "tabmosaic.sidebarContext": {
+          ...${JSON.stringify(selectedTabsContext)},
+          updatedAt: new Date().toISOString()
+        }
+      })`
+    );
+
+    const contextRendered = await waitFor(async () => {
+      return evaluate(
+        cdp,
+        `(async () => {
+          const bar = document.querySelector("#agentContextBar");
+          const text = bar?.textContent || "";
+          if (bar && bar.dataset.contextScope === "selected_tabs" && /Selected tabs/.test(text)) return true;
+          await chrome.storage.local.set({
+            "tabmosaic.sidebarContext": {
+              ...${JSON.stringify(selectedTabsContext)},
+              updatedAt: new Date().toISOString()
+            }
+          });
+          return false;
+        })()`
+      );
+    }, "Sidebar did not render selected-tabs context before real AI content regroup screenshot");
+    assert(contextRendered, "Selected-tabs context did not render");
+
+    const contextSummariesBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .context-tabs-message").length`);
+    const contextToolCardsBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card").length`);
+    await submitSidepanelComposerTrusted(cdp, "What are these selected tabs about?");
+
+    const contextAnswer = await waitFor(async () => {
+      return evaluate(
+        cdp,
+        `(() => {
+          const toolCards = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card"));
+          const summaries = Array.from(document.querySelectorAll("#chatPanel .context-tabs-message"));
+          if (toolCards.length <= ${Number(contextToolCardsBefore)} || summaries.length <= ${Number(contextSummariesBefore)}) return null;
+
+          const toolCard = toolCards[toolCards.length - 1];
+          const summary = summaries[summaries.length - 1];
+          return {
+            toolText: (toolCard.textContent || "").replace(/\\s+/g, " ").trim(),
+            text: (summary.textContent || "").replace(/\\s+/g, " ").trim(),
+            provider: summary.dataset.provider || "",
+            aiUsed: summary.dataset.aiUsed === "true"
+          };
+        })()`
+      );
+    }, "Real AI selected-tabs context answer did not render", 45000);
+
+    assert(contextAnswer.aiUsed, `Selected-tabs answer fell back to local mode: ${JSON.stringify(contextAnswer)}`);
+    assert(contextAnswer.provider === "deepseek", `Expected DeepSeek provider for selected-tabs answer, got ${contextAnswer.provider || "empty"}`);
+    assert(/3\/3 tabs/.test(contextAnswer.toolText), `Selected-tabs tool card did not show 3/3 reads: ${contextAnswer.toolText}`);
+    assert(/Product|Planning|Roadmap/i.test(contextAnswer.text), "Selected-tabs answer did not include product/planning content");
+    assert(/Debug|QA|Release|Incident/i.test(contextAnswer.text), "Selected-tabs answer did not include QA/debug content");
+    assert(/Design|Interface|Review|UX|UI/i.test(contextAnswer.text), "Selected-tabs answer did not include design content");
+    assert(!/https?:\/\//i.test(contextAnswer.text), "Selected-tabs answer leaked a full URL");
+
+    await scrollAgentThreadToBottom(cdp);
+    fs.mkdirSync(REAL_AI_ARTIFACT_DIR, { recursive: true });
+    const contextScreenshot = await cdp.send("Page.captureScreenshot", {
+      format: "png",
+      fromSurface: true
+    });
+    fs.writeFileSync(REAL_AI_CONTEXT_TABS_SCREENSHOT, Buffer.from(contextScreenshot.data, "base64"));
+
+    const contentCardsBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .content-regroup-card").length`);
+    const toolCardsBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card").length`);
+    await submitSidepanelComposerTrusted(cdp, "Regroup these selected tabs by actual page content");
+
+    const regroupPreview = await waitFor(async () => {
+      return evaluate(
+      cdp,
+      `chrome.storage.local.get("tabmosaic.chatDraft").then((stored) => {
+          const draft = stored["tabmosaic.chatDraft"];
+          const toolCards = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card"));
+          const cards = Array.from(document.querySelectorAll("#chatPanel .content-regroup-card"));
+          if (!draft || toolCards.length <= ${Number(toolCardsBefore)} || cards.length <= ${Number(contentCardsBefore)}) return null;
+
+          const toolCard = toolCards[toolCards.length - 1];
+          const card = cards[cards.length - 1];
+          return {
+            toolText: (toolCard.textContent || "").replace(/\\s+/g, " ").trim(),
+            text: (card.textContent || "").replace(/\\s+/g, " ").trim(),
+            groupCount: Array.isArray(draft.groups) ? draft.groups.length : 0,
+            provider: draft.provider || "",
+            aiUsed: Boolean(draft.aiUsed),
+            aiError: draft.aiError || "",
+            groupNames: Array.isArray(draft.groups) ? draft.groups.map((group) => group.name || "") : []
+          };
+        })`
+      );
+    }, "Real AI content regroup preview did not render", 45000);
+
+    assert(regroupPreview.aiUsed, `Regroup preview fell back to local mode: ${JSON.stringify(regroupPreview)}`);
+    assert(regroupPreview.provider === "deepseek", `Expected DeepSeek provider, got ${regroupPreview.provider || "empty"}`);
+    assert(/3\/3 tabs/.test(regroupPreview.toolText), `Regroup tool card did not show 3/3 reads: ${regroupPreview.toolText}`);
+    assert(regroupPreview.groupCount >= 3, `Regroup preview should show at least 3 groups: ${regroupPreview.text}`);
+    assert(/Product|Planning|Roadmap/i.test(regroupPreview.text), "Regroup preview did not include product/planning content");
+    assert(/Debug|QA|Release|Incident/i.test(regroupPreview.text), "Regroup preview did not include QA/debug content");
+    assert(/Design|Interface|Review|UX|UI/i.test(regroupPreview.text), "Regroup preview did not include design content");
+    assert(!/https?:\/\//i.test(regroupPreview.text), "Regroup preview leaked a full URL");
+
+    await scrollAgentThreadToBottom(cdp);
+
+    const screenshot = await cdp.send("Page.captureScreenshot", {
+      format: "png",
+      fromSurface: true
+    });
+    fs.writeFileSync(REAL_AI_CONTENT_REGROUP_SCREENSHOT, Buffer.from(screenshot.data, "base64"));
+
+    console.log("PASS real AI content regroup screenshot captured");
+    console.log(`provider=${regroupPreview.provider}`);
+    console.log(`aiUsed=${regroupPreview.aiUsed}`);
+    console.log(`readTabs=3`);
+    console.log(`contextScreenshot=${path.relative(ROOT_DIR, REAL_AI_CONTEXT_TABS_SCREENSHOT)}`);
+    console.log(`groups=${regroupPreview.groupNames.join(" | ")}`);
+    console.log(`screenshot=${path.relative(ROOT_DIR, REAL_AI_CONTENT_REGROUP_SCREENSHOT)}`);
+  } finally {
+    cdp.close();
+  }
+}
+
+async function scrollAgentThreadToBottom(cdp) {
+  await evaluate(
+    cdp,
+    `(() => {
+      const thread = document.querySelector(".agent-thread");
+      if (thread) {
+        thread.scrollTop = thread.scrollHeight;
+        thread.dispatchEvent(new Event("scroll", { bubbles: true }));
+      }
+      return true;
+    })()`
+  );
+  await delay(250);
 }
 
 async function runDeepSeekAgentFlow(cdp) {

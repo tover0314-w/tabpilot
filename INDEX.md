@@ -31,7 +31,7 @@
 - `tools/capture_real_page_chat_screenshot.js`：可选真实公开页面 Sidebar QA 截图脚本，使用临时 Chrome profile、临时 extension copy、显式 `--ai` DeepSeek 配置，验证 current-page 多轮对话和 selected page-region 对话。
 - `tools/build_store_screenshots.js`：可选 Chrome Web Store screenshot 草稿生成脚本，用 mock UI 截图生成 5 张本地 1280x800 PNG，输出到 ignored artifacts，DO NOT SUBMIT YET。
 - `tools/extension_smoke_test.js`：无依赖 Node smoke test，覆盖 manifest、localization、permission explanation、redacted diagnostics、Chat Refine、rules、dedupe safety、sensitive summary confirmation、AI output validation、AI status visibility 和 local data deletion。
-- `tools/chrome_runtime_smoke_test.js`：可选 Chrome runtime smoke test，使用临时 profile 尝试加载 unpacked extension 并验证真实 native tab groups。
+- `tools/chrome_runtime_smoke_test.js`：可选 Chrome runtime smoke test，使用临时 profile 尝试加载 unpacked extension 并验证真实 native tab groups；`--real-ai-content-regroup-screenshot` 会用临时 fixture pages + DeepSeek 生成内容重分组 Sidebar 截图。
 - `tools/open_manual_qa_profile.js`：打开一次性手动 QA Chrome profile，加载 extension、本地 checklist、合成 QA tabs、sidepanel 和 dashboard，不触碰真实 Chrome profile；checklist 覆盖 AI 状态、敏感页 summary 确认、Undo/Restore、Dashboard apply 和隐私输出。
 - `tools/deepseek_smoke_test.js`：读取 `.env.local` 的 DeepSeek/OpenAI-compatible request-format smoke test，默认只检查 `/models`，可选合成 tabs 分类。
 - `tools/qa_seed_tabs.js`：手动 QA seed tabs 脚本，默认打印 URLs，`--open` 才会打开 Chrome；包含合成 billing 页面用于敏感 summary 确认。
@@ -113,7 +113,7 @@
 - `14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md`：Chrome Web Store 数据披露草稿，映射数据类别、Limited Use、DeepSeek 共享和确认门，DO NOT SUBMIT YET。
 - `15_PUBLIC_LAUNCH_MATERIALS_DRAFT.md`：公开发布素材草稿，包含 landing page、demo video、Product Hunt、Hacker News、X/Twitter 和 SEO 文案，DO NOT PUBLISH YET。
 - `16_PUBLIC_LAUNCH_DECISION_PACKET.md`：public launch 决策包，汇总 license、public repo 范围、品牌/域名、隐私 URL、Chrome Store、BYOK、Free/Pro、analytics、QA 和素材确认项。
-- `17_PUBLIC_REPO_CLEANUP_CHECKLIST.md`：公开仓库清理清单，覆盖 keep/exclude 文件、secret scan、generated artifacts、raw archives、real-profile QA 记录和 public push 前检查。
+- `17_PUBLIC_REPO_CLEANUP_CHECKLIST.md`：公开仓库清理清单，覆盖 keep/exclude 文件、secret scan、generated artifacts、raw archive 私有备份状态、real-profile QA 记录和 public push 前检查。
 - `18_FEATURE_DISCUSSION_GUIDE.md`：逐功能讨论指南，汇总当前完成度、UI 截图入口、待讨论问题、剩余缺口和确认门。
 - `19_AGENT_SEARCH_WORK_AGENT_IMPLEMENTATION_PLAN.md`：Agent Search 和 Browser Work Agent 下一阶段实施计划，拆解 provider 配置、search results、todo agent、link/screenshot/attachment 输入和 QA。
 
@@ -122,4 +122,3 @@
 - `01_SOURCES.md`：官方参考。
 - `02_ASSUMPTIONS.md`：假设。
 - `03_RESEARCH_TODO.md`：后续调研。
-- `ARCHIVES/`：原始交付压缩包归档。

@@ -75,6 +75,8 @@ Duplicate close safety audit entries are kept locally as count-only events for b
 
 Saved workspace snapshots are created only from hidden/private-beta workspace save paths. They are local-only, stored in `chrome.storage.local`, and keep minimized workspace metadata: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts. They must not include full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud data, summaries, or chat history. Copied diagnostics expose only the saved workspace count.
 
+Work Queue tasks and saved Collections are local-only, stored in `chrome.storage.local`, and created only after user action from Dashboard selection, Sidebar todo commands, Search Tool source actions, pasted-link actions, or current-page checklist todo commands. Tab-linked items store tab title, hostname, path, tab IDs, and tab state only. Source-linked items store sanitized source title, hostname, path, optional snippet, and a local source URL with username/password/query/hash stripped. Current-page checklist todos may store generated checklist items locally after the user explicitly asks to read the current page; they must not persist raw page text, full URLs, browser history, cookies, form values, or cloud IDs.
+
 An individual saved workspace snapshot can be deleted from the hidden/private-beta workspace path after browser confirmation. This deletes only the selected local snapshot and must not restore, close, move, or regroup tabs.
 
 `Clear AI Key` removes only the locally saved AI API key, disables AI classification, and keeps local rules, recent organize results, Undo/Restore snapshots, privacy acceptance, chat drafts, diagnostics, and duplicate safety audit counts. It asks for browser confirmation and does not move or close tabs, call the AI provider, delete browser history, or delete cookies.
@@ -184,6 +186,17 @@ When Agent 需要读取多个页面正文
 Then Sidebar 先显示 tool card，说明工具、范围、最多 6 个 tabs、visible text 和 session-only
 And 敏感/受限/不可读页面被跳过或额外确认
 And 页面正文和摘要不被持久保存
+
+Given 用户把当前页面生成 checklist todo
+When Agent 读取当前页面 visible text
+Then 复用 current-page sensitive confirmation 和 Page Agent payload boundary
+And 只把生成后的 checklist 存在本地 Work Queue
+And 不持久保存原始页面正文、完整 URL、query/hash 或云端记忆
+
+Given 用户粘贴链接或保存搜索结果
+When 用户点击 Save 或 Todo
+Then 只保存本地 source metadata
+And 不自动打开、抓取、总结或上传链接页面内容
 
 Given 用户进入 privacy settings
 Then 用户可以查看权限解释、配置本地 API、单独清除本地 AI key、删除本地数据

@@ -1,16 +1,26 @@
 # Public Repo Cleanup Checklist
 
-Status: DRAFT - DO NOT PUSH PUBLICLY UNTIL D-L01, ARCHIVE, REAL-PROFILE QA, AND PUBLIC-LAUNCH MATERIALS ARE CLEARED  
-Decision state: D-L02 public repo boundary is confirmed by the user's full-open-source direction; this checklist still blocks unsafe or unapproved files  
-Last updated: 2026-06-12
+Status: PUBLIC SOURCE RELEASE READY AFTER FINAL AUDIT; DO NOT LAUNCH STORE/MARKETING UNTIL PUBLIC-LAUNCH MATERIALS ARE CLEARED
+Decision state: D-L01, D-L02, ARCHIVE, and D-L11 source-release deferral are confirmed; this checklist still blocks store/marketing launch until separate public-launch materials are cleared
+Last updated: 2026-06-13
 
-This checklist is for the final pass before making the repository public or pushing a public-launch branch.
+This checklist is for the final pass before making the repository public, pushing a public source-release branch, or preparing a public-launch branch.
 
 Current readiness:
 
 ```text
 READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes
+READY_PUBLIC_SOURCE_RELEASE=yes
+READY_PUBLIC_MARKETING_LAUNCH=no
 READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
+```
+
+Meaning:
+
+```text
+Public source release = GitHub/source code can be public with clear beta warnings.
+Public marketing launch = launch posts, website campaign, Product Hunt/HN/X-style announcement.
+Public Chrome Web Store launch = Chrome Web Store listing submitted/published for general users.
 ```
 
 ## 1. Principle
@@ -38,7 +48,7 @@ real-profile QA notes
 private screenshots
 ignored local artifacts
 unapproved legal/store copy as final
-raw imported archives unless explicitly confirmed
+raw imported archives
 ```
 
 ## 2. Must Confirm Before Public Push
@@ -46,14 +56,22 @@ raw imported archives unless explicitly confirmed
 These are not solved by this checklist:
 
 ```text
-[ ] D-L01 Open-source license confirmed.
+[x] D-L01 Open-source license confirmed.
 [x] D-L02 Public repo boundary confirmed.
+[x] ARCHIVE Raw imported archive reviewed and moved to private backup outside the public repo.
+[x] D-L11 Real-profile QA requirement explicitly deferred for GitHub-only source release.
+```
+
+D-L11_SOURCE_RELEASE_STATUS=DEFERRED_FOR_GITHUB_SOURCE_RELEASE
+
+These block public marketing and Chrome Web Store launch, but should not be mixed up with a GitHub-only source release:
+
+```text
 [ ] D-L03 Product name / domain confirmed or public copy clearly says working name.
 [ ] D-L04 Public developer identity / support email confirmed if store/legal docs are published.
 [ ] D-L05 Privacy policy URL confirmed if linked externally.
 [ ] D-L06 Chrome Web Store single-purpose wording approved before store submission.
 [ ] D-L07 Chrome Web Store data-use / Limited Use disclosure approved before store submission.
-[ ] D-L11 Real-profile QA requirement completed or explicitly deferred for GitHub-only source release.
 [ ] D-L12 Final screenshots/demo approved before public marketing/store use.
 ```
 
@@ -113,29 +131,21 @@ Chrome Web Store dashboard screenshots containing account data
 
 `dist/`, `artifacts/`, and `output/` are local generated outputs. They should be reproducible from source and ignored by git.
 
-## 5. Archive Decision Gate
+## 5. Archive Decision
 
-Current raw archive found:
+Resolved for public source release:
+
+```text
+The raw imported UI archive was removed from git tracking and moved to a private backup outside the public repository.
+```
+
+Do not re-add to the public repository unless the user separately approves after manual inspection.
+
+Previous archive:
 
 ```text
 06_REFERENCES/ARCHIVES/TabPilot-AI-UI.zip
 ```
-
-Decision needed before public push:
-
-```text
-Option A: keep archive public if it contains only user-owned design source and no private/sensitive content.
-Option B: remove archive from public repo and keep only summarized docs/screenshots.
-Option C: move archive to private backup outside the public repo.
-```
-
-Current recommendation:
-
-```text
-Use Option B or C unless the archive has been manually inspected and approved for public release.
-```
-
-Do not delete or untrack the archive automatically without user confirmation because it may be part of the imported harness history.
 
 ## 6. Pre-Public Commands
 
@@ -194,10 +204,10 @@ No API key or provider secret appears in tracked or unignored candidate files.
 
 `tools/public_repo_audit.js` scans tracked plus unignored candidate files for common secret patterns such as `sk-...` API keys and bearer tokens. Synthetic test keys such as `sk-secret` in local tests are allowed; real provider keys are not.
 
-Known item requiring decision:
+Known archive status:
 
 ```text
-06_REFERENCES/ARCHIVES/TabPilot-AI-UI.zip is currently tracked and must be reviewed before public repo launch.
+No raw imported archive should be tracked in the public source release.
 ```
 
 ## 8. Public README Audit
@@ -208,7 +218,7 @@ Confirm README says:
 open-source AI browser layer for Chrome
 controlled local/private beta
 public Chrome Web Store launch is not ready yet
-license is still CONFIRM if not yet approved
+license is Apache-2.0
 metadata-first Smart Organize
 page text is user-triggered only
 BYOK provider setup
@@ -238,21 +248,31 @@ CONFIRM BEFORE PUBLIC LAUNCH
 
 ## 10. Final Public Push Checklist
 
-Only after confirmation:
+GitHub/source release only after confirmation:
 
 ```text
-[ ] License added if approved.
-[ ] Public repo boundary approved.
-[ ] Raw archive decision resolved.
-[ ] Secrets scan passed.
-[ ] Public repo audit passed.
-[ ] Issue forms smoke passed.
-[ ] Extension smoke passed.
-[ ] Release package verification passed.
-[ ] Beta readiness still says public Chrome Web Store launch is not ready unless all public-launch blockers are actually resolved.
-[ ] README first screen reviewed.
-[ ] Privacy architecture reviewed.
+[x] License added if approved.
+[x] Public repo boundary approved.
+[x] Raw archive decision resolved.
+[x] Real-profile QA completed or explicitly deferred for GitHub-only source release.
+[x] Secrets scan passed.
+[x] Public repo audit passed.
+[x] Issue forms smoke passed.
+[x] Extension smoke passed.
+[x] Release package verification passed.
+[x] README first screen reviewed.
+[x] Privacy architecture reviewed.
+[x] Final public branch contains no ignored generated outputs.
+```
+
+Marketing / Chrome Web Store launch only after additional confirmation:
+
+```text
 [ ] Support/contact path reviewed.
+[ ] Privacy policy URL reviewed.
+[ ] Chrome Web Store wording reviewed.
+[ ] Chrome Web Store disclosure reviewed.
 [ ] Real-profile QA status stated truthfully.
-[ ] Final public branch contains no ignored generated outputs.
+[ ] Final screenshots/demo approved.
+[ ] Beta readiness still says public Chrome Web Store launch is not ready unless all public-launch blockers are actually resolved.
 ```

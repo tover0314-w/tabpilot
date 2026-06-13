@@ -1,8 +1,8 @@
 # Public Launch Decision Packet
 
-Status: CONFIRM BEFORE PUBLIC LAUNCH  
-Purpose: collect the remaining user decisions blocking public repo / Chrome Web Store / launch posts  
-Last updated: 2026-06-12
+Status: CONFIRM BEFORE PUBLIC LAUNCH
+Purpose: collect the remaining user decisions blocking public source release / Chrome Web Store / launch posts
+Last updated: 2026-06-13
 
 This packet does not finalize decisions. It turns the remaining blockers into a compact approval list.
 
@@ -21,14 +21,22 @@ Current evidence:
 
 ```text
 READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes
+READY_PUBLIC_SOURCE_RELEASE=yes
+READY_PUBLIC_MARKETING_LAUNCH=no
 READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
 ```
 
-Why public launch is still blocked:
+Why GitHub-only public source release is now clear:
 
 ```text
-open-source license not confirmed
-raw imported archive public-repo treatment not approved
+Apache-2.0 license confirmed and LICENSE added
+raw imported archive moved out of the public repo into private backup
+real-profile QA explicitly deferred for GitHub-only source release
+```
+
+Why public marketing / Chrome Web Store launch is still blocked:
+
+```text
 privacy policy URL / support email not confirmed
 Chrome Web Store disclosures not confirmed
 final screenshots / demo not approved
@@ -36,14 +44,16 @@ real-profile manual QA not completed
 beta user feedback not collected
 ```
 
-No `LICENSE` file was added because the open-source license remains unconfirmed.
-Public repo boundary is now treated as confirmed by the user's full-open-source direction, while secrets, ignored local artifacts, local private-beta config, completed real-profile QA notes, and unapproved raw archives remain excluded or blocked until separately cleared.
+`LICENSE` is now included with Apache-2.0.
+Public repo boundary is now treated as confirmed by the user's full-open-source direction, while secrets, ignored local artifacts, local private-beta config, completed real-profile QA notes, and raw imported archives remain excluded from the public source release.
+
+The product can move toward a GitHub source release before Chrome Web Store launch, but only if the README clearly says local/private beta, install-from-source, and public Chrome Web Store launch not ready yet.
 
 ## 2. Decision Summary
 
 | ID | Decision | Recommendation | Status |
 |---|---|---|---|
-| D-L01 | Open-source license | Apache-2.0 for permissive adoption plus explicit patent grant | CONFIRM |
+| D-L01 | Open-source license | Apache-2.0 for permissive adoption plus explicit patent grant | CONFIRMED BY USER |
 | D-L02 | Public repo boundary | Publish the local extension core, docs, prompts/schemas, tools, issue templates, and privacy materials; exclude secrets, ignored artifacts, completed real-profile QA notes, local private-beta config, and unapproved raw imported archives | CONFIRMED BY USER |
 | D-L03 | Product name / domain | Keep TabMosaic AI as working name only for now; re-confirm public brand/domain because the 2026-06-12 scan found a Chrome Web Store extension named `Tab Mosaic` | CONFIRM |
 | D-L04 | Public developer identity / support email | Use a stable public support email on the chosen domain | CONFIRM |
@@ -53,7 +63,7 @@ Public repo boundary is now treated as confirmed by the user's full-open-source 
 | D-L08 | First public build includes BYOK AI | Yes, keep BYOK as core positioning; no hosted AI, no account, no cloud sync in first public build | CONFIRM |
 | D-L09 | Free / Pro boundary | Local extension + BYOK core free/open source; hosted AI, sync, team, long-term memory, and managed workspace services later paid | CONFIRM |
 | D-L10 | Analytics policy | Ship first public build with no remote analytics involving browsing activity | CONFIRM |
-| D-L11 | Real-profile QA requirement | Run one full redacted real-profile QA pass before public Chrome Web Store submission | CONFIRM |
+| D-L11 | Real-profile QA requirement | Deferred for GitHub-only source release; before Chrome Web Store submission, run one full redacted real-profile QA pass | CONFIRMED BY USER FOR SOURCE RELEASE DEFERRAL |
 | D-L12 | Final screenshots / demo | Use mock/synthetic data only; user must approve final assets before store or launch posts | CONFIRM |
 | D-L13 | Beta user ramp | Start with 5-10 trusted testers, then 20-50 after critical issues are resolved | CONFIRM |
 | D-L14 | Public launch timing | Do not post PH/HN/X or submit Chrome Web Store until D-L01 through D-L13 are resolved | CONFIRM |
@@ -83,13 +93,20 @@ Alternatives:
 | Apache-2.0 | Still permissive; includes explicit patent grant |
 | AGPL-3.0 | Strong reciprocity; may reduce adoption and provider/community contributions |
 
-Do after confirmation:
+Completed after confirmation:
 
 ```text
 Add LICENSE.
 Update README license section.
 Update package/repo metadata if added later.
 Mark D-034-A as confirmed.
+```
+
+Status:
+
+```text
+CONFIRMED BY USER on 2026-06-13.
+LICENSE added with Apache-2.0 text.
 ```
 
 ### D-L02 Public Repo Boundary
@@ -134,7 +151,7 @@ API keys or provider console screenshots
 Open question:
 
 ```text
-Whether raw imported archive files in 06_REFERENCES/ARCHIVES should be kept public, moved to a private backup, or replaced by summarized docs only.
+Resolved for GitHub-only source release: raw imported archive files are not public. The imported UI zip was moved to a private backup outside the repository.
 ```
 
 ### D-L03 Product Name / Domain
@@ -350,10 +367,14 @@ product analytics tied to browsing activity
 Recommendation:
 
 ```text
+For GitHub-only source release: deferred by user confirmation on 2026-06-13.
+For Chrome Web Store / public marketing launch: run one full redacted real-profile QA pass before submission or launch posts.
 Run disposable QA profile first.
 Run one non-critical real-profile QA pass.
 Only then run one real day-to-day profile pass if the user is comfortable.
 ```
+
+D-L11_SOURCE_RELEASE_STATUS=DEFERRED_FOR_GITHUB_SOURCE_RELEASE
 
 Evidence template:
 
@@ -438,7 +459,7 @@ If launching GitHub before Chrome Web Store:
 Clearly say local/private beta.
 Clearly say install from source.
 Clearly say public Chrome Web Store launch is not ready yet.
-Clearly say license status if still pending.
+Clearly say Apache-2.0 license.
 ```
 
 ## 4. After Approval Work Plan
@@ -446,14 +467,11 @@ Clearly say license status if still pending.
 When the user approves the packet, next implementation/doc steps:
 
 ```text
-1. Add LICENSE if D-L01 is approved.
-2. Update README license and public repo sections.
-3. Update Decisions To Confirm statuses.
-4. Replace privacy policy placeholders once D-L04/D-L05 are provided.
-5. Finalize Chrome Store wording once D-L06/D-L07 are approved.
-6. Run real-profile QA and record redacted result outside git or in a sanitized copy.
-7. Generate and user-review final screenshots/demo.
-8. Prepare public repo cleanup and push.
+1. Replace privacy policy placeholders once D-L04/D-L05 are provided.
+2. Finalize Chrome Store wording once D-L06/D-L07 are approved.
+3. Run real-profile QA and record redacted result outside git or in a sanitized copy.
+4. Generate and user-review final screenshots/demo.
+5. Prepare public marketing and Chrome Web Store launch only after remaining public-launch gates are resolved.
 ```
 
 ## 5. Current Non-Negotiables

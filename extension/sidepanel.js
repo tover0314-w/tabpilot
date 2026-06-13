@@ -3,11 +3,16 @@ import { applyI18n, initI18n, msg } from "./i18n.js";
 const LAST_CLOSED_TABS_KEY = "tabmosaic.lastClosedTabs";
 const SIDEBAR_CONTEXT_KEY = "tabmosaic.sidebarContext";
 const SIDEBAR_MODE_KEY = "tabmosaic.sidebarMode";
+const SIDEBAR_PENDING_PROMPT_KEY = "tabmosaic.sidebarPendingPrompt";
+const AGENT_TASKS_KEY = "tabmosaic.agentTasks";
+const SAVED_COLLECTIONS_KEY = "tabmosaic.savedCollections";
 const CHAT_THREAD_LIMIT = 22;
 const AI_AGENT_CONVERSATION_LIMIT = 4;
 const PAGE_CHAT_CONVERSATION_LIMIT = 20;
 const CONTEXT_TABS_PERMISSION_LIMIT = 6;
 const CONTEXT_TABS_CHAT_CONVERSATION_LIMIT = 20;
+const MAX_AGENT_ITEMS = 30;
+const MAX_TODO_LINKED_TABS = 24;
 
 const statusPanel = document.querySelector("#statusPanel");
 const metricsGrid = document.querySelector("#metricsGrid");
@@ -49,13 +54,16 @@ let chatMessages = [];
 let activeSidebarContext = { scope: "current_tab" };
 let activeSidebarMode = "agent";
 let verticalTabsSearchTerm = "";
+let latestWebSearchResults = [];
+let latestDetectedLinks = [];
 
 await initI18n();
 applyI18n();
 await initSidebarContext();
 await initSidebarMode();
+await initSidebarPendingPrompt();
 
-dashboardTopButton.addEventListener("click", openDashboard);
+dashboardTopButton.addEventListener("click", () => openDashboard());
 organizeButton.addEventListener("click", () => runQuickChatCommand("organize again", msg("organizeAgain")));
 undoButton.addEventListener("click", () => runQuickChatCommand("undo", msg("undo")));
 restoreButton.addEventListener("click", () => runQuickChatCommand("restore closed", msg("restoreClosed")));
@@ -174,9 +182,10 @@ async function acceptPrivacyAndOrganize() {
   }
 }
 
-async function openDashboard() {
+async function openDashboard(page = "") {
+  const hash = page ? `#${encodeURIComponent(page)}` : "";
   await chrome.tabs.create({
-    url: chrome.runtime.getURL("dashboard.html")
+    url: chrome.runtime.getURL(`dashboard.html${hash}`)
   });
 }
 
@@ -248,6 +257,34 @@ async function switchSidebarMode(mode) {
       updatedAt: new Date().toISOString()
     }
   });
+}
+
+async function initSidebarPendingPrompt() {
+  if (!chatInput) return;
+
+  try {
+    const result = await chrome.storage.local.get(SIDEBAR_PENDING_PROMPT_KEY);
+    const prompt = result[SIDEBAR_PENDING_PROMPT_KEY];
+    const text = String(prompt?.text || "").trim();
+
+    if (!text || isStaleSidebarPendingPrompt(prompt)) return;
+
+    chatInput.value = text;
+    resizeComposer();
+    requestAnimationFrame(() => {
+      chatInput.focus();
+      chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
+    });
+    await chrome.storage.local.remove(SIDEBAR_PENDING_PROMPT_KEY);
+  } catch {
+    // Pending prompts are a convenience only; ignore storage failures.
+  }
+}
+
+function isStaleSidebarPendingPrompt(prompt) {
+  const createdAt = Date.parse(prompt?.createdAt || "");
+  if (!Number.isFinite(createdAt)) return true;
+  return Date.now() - createdAt > 5 * 60 * 1000;
 }
 
 function refreshVerticalTabsIfNeeded() {
@@ -500,6 +537,387 @@ async function saveCurrentWorkspace() {
       response.result?.workspace?.name || msg("savedWorkspace")
     ])
   });
+}
+
+async function createTodoFromSidebarContext(text) {
+  const context = normalizeSidebarContext(activeSidebarContext) || { scope: "current_tab" };
+  setBusy(true);
+
+  try {
+    const rawTabs = await getTodoTabsForSidebarContext(context);
+    const tabs = dedupeTabsById(rawTabs)
+      .slice(0, MAX_TODO_LINKED_TABS)
+      .map((tab) => sanitizeTabForSidebarWork(tab, context))
+      .filter((tab) => Number.isInteger(tab.id));
+
+    if (!tabs.length) {
+      renderChatPanel({
+        status: "info",
+        answer: msg("agentTodoNoContext")
+      });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const task = {
+      id: `task-${Date.now()}`,
+      title: buildSidebarTodoTitle(tabs, context),
+      status: "open",
+      source: "sidebar_agent",
+      sourcePrompt: sanitizeTodoSourcePrompt(text),
+      contextScope: context.scope,
+      createdAt: now,
+      updatedAt: now,
+      tabIds: tabs.map((tab) => tab.id).filter(Number.isInteger),
+      tabs
+    };
+    const stored = await chrome.storage.local.get(AGENT_TASKS_KEY);
+    const existingTasks = Array.isArray(stored[AGENT_TASKS_KEY]) ? stored[AGENT_TASKS_KEY] : [];
+    await chrome.storage.local.set({
+      [AGENT_TASKS_KEY]: [task, ...existingTasks].slice(0, MAX_AGENT_ITEMS)
+    });
+
+    renderChatPanel({
+      status: "todo-created",
+      answer: buildSidebarTodoMarkdown(task),
+      task
+    });
+  } catch (error) {
+    renderChatPanel({
+      status: "error",
+      answer: error?.message || msg("couldNotBuildSafeAction")
+    });
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function createChecklistTodoFromCurrentPage(text) {
+  setBusy(true);
+  renderChatPanel({
+    status: "loading",
+    answer: msg("agentTodoReadingPage")
+  });
+
+  const privacyResponse = await chrome.runtime.sendMessage({
+    type: "CHECK_SUMMARY_PRIVACY",
+    activeWindowId: getCurrentContextWindowId()
+  });
+
+  if (!privacyResponse?.ok) {
+    setBusy(false);
+    renderChatPanel({
+      status: "error",
+      answer: privacyResponse?.error || msg("pageCouldNotBeRead")
+    });
+    return;
+  }
+
+  const confirmedSensitiveTabId = confirmSensitiveSummaryIfNeeded(privacyResponse.result);
+
+  if (confirmedSensitiveTabId === false) {
+    setBusy(false);
+    renderChatPanel({
+      status: "info",
+      answer: msg("summaryCancelledCopy")
+    });
+    return;
+  }
+
+  renderChatPanel({
+    status: "loading",
+    answer: msg("agentTodoCreatingChecklist")
+  });
+
+  const question = buildPageTodoQuestion(text);
+  let response = await requestCurrentTabSummary(confirmedSensitiveTabId, question);
+
+  if (response?.ok && response.summary?.status === "needs-confirmation") {
+    const retryConfirmedTabId = confirmSensitiveSummaryIfNeeded(response.summary);
+
+    if (retryConfirmedTabId === false) {
+      setBusy(false);
+      renderChatPanel({
+        status: "info",
+        answer: msg("summaryCancelledCopy")
+      });
+      return;
+    }
+
+    response = await requestCurrentTabSummary(retryConfirmedTabId, question);
+  }
+
+  setBusy(false);
+
+  if (!response?.ok) {
+    renderChatPanel({
+      status: "error",
+      answer: response?.error || msg("pageCouldNotBeRead")
+    });
+    return;
+  }
+
+  if (response.summary?.status !== "completed") {
+    renderChatPanel({
+      status: response.summary?.status === "needs-ai-config" ? "info" : "error",
+      answer: response.summary?.summary || msg("pageCouldNotBeRead")
+    });
+    return;
+  }
+
+  const task = await saveChecklistTodoFromPageSummary(response.summary, text);
+  renderChatPanel({
+    status: "todo-created",
+    answer: buildChecklistTodoMarkdown(task),
+    task
+  });
+}
+
+function buildPageTodoQuestion(text) {
+  const userIntent = sanitizeTodoSourcePrompt(text);
+  const prefix = "Turn this page into a concise execution checklist for the user.";
+  const suffix = "Return concrete next actions, risks to check, and anything the user should not change casually.";
+
+  return [prefix, userIntent ? `User request: ${userIntent}.` : "", suffix]
+    .filter(Boolean)
+    .join(" ")
+    .slice(0, 240);
+}
+
+async function saveChecklistTodoFromPageSummary(summary, sourcePrompt) {
+  const context = normalizeSidebarContext(activeSidebarContext) || { scope: "current_tab" };
+  const rawTabs = await getTodoTabsForSidebarContext({ ...context, scope: "current_tab" });
+  const tabs = dedupeTabsById(rawTabs)
+    .slice(0, 1)
+    .map((tab) => sanitizeTabForSidebarWork(tab, context))
+    .filter((tab) => Number.isInteger(tab.id));
+  const checklist = buildChecklistItemsFromPageSummary(summary);
+  const now = new Date().toISOString();
+  const task = {
+    id: `task-${Date.now()}`,
+    title: buildPageChecklistTodoTitle(summary, tabs),
+    status: "open",
+    source: "current_page_agent",
+    sourcePrompt: sanitizeTodoSourcePrompt(sourcePrompt),
+    contextScope: "current_tab",
+    createdAt: now,
+    updatedAt: now,
+    tabIds: tabs.map((tab) => tab.id).filter(Number.isInteger),
+    tabs,
+    checklist,
+    pageAgent: {
+      provider: String(summary.provider || "").slice(0, 80),
+      aiUsed: Boolean(summary.aiUsed),
+      extractedChars: Number.isInteger(Number(summary.extractedChars)) ? Number(summary.extractedChars) : 0
+    }
+  };
+  const stored = await chrome.storage.local.get(AGENT_TASKS_KEY);
+  const existingTasks = Array.isArray(stored[AGENT_TASKS_KEY]) ? stored[AGENT_TASKS_KEY] : [];
+  await chrome.storage.local.set({
+    [AGENT_TASKS_KEY]: [task, ...existingTasks].slice(0, MAX_AGENT_ITEMS)
+  });
+
+  return task;
+}
+
+function buildChecklistItemsFromPageSummary(summary = {}) {
+  const keyPoints = Array.isArray(summary.keyPoints) ? summary.keyPoints : [];
+  const fromKeyPoints = keyPoints
+    .map(cleanChecklistItem)
+    .filter(Boolean);
+  const fromAnswer = String(summary.summary || "")
+    .split(/\n+|(?<=\.)\s+|(?<=。)\s*/)
+    .map((item) => item.replace(/^[-*]\s+|\d+[.)]\s+/g, ""))
+    .map(cleanChecklistItem)
+    .filter(Boolean);
+  const items = Array.from(new Set([...fromKeyPoints, ...fromAnswer]))
+    .filter((item) => item.length >= 8)
+    .slice(0, 6);
+
+  if (items.length) return items;
+  return [msg("agentTodoFallbackChecklist")];
+}
+
+function cleanChecklistItem(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .replace(/^[-*]\s+|\d+[.)]\s+/g, "")
+    .trim()
+    .replace(/[.。]+$/g, "")
+    .slice(0, 180);
+}
+
+function buildPageChecklistTodoTitle(summary = {}, tabs = []) {
+  const host = tabs[0]?.hostname || summary.hostname || "";
+  const label = host ? formatSidebarHostname(host) || host : compactPageTitle(summary.title);
+  return msg("todoReviewPageChecklist", [label || msg("currentTab")]);
+}
+
+function buildChecklistTodoMarkdown(task = {}) {
+  const checklist = Array.isArray(task.checklist) ? task.checklist.slice(0, 6) : [];
+  const lines = [
+    msg("agentTodoCreated", [task.title || msg("todo")]),
+    "",
+    ...checklist.map((item) => `- ${item}`),
+    "",
+    msg("agentTodoChecklistStoredLocally")
+  ];
+
+  return lines.join("\n");
+}
+
+async function getTodoTabsForSidebarContext(context) {
+  const snapshotTabs = getTodoTabsFromSnapshot(context);
+  if (snapshotTabs.length) return snapshotTabs;
+
+  if (context?.scope === "selected_tabs" || context?.scope === "current_group") {
+    const tabIds = resolveContextTabIdsForPermission(context).slice(0, MAX_TODO_LINKED_TABS);
+    const liveTabs = await getLiveTabsByIds(tabIds);
+    if (liveTabs.length) return liveTabs;
+  }
+
+  if (context?.scope === "current_tab" && Number.isInteger(context.tabId)) {
+    const liveTab = await getLiveTabById(context.tabId);
+    if (liveTab) return [liveTab];
+  }
+
+  try {
+    const [activeTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    return activeTab ? [activeTab] : [];
+  } catch {
+    return [];
+  }
+}
+
+function getTodoTabsFromSnapshot(context) {
+  const tabs = getSnapshotTabs(latestRun);
+  if (!tabs.length) return [];
+
+  if (context?.scope === "selected_tabs" && Array.isArray(context.tabIds) && context.tabIds.length) {
+    const tabById = new Map(tabs.map((tab) => [Number(tab.id), tab]));
+    return context.tabIds
+      .map((tabId) => tabById.get(Number(tabId)))
+      .filter(Boolean);
+  }
+
+  if (context?.scope === "current_group" && Number.isInteger(context.groupId)) {
+    return tabs.filter((tab) => Number(tab.groupId) === Number(context.groupId));
+  }
+
+  if (context?.scope === "current_window" && Number.isInteger(context.windowId)) {
+    return tabs.filter((tab) => Number(tab.windowId) === Number(context.windowId));
+  }
+
+  if (context?.scope === "current_tab" && Number.isInteger(context.tabId)) {
+    return tabs.filter((tab) => Number(tab.id) === Number(context.tabId));
+  }
+
+  return [];
+}
+
+async function getLiveTabsByIds(tabIds) {
+  const tabs = [];
+
+  for (const tabId of tabIds) {
+    const tab = await getLiveTabById(tabId);
+    if (tab) tabs.push(tab);
+  }
+
+  return tabs;
+}
+
+async function getLiveTabById(tabId) {
+  if (!Number.isInteger(tabId) || !chrome.tabs?.get) return null;
+
+  try {
+    return await chrome.tabs.get(tabId);
+  } catch {
+    return null;
+  }
+}
+
+function sanitizeTabForSidebarWork(tab, context = {}) {
+  const rawUrl = tab?.url || tab?.pendingUrl || "";
+  const parsed = parseBrowserWorkUrl(rawUrl);
+  const group = findLatestRunGroup(tab?.groupId) || findLatestRunGroup(context.groupId);
+
+  return {
+    id: toOptionalInteger(tab?.id),
+    windowId: toOptionalInteger(tab?.windowId || context.windowId),
+    groupId: toOptionalInteger(tab?.groupId || context.groupId),
+    groupName: String(group?.name || tab?.groupName || tab?.groupTitle || context.groupName || "").slice(0, 120),
+    title: String(tab?.title || "").slice(0, 180),
+    hostname: String(tab?.hostname || parsed.hostname || "").slice(0, 120),
+    path: sanitizeBrowserWorkPath(tab?.path || parsed.path || ""),
+    active: Boolean(tab?.active),
+    pinned: Boolean(tab?.pinned),
+    audible: Boolean(tab?.audible)
+  };
+}
+
+function parseBrowserWorkUrl(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    return {
+      hostname: url.hostname,
+      path: sanitizeBrowserWorkPath(url.pathname)
+    };
+  } catch {
+    return { hostname: "", path: "" };
+  }
+}
+
+function sanitizeBrowserWorkPath(value) {
+  return String(value || "")
+    .split(/[?#]/)[0]
+    .slice(0, 180);
+}
+
+function findLatestRunGroup(groupId) {
+  if (!Number.isInteger(Number(groupId))) return null;
+  return (Array.isArray(latestRun?.groups) ? latestRun.groups : []).find(
+    (group) => Number(group.id) === Number(groupId)
+  ) || null;
+}
+
+function buildSidebarTodoTitle(tabs, context = {}) {
+  const groupNames = Array.from(
+    new Set([
+      context.groupName,
+      ...tabs.map((tab) => tab.groupName)
+    ].filter(Boolean))
+  );
+
+  if (groupNames.length === 1) {
+    return msg("todoReviewGroup", [groupNames[0]]);
+  }
+
+  if (context.scope === "selected_tabs") {
+    return msg("todoReviewSelectedTabs");
+  }
+
+  const host = mostCommonValue(tabs.map((tab) => tab.hostname).filter(Boolean));
+  return host ? msg("todoReviewHostTabs", [host]) : msg("todoReviewSelectedTabs");
+}
+
+function buildSidebarTodoMarkdown(task = {}) {
+  const tabCount = Array.isArray(task.tabs) ? task.tabs.length : 0;
+
+  return [
+    msg("agentTodoCreated", [task.title || msg("todo")]),
+    "",
+    `- ${msg("agentTodoLinkedTabs", [tabCount])}`,
+    `- ${msg("agentTodoStoredLocally")}`,
+    "",
+    msg("agentTodoOpenDashboardHint")
+  ].join("\n");
+}
+
+function sanitizeTodoSourcePrompt(text) {
+  return String(text || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 240);
 }
 
 async function summarizeCurrentTab(question = "") {
@@ -1123,6 +1541,18 @@ async function processChatText(text) {
     return true;
   }
 
+  if (shouldRoutePastedLinks(text)) {
+    latestChatDraft = null;
+    latestDetectedLinks = extractPastedLinks(text);
+    renderChatPanel({
+      status: "link-detected",
+      answer: buildDetectedLinksMarkdown(latestDetectedLinks),
+      links: latestDetectedLinks
+    });
+    clearComposer();
+    return true;
+  }
+
   const readOnlyAnswer = await buildReadOnlyAgentAnswer(text, latestRun);
   if (readOnlyAnswer) {
     latestChatDraft = null;
@@ -1192,6 +1622,49 @@ function shouldRouteAgentWebSearch(text) {
   );
 }
 
+function shouldRoutePastedLinks(text) {
+  return extractPastedLinks(text).length > 0;
+}
+
+function extractPastedLinks(text) {
+  const matches = String(text || "").match(/https?:\/\/[^\s<>"'`]+/gi) || [];
+  const seen = new Set();
+  const links = [];
+
+  for (const rawLink of matches) {
+    const url = normalizeOpenableSearchResultUrl(rawLink.replace(/[),.;!?，。！？）]+$/g, ""));
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    const parsed = parseBrowserWorkUrl(url);
+    links.push({
+      index: links.length,
+      title: parsed.hostname || msg("linkedSource"),
+      url,
+      hostname: parsed.hostname,
+      path: sanitizeBrowserWorkPath(parsed.path || ""),
+      snippet: "",
+      sourceType: "pasted_link"
+    });
+  }
+
+  return links.slice(0, 4);
+}
+
+function buildDetectedLinksMarkdown(links = []) {
+  const safeLinks = Array.isArray(links) ? links : [];
+  const lines = [
+    safeLinks.length === 1 ? msg("agentLinkDetected") : msg("agentLinksDetected", [safeLinks.length])
+  ];
+
+  safeLinks.slice(0, 4).forEach((link) => {
+    const label = [link.hostname, link.path].filter(Boolean).join("");
+    lines.push(`- ${label || link.url || msg("linkedSource")}`);
+  });
+
+  lines.push("", msg("agentLinksNoFetch"));
+  return lines.join("\n");
+}
+
 async function runAgentWebSearch(text) {
   const query = extractAgentWebSearchQuery(text);
 
@@ -1225,11 +1698,12 @@ async function runAgentWebSearch(text) {
 
   if (response?.ok && response.result?.status === "completed") {
     const resultCount = Number(response.result.resultCount || response.result.results?.length || 0);
+    latestWebSearchResults = sanitizeSearchResultsForLocalWork(response.result.results || []);
     updateLatestToolCard(buildWebSearchToolCard(query, "completed", resultCount));
     renderChatPanel({
       status: "web-search",
       answer: buildWebSearchAnswer(response.result),
-      results: response.result.results || [],
+      results: latestWebSearchResults,
       providerLabel: response.result.providerLabel,
       query
     });
@@ -1240,7 +1714,7 @@ async function runAgentWebSearch(text) {
 
   if (response?.ok && response.result?.status === "not-configured") {
     renderChatPanel({
-      status: "info",
+      status: "search-provider-needed",
       answer: msg("agentWebSearchNeedsProvider", [query || msg("webSearch")])
     });
     return true;
@@ -1614,6 +2088,16 @@ async function handleAgentCommand(text) {
     return true;
   }
 
+  if (command === "createPageTodo") {
+    await createChecklistTodoFromCurrentPage(text);
+    return true;
+  }
+
+  if (command === "createTodo") {
+    await createTodoFromSidebarContext(text);
+    return true;
+  }
+
   const messages = {
     summarize: pageQuestion ? msg("agentCommandAskPage") : msg("agentCommandSummarize"),
     selectRegion: msg("agentCommandSelectRegion"),
@@ -1661,7 +2145,9 @@ function parseAgentCommand(text) {
   const normalized = normalizeAgentText(text);
 
   if (isPageRegionCommand(normalized)) return "selectRegion";
+  if (isCreatePageTodoCommand(normalized)) return "createPageTodo";
   if (isSummaryCommand(normalized)) return "summarize";
+  if (isCreateTodoCommand(normalized)) return "createTodo";
   if (isSaveWorkspaceCommand(normalized)) return "saveWorkspace";
   if (isDashboardCommand(normalized)) return "dashboard";
   if (isRestoreCommand(normalized)) return "restore";
@@ -1776,6 +2262,24 @@ function isSaveWorkspaceCommand(text) {
     /\b(save|store)\s+(this\s+|current\s+)?workspace\b/.test(text) ||
     /\bsave\s+(this\s+|current\s+)?browser\b/.test(text) ||
     /保存.*(工作区|当前整理|浏览器)/.test(text)
+  );
+}
+
+function isCreateTodoCommand(text) {
+  return (
+    /\b(create|make|add|save|turn)\b.{0,60}\b(todo|to-do|task|action item|work queue)\b/.test(text) ||
+    /\b(this|these|tab|tabs?|group|page|context)\b.{0,40}\b(should be|as|into)\b.{0,20}\b(todo|to-do|task|action item)\b/.test(text) ||
+    /(?:创建|生成|加入|保存|变成).{0,40}(?:待办|任务|todo|行动项)/.test(text) ||
+    /(?:把|将).{0,50}(?:页面|标签|tab|tabs|group|分组|这些|当前).{0,50}(?:待办|任务|todo|行动项)/.test(text)
+  );
+}
+
+function isCreatePageTodoCommand(text) {
+  return (
+    /\b(create|make|turn|convert)\b.{0,80}\b(page|current page|this page)\b.{0,80}\b(todo|to-do|task|checklist|action plan|next steps?)\b/.test(text) ||
+    /\b(page|current page|this page)\b.{0,80}\b(into|as)\b.{0,30}\b(todo|to-do|task|checklist|action plan)\b/.test(text) ||
+    /(?:把|将).{0,20}(?:当前)?(?:页面|网页|这页).{0,50}(?:待办|任务|清单|执行计划|行动项)/.test(text) ||
+    /(?:根据|基于).{0,20}(?:当前)?(?:页面|网页|这页).{0,50}(?:生成|创建|整理).{0,20}(?:待办|任务|清单|执行计划|行动项)/.test(text)
   );
 }
 
@@ -2320,6 +2824,14 @@ function dedupeTabsById(tabs) {
   return deduped;
 }
 
+function mostCommonValue(values) {
+  const counts = new Map();
+  values.forEach((value) => {
+    counts.set(value, (counts.get(value) || 0) + 1);
+  });
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+}
+
 function buildTabSearchResult(text, run) {
   const query = extractTabSearchQuery(text);
 
@@ -2432,6 +2944,36 @@ async function handleChatPanelAction(event) {
     return;
   }
 
+  if (button.dataset.chatAction === "save-search-result") {
+    await saveSearchResultAsCollection(Number(button.dataset.searchIndex));
+    return;
+  }
+
+  if (button.dataset.chatAction === "todo-search-result") {
+    await createTodoFromSearchResult(Number(button.dataset.searchIndex));
+    return;
+  }
+
+  if (button.dataset.chatAction === "save-detected-link") {
+    await saveDetectedLinkAsCollection(Number(button.dataset.linkIndex));
+    return;
+  }
+
+  if (button.dataset.chatAction === "todo-detected-link") {
+    await createTodoFromDetectedLink(Number(button.dataset.linkIndex));
+    return;
+  }
+
+  if (button.dataset.chatAction === "open-search-settings") {
+    await openDashboard("settings");
+    return;
+  }
+
+  if (button.dataset.chatAction === "open-dashboard") {
+    await openDashboard();
+    return;
+  }
+
   if (button.dataset.chatAction === "quick-command") {
     await runQuickChatCommand(button.dataset.command || "", button.dataset.label || button.textContent.trim());
     return;
@@ -2518,6 +3060,212 @@ async function openSearchResult(rawUrl) {
       answer: msg("webSearchOpenFailed")
     });
   }
+}
+
+async function saveSearchResultAsCollection(index) {
+  const source = getSearchResultByIndex(index);
+
+  if (!source) {
+    renderChatPanel({
+      status: "error",
+      answer: msg("browserWorkSourceUnavailable")
+    });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const collection = {
+    id: `collection-${Date.now()}`,
+    name: source.title || source.hostname || msg("webSearchResult"),
+    source: "sidebar_search_result",
+    createdAt: now,
+    updatedAt: now,
+    tabIds: [],
+    tabs: [],
+    sources: [sanitizeSourceForLocalWork(source)]
+  };
+  const stored = await chrome.storage.local.get(SAVED_COLLECTIONS_KEY);
+  const existingCollections = Array.isArray(stored[SAVED_COLLECTIONS_KEY]) ? stored[SAVED_COLLECTIONS_KEY] : [];
+  await chrome.storage.local.set({
+    [SAVED_COLLECTIONS_KEY]: [collection, ...existingCollections].slice(0, MAX_AGENT_ITEMS)
+  });
+
+  renderChatPanel({
+    status: "info",
+    answer: msg("searchResultSavedToCollection", [collection.name])
+  });
+}
+
+async function createTodoFromSearchResult(index) {
+  const source = getSearchResultByIndex(index);
+
+  if (!source) {
+    renderChatPanel({
+      status: "error",
+      answer: msg("browserWorkSourceUnavailable")
+    });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const task = {
+    id: `task-${Date.now()}`,
+    title: msg("todoReviewSearchResult", [source.title || source.hostname || msg("webSearchResult")]),
+    status: "open",
+    source: "sidebar_search_result",
+    createdAt: now,
+    updatedAt: now,
+    tabIds: [],
+    tabs: [],
+    sources: [sanitizeSourceForLocalWork(source)]
+  };
+  const stored = await chrome.storage.local.get(AGENT_TASKS_KEY);
+  const existingTasks = Array.isArray(stored[AGENT_TASKS_KEY]) ? stored[AGENT_TASKS_KEY] : [];
+  await chrome.storage.local.set({
+    [AGENT_TASKS_KEY]: [task, ...existingTasks].slice(0, MAX_AGENT_ITEMS)
+  });
+
+  renderChatPanel({
+    status: "todo-created",
+    answer: buildSourceTodoMarkdown(task),
+    task
+  });
+}
+
+async function saveDetectedLinkAsCollection(index) {
+  const source = getDetectedLinkByIndex(index);
+
+  if (!source) {
+    renderChatPanel({
+      status: "error",
+      answer: msg("browserWorkSourceUnavailable")
+    });
+    return;
+  }
+
+  await saveSourceAsCollection(source, "sidebar_pasted_link");
+}
+
+async function createTodoFromDetectedLink(index) {
+  const source = getDetectedLinkByIndex(index);
+
+  if (!source) {
+    renderChatPanel({
+      status: "error",
+      answer: msg("browserWorkSourceUnavailable")
+    });
+    return;
+  }
+
+  await createTodoFromSource(source, "sidebar_pasted_link", msg("todoReviewLinkedSource", [source.hostname || source.title || msg("linkedSource")]));
+}
+
+function getSearchResultByIndex(index) {
+  const resultIndex = Number(index);
+  if (!Number.isInteger(resultIndex)) return null;
+  return latestWebSearchResults.find((result) => Number(result.index) === resultIndex) || null;
+}
+
+function getDetectedLinkByIndex(index) {
+  const linkIndex = Number(index);
+  if (!Number.isInteger(linkIndex)) return null;
+  return latestDetectedLinks.find((link) => Number(link.index) === linkIndex) || null;
+}
+
+async function saveSourceAsCollection(source, sourceName) {
+  const localSource = sanitizeSourceForLocalWork(source);
+  const now = new Date().toISOString();
+  const collection = {
+    id: `collection-${Date.now()}`,
+    name: localSource.title || localSource.hostname || msg("linkedSource"),
+    source: sourceName,
+    createdAt: now,
+    updatedAt: now,
+    tabIds: [],
+    tabs: [],
+    sources: [localSource]
+  };
+  const stored = await chrome.storage.local.get(SAVED_COLLECTIONS_KEY);
+  const existingCollections = Array.isArray(stored[SAVED_COLLECTIONS_KEY]) ? stored[SAVED_COLLECTIONS_KEY] : [];
+  await chrome.storage.local.set({
+    [SAVED_COLLECTIONS_KEY]: [collection, ...existingCollections].slice(0, MAX_AGENT_ITEMS)
+  });
+
+  renderChatPanel({
+    status: "info",
+    answer: msg("searchResultSavedToCollection", [collection.name])
+  });
+}
+
+async function createTodoFromSource(source, sourceName, title) {
+  const now = new Date().toISOString();
+  const task = {
+    id: `task-${Date.now()}`,
+    title,
+    status: "open",
+    source: sourceName,
+    createdAt: now,
+    updatedAt: now,
+    tabIds: [],
+    tabs: [],
+    sources: [sanitizeSourceForLocalWork(source)]
+  };
+  const stored = await chrome.storage.local.get(AGENT_TASKS_KEY);
+  const existingTasks = Array.isArray(stored[AGENT_TASKS_KEY]) ? stored[AGENT_TASKS_KEY] : [];
+  await chrome.storage.local.set({
+    [AGENT_TASKS_KEY]: [task, ...existingTasks].slice(0, MAX_AGENT_ITEMS)
+  });
+
+  renderChatPanel({
+    status: "todo-created",
+    answer: buildSourceTodoMarkdown(task),
+    task
+  });
+}
+
+function sanitizeSourceForLocalWork(source = {}) {
+  const url = normalizeOpenableSearchResultUrl(source.url || "");
+  const parsed = parseBrowserWorkUrl(url);
+
+  return {
+    title: String(source.title || parsed.hostname || msg("webSearchResult")).slice(0, 180),
+    hostname: String(source.hostname || parsed.hostname || "").slice(0, 120),
+    path: sanitizeBrowserWorkPath(parsed.path || source.path || ""),
+    url: sanitizePersistentSourceUrl(url),
+    snippet: String(source.snippet || "").replace(/\s+/g, " ").trim().slice(0, 240),
+    sourceType: String(source.sourceType || "search_result").slice(0, 40),
+    savedAt: new Date().toISOString()
+  };
+}
+
+function sanitizePersistentSourceUrl(rawUrl) {
+  try {
+    const url = new URL(String(rawUrl || "").trim());
+    if (!["http:", "https:"].includes(url.protocol)) return "";
+    url.username = "";
+    url.password = "";
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
+
+function buildSourceTodoMarkdown(task = {}) {
+  const source = Array.isArray(task.sources) ? task.sources[0] : null;
+  const title = task.title || msg("todo");
+  const snippet = source?.snippet || source?.hostname || "";
+  const lines = [
+    msg("agentTodoCreated", [title])
+  ];
+
+  if (snippet) {
+    lines.push("", `- ${snippet}`);
+  }
+
+  lines.push("", msg("agentTodoSourceStoredLocally"));
+  return lines.join("\n");
 }
 
 function normalizeOpenableSearchResultUrl(rawUrl) {
@@ -2757,19 +3505,18 @@ function renderLatestRunMessage(run) {
   if (!run || run.status === "privacy-onboarding") return;
 
   const status = run.status || "idle";
+  if (status === "idle") return;
+
   const title = status === "idle" ? msg("readyWhenYouAre") : getRunMessageTitle(run);
   const body = getRunMessageBody(run);
   const summary = run.summary || null;
-  const metrics = summary && ["undone", "closed-restored"].includes(status)
-    ? buildRunMessageMetrics(summary, status)
-    : [];
   const actions = buildRunMessageActions(summary, status);
   const insights = status === "completed" ? run.classificationInsights : null;
 
   upsertSystemChatMessage({
     role: "assistant",
     status: `run-${status}`,
-    html: renderRunMessageCard({ title, body, metrics, actions, status, insights })
+    html: renderRunMessageCard({ title, body, actions, status, insights })
   });
 }
 
@@ -2804,61 +3551,80 @@ function getRunMessageBody(run) {
   return run?.message || msg("clickIconToOrganize");
 }
 
-function buildRunMessageMetrics(summary, status) {
-  if (status === "undone") {
-    return [
-      { label: msg("tabs"), value: summary.restoredTabs ?? 0 },
-      { label: msg("groups"), value: summary.restoredGroups ?? 0 }
-    ];
-  }
-
-  if (status === "closed-restored") {
-    return [
-      { label: msg("tabs"), value: summary.restoredClosedTabs ?? 0 },
-      { label: msg("groups"), value: summary.restoredClosedGroups ?? 0 }
-    ];
-  }
-
-  return [
-    { label: msg("groups"), value: summary.groupsCreated ?? 0 },
-    { label: msg("tabsOrganized"), value: summary.tabsMoved ?? 0 },
-    { label: msg("memoryRelief"), value: summary.safeDuplicatesClosed ?? 0 },
-    { label: msg("reviewDupes"), value: summary.reviewDuplicateGroups ?? 0 }
-  ];
-}
-
 function buildRunMessageActions(summary, status) {
   if (["scanning", "grouping", "undoing", "restoring-closed"].includes(status)) {
     return [];
   }
 
-  const actions = [
-    { label: msg("organizeAgain"), command: "organize again" }
-  ];
-
-  if (status === "completed" && summary?.undoAvailable) {
-    actions.push({ label: msg("undo"), command: "undo" });
-  }
-
-  if (status === "completed" && summary?.closedTabsRestoreAvailable) {
-    actions.push({ label: msg("restoreClosed"), command: "restore closed" });
-  }
-
-  return actions.slice(0, 5);
+  return [];
 }
 
-function renderRunMessageCard({ title, body, metrics, actions, status, insights }) {
+function renderRunMessageCard({ title, body, actions, status, insights }) {
+  const shouldRenderExtras = status !== "completed";
+
   return `
     <article class="run-message-card" data-run-message-status="${escapeHtml(status || "")}">
-      <div class="run-message-heading">
-        <span class="status-dot" aria-hidden="true"></span>
-        <p class="chat-answer">${escapeHtml(formatRunMessageText(title, body, status))}</p>
-      </div>
-      ${metrics.length ? `<div class="agent-result-list">${metrics.map((metric) => renderImpactMetric(metric.label, metric.value)).join("")}</div>` : ""}
-      ${renderClassificationInsights(insights)}
-      ${actions.length ? renderQuickCommandActions(actions) : ""}
+      <div class="chat-answer markdown-message">${renderSafeMarkdown(formatRunMessageText(title, body, status))}</div>
+      ${shouldRenderExtras ? renderClassificationInsights(insights) : ""}
+      ${shouldRenderExtras && actions.length ? renderQuickCommandActions(actions) : ""}
     </article>
   `;
+}
+
+function renderSafeMarkdown(markdown) {
+  const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+  const parts = [];
+  let paragraph = [];
+  let listItems = [];
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    parts.push(`<p>${renderInlineMarkdown(paragraph.join(" "))}</p>`);
+    paragraph = [];
+  };
+
+  const flushList = () => {
+    if (!listItems.length) return;
+    parts.push(`<ul>${listItems.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</ul>`);
+    listItems = [];
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      flushParagraph();
+      listItems.push(line.replace(/^[-*]\s+/, ""));
+      continue;
+    }
+
+    flushList();
+    paragraph.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return parts.join("");
+}
+
+function renderInlineMarkdown(value) {
+  const tokens = [];
+  const tokenized = escapeHtml(value)
+    .replace(/`([^`]+)`/g, (_match, code) => {
+      const token = `@@CODE${tokens.length}@@`;
+      tokens.push(`<code>${code}</code>`);
+      return token;
+    })
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+
+  return tokens.reduce((html, token, index) => html.replace(`@@CODE${index}@@`, token), tokenized);
 }
 
 function renderClassificationInsights(insights) {
@@ -3428,22 +4194,28 @@ function renderChatSummary(summary) {
   const status = summary?.status || "completed";
   const showKeyPoints = status === "completed" && keyPoints.length > 0 && !summary?.question;
 
-  return `
-    <div class="chat-summary-card ${escapeHtml(status)}">
-      <p class="chat-answer">${escapeHtml(summary?.summary || "")}</p>
-      ${showKeyPoints ? renderKeyPoints(keyPoints) : ""}
-    </div>
-  `;
+  return renderAssistantMarkdownMessage(
+    buildPageSummaryMarkdown(summary, showKeyPoints ? keyPoints : []),
+    `chat-summary-card ${status}`
+  );
 }
 
-function renderKeyPoints(points) {
-  if (!points.length) return "";
+function buildPageSummaryMarkdown(summary, keyPoints = []) {
+  const lines = [];
+  const answer = String(summary?.summary || summary?.answer || "").trim();
 
-  return `
-    <ul>
-      ${points.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}
-    </ul>
-  `;
+  if (answer) lines.push(answer);
+  const cleanPoints = keyPoints
+    .map((point) => String(point || "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+
+  if (cleanPoints.length) {
+    if (lines.length) lines.push("");
+    cleanPoints.forEach((point) => lines.push(`- ${point}`));
+  }
+
+  return lines.join("\n") || "I could not find enough readable page content to answer yet.";
 }
 
 function renderChatPanel(draft) {
@@ -3531,6 +4303,18 @@ function renderChatPanelContent(draft) {
     return renderWebSearchCard(draft);
   }
 
+  if (draft.status === "search-provider-needed") {
+    return renderSearchProviderNeeded(draft);
+  }
+
+  if (draft.status === "todo-created") {
+    return renderTodoCreatedMessage(draft);
+  }
+
+  if (draft.status === "link-detected") {
+    return renderDetectedLinksMessage(draft);
+  }
+
   if (["loading", "error", "applied", "info"].includes(draft.status)) {
     return `
       <p class="chat-answer">${escapeHtml(draft.answer || "")}</p>
@@ -3561,35 +4345,20 @@ function renderChatPanelContent(draft) {
 }
 
 function renderAIAgentCard(draft) {
-  return `
-    <article class="ai-agent-card">
-      <p class="chat-answer">${escapeHtml(draft.answer || "")}</p>
-    </article>
-  `;
+  return renderAssistantMarkdownMessage(draft.answer || "", "ai-agent-card");
 }
 
 function renderWebSearchCard(draft) {
   const results = Array.isArray(draft.results) ? draft.results.slice(0, 5) : [];
-  const provider = draft.providerLabel ? msg("webSearchProviderMeta", [draft.providerLabel]) : "";
-  const query = String(draft.query || "").trim();
-  const meta = [
-    query ? msg("toolCardSearchScope", [query]) : "",
-    provider,
-    msg("toolCardStorageSessionOnly")
-  ].filter(Boolean);
 
   return `
-    <article class="ai-agent-card web-search-card">
-      <p class="chat-answer">${escapeHtml(draft.answer || msg("agentWebSearchNoResults"))}</p>
-      ${
-        meta.length
-          ? `<div class="web-search-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`
-          : ""
-      }
+    <article class="assistant-answer-message web-search-message">
+      <div class="chat-answer markdown-message">${renderSafeMarkdown(buildWebSearchMarkdown(draft))}</div>
       ${
         results.length
-          ? `<div class="web-search-results">
-              ${results.map(renderWebSearchResult).join("")}
+          ? `<div class="web-search-sources" aria-label="${escapeHtml(msg("webSearchSources"))}">
+              <span>${escapeHtml(msg("webSearchSources"))}</span>
+              ${results.map(renderWebSearchSource).join("")}
             </div>`
           : ""
       }
@@ -3597,28 +4366,82 @@ function renderWebSearchCard(draft) {
   `;
 }
 
-function renderWebSearchResult(result = {}) {
-  const title = result.title || result.hostname || msg("webSearchResult");
-  const meta = result.hostname || "";
-  const snippet = result.snippet || "";
-  const url = normalizeOpenableSearchResultUrl(result.url || "");
+function buildWebSearchMarkdown(draft = {}) {
+  const answer = String(draft.answer || msg("agentWebSearchNoResults")).trim();
+  return answer || msg("agentWebSearchNoResults");
+}
+
+function renderSearchProviderNeeded(draft = {}) {
+  return `
+    <article class="assistant-answer-message web-search-message">
+      <div class="chat-answer markdown-message">${renderSafeMarkdown(draft.answer || "")}</div>
+      <div class="chat-action-row">
+        <button class="secondary-button" type="button" data-chat-action="open-search-settings">${escapeHtml(msg("openSettings"))}</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderTodoCreatedMessage(draft = {}) {
+  return `
+    <article class="assistant-answer-message todo-created-message">
+      <div class="chat-answer markdown-message">${renderSafeMarkdown(draft.answer || buildSidebarTodoMarkdown(draft.task || {}))}</div>
+      <div class="chat-action-row">
+        <button class="secondary-button" type="button" data-chat-action="open-dashboard">${escapeHtml(msg("openDashboard"))}</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderDetectedLinksMessage(draft = {}) {
+  const links = Array.isArray(draft.links) ? draft.links.slice(0, 4) : [];
 
   return `
-    <section class="web-search-result">
-      <div class="web-search-result-head">
-        <div>
-          <strong>${escapeHtml(title)}</strong>
-          ${meta ? `<span>${escapeHtml(meta)}</span>` : ""}
-        </div>
+    <article class="assistant-answer-message link-detected-message">
+      <div class="chat-answer markdown-message">${renderSafeMarkdown(draft.answer || buildDetectedLinksMarkdown(links))}</div>
+      ${
+        links.length
+          ? `<div class="chat-action-row">
+              <button class="secondary-button" type="button" data-chat-action="save-detected-link" data-link-index="${escapeHtml(String(links[0].index || 0))}">${escapeHtml(msg("saveSource"))}</button>
+              <button class="secondary-button" type="button" data-chat-action="todo-detected-link" data-link-index="${escapeHtml(String(links[0].index || 0))}">${escapeHtml(msg("createTodo"))}</button>
+            </div>`
+          : ""
+      }
+    </article>
+  `;
+}
+
+function renderWebSearchSource(result = {}) {
+  const title = result.title || result.hostname || msg("webSearchResult");
+  const hostname = result.hostname || "";
+  const url = normalizeOpenableSearchResultUrl(result.url || "");
+  const resultIndex = Number.isInteger(Number(result.index)) ? Number(result.index) : -1;
+
+  return `
+    <section class="web-search-source">
+      <div>
+        <strong>${escapeHtml(title)}</strong>
+        ${hostname ? `<small>${escapeHtml(hostname)}</small>` : ""}
+      </div>
+      <div class="web-search-source-actions">
         ${
           url
             ? `<button class="mini-button" type="button" data-chat-action="open-search-result" data-search-url="${escapeHtml(url)}">${escapeHtml(msg("webSearchOpenResult"))}</button>`
             : ""
         }
+        ${
+          resultIndex >= 0
+            ? `<button class="mini-button" type="button" data-chat-action="save-search-result" data-search-index="${escapeHtml(String(resultIndex))}">${escapeHtml(msg("saveSource"))}</button>
+               <button class="mini-button" type="button" data-chat-action="todo-search-result" data-search-index="${escapeHtml(String(resultIndex))}">${escapeHtml(msg("createTodoShort"))}</button>`
+            : ""
+        }
       </div>
-      ${snippet ? `<p>${escapeHtml(snippet)}</p>` : ""}
     </section>
   `;
+}
+
+function renderWebSearchResult(result = {}) {
+  return renderWebSearchSource(result);
 }
 
 function buildWebSearchAnswer(result = {}) {
@@ -3636,52 +4459,30 @@ function buildWebSearchAnswer(result = {}) {
   return msg("agentWebSearchNoResults");
 }
 
+function sanitizeSearchResultsForLocalWork(results = []) {
+  return (Array.isArray(results) ? results : [])
+    .map((result, index) => {
+      const url = normalizeOpenableSearchResultUrl(result.url || "");
+      const parsed = parseBrowserWorkUrl(url);
+
+      return {
+        index,
+        title: String(result.title || parsed.hostname || msg("webSearchResult")).slice(0, 180),
+        url,
+        hostname: String(result.hostname || parsed.hostname || "").slice(0, 120),
+        path: sanitizeBrowserWorkPath(parsed.path || ""),
+        snippet: String(result.snippet || "").replace(/\s+/g, " ").trim().slice(0, 240),
+        score: Number.isFinite(Number(result.score)) ? Number(result.score) : null
+      };
+    })
+    .filter((result) => result.title || result.url || result.hostname)
+    .slice(0, 8);
+}
+
 function renderRegroupPreview(draft) {
-  const groups = Array.isArray(draft.groups) ? draft.groups.slice(0, 8) : [];
-
   return `
-    <article class="ai-agent-card content-regroup-card">
-      <p class="chat-answer">${escapeHtml(draft.answer || "")}</p>
-      <div class="content-regroup-list">
-        ${groups
-          .map((group) => {
-            const tabs = Array.isArray(group.matchedTabs) ? group.matchedTabs.slice(0, 4) : [];
-            const hiddenCount = Math.max(0, Number(group.tabIds?.length || tabs.length) - tabs.length);
-
-            return `
-              <section class="content-regroup-group">
-                <div class="content-regroup-heading">
-                  <span class="group-dot g-${escapeHtml(getGroupColorIndex(group.color))}" aria-hidden="true"></span>
-                  <strong>${escapeHtml(group.name || msg("contextUnnamedGroup"))}</strong>
-                  <small>${escapeHtml(msg("tabsCount", [Number(group.tabIds?.length || tabs.length)]))}</small>
-                </div>
-                ${group.reason ? `<p>${escapeHtml(group.reason)}</p>` : ""}
-                ${
-                  tabs.length
-                    ? `
-                      <div class="content-regroup-tabs">
-                        ${tabs
-                          .map((tab) => `
-                            <span>
-                              <b>${escapeHtml(tab.title || msg("untitled"))}</b>
-                              <small>${escapeHtml(tab.hostname || "")}</small>
-                            </span>
-                          `)
-                          .join("")}
-                        ${hiddenCount ? `<em>${escapeHtml(msg("more", [hiddenCount]))}</em>` : ""}
-                      </div>
-                    `
-                    : ""
-                }
-              </section>
-            `;
-          })
-          .join("")}
-      </div>
-      <div class="chat-action-summary">
-        <span>${escapeHtml(draft.actionSummary || msg("previewAction"))}</span>
-        <small>${escapeHtml(draft.risk || msg("noTabsWillBeClosed"))}</small>
-      </div>
+    <article class="assistant-answer-message content-regroup-card content-regroup-message">
+      <div class="chat-answer markdown-message">${renderSafeMarkdown(buildRegroupPreviewMarkdown(draft))}</div>
       <div class="chat-action-row">
         <button class="primary-button" type="button" data-chat-action="apply" data-draft-id="${escapeHtml(draft.id || "")}">${escapeHtml(msg("apply"))}</button>
         <button class="secondary-button" type="button" data-chat-action="cancel" data-draft-id="${escapeHtml(draft.id || "")}">${escapeHtml(msg("cancel"))}</button>
@@ -3690,88 +4491,84 @@ function renderRegroupPreview(draft) {
   `;
 }
 
-function getGroupColorIndex(color) {
-  const colors = ["grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan"];
-  const index = colors.indexOf(color);
-  return index >= 0 ? index : 0;
+function buildRegroupPreviewMarkdown(draft) {
+  const groups = Array.isArray(draft.groups) ? draft.groups.slice(0, 8) : [];
+  const lines = [];
+  const answer = String(draft.answer || "").trim();
+
+  if (answer) {
+    lines.push(answer);
+    lines.push("");
+  } else {
+    lines.push("I can regroup these tabs by what the pages are actually about.");
+    lines.push("");
+  }
+
+  for (const group of groups) {
+    const name = group.name || msg("contextUnnamedGroup");
+    const tabCount = Number(group.tabIds?.length || group.matchedTabs?.length || 0);
+    const reason = String(group.reason || "Grouped by visible page content.").trim();
+    const tabs = (Array.isArray(group.matchedTabs) ? group.matchedTabs : [])
+      .slice(0, 3)
+      .map((tab) => tab.title || msg("untitled"))
+      .filter(Boolean);
+    const extraCount = Math.max(0, tabCount - tabs.length);
+    const tabText = tabs.length
+      ? ` Tab${tabs.length > 1 ? "s" : ""}: ${tabs.join(", ")}${extraCount ? `, +${extraCount} more` : ""}.`
+      : "";
+
+    lines.push(`- **${name}** (${tabCount || 1} ${tabCount === 1 ? "tab" : "tabs"}): ${reason}${tabText}`);
+  }
+
+  lines.push("");
+  lines.push("No browser changes happen until you click **Apply**. No tabs will be closed.");
+
+  return lines.join("\n");
 }
 
 function renderContextTabsSummary(summary) {
   const keyPoints = Array.isArray(summary?.keyPoints) ? summary.keyPoints.slice(0, 4) : [];
-  const tabSummaries = Array.isArray(summary?.tabSummaries) ? summary.tabSummaries.slice(0, 4) : [];
   const recommendations = Array.isArray(summary?.recommendations) ? summary.recommendations.slice(0, 3) : [];
-  const groupSummary = summary?.groupSummary || null;
 
-  return `
-    <article class="ai-agent-card context-tabs-card">
-      <p class="chat-answer">${escapeHtml(summary?.summary || summary?.answer || "")}</p>
-      ${keyPoints.length ? renderKeyPoints(keyPoints) : ""}
-      ${recommendations.length ? `<p class="chat-note">${escapeHtml(recommendations.join(" "))}</p>` : ""}
-      ${groupSummary ? renderContextGroupSummary(groupSummary) : ""}
-      ${
-        tabSummaries.length
-          ? `
-            <div class="context-tab-summaries">
-              ${tabSummaries
-                .map(
-                  (tab) => `
-                    <div class="context-tab-summary-row">
-                      <strong>${escapeHtml(tab.title || msg("untitled"))}</strong>
-                      <span>${escapeHtml(tab.summary || "")}</span>
-                    </div>
-                  `
-                )
-                .join("")}
-            </div>
-          `
-          : ""
-      }
-    </article>
-  `;
+  return renderAssistantMarkdownMessage(
+    buildContextTabsSummaryMarkdown(summary, keyPoints, recommendations),
+    "context-tabs-message",
+    `data-provider="${escapeHtml(summary?.provider || "")}" data-ai-used="${summary?.aiUsed ? "true" : "false"}"`
+  );
 }
 
-function renderContextGroupSummary(groupSummary) {
-  const themes = Array.isArray(groupSummary?.themes) ? groupSummary.themes.slice(0, 3) : [];
-  const hosts = Array.isArray(groupSummary?.topHosts) ? groupSummary.topHosts.slice(0, 3) : [];
-  const skippedBreakdown = Array.isArray(groupSummary?.skippedBreakdown) ? groupSummary.skippedBreakdown.slice(0, 4) : [];
-  const source = groupSummary.source === "visible_text" ? msg("summarySourceVisibleText") : msg("summarySourceMetadata");
-  const readCount = Number(groupSummary.readTabCount || 0);
-  const tabCount = Number(groupSummary.tabCount || 0);
-  const skippedCount = Number(groupSummary.skippedTabCount || 0);
+function buildContextTabsSummaryMarkdown(summary, keyPoints = [], recommendations = []) {
+  const lines = [];
+  const answer = String(summary?.summary || summary?.answer || "").trim();
+  const cleanPoints = keyPoints
+    .map((point) => String(point || "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  const cleanRecommendations = recommendations
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, 2);
 
+  if (answer) lines.push(answer);
+
+  if (cleanPoints.length) {
+    if (lines.length) lines.push("");
+    cleanPoints.forEach((point) => lines.push(`- ${point}`));
+  }
+
+  if (cleanRecommendations.length) {
+    if (lines.length) lines.push("");
+    lines.push(`Suggested next: ${cleanRecommendations.join(" ")}`);
+  }
+
+  return lines.join("\n") || "I read the selected tabs, but I do not have enough clear content to answer yet.";
+}
+
+function renderAssistantMarkdownMessage(markdown, className = "", attributes = "") {
   return `
-    <div class="context-group-summary">
-      <div class="context-summary-heading">
-        <span>${escapeHtml(msg("groupSummaryLabel"))}</span>
-        <strong>${escapeHtml(groupSummary.label || msg("contextUnnamedGroup"))}</strong>
-      </div>
-      <div class="context-summary-meta">
-        <span>${escapeHtml(msg("summaryReadMeta", [readCount, tabCount]))}</span>
-        <span>${escapeHtml(source)}</span>
-        ${skippedCount ? `<span>${escapeHtml(msg("toolCardSkipped", [skippedCount]))}</span>` : ""}
-      </div>
-      ${
-        themes.length || hosts.length
-          ? `
-            <div class="context-summary-tags">
-              ${themes.map((theme) => `<span>${escapeHtml(theme)}</span>`).join("")}
-              ${hosts.map((host) => `<span>${escapeHtml(host)}</span>`).join("")}
-            </div>
-          `
-          : ""
-      }
-      ${
-        skippedBreakdown.length
-          ? `
-            <div class="context-summary-skips" aria-label="${escapeHtml(msg("contextSkippedBreakdownLabel"))}">
-              ${skippedBreakdown
-                .map((item) => `<span>${escapeHtml(formatContextSkipBreakdownItem(item))}</span>`)
-                .join("")}
-            </div>
-          `
-          : ""
-      }
-    </div>
+    <article class="assistant-answer-message ${escapeHtml(className)}" ${attributes}>
+      <div class="chat-answer markdown-message">${renderSafeMarkdown(markdown)}</div>
+    </article>
   `;
 }
 
@@ -4188,7 +4985,11 @@ function getCompletedAgentReply(run) {
     reviewGroups,
     aiCopy,
     fallbackCopy
-  ]).replace(/\s+/g, " ").trim();
+  ])
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function escapeHtml(value) {

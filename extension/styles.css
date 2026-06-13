@@ -3014,14 +3014,24 @@ summary {
 
 .dashboard-agent-minirow {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
-  align-items: center;
+  align-items: start;
   min-height: 42px;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.48);
+}
+
+.dashboard-agent-minirow.done {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.dashboard-agent-minirow.done .dashboard-agent-minirow-copy strong {
+  color: rgba(24, 33, 31, 0.5);
+  text-decoration: line-through;
+  text-decoration-color: rgba(47, 116, 105, 0.32);
 }
 
 .dashboard-agent-minirow strong,
@@ -3065,14 +3075,47 @@ summary {
   min-width: 0;
 }
 
-.dashboard-agent-tab-preview {
+.dashboard-agent-checklist-preview {
+  display: grid;
+  gap: 3px;
+  margin: 7px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dashboard-agent-checklist-preview li {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  padding-left: 13px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-agent-checklist-preview li::before {
+  position: absolute;
+  top: 0.54em;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(47, 116, 105, 0.42);
+  content: "";
+}
+
+.dashboard-agent-tab-preview,
+.dashboard-agent-source-preview {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
   margin-top: 6px;
 }
 
-.dashboard-agent-tab-preview span {
+.dashboard-agent-tab-preview span,
+.dashboard-agent-source-preview span {
   max-width: 132px;
   overflow: hidden;
   padding: 2px 6px;
@@ -3088,21 +3131,35 @@ summary {
 }
 
 .dashboard-agent-row-action {
-  min-width: 44px;
+  min-width: 0;
   min-height: 28px;
-  padding: 0 10px;
+  padding: 0 8px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.62);
   color: var(--text);
   cursor: pointer;
   font: inherit;
-  font-size: 11.5px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .dashboard-agent-row-action:hover {
   border-color: var(--accent);
   background: rgba(255, 255, 255, 0.82);
+}
+
+.dashboard-agent-row-action.quiet {
+  color: var(--muted);
+}
+
+.dashboard-agent-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 2;
+  gap: 6px;
+  margin-top: -2px;
 }
 
 .dashboard-agent-panels {
@@ -3573,6 +3630,145 @@ summary {
 .dashboard-settings-card .row {
   background: rgba(255, 255, 255, 0.36);
   box-shadow: none;
+}
+
+/* Settings polish: lightweight tool cards instead of admin-style forms. */
+.dashboard-page[data-page="settings"].active {
+  max-width: 760px;
+}
+
+.dashboard-page[data-page="settings"] .dashboard-page-head {
+  margin-bottom: 14px;
+}
+
+.dashboard-page[data-page="settings"] .dashboard-page-title {
+  font-size: 26px;
+  letter-spacing: 0;
+}
+
+.settings-tool-card {
+  gap: 12px;
+  max-width: 640px;
+  margin-top: 14px;
+  padding: 15px;
+  border-color: rgba(33, 47, 43, 0.08);
+  border-radius: 12px;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.72), rgba(248, 252, 250, 0.54));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 18px 48px rgba(29, 45, 41, 0.08);
+}
+
+.settings-card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.settings-card-head h3 {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.settings-tool-badge {
+  align-self: start;
+  padding: 4px 8px;
+  border: 1px solid rgba(47, 116, 105, 0.14);
+  border-radius: 999px;
+  background: rgba(238, 248, 244, 0.62);
+  color: rgba(47, 116, 105, 0.86);
+  font-size: 10.5px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.settings-tool-note {
+  margin: -2px 0 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(33, 47, 43, 0.07);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.38);
+  color: rgba(24, 33, 31, 0.62);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.settings-toggle-row {
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid rgba(33, 47, 43, 0.07);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.settings-field {
+  gap: 7px;
+}
+
+.settings-form input[type="number"] {
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.46);
+  color: var(--text);
+  font: inherit;
+}
+
+.settings-tool-card .settings-provider-details {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.settings-tool-card .settings-provider-details summary {
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
+.settings-tool-card .settings-actions {
+  gap: 7px;
+}
+
+.settings-tool-card .primary-button,
+.settings-tool-card .secondary-button {
+  min-height: 34px;
+  border-radius: 9px;
+}
+
+.settings-provider-grid-compact {
+  grid-template-columns: minmax(0, 1fr) 132px;
+}
+
+.settings-provider-grid-compact label {
+  min-width: 0;
+}
+
+.search-tool-settings {
+  border-color: rgba(47, 116, 105, 0.12);
+}
+
+.search-tool-settings .settings-tool-badge {
+  border-color: rgba(75, 126, 154, 0.16);
+  background: rgba(235, 244, 248, 0.66);
+  color: rgba(58, 100, 125, 0.9);
+}
+
+.search-tool-settings .primary-button {
+  background: linear-gradient(150deg, rgba(47, 116, 105, 0.96), rgba(58, 100, 125, 0.92));
+}
+
+@media (max-width: 760px) {
+  .settings-card-head,
+  .settings-provider-grid-compact {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-tool-badge {
+    justify-self: start;
+  }
 }
 
 .permission-row span {
@@ -5523,11 +5719,295 @@ body,
   background: #25675e;
 }
 
+/* Sidebar result message reset: the organize result is an assistant reply, not a report panel. */
+.tab-agent-shell .agent-primary-message {
+  display: none !important;
+}
+
+.tab-agent-shell .chat-thread-message.assistant.run-completed,
+.tab-agent-shell .chat-thread-message.assistant.run-undone,
+.tab-agent-shell .chat-thread-message.assistant.run-closed-restored,
+.tab-agent-shell .chat-thread-message.assistant.run-error {
+  border-radius: 12px;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.82), rgba(250, 253, 251, 0.62) 62%, rgba(236, 244, 241, 0.42));
+}
+
+.tab-agent-shell .run-message-card {
+  gap: 8px;
+}
+
+.tab-agent-shell .run-message-heading {
+  display: block;
+}
+
+.tab-agent-shell .run-message-heading .chat-answer {
+  color: rgba(24, 33, 31, 0.74);
+  font-size: 12.8px;
+  line-height: 1.5;
+}
+
+.tab-agent-shell .markdown-message {
+  display: grid;
+  gap: 8px;
+}
+
+.tab-agent-shell .markdown-message p,
+.tab-agent-shell .markdown-message ul {
+  margin: 0;
+}
+
+.tab-agent-shell .markdown-message ul {
+  display: grid;
+  gap: 3px;
+  padding-left: 16px;
+}
+
+.tab-agent-shell .markdown-message li {
+  padding-left: 1px;
+}
+
+.tab-agent-shell .markdown-message strong {
+  color: rgba(24, 33, 31, 0.82);
+  font-weight: 680;
+}
+
+.tab-agent-shell .markdown-message code {
+  padding: 1px 4px;
+  border: 1px solid rgba(33, 47, 43, 0.08);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.52);
+  color: rgba(24, 33, 31, 0.72);
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+.tab-agent-shell .run-message-card .agent-result-list {
+  gap: 5px;
+}
+
+.tab-agent-shell .run-message-card .agent-result-list span {
+  min-height: 24px;
+  padding: 0 8px;
+  border-color: rgba(33, 47, 43, 0.08);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.tab-agent-shell .run-message-card .agent-result-list small {
+  font-size: 10px;
+}
+
+.tab-agent-shell .run-message-card .agent-result-list strong {
+  font-size: 11.2px;
+}
+
+.tab-agent-shell .run-message-card .chat-action-row {
+  gap: 5px;
+  padding-top: 1px;
+}
+
+.tab-agent-shell .run-message-card .chat-action-row .mini-button {
+  min-height: 26px;
+  padding: 0 9px;
+  border-color: rgba(33, 47, 43, 0.1);
+  background: rgba(255, 255, 255, 0.48);
+  color: rgba(24, 33, 31, 0.68);
+  font-size: 11px;
+}
+
 .tab-agent-shell .agent-composer #pageRegionButton:disabled,
 .tab-agent-shell .agent-composer #chatSendButton:disabled {
   cursor: not-allowed;
   opacity: 0.42;
   box-shadow: none;
+}
+
+/* Unified assistant answers: normal prose first, lightweight Markdown details only when useful. */
+.tab-agent-shell .assistant-answer-message {
+  display: grid;
+  gap: 9px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tab-agent-shell .assistant-answer-message .markdown-message {
+  gap: 8px;
+}
+
+.tab-agent-shell .assistant-answer-message .markdown-message p,
+.tab-agent-shell .assistant-answer-message .markdown-message li {
+  color: rgba(24, 33, 31, 0.76);
+  font-size: 12.6px;
+  line-height: 1.46;
+}
+
+.tab-agent-shell .assistant-answer-message .markdown-message ul {
+  gap: 5px;
+  padding-left: 17px;
+}
+
+.tab-agent-shell .chat-thread-message.assistant.tool-card {
+  max-width: min(92%, 330px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tab-agent-shell .agent-tool-card {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  gap: 2px 7px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tab-agent-shell .agent-tool-card-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: rgba(24, 33, 31, 0.58);
+  font-size: 11.2px;
+  line-height: 1.35;
+}
+
+.tab-agent-shell .agent-tool-card-header strong {
+  font-weight: 620;
+}
+
+.tab-agent-shell .agent-tool-card .tool-dot {
+  width: 5px;
+  height: 5px;
+  background: rgba(47, 116, 105, 0.72);
+}
+
+.tab-agent-shell .agent-tool-card-grid {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.tab-agent-shell .agent-tool-card-grid span {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(24, 33, 31, 0.42);
+  font-size: 10.2px;
+  line-height: 1.35;
+}
+
+.tab-agent-shell .agent-tool-card-grid span + span::before {
+  margin: 0 5px;
+  color: rgba(24, 33, 31, 0.28);
+  content: "·";
+}
+
+.tab-agent-shell .web-search-message {
+  gap: 10px;
+}
+
+.tab-agent-shell .web-search-sources {
+  display: grid;
+  gap: 0;
+  padding-top: 2px;
+  border-top: 1px solid rgba(33, 47, 43, 0.07);
+}
+
+.tab-agent-shell .web-search-sources > span {
+  margin: 0 0 2px;
+  color: rgba(24, 33, 31, 0.42);
+  font-size: 10.5px;
+  font-weight: 620;
+}
+
+.tab-agent-shell .web-search-source {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, auto);
+  gap: 8px;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 0;
+  border-top: 1px solid rgba(33, 47, 43, 0.06);
+}
+
+.tab-agent-shell .web-search-sources > span + .web-search-source {
+  border-top: 0;
+}
+
+.tab-agent-shell .web-search-source div {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.tab-agent-shell .web-search-source-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 38px);
+  gap: 4px;
+  justify-content: end;
+  min-width: 122px;
+}
+
+.tab-agent-shell .web-search-source strong {
+  overflow: hidden;
+  color: rgba(24, 33, 31, 0.76);
+  font-size: 11.7px;
+  font-weight: 640;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-agent-shell .web-search-source small {
+  overflow: hidden;
+  color: rgba(24, 33, 31, 0.46);
+  font-size: 10.4px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-agent-shell .web-search-source .mini-button {
+  width: 38px;
+  min-width: 0;
+  min-height: 24px;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.48);
+  font-size: 10.8px;
+}
+
+/* Agent regroup previews should read like a chat answer, not an admin result panel. */
+.tab-agent-shell .content-regroup-message {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.tab-agent-shell .content-regroup-message .markdown-message {
+  gap: 9px;
+}
+
+.tab-agent-shell .content-regroup-message .markdown-message ul {
+  gap: 6px;
+  padding-left: 18px;
+}
+
+.tab-agent-shell .content-regroup-message .chat-action-row {
+  margin-top: 2px;
 }
 
 @media (max-width: 360px) {

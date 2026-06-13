@@ -216,6 +216,76 @@ export type SavedWorkspaceRestoreResult = {
 
 It creates an Undo snapshot before regrouping, restores only currently open unprotected tabs that still match saved tab IDs, and skips missing/closed/pinned/internal/incognito tabs. It does not reopen pages because the saved snapshot intentionally does not store full URLs.
 
+## Browser Work Queue and Collections
+
+Current local-first Workbench objects:
+
+```ts
+export type BrowserWorkSource = {
+  title: string;
+  hostname: string;
+  path: string;
+  url?: string;
+  snippet?: string;
+  sourceType: 'search_result' | 'pasted_link' | string;
+  savedAt: string;
+};
+
+export type AgentTask = {
+  id: string;
+  title: string;
+  status: 'open' | 'done' | 'archived';
+  source: 'dashboard_selection' | 'sidebar_agent' | 'current_page_agent' | 'sidebar_search_result' | 'sidebar_pasted_link' | string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+  archivedAt?: string;
+  tabIds: number[];
+  tabs: Array<{
+    id: number;
+    windowId: number;
+    groupId: number | null;
+    groupName: string;
+    title: string;
+    hostname: string;
+    path: string;
+    active: boolean;
+    pinned: boolean;
+    audible: boolean;
+  }>;
+  sources?: BrowserWorkSource[];
+  checklist?: string[];
+};
+
+export type SavedCollection = {
+  id: string;
+  name: string;
+  source: 'dashboard_selection' | 'sidebar_search_result' | 'sidebar_pasted_link' | string;
+  createdAt: string;
+  updatedAt: string;
+  tabIds: number[];
+  tabs: AgentTask['tabs'];
+  sources?: BrowserWorkSource[];
+};
+```
+
+Storage keys:
+
+```text
+tabmosaic.agentTasks
+tabmosaic.savedCollections
+```
+
+Privacy notes:
+
+```text
+- Tab-linked tasks/collections store tab title, hostname, path, state, and local tab IDs only.
+- Search-result and pasted-link sources store sanitized source title, hostname, path, optional snippet, and a local source URL with username/password/query/hash stripped.
+- Current-page checklist todos store generated checklist text locally only after the user explicitly asks to read the page.
+- These objects do not store raw page text, full tab URLs, browser history, cookies, form values, or cloud IDs.
+- No TabMosaic cloud storage is used in the current implementation.
+```
+
 Long-term target shape:
 
 ```ts

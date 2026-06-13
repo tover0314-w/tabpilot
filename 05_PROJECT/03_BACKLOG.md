@@ -90,12 +90,15 @@
 - [x] page region cropped screenshot metadata first slice（user-selected region only；transient visible-tab capture cropped in memory；full capture discarded；text-only Page Agent receives metadata, not image bytes）。
 - [ ] page region context polish（vision-model cropped image upload, complex SaaS page real-profile QA, richer visual understanding）。
 - [ ] auto-add new tabs to groups。
-- [ ] Agent search provider config UX（D-039：Tavily-style BYOK provider settings, test, clear, permission copy；Dashboard 不放 search UI）。
+- [x] Agent search provider config UX first slice（D-039：Tavily-style BYOK provider settings, save/clear, permission copy；Dashboard 不放 search UI）。
 - [ ] Agent search real-key QA（explicit search only；send user query only；no tab/page/full URL payload）。
-- [ ] Search result save-to-collection（local metadata/snippet only；no raw result page storage）。
-- [ ] Search result to todo（create Work Queue item from selected search results）。
-- [ ] Todo Agent MVP polish（done/archive/focus source/open Sidebar context；local-only）。
-- [ ] Link understanding first slice（pasted URL detection；no silent fetch；confirmation before using link content）。
+- [x] Search result save-to-collection（local metadata/snippet only；no raw result page storage）。
+- [x] Search result to todo（create Work Queue item from selected search results）。
+- [x] Todo Agent MVP polish first slice（Dashboard Work Queue done/reopen/archive/focus source/open Sidebar context；local-only）。
+- [x] Todo Agent Sidebar command first slice（natural-language todo creation from current tab / current group / selected tabs；local-only metadata）。
+- [x] Todo Agent Sidebar command polish first slice（current-page checklist todo after user-triggered page read；search result to todo；local-only Work Queue storage）。
+- [ ] Todo Agent Sidebar command polish（richer task naming, multi-source todos, checklist editing UX）。
+- [x] Link understanding first slice（pasted URL detection；no silent fetch；save source / create todo locally）。
 - [ ] Search provider diagnostics（redacted status, provider origin, result count, no key/log leakage）。
 
 ## P2 Could-have

@@ -85,8 +85,11 @@ permissionBoundary: explicit host permission / allowlist before non-DeepSeek hos
 - Classification timeout or provider failure returns `fallback:*` status and one-click organize continues with local rules.
 - Timeout handling does not change host permission, request payload, full URL policy, page text policy, or cloud storage defaults.
 - Sidebar 和 Dashboard 已显示 latest run 的 AI 状态（AI provider applied / fallback / local rules）和 AI suggested group count，方便私测确认 AI 是否真的参与分类。
+- Acceptance evidence for product behavior should use the real configured AI provider when available. `tools/deepseek_real_tabs_classification.js` reads the user's current Chrome tab metadata, calls the configured DeepSeek/OpenAI-compatible model, and writes a Markdown/JSON/screenshot report. `tools/capture_real_ai_sidepanel_result.js` renders that real model result inside the Sidebar UI for acceptance review. These tools must not print API keys and must not send full URLs, query/hash, page body text, cookies, form values, browser history, local storage, or saved workspace contents.
 - Other OpenAI-compatible hosts and local model endpoints are enabled only through explicit origin permission. The implementation rejects remote HTTP providers, rejects Base URLs containing username/password/query/hash, allows HTTP only for localhost-style endpoints, and sends Authorization only when an API key is present.
 - Known provider hosts get provider-specific labels in local status; unknown OpenAI-compatible hosts remain supported as `openai-compatible`.
+- Agent web search is a separate optional BYOK provider path, not part of the OpenAI-compatible model provider. The first adapter is Tavily-style `POST /search`; it is disabled until the user saves a local search API key in Dashboard Settings, grants the configured search provider origin permission, and explicitly asks the Sidebar Agent to search the web.
+- Web search sends only the normalized user-typed query by default. It does not send open tab titles, page text, full browser URLs, summaries, workspace memory, rules, or chat history to the search provider. Raw content and image search are off by default, and results remain session-only unless a later Save flow is implemented.
 
 ### 3.1 Chrome built-in AI research status
 

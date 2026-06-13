@@ -42,7 +42,7 @@
 | D-032 | Ollama/local model 是否进入 MVP | 以 OpenAI-compatible `http://localhost` endpoint 形式进入 BYOK settings；不做复杂本地模型向导或模型市场 | CONFIRMED BY USER |
 | D-033 | Command Palette / Context Menu 是否进入 MVP | 建议不进入 MVP；作为 P1/P2 power-user 入口 | CONFIRM |
 | D-034 | 项目是否开源 | 是，全量开源。开源用于信任、SEO、开发者传播、社区反馈和 BYOK 模型配置 | CONFIRMED BY USER |
-| D-034-A | 开源 license | 待确认。候选：MIT、Apache-2.0、AGPL-3.0；dual license 不作为默认方向，除非重新打开全量开源决策 | CONFIRM |
+| D-034-A | 开源 license | Apache-2.0；用于全量开源、BYOK 传播、开发者采用和社区贡献 | CONFIRMED BY USER |
 | D-035 | 是否支持网页区域 / HTML element 选择作为 AI 上下文 | P1 buildable：用户主动点选页面区域后读取该区域 visible text / semantic structure，session-only，不后台读取整页，不保存 raw HTML | CONFIRMED BY USER |
 | D-036 | 是否学习 Tabbit 的 `@` context picker | 建议 P1：Sidebar composer 输入 `@` 后可选择 Current tab / Current group / Selected tabs / Page region / Workspace 等上下文 | CONFIRM |
 | D-037 | 是否先做内置 workflows 而不是 Skills marketplace | 建议 P2：Compare Tabs、Research Brief、GitHub PR Explain、Extract Table From Region 等内置工作流；不做 marketplace / scripts | CONFIRM |

@@ -322,6 +322,68 @@ async function main() {
         }
       },
       {
+        name: "sidepanel-create-todo.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        sidebarContext: {
+          scope: "selected_tabs",
+          tabIds: [301, 302, 303],
+          tabCount: 3,
+          windowId: 1,
+          title: "Selected planning tabs",
+          groupName: "Product Planning",
+          source: "screenshot-fixture",
+          updatedAt: "2026-06-13T00:00:00.000Z"
+        },
+        beforeScreenshot: async (page) => {
+          await page.locator("#chatInput").fill("make these tabs a todo");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForSelector(".chat-thread-message.assistant.todo-created", { timeout: 5000 });
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
+        }
+      },
+      {
+        name: "sidepanel-page-checklist-todo.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          await page.locator("#chatInput").fill("make this page a checklist todo");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForFunction(
+            () => document.querySelectorAll(".chat-thread-message.assistant.todo-created").length >= 1,
+            null,
+            { timeout: 7000 }
+          );
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
+        }
+      },
+      {
+        name: "sidepanel-link-understanding.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          await page.locator("#chatInput").fill("https://example.com/research/browser-work-agent?utm_source=test#section");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForSelector(".chat-thread-message.assistant.link-detected", { timeout: 5000 });
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
+        }
+      },
+      {
         name: "sidepanel-web-search.png",
         path: "/sidepanel.html",
         viewport: SIDEPANEL_VIEWPORT,
@@ -331,7 +393,43 @@ async function main() {
           await page.locator("#chatInput").fill("search the web for browser work agent");
           await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
           await page.waitForSelector(".chat-thread-message.assistant.tool-card", { timeout: 5000 });
-          await page.waitForSelector(".chat-thread-message.assistant .web-search-card", { timeout: 5000 });
+          await page.waitForSelector(".chat-thread-message.assistant .web-search-message", { timeout: 5000 });
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
+        }
+      },
+      {
+        name: "sidepanel-search-result-todo.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          await page.locator("#chatInput").fill("search the web for browser work agent");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForSelector(".chat-thread-message.assistant .web-search-message", { timeout: 5000 });
+          await page.locator('[data-chat-action="todo-search-result"]').first().click();
+          await page.waitForSelector(".chat-thread-message.assistant.todo-created", { timeout: 5000 });
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
+        }
+      },
+      {
+        name: "sidepanel-web-search-setup.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        webSearchMode: "not-configured",
+        beforeScreenshot: async (page) => {
+          await page.locator("#chatInput").fill("search the web for browser work agent");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForSelector(".chat-thread-message.assistant.tool-card", { timeout: 5000 });
+          await page.waitForSelector(".chat-thread-message.assistant.search-provider-needed", { timeout: 5000 });
           await page.locator(".agent-thread").evaluate((element) => {
             element.scrollTop = element.scrollHeight;
             element.dispatchEvent(new Event("scroll", { bubbles: true }));
@@ -433,6 +531,17 @@ async function main() {
             null,
             { timeout: 5000 }
           );
+        }
+      },
+      {
+        name: "dashboard-search-settings.png",
+        path: "/dashboard.html#settings",
+        viewport: DEFAULT_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          await page.waitForSelector("#searchSettingsForm", { timeout: 5000 });
+          await page.locator("#searchSettingsForm").scrollIntoViewIfNeeded();
         }
       },
       {
@@ -632,7 +741,7 @@ async function newMockedPage(browser, viewport, language, options = {}) {
   };
 
   await page.addInitScript(
-    ({ messages, storage, language }) => {
+    ({ messages, storage, language, webSearchMode }) => {
       const listeners = [];
 
       function clone(value) {
@@ -881,6 +990,27 @@ async function newMockedPage(browser, viewport, language, options = {}) {
             }
 
             if (request?.type === "RUN_AGENT_WEB_SEARCH") {
+              if (webSearchMode === "not-configured") {
+                return {
+                  ok: true,
+                  result: {
+                    status: "not-configured",
+                    provider: "tavily",
+                    providerLabel: "Tavily",
+                    query: request.query || "browser work agent",
+                    results: [],
+                    answer: "",
+                    privacy: {
+                      sentQuery: false,
+                      sentTabData: false,
+                      sentPageText: false,
+                      sentFullUrls: false,
+                      storage: "session_only_until_saved"
+                    }
+                  }
+                };
+              }
+
               return {
                 ok: true,
                 result: {
@@ -971,6 +1101,22 @@ async function newMockedPage(browser, viewport, language, options = {}) {
         },
         tabs: {
           create: async () => ({ id: 999 }),
+          get: async (tabId) => {
+            const tabs = storage["tabmosaic.currentRun"]?.snapshot?.tabs || [];
+            const tab = tabs.find((item) => Number(item.id) === Number(tabId));
+
+            if (tab) return toChromeTab(tab);
+            if (Number(tabId) === 901) {
+              return {
+                id: 901,
+                windowId: 1,
+                title: "Settings | Database | ai-music | Supabase",
+                url: "https://supabase.com/dashboard/project/ai-music/settings/database"
+              };
+            }
+
+            throw new Error("No mock tab");
+          },
           query: async (queryInfo = {}) => {
             const tabs = storage["tabmosaic.currentRun"]?.snapshot?.tabs || [];
             const matches = queryInfo.active
@@ -993,7 +1139,8 @@ async function newMockedPage(browser, viewport, language, options = {}) {
     {
       messages,
       storage,
-      language
+      language,
+      webSearchMode: options.webSearchMode || "completed"
     }
   );
 
@@ -1009,6 +1156,11 @@ function readMessages(language) {
 async function assertPageReady(page, pathname) {
   if (pathname.includes("sidepanel")) {
     await page.waitForSelector(".chat-thread-message.assistant.run-completed .run-message-card", { timeout: 5000 });
+    return;
+  }
+
+  if (pathname.includes("#settings")) {
+    await page.waitForSelector("#searchSettingsForm", { timeout: 5000 });
     return;
   }
 

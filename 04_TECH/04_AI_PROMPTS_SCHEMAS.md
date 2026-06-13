@@ -260,6 +260,29 @@ Validation:
 - `skippedBreakdown` may include only reason codes, safe labels, and counts. It must not include full URLs, raw page text, hidden DOM, or secrets.
 - Failed or partial tool cards should still leave the chat usable with metadata-only fallback.
 
+### 5.2 Content-Assisted Regrouping Prompt
+
+CONFIRMED BY IMPLEMENTATION:
+
+Content-assisted regrouping reads capped visible text only after the user asks the Agent to regroup selected tabs or the current group by page content. The output is a preview draft with Apply / Cancel, not an automatic browser mutation.
+
+Prompt rules:
+
+- Use only existing `tabId` values from the provided readable tabs.
+- Never close tabs, navigate, click, bookmark, archive, delete, or claim changes were applied.
+- Prefer user job, workflow, artifact type, and page intent over domain.
+- Do not merge tabs only because they share the same hostname, product, or broad project.
+- For a small selected context with clearly different page intents, prefer several precise task groups over one umbrella group.
+- A tab may appear in at most one group.
+- It is acceptable to leave a tab unassigned when visible text is insufficient.
+
+Validation:
+
+- Invalid, invented, or duplicate tab IDs are ignored.
+- Drafts with no valid readable tabs are rejected.
+- The preview stores a local temporary `regroup_tabs` draft and requires user Apply before native Chrome groups change.
+- Privacy metadata must report `sentPageText: true`, `sentFullUrls: false`, and `storedCloud: false` when a real provider is used.
+
 ## 6. Chat to Action Prompt
 
 ```text

@@ -80,6 +80,8 @@ Websites
 
 CONFIRMED: one-click organize remains metadata-only. Page visible text may be used later only when the user explicitly asks the Agent to answer from a current group / selected tabs or to improve grouping using page content; that separate flow must show a tool card, read at most 6 tabs in private beta, and keep extracted context session-only.
 
+CONFIRMED BY USER: Classification quality discussions and acceptance screenshots must use the real configured AI model whenever the local/BYOK provider is available. Mock fixtures are still allowed for regression testing, but they cannot be used as evidence that classification quality is good.
+
 ## 4. 分类 Pipeline
 
 ```text

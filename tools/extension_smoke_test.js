@@ -385,6 +385,7 @@ test("dashboard permission explanation matches manifest permissions", () => {
 test("sidepanel opens as a chat-first Tab Agent UI", () => {
   const sidepanelHtml = fs.readFileSync(path.join(EXTENSION_DIR, "sidepanel.html"), "utf8");
   const sidepanelJs = fs.readFileSync(path.join(EXTENSION_DIR, "sidepanel.js"), "utf8");
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const css = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
   const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
@@ -399,7 +400,7 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(!sidepanelHtml.includes('data-i18n="tabAgentTitle"'), "Sidepanel should not show a visible Tab Agent title");
   assert(sidepanelHtml.includes('id="dashboardTopButton"'), "Sidepanel should expose Dashboard as a top-right icon button");
   assert(!sidepanelHtml.includes('id="scanButton"'), "Sidepanel should not keep the old header refresh button");
-  assert(sidepanelJs.includes('dashboardTopButton.addEventListener("click", openDashboard)'), "Top-right Dashboard button should open Dashboard");
+  assert(sidepanelJs.includes('dashboardTopButton.addEventListener("click", () => openDashboard())'), "Top-right Dashboard button should open Dashboard");
   assert(sidepanelHtml.includes('data-i18n-aria-label="ask"'), "Chat send action should read like a conversation, not a settings preview");
   assert(sidepanelHtml.indexOf("agent-thread") < sidepanelHtml.indexOf("chatForm"), "Conversation should sit before the composer");
   assert(
@@ -449,7 +450,11 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("search_web_provider"), "Sidebar web search should use the Agent search tool contract");
   assert(sidepanelJs.includes('type: "RUN_AGENT_WEB_SEARCH"'), "Sidebar should execute web search through the internal Agent tool executor");
   assert(sidepanelJs.includes('status: "web-search"'), "Sidebar should render successful web search as an assistant message card");
+  assert(sidepanelJs.includes("web-search-sources"), "Web search should render sources as a lightweight assistant attachment");
+  assert(sidepanelJs.includes("function renderWebSearchSource"), "Web search sources should use a compact source renderer");
   assert(sidepanelJs.includes("agentWebSearchNeedsProvider"), "Sidebar should explain provider setup when web search is not configured");
+  assert(sidepanelJs.includes('status: "search-provider-needed"'), "Sidebar should render missing search setup as a natural assistant message");
+  assert(sidepanelJs.includes('data-chat-action="open-search-settings"'), "Missing search setup should offer a minimal settings path");
   assert(sidepanelJs.includes("toolCardSearchWeb"), "Sidebar should render web search as a tool-card state");
   assert(sidepanelJs.includes("await summarizeContextTabs(text)"), "Group/selected-tab questions should trigger context tab reading");
   assert(sidepanelJs.includes('type: "SUMMARIZE_CONTEXT_TABS"'), "Sidebar should call the background context-tabs agent flow");
@@ -475,14 +480,11 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes('msg("toolCardReadSelectedTabs")'), "Selected-tabs running tool cards should use selected-tabs copy");
   assert(sidepanelJs.includes("function updateLatestToolCard"), "Sidebar should update the running tool card after extraction");
   assert(sidepanelJs.includes('status: "context-summary"'), "Context tab answers should render as normal assistant messages");
-  assert(sidepanelJs.includes("function renderContextTabsSummary"), "Context tab answers should have a simple message-card renderer");
-  assert(sidepanelJs.includes("function renderContextGroupSummary"), "Context tab answers should render a compact group summary");
-  assert(sidepanelJs.includes("context-group-summary"), "Group summaries should stay inside the assistant message card");
-  assert(
-    sidepanelJs.indexOf('<p class="chat-answer">${escapeHtml(summary?.summary || summary?.answer || "")}</p>') <
-      sidepanelJs.indexOf("${groupSummary ? renderContextGroupSummary(groupSummary) : \"\"}"),
-    "Context tab answers should lead with assistant prose before summary metadata"
-  );
+  assert(sidepanelJs.includes("function renderContextTabsSummary"), "Context tab answers should have a simple assistant renderer");
+  assert(sidepanelJs.includes("function buildContextTabsSummaryMarkdown"), "Context tab answers should render as Markdown-style assistant text");
+  assert(sidepanelJs.includes("context-tabs-message"), "Context tab answers should use the unified assistant answer shape");
+  assert(!sidepanelJs.includes("function renderContextGroupSummary"), "Context tab answers should not render a separate group-summary card");
+  assert(!sidepanelJs.includes("context-tab-summary-row"), "Context tab answers should not render tab-summary rows by default");
   assert(sidepanelJs.includes("const skippedBreakdown = Array.isArray(toolCard.skippedBreakdown)"), "Tool cards should render skipped reason breakdowns when available");
   assert(sidepanelJs.includes(".map(formatContextSkipBreakdownItem)"), "Tool cards should reuse readable skipped-reason labels");
   assert(backgroundCode.includes("function buildContextGroupSummary"), "Background should build explicit group summary metadata");
@@ -490,13 +492,13 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(backgroundCode.includes("Approve Chrome site access for the selected work pages"), "Missing site access should produce a concrete retry next step");
   assert(backgroundCode.includes("function buildContextSkipBreakdown"), "Background should build structured skipped-tab reason counts");
   assert(sidepanelJs.includes("function formatContextSkipBreakdownItem"), "Sidebar should render skipped-tab reason chips");
-  assert(sidepanelJs.includes("context-summary-skips"), "Skipped-tab breakdown should stay inside the compact group summary card");
   assert(sidepanelJs.includes("skipReasonMissingPermission"), "Skipped-tab reason chips should distinguish missing site access from restricted pages");
   assert(sidepanelJs.includes("function shouldRouteContextTabsRegroupQuestion"), "Sidebar should route content regroup requests for selected/group tabs");
   assert(sidepanelJs.includes("await regroupContextTabs(text)"), "Content regroup requests should trigger the regroup agent flow");
   assert(sidepanelJs.includes('type: "REGROUP_CONTEXT_TABS"'), "Sidebar should call the background context regroup agent flow");
-  assert(sidepanelJs.includes("function renderRegroupPreview"), "Content regroup previews should render as assistant message cards");
-  assert(sidepanelJs.includes("content-regroup-card"), "Content regroup previews should use a compact chat-card style");
+  assert(sidepanelJs.includes("function renderRegroupPreview"), "Content regroup previews should render in the assistant message flow");
+  assert(sidepanelJs.includes("function buildRegroupPreviewMarkdown"), "Content regroup previews should render proposed groups as Markdown-style assistant text");
+  assert(sidepanelJs.includes("content-regroup-message"), "Content regroup previews should avoid nested admin-style group cards");
   assert(backgroundCode.includes('message.type === "REGROUP_CONTEXT_TABS"'), "Background should handle the content regroup agent message");
   assert(backgroundCode.includes("function applyRegroupTabsDraft"), "Background should apply regroup previews only after Apply");
   assert(backgroundCode.includes('draft.type === "regroup_tabs"'), "Chat Apply should route regroup drafts through the Apply-gated path");
@@ -575,6 +577,23 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("await saveCurrentWorkspace()"), "Chat command should support local workspace save");
   assert(sidepanelJs.includes("isSaveWorkspaceCommand(normalized)"), "Save workspace commands should be recognized before chat refine");
   assert(sidepanelJs.includes('type: "SAVE_CURRENT_WORKSPACE"'), "Sidepanel save workspace should use the background action");
+  assert(sidepanelJs.includes("AGENT_TASKS_KEY"), "Sidepanel should write local Browser Work Queue todos");
+  assert(sidepanelJs.includes("function isCreateTodoCommand"), "Sidepanel should recognize natural-language todo commands");
+  assert(sidepanelJs.includes("await createTodoFromSidebarContext(text)"), "Todo commands should create work items from the active Sidebar context");
+  assert(sidepanelJs.includes('status: "todo-created"'), "Created todos should render as a normal assistant message");
+  assert(sidepanelJs.includes("Stored locally with tab metadata only") || en.agentTodoStoredLocally?.message.includes("tab metadata"), "Todo creation should disclose local metadata-only storage");
+  assert(sidepanelJs.includes("function isCreatePageTodoCommand"), "Sidepanel should recognize current-page checklist todo commands");
+  assert(sidepanelJs.includes("await createChecklistTodoFromCurrentPage(text)"), "Current-page checklist todos should run through the page Agent flow");
+  assert(sidepanelJs.includes("buildPageTodoQuestion"), "Current-page todo creation should ask for an execution checklist");
+  assert(sidepanelJs.includes("SAVED_COLLECTIONS_KEY"), "Sidebar should be able to save Agent sources as local collections");
+  assert(sidepanelJs.includes("function sanitizeSearchResultsForLocalWork"), "Search results should be sanitized before local save/todo actions");
+  assert(sidepanelJs.includes('data-chat-action="save-search-result"'), "Search result sources should offer local save");
+  assert(sidepanelJs.includes('data-chat-action="todo-search-result"'), "Search result sources should offer create todo");
+  assert(sidepanelJs.includes("function shouldRoutePastedLinks"), "Sidebar should recognize pasted links as browser work objects");
+  assert(sidepanelJs.includes('status: "link-detected"'), "Pasted links should render as a normal assistant message");
+  assert(sidepanelJs.includes("I did not open or fetch the page") || en.agentLinksNoFetch?.message.includes("did not open or fetch"), "Link understanding should disclose no silent fetch");
+  assert(dashboardJs.includes("renderBrowserWorkSourcePreview"), "Dashboard Work Queue should render saved sources");
+  assert(dashboardJs.includes("renderBrowserWorkChecklistPreview"), "Dashboard Work Queue should render checklist previews");
   assert(sidepanelJs.includes("function askMetadataAgent"), "Sidepanel should fall back to metadata-only AI Agent answers");
   assert(sidepanelJs.indexOf('type: "PREVIEW_CHAT_REFINE"') < sidepanelJs.indexOf('type: "ASK_TAB_AGENT"'), "Safe local action drafts should run before AI Agent open answers");
   assert(sidepanelJs.includes("function buildOpenChatFallbackAnswer"), "Open-ended chat fallback should render as a normal assistant answer");
@@ -600,8 +619,9 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(css.includes(".chat-thread-message.assistant"), "Assistant chat messages should have scoped styling");
   assert(css.includes(".chat-summary-card"), "Current-page summary chat message should have scoped styling");
   assert(css.includes(".ai-agent-card"), "AI Agent answer should remain a simple message card");
+  assert(css.includes(".assistant-answer-message"), "Assistant answers should share the unified Markdown message styling");
+  assert(css.includes(".web-search-sources"), "Web search sources should have lightweight scoped styling");
   assert(css.includes(".agent-tool-card"), "Agent tool cards should have scoped styling");
-  assert(css.includes(".context-tab-summary-row"), "Context-tab summaries should have scoped styling");
   assert(!css.includes(".chat-summary-question"), "Current-page chat should not render a separate question label block");
   assert(!css.includes(".agent-privacy-note"), "AI Agent chat should not carry a per-message privacy footnote style");
   assert(css.includes(".agent-context-bar"), "Composer context status should have scoped styling");
@@ -689,6 +709,13 @@ test("dashboard follows minimal glass workbench structure", () => {
   assert(!dashboardCss.includes(".dashboard-agent-search"), "Dashboard should not carry a visible search surface");
   assert(dashboardHtml.includes('id="dashboardAgentTasks"'), "Dashboard workbench should include a lightweight task area");
   assert(dashboardHtml.includes('id="dashboardAgentCollections"'), "Dashboard workbench should include a lightweight collections area");
+  assert(dashboardJs.includes('data-browser-work-action="focus"'), "Browser work rows should focus linked source tabs");
+  assert(dashboardJs.includes('data-browser-work-action="toggle-done"'), "Work Queue todos should support done/reopen");
+  assert(dashboardJs.includes('data-browser-work-action="archive"'), "Work Queue todos should support local archive");
+  assert(dashboardJs.includes("function updateBrowserWorkTask"), "Work Queue todo changes should persist locally");
+  assert(dashboardHtml.includes('id="searchSettingsForm"'), "Dashboard settings should include optional Agent web search BYOK setup");
+  assert(dashboardHtml.includes('id="searchKeyInput"'), "Search setup should store a user-provided search key locally");
+  assert(dashboardJs.includes("SEARCH_SETTINGS_KEY"), "Dashboard should save Agent web search settings to the existing local search config");
   assert(!dashboardJs.includes("agentSearchProviderBoundary"), "External search disclosure should live in Agent chat, not Dashboard search UI");
   assert(backgroundCode.includes("search_web_provider"), "Agent search should mean provider-backed web search, not Dashboard UI search");
   assert(dashboardJs.includes("sanitizeTabForBrowserWork"), "Dashboard should sanitize tabs before saving tasks or collections");
