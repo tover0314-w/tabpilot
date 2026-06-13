@@ -7,6 +7,9 @@
 - `agents.md`：lowercase compatibility pointer，指向 `AGENTS.md`。
 - `CHANGELOG.md`：harness 版本变化记录。
 - `CONTRIBUTING.md`：公开仓库贡献指南，说明开源状态、隐私红线、PR 要求、issue 模板和本地检查命令。
+- `SECURITY.md`：公开安全策略，说明浏览器数据、AI provider、权限和漏洞报告边界。
+- `VISION.md`：公开项目愿景，说明 AI browser layer、隐私、开源和长期方向。
+- `LICENSE`：Apache-2.0 开源许可证。
 
 ## Implementation
 
@@ -53,6 +56,7 @@
 - `06_AI_BROWSER_LAYER_PRD_REVIEW.md`：对导入的 AI Browser Layer PRD 的评审、可吸收内容、冲突点和确认门。
 - `07_OPEN_SOURCE_BYOK_STRATEGY.md`：开源增长、BYOK 模型配置、AI Browser Layer 叙事和 hosted service 商业化边界。
 - `08_BRAND_DOMAIN_PRELIMINARY_SCAN.md`：品牌/域名初扫，记录 `Tab Mosaic` Chrome Web Store 近似冲突、SEO 风险和 D-001-A 公开品牌/域名确认门。
+- `09_REPO_GROWTH_AND_SEO_NAMING_NOTES.md`：OpenClaw-style repo 运营学习、GitHub 门面优化、SEO 关键词和公开命名候选。
 
 ## 02_FEATURE_SPECS
 

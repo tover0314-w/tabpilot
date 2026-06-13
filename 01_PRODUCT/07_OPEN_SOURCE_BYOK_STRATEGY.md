@@ -1,12 +1,12 @@
 # Open Source + BYOK Strategy
 
-Status: CONFIRMED BY USER for full open-source direction  
-License: CONFIRM  
-Last updated: 2026-06-12
+Status: CONFIRMED BY USER for full open-source direction
+License: Apache-2.0 confirmed
+Last updated: 2026-06-13
 
 ## 1. Strategy Summary
 
-TabMosaic AI should move from a closed-source commercial extension narrative to a full open-source, user-controlled AI browser layer narrative. The public repo should include the local extension source; license selection remains separate.
+TabMosaic AI should move from a closed-source commercial extension narrative to a full open-source, user-controlled AI browser layer narrative. The public repo includes the local extension source under Apache-2.0.
 
 Core promise:
 
@@ -187,31 +187,26 @@ Recommended SEO / content topics:
 - AI tab groups for Chrome
 - DeepSeek Chrome extension tab organizer
 
-## 8. License Decision Gate
-
-Open source is confirmed, but license is not.
+## 8. License Decision
 
 Decision Gate: D-034-A Open Source License
 
-Options to evaluate:
-
-| License | Tradeoff |
-|---|---|
-| MIT | easiest adoption, weakest commercial protection |
-| Apache-2.0 | permissive, includes explicit patent grant |
-| AGPL-3.0 | stronger reciprocity, may reduce commercial adoption |
-| Dual license | more control, more operational complexity; not recommended unless the user reopens the full-open-source decision |
-
-Current recommendation:
+Status:
 
 ```text
-Use Apache-2.0 or MIT for fastest developer adoption unless the user wants stronger copyleft protection.
-Do not add a LICENSE file until confirmed.
+CONFIRMED BY USER
+License: Apache-2.0
 ```
+
+Why this fits:
+
+- permissive enough for fast developer adoption
+- explicit patent grant
+- friendly to company review
+- compatible with the open-source + BYOK trust strategy
 
 ## 9. Open Questions
 
-- Which license should the public repo use?
 - Should hosted/pro features live in the same public repo as stubs or in a separate repo later?
 - Which provider setup guides should get deeper step-by-step pages first: DeepSeek, OpenAI-compatible custom, OpenRouter, Groq, Together, xAI, Perplexity, Cerebras, Fireworks, DeepInfra, SiliconFlow, Kimi, MiniMax, DashScope, Ollama, LM Studio?
 - Should local model support get a first-class onboarding wizard before hosted AI gateway?

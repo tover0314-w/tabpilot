@@ -7,11 +7,11 @@ Thank you for helping. This repo handles sensitive browser-adjacent workflows, s
 ## Project Status
 
 - Full open-source direction is confirmed.
-- The open-source license is not confirmed yet, so this repo intentionally has no `LICENSE` file.
+- The repository is licensed under Apache-2.0.
 - The local extension should remain inspectable and BYOK-friendly.
 - Optional hosted services, sync, managed AI, and billing are future layers, not a closed-source local core.
 
-Do not add a license file or change the public/commercial boundary without an explicit decision update.
+Do not change the license or public/commercial boundary without an explicit decision update.
 
 ## Before You Start
 

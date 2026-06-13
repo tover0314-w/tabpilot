@@ -42,7 +42,9 @@ jobs:
           node --check tools/qa_seed_tabs.js
           node --check tools/generate_extension_assets.js
           node --check tools/capture_ui_screenshots.js
+          node --check tools/capture_real_ai_sidepanel_result.js
           node --check tools/build_store_screenshots.js
+          node --check tools/deepseek_real_tabs_classification.js
           node --check tools/deepseek_smoke_test.js
           node --check tools/write_private_beta_ai_config.js
           node --check tools/secret_scan.js
