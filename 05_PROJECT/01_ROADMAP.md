@@ -27,13 +27,17 @@
 - Chat refine basic。
 - Current tab summary。
 - Dashboard V0。
+- Open-source README / privacy docs / BYOK setup docs。
 
 ## Phase 2：Paid Beta
 
-目标：验证付费。
+目标：验证全量开源后的 hosted service / managed AI / sync 付费。
 
 范围：
 
+- Public GitHub repo。
+- BYOK provider configuration。
+- OpenAI-compatible provider docs。
 - Account。
 - Hosted AI gateway。
 - Usage metering。
@@ -58,10 +62,12 @@
 
 ## Phase 4：Scale
 
-目标：扩大市场。
+目标：扩大市场和社区。
 
 范围：
 
+- Community provider adapters。
+- Shared rules / workflow templates。
 - Team workspace。
 - Shared templates。
 - Browser history agent。
@@ -94,6 +100,12 @@ AI 能生成较好 group names 和 assignments。
 
 邀请 20–50 个重度 tab 用户测试。
 
-### M7：Public Launch
+### M7：Open Source Launch
+
+公开 GitHub repo，发布开源 README、隐私架构、BYOK provider setup、贡献指南和 license。
+
+License 仍需在 launch 前确认。
+
+### M8：Public Product Launch
 
 Product Hunt / Hacker News / X 上线。

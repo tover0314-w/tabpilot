@@ -29,6 +29,8 @@ Before touching a real Chrome profile, open a disposable QA browser:
 node tools/open_manual_qa_profile.js --dry-run
 node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
+# Recommended when testing selected-tabs page context and fixture refresh/link behavior:
+node tools/open_manual_qa_profile.js --keep-fixture-server
 ```
 
 Expected:
@@ -41,6 +43,8 @@ Expected:
 - The checklist can save local QA notes in the disposable profile, copy a Markdown QA result for review before sharing, and copy the blank redaction-safe real-profile QA template.
 - The checklist includes AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks.
 - Synthetic QA tabs are opened.
+- Three local synthetic context fixture pages are opened under `tabmosaic-manual.test`: Product Roadmap, Release Checklist, and Interface Review. These are the preferred pages for selected-tabs page-context permission testing.
+- `--keep-fixture-server` keeps the local fixture server alive until Ctrl+C, so fixture links and refreshed fixture tabs continue to work during selected-tabs page-context QA.
 - Sidepanel and Dashboard extension pages are opened.
 - The script prints profileDir, extensionId, checklist URL, sidepanel URL, dashboard URL, real-profile QA template path, and cleanup command.
 - `--self-test` opens the disposable browser, verifies setup and checklist report controls, then closes and removes the temporary profile automatically.
@@ -70,7 +74,8 @@ Expected:
 
 ```text
 Manifest V3 extension loads without errors.
-No default popup is shown when clicking the toolbar icon.
+Clicking the toolbar icon opens the compact TabMosaic action menu.
+Smart Organize, Vertical Tabs, Current Page Chat, and Dashboard are visible.
 ```
 
 ## 4. Seed QA Tabs
@@ -237,7 +242,49 @@ Expected:
 - No cloud AI request is made in this slice.
 ```
 
-## 11. Dashboard
+## 11. Selected Tabs And Group Page Context
+
+Run this in the disposable QA profile first. Real-profile results should be redacted before sharing.
+
+1. Open Dashboard.
+2. In the Manual QA Checklist, use the `Context Fixture Guide` to identify the already opened local fixture pages and copy the selected-tabs prompt.
+3. Find the local Manual QA fixture pages in Dashboard Smart Groups: Product Roadmap, Release Checklist, and Interface Review.
+4. In Smart Groups, select at least two same-window Manual QA fixture tab rows.
+5. Click `Chat selected`.
+6. In the Sidebar composer, paste the copied page-content prompt.
+7. If Chrome shows a native site-access prompt, approve access only for the `tabmosaic-manual.test` fixture origin.
+8. Confirm the answer renders as normal chat, not a dashboard panel, and uses fixture markers such as `ORBITALPLANNING`, `BUGLANTERN`, or `GLASSHARBOR` when access is allowed.
+9. Ask a follow-up question such as: `Which one should I read first and why?`
+10. Ask a content regroup request such as: `Regroup these selected tabs by what the pages are actually about.`
+11. Confirm any regroup result shows `Apply` / `Cancel` before native tab groups change.
+12. Repeat once while denying or closing the site-access prompt for one readable page.
+
+Expected:
+
+```text
+- Page content is read only after the selected-tabs/current-group question.
+- The running tool card says Read selected tabs for selected-tabs scope, not Read group pages.
+- Chrome optional site access is requested per selected origin, not as broad all-site access.
+- Local fixture answers can use `ORBITALPLANNING`, `BUGLANTERN`, and `GLASSHARBOR` because those markers exist only in the synthetic fixture pages.
+- Tabs over the read cap, restricted pages, protected pages, sensitive pages, and permission-denied pages are skipped with clear reason chips.
+- Denied or missing site access is explained as site access not granted and gives a retry path.
+- The answer can be partial when some pages are unreadable.
+- Follow-up questions reuse only the short local context for the same scoped selection.
+- Content-assisted regrouping previews before Apply and does not close tabs.
+- Selected-tabs visible text, summaries, and follow-up context are session-only and do not appear in diagnostics, feedback templates, local workspaces, or stored run snapshots.
+```
+
+Fail if:
+
+```text
+- The extension reads selected-tab page text before the user asks.
+- Chrome grants broad all-site access or the extension asks for <all_urls>.
+- The answer silently claims to read pages that were skipped, denied, restricted, or over the cap.
+- Native tab groups change before Apply.
+- Selected-tabs page text appears in copied diagnostics, feedback templates, local workspaces, or stored run snapshots.
+```
+
+## 12. Dashboard
 
 1. Click `Open Dashboard`.
 2. Review Smart Groups and Duplicate Center.
@@ -261,7 +308,7 @@ Expected:
 - Non-DeepSeek AI base URLs are rejected before any network request in this private beta.
 ```
 
-## 12. Optional UI Screenshot Preview
+## 13. Optional UI Screenshot Preview
 
 Run before or after manual QA when a visual snapshot is useful:
 
@@ -286,7 +333,7 @@ Expected:
 
 This is not a substitute for real Chrome manual QA because it does not prove native tab groups were created in the browser top bar.
 
-## 12. Beta Diagnostics And Feedback
+## 14. Beta Diagnostics And Feedback
 
 1. Open the hidden private-beta Settings path in a development build.
 2. Click `Copy Diagnostic Snapshot`.
@@ -321,7 +368,7 @@ Fail if:
 - GitHub issue forms ask testers to include sensitive browsing data or secrets.
 ```
 
-## 13. Privacy Check
+## 15. Privacy Check
 
 Expected:
 
@@ -330,10 +377,10 @@ Expected:
 - Full URL is stored only where needed for Restore Closed.
 - Page body is read only after Summarize Current Tab.
 - Chat Refine does not read page body.
-- No <all_urls>, history, bookmarks, cookies, webRequest, or browsingData permission is requested.
+- No default all-site access, history, bookmarks, cookies, webRequest, or browsingData permission is granted. User-triggered group/selected-tabs page questions may request specific site access and release it after the answer.
 ```
 
-## 14. Result Log Template
+## 16. Result Log Template
 
 Use:
 

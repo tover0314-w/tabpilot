@@ -6,6 +6,23 @@
 
 分类目标不是按网站分，而是按用户任务、项目、意图分。
 
+V2 规格见 `02_FEATURE_SPECS/12_AGENTIC_CLASSIFICATION_AND_CONTEXT_TOOLS.md`。该规格将分类拆成 project / workflow / artifact / intent 等维度，并明确禁止把 domain-only grouping 当作理想结果。
+
+当前实现状态：
+
+```text
+CONFIRMED BY IMPLEMENTATION:
+- One-click organize remains metadata-only.
+- Classifier V2 derives artifact/workflow/project/domain/intent/sensitive/domain-only-risk features locally.
+- Weak domain-only AI group names are rejected during validation.
+- AI-provided split/merge suggestions and conservative local metadata split/merge suggestions are surfaced as folded Sidebar refinement notes after organize.
+- Split suggestions are not applied automatically; they only tell the user where a broad group may be improved.
+- Merge suggestions are not applied automatically; they only tell the user which small groups may belong together.
+
+STILL PENDING:
+- Real-profile classification QA against messy office/knowledge-work tabs.
+```
+
 ## 2. 好分类 vs 坏分类
 
 ### 好分类
@@ -60,6 +77,8 @@ Websites
 - 表单内容。
 - localStorage/sessionStorage。
 - 密码字段。
+
+CONFIRMED: one-click organize remains metadata-only. Page visible text may be used later only when the user explicitly asks the Agent to answer from a current group / selected tabs or to improve grouping using page content; that separate flow must show a tool card, read at most 6 tabs in private beta, and keep extracted context session-only.
 
 ## 4. 分类 Pipeline
 

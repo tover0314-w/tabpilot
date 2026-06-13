@@ -43,6 +43,47 @@ const FORMS = [
       "Biggest MVP gap",
       "Reviewed feedback template output"
     ]
+  },
+  {
+    relativePath: ".github/ISSUE_TEMPLATE/provider_request.yml",
+    titlePrefix: "[Provider Request]:",
+    requiredText: [
+      "Provider request",
+      "OpenAI-compatible API",
+      "Public docs URL",
+      "Base URL shape",
+      "Models to support",
+      "Browser-agent use case",
+      "public or synthetic provider details"
+    ]
+  },
+  {
+    relativePath: ".github/ISSUE_TEMPLATE/grouping_quality.yml",
+    titlePrefix: "[Grouping Quality]:",
+    requiredText: [
+      "Grouping quality feedback",
+      "Workload shape",
+      "Context used",
+      "Grouped mostly by domain",
+      "Expected grouping",
+      "Actual grouping",
+      "Safe generic examples",
+      "generic or synthetic tab descriptions"
+    ]
+  },
+  {
+    relativePath: ".github/ISSUE_TEMPLATE/ui_bug.yml",
+    titlePrefix: "[UI Bug]:",
+    requiredText: [
+      "UI bug report",
+      "UI surface",
+      "Sidebar chat",
+      "Dashboard settings",
+      "Toolbar menu",
+      "Expected UI behavior",
+      "Actual UI behavior",
+      "redacted private browser content"
+    ]
   }
 ];
 

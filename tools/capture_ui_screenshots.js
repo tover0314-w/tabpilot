@@ -10,6 +10,18 @@ const OUT_DIR = path.join(ROOT_DIR, "artifacts", "ui-screenshots");
 const DEFAULT_VIEWPORT = { width: 1366, height: 980 };
 const DASHBOARD_MOBILE_VIEWPORT = { width: 390, height: 1200 };
 const SIDEPANEL_VIEWPORT = { width: 390, height: 860 };
+const TEN_TURN_PAGE_QUESTIONS = [
+  "What is this page for?",
+  "What are the most important health signals?",
+  "Should I change connection pooling right now?",
+  "What is the risk if I rotate the database password?",
+  "Is point-in-time recovery enabled?",
+  "Which project and environment are we talking about?",
+  "Before running the pending migration, what should I check?",
+  "Could this page help me reduce connection errors?",
+  "Summarize the action plan in priority order.",
+  "Final decision: change settings now or prepare first?"
+];
 
 const MOCK_RUN = {
   id: "mock-run-2026-06-09",
@@ -265,10 +277,118 @@ async function main() {
         fullPage: false,
         language: "en",
         beforeScreenshot: async (page) => {
-          await page.locator("#chatInput").fill("Move GitHub PR tabs to Code Review");
+          await page.locator("#chatInput").fill("What content does this page have?");
           await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
           await page.waitForSelector(".chat-thread-message.user", { timeout: 5000 });
-          await page.waitForSelector(".chat-thread-message.assistant.preview", { timeout: 5000 });
+          await page.waitForSelector(".chat-thread-message.assistant.summary", { timeout: 5000 });
+          await page.locator("#chatInput").fill("What should I check before changing database settings?");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForFunction(
+            () => document.querySelectorAll(".chat-thread-message.assistant.summary").length >= 2,
+            null,
+            { timeout: 5000 }
+          );
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
+        }
+      },
+      {
+        name: "sidepanel-context-tabs.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        sidebarContext: {
+          scope: "selected_tabs",
+          tabIds: [301, 302, 303, 304, 305, 306, 307, 308],
+          tabCount: 8,
+          windowId: 1,
+          title: "Selected planning tabs",
+          groupName: "Product Planning",
+          source: "screenshot-fixture",
+          updatedAt: "2026-06-11T00:00:00.000Z"
+        },
+        beforeScreenshot: async (page) => {
+          await page.locator("#chatInput").fill("What are these selected tabs about?");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForSelector(".chat-thread-message.assistant.tool-card", { timeout: 5000 });
+          await page.waitForSelector(".chat-thread-message.assistant.context-summary", { timeout: 5000 });
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
+        }
+      },
+      {
+        name: "sidepanel-web-search.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          await page.locator("#chatInput").fill("search the web for browser work agent");
+          await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+          await page.waitForSelector(".chat-thread-message.assistant.tool-card", { timeout: 5000 });
+          await page.waitForSelector(".chat-thread-message.assistant .web-search-card", { timeout: 5000 });
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
+        }
+      },
+      {
+        name: "sidepanel-10-turn-chat.png",
+        path: "/sidepanel.html",
+        viewport: SIDEPANEL_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          for (const question of TEN_TURN_PAGE_QUESTIONS) {
+            await page.locator("#chatInput").fill(question);
+            await page.locator("#chatForm").evaluate((form) => form.requestSubmit());
+            try {
+              await page.waitForFunction(
+                () => {
+                  const input = document.querySelector("#chatInput");
+                  const messages = Array.from(document.querySelectorAll(".chat-thread-message"));
+                  const lastMessage = messages[messages.length - 1];
+
+                  return Boolean(
+                    input &&
+                      !input.disabled &&
+                      input.value === "" &&
+                      lastMessage?.classList.contains("assistant") &&
+                      lastMessage?.classList.contains("summary")
+                  );
+                },
+                null,
+                { timeout: 7000 }
+              );
+            } catch (error) {
+              const diagnostic = await page.evaluate(() => {
+                const messages = Array.from(document.querySelectorAll(".chat-thread-message"));
+                const lastMessage = messages[messages.length - 1];
+                const input = document.querySelector("#chatInput");
+
+                return {
+                  count: messages.length,
+                  inputDisabled: Boolean(input?.disabled),
+                  inputValue: input?.value || "",
+                  lastClass: lastMessage?.className || "",
+                  lastText: lastMessage?.textContent?.replace(/\s+/g, " ").trim().slice(0, 220) || ""
+                };
+              });
+              throw new Error(
+                `10-turn sidepanel screenshot timed out after question: ${question}\n${JSON.stringify(diagnostic)}`
+              );
+            }
+          }
+          await page.locator(".agent-thread").evaluate((element) => {
+            element.scrollTop = element.scrollHeight;
+            element.dispatchEvent(new Event("scroll", { bubbles: true }));
+          });
         }
       },
       {
@@ -277,6 +397,43 @@ async function main() {
         viewport: DEFAULT_VIEWPORT,
         fullPage: false,
         language: "en"
+      },
+      {
+        name: "dashboard-selected-tabs.png",
+        path: "/dashboard.html",
+        viewport: DEFAULT_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          const checkboxes = page.locator('[data-window-id="1"] [data-tab-select]');
+          await checkboxes.nth(0).check();
+          await checkboxes.nth(1).check();
+          await page.waitForSelector("#chatSelectedTabsButton:not([hidden])", { timeout: 5000 });
+        }
+      },
+      {
+        name: "dashboard-workbench.png",
+        path: "/dashboard.html",
+        viewport: DEFAULT_VIEWPORT,
+        fullPage: false,
+        language: "en",
+        beforeScreenshot: async (page) => {
+          const checkboxes = page.locator('[data-window-id="1"] [data-tab-select]');
+          await checkboxes.nth(0).check();
+          await checkboxes.nth(1).check();
+          await page.locator("#createTodoFromSelectionButton").click();
+          await page.waitForFunction(
+            () => document.querySelectorAll("#dashboardAgentTasks .dashboard-agent-minirow").length >= 1,
+            null,
+            { timeout: 5000 }
+          );
+          await page.locator("#saveSelectionCollectionButton").click();
+          await page.waitForFunction(
+            () => document.querySelectorAll("#dashboardAgentCollections .dashboard-agent-minirow").length >= 1,
+            null,
+            { timeout: 5000 }
+          );
+        }
       },
       {
         name: "dashboard-mobile.png",
@@ -288,7 +445,7 @@ async function main() {
     ];
 
     for (const item of pages) {
-      const page = await newMockedPage(browser, item.viewport, item.language);
+      const page = await newMockedPage(browser, item.viewport, item.language, item);
       const pageErrors = [];
       page.on("pageerror", (error) => pageErrors.push(error.message));
       page.on("console", (message) => {
@@ -321,6 +478,10 @@ async function main() {
 }
 
 async function captureScreenshot(page, screenshotPath, item) {
+  if (item.path === "/sidepanel.html") {
+    await assertSidepanelLayoutNotClipped(page, item.name);
+  }
+
   try {
     await page.screenshot({
       path: screenshotPath,
@@ -337,6 +498,49 @@ async function captureScreenshot(page, screenshotPath, item) {
   const stats = fs.statSync(screenshotPath);
   if (stats.size < 10000) {
     throw new Error(`${item.name} screenshot looks too small (${stats.size} bytes)`);
+  }
+}
+
+async function assertSidepanelLayoutNotClipped(page, name) {
+  const layout = await page.evaluate(() => {
+    const rectFor = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return {
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+        width: Math.round(rect.width),
+        scrollLeft: element.scrollLeft,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth
+      };
+    };
+
+    return {
+      bodyScrollLeft: document.body.scrollLeft,
+      documentScrollLeft: document.documentElement.scrollLeft,
+      scrollingElementScrollLeft: document.scrollingElement?.scrollLeft || 0,
+      bodyScrollWidth: document.body.scrollWidth,
+      bodyClientWidth: document.body.clientWidth,
+      shell: rectFor(".tab-agent-shell"),
+      thread: rectFor(".agent-thread"),
+      firstMessage: rectFor(".chat-thread-message"),
+      composer: rectFor(".agent-composer")
+    };
+  });
+
+  const horizontalDrift =
+    layout.bodyScrollLeft !== 0 ||
+    layout.documentScrollLeft !== 0 ||
+    layout.scrollingElementScrollLeft !== 0 ||
+    layout.shell?.scrollLeft !== 0 ||
+    layout.thread?.left < 0 ||
+    layout.firstMessage?.left < 0 ||
+    layout.composer?.right > layout.bodyClientWidth + 1;
+
+  if (horizontalDrift) {
+    throw new Error(`${name} sidepanel layout is horizontally clipped:\n${JSON.stringify(layout, null, 2)}`);
   }
 }
 
@@ -407,11 +611,20 @@ function contentType(filePath) {
   return "application/octet-stream";
 }
 
-async function newMockedPage(browser, viewport, language) {
+async function newMockedPage(browser, viewport, language, options = {}) {
   const page = await browser.newPage({ viewport });
   const messages = readMessages(language);
   const storage = {
     "tabmosaic.currentRun": MOCK_RUN,
+    "tabmosaic.sidebarContext": options.sidebarContext || {
+      scope: "current_tab",
+      tabId: 901,
+      windowId: 1,
+      title: "Settings | Database | ai-music | Supabase",
+      hostname: "supabase.com",
+      source: "browser",
+      updatedAt: "2026-06-11T00:00:00.000Z"
+    },
     "tabmosaic.userRules": MOCK_RULES,
     "tabmosaic.aiSettings": MOCK_AI_SETTINGS,
     "tabmosaic.errorLog": [],
@@ -461,6 +674,59 @@ async function newMockedPage(browser, viewport, language) {
         };
       }
 
+      function buildMockCurrentPageSummary(question) {
+        const normalized = String(question || "").toLowerCase();
+        const answers = [
+          {
+            match: /what is this page|what content|content does this page|content.*page|\bfor\?*$/,
+            text: "This page is the Database settings area for your Supabase ai-music project. It covers connection details, database configuration, backups, pooling, and production-level database controls."
+          },
+          {
+            match: /check before changing|changing database|database settings/,
+            text: "Before changing database settings, confirm a recent backup, review pooling and connection limits, and avoid rotating credentials until you know which services use them."
+          },
+          {
+            match: /health signals|important/,
+            text: "The main signals are active connections, storage usage, backup status, pooling mode, pending migrations, and whether recovery options are enabled."
+          },
+          {
+            match: /pooling/,
+            text: "Do not change pooling immediately. First check whether production services still use direct connections and whether prepared statements are compatible with transaction pooling."
+          },
+          {
+            match: /password|rotate/,
+            text: "Password rotation can break production if app secrets are not updated first. Treat it as a coordinated release task, not a casual settings change."
+          },
+          {
+            match: /point-in-time|pitr|recovery/,
+            text: "Point-in-time recovery appears to be off, so recent daily backups become more important before risky database changes."
+          },
+          {
+            match: /project|environment/,
+            text: "The context is the ai-music production project in Supabase, so the safer default is to prepare and test before changing settings."
+          },
+          {
+            match: /migration/,
+            text: "Before the pending migration, confirm a recent backup, test in staging, and check whether the tracks table impact is acceptable for production traffic."
+          },
+          {
+            match: /connection errors/,
+            text: "Yes. This page can help diagnose connection errors by showing pooling configuration, direct connection pressure, and connection limits."
+          },
+          {
+            match: /action plan|priority/,
+            text: "Priority plan: confirm backups, review direct connections, test pooling and migrations in staging, then coordinate password or production setting changes."
+          },
+          {
+            match: /final decision|change settings|prepare first/,
+            text: "Prepare first. The page shows enough production risk that you should verify backups, staging migration behavior, pooling compatibility, and app secrets before changing settings."
+          }
+        ];
+        const match = answers.find((item) => item.match.test(normalized));
+
+        return match?.text || "This page is the Database settings area for your Supabase ai-music project, covering connection details, backups, pooling, migrations, and production database controls.";
+      }
+
       globalThis.chrome = {
         i18n: {
           getUILanguage: () => (language === "zh" ? "zh-CN" : "en-US"),
@@ -487,6 +753,174 @@ async function newMockedPage(browser, viewport, language) {
                 result: {
                   modelAvailable: true,
                   model: request.model || "deepseek-v4-flash"
+                }
+              };
+            }
+
+            if (request?.type === "CHECK_SUMMARY_PRIVACY") {
+              return {
+                ok: true,
+                result: {
+                  tabId: 901,
+                  title: "Settings | Database | ai-music | Supabase",
+                  hostname: "supabase.com",
+                  requiresConfirmation: false,
+                  reason: ""
+                }
+              };
+            }
+
+            if (request?.type === "SUMMARIZE_CURRENT_TAB") {
+              const question = String(request.question || "");
+              const answer = buildMockCurrentPageSummary(question);
+
+              return {
+                ok: true,
+                summary: {
+                  status: "completed",
+                  title: "Settings | Database | ai-music | Supabase",
+                  hostname: "supabase.com",
+                  question: question || "What content does this page have?",
+                  summary: answer,
+                  keyPoints: [
+                    "Confirm backups or recovery options first.",
+                    "Review pooling and connection limits before traffic changes.",
+                    "Avoid rotating credentials until you know which services use them."
+                  ],
+                  suggestedGroup: "Backend Setup",
+                  suggestedAction: "keep",
+                  confidence: 0.82,
+                  extractedChars: 1840,
+                  provider: "deepseek",
+                  aiUsed: true,
+                  privacy: {
+                    sentTabMetadata: true,
+                    sentPageText: true,
+                    sentFullUrls: false,
+                    storedCloud: false
+                  }
+                }
+              };
+            }
+
+            if (request?.type === "SUMMARIZE_CONTEXT_TABS") {
+              return {
+                ok: true,
+                summary: {
+                  status: "completed",
+                  provider: "deepseek",
+                  aiUsed: true,
+                  question: request.question || "What are these selected tabs about?",
+                  answer: "These selected tabs are mostly about private beta planning: roadmap decisions, launch checklist work, pricing notes, customer research, and competitor positioning. I read the safe visible pages I could, skipped two that exceeded the beta cap, and did not store the extracted text.",
+                  summary: "These selected tabs are mostly about private beta planning: roadmap decisions, launch checklist work, pricing notes, customer research, and competitor positioning. I read the safe visible pages I could, skipped two that exceeded the beta cap, and did not store the extracted text.",
+                  keyPoints: [
+                    "The strongest theme is planning the private beta launch.",
+                    "Several pages support product decisions: roadmap, pricing, customer research, and competitor positioning.",
+                    "The group should stay task-based rather than split by website."
+                  ],
+                  tabSummaries: [
+                    {
+                      tabId: 301,
+                      title: "Q3 planning doc",
+                      summary: "Roadmap and priority planning for the next beta slice.",
+                      suggestedAction: "keep"
+                    },
+                    {
+                      tabId: 303,
+                      title: "MVP private beta checklist",
+                      summary: "Launch readiness tasks and QA checkpoints.",
+                      suggestedAction: "review"
+                    },
+                    {
+                      tabId: 306,
+                      title: "Office workflow research",
+                      summary: "Research notes about how office workers deal with tab overload.",
+                      suggestedAction: "keep"
+                    }
+                  ],
+                  recommendations: [
+                    "Keep these together as Product Planning, then split only if pricing or research grows into separate work."
+                  ],
+                  toolCard: {
+                    toolName: "read_selected_tabs_pages",
+                    label: "Read selected tabs",
+                    scope: {
+                      type: "selected_tabs",
+                      requestedTabCount: 8,
+                      readTabCount: 6,
+                      skippedTabCount: 2,
+                      maxTabs: 6
+                    },
+                    dataUsed: ["visible_text", "title", "hostname", "headings"],
+                    storage: "session_only",
+                    status: "partial",
+                    skippedReasons: ["over_cap"]
+                  },
+                  skippedTabs: [
+                    {
+                      tabId: 307,
+                      title: "Launch checklist",
+                      hostname: "docs.google.com",
+                      reason: "over_cap"
+                    },
+                    {
+                      tabId: 308,
+                      title: "Competitor positioning",
+                      hostname: "docs.google.com",
+                      reason: "over_cap"
+                    }
+                  ],
+                  privacy: {
+                    sentTabMetadata: true,
+                    sentPageText: true,
+                    sentFullUrls: false,
+                    storedCloud: false
+                  }
+                }
+              };
+            }
+
+            if (request?.type === "RUN_AGENT_WEB_SEARCH") {
+              return {
+                ok: true,
+                result: {
+                  status: "completed",
+                  provider: "tavily",
+                  providerLabel: "Tavily",
+                  query: request.query || "browser work agent",
+                  answer: "A browser work agent combines page context, open tabs, web search, todos, and safe browser actions so the browser can help finish knowledge-work tasks instead of only displaying pages.",
+                  resultCount: 3,
+                  searchedAt: "2026-06-13T00:00:00.000Z",
+                  results: [
+                    {
+                      title: "Browser work agents: context, tools, and safe actions",
+                      url: "https://example.com/browser-work-agent",
+                      hostname: "example.com",
+                      snippet: "A practical overview of browser agents that use page context, search results, and user-approved actions.",
+                      score: 0.94
+                    },
+                    {
+                      title: "Designing AI browser extensions for knowledge work",
+                      url: "https://example.org/ai-browser-extension",
+                      hostname: "example.org",
+                      snippet: "Patterns for sidebars, tab context, privacy boundaries, and action confirmation in browser extensions.",
+                      score: 0.88
+                    },
+                    {
+                      title: "From tab manager to browser workbench",
+                      url: "https://research.example.net/browser-workbench",
+                      hostname: "research.example.net",
+                      snippet: "Why tasks, collections, and summaries can make tab organization useful after the initial cleanup.",
+                      score: 0.82
+                    }
+                  ],
+                  privacy: {
+                    sentQuery: true,
+                    sentTabData: false,
+                    sentPageText: false,
+                    sentFullUrls: false,
+                    storage: "session_only_until_saved"
+                  }
                 }
               };
             }

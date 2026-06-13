@@ -1,0 +1,99 @@
+name: Provider request
+description: Request a BYOK provider preset, model setup note, or OpenAI-compatible endpoint guide.
+title: "[Provider Request]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to request model/provider support for TabMosaic AI.
+
+        Privacy guardrails:
+        - Do not paste API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+        - Never paste request headers, Authorization values, account IDs, billing details, or private provider console screenshots.
+        - Review every field before submitting. Public provider docs links are okay.
+  - type: input
+    id: provider_name
+    attributes:
+      label: Provider name
+      description: Name of the model provider, gateway, or local model tool.
+      placeholder: "OpenRouter, Groq, Together AI, Ollama, LM Studio..."
+    validations:
+      required: true
+  - type: dropdown
+    id: provider_type
+    attributes:
+      label: Provider type
+      options:
+        - Remote HTTPS provider
+        - Localhost model endpoint
+        - OpenAI-compatible gateway
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: openai_compatible
+    attributes:
+      label: OpenAI-compatible API
+      description: Does it support the OpenAI-compatible chat/completions request shape?
+      options:
+        - Yes
+        - No
+        - Partially
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: public_docs_url
+    attributes:
+      label: Public docs URL
+      description: Link only to public documentation. Do not paste private console URLs.
+      placeholder: "https://provider.example/docs/openai-compatible"
+    validations:
+      required: false
+  - type: input
+    id: base_url_shape
+    attributes:
+      label: Base URL shape
+      description: Use a public/example URL only. Do not include API keys, query strings, account IDs, or private paths.
+      placeholder: "https://api.provider.example/v1 or http://localhost:11434/v1"
+    validations:
+      required: false
+  - type: textarea
+    id: models_requested
+    attributes:
+      label: Models to support
+      description: List model IDs or families using public names only.
+      placeholder: |
+        - provider/model-a
+        - provider/model-b
+    validations:
+      required: true
+  - type: textarea
+    id: setup_notes
+    attributes:
+      label: Setup notes
+      description: Mention auth style, known quirks, CORS/permission needs, and local endpoint behavior without secrets.
+      placeholder: |
+        Remote HTTPS provider with Bearer token auth.
+        Localhost endpoint does not require an API key by default.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Browser-agent use case
+      description: Explain why this provider matters for tab organization, page chat, or local privacy.
+      placeholder: "I want a local model for private current-page chat."
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy_check
+    attributes:
+      label: Privacy check
+      options:
+        - label: I did not include API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+          required: true
+        - label: I reviewed this provider request before submitting and included only public or synthetic provider details.
+          required: true
+

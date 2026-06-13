@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="toolbarMenuTitle">TabMosaic</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="popup-body">
+    <main class="toolbar-menu-shell" aria-label="TabMosaic actions" data-i18n-aria-label="toolbarMenuTitle">
+      <header class="toolbar-menu-header">
+        <div>
+          <p class="eyebrow">TabMosaic</p>
+          <h1 data-i18n="toolbarMenuHeading">Choose a tab mode</h1>
+        </div>
+      </header>
+
+      <section class="toolbar-menu-actions" aria-label="Primary actions" data-i18n-aria-label="toolbarPrimaryActions">
+        <button class="toolbar-action primary" type="button" data-toolbar-action="smart-organize">
+          <span class="toolbar-action-icon" aria-hidden="true">✦</span>
+          <span>
+            <strong data-i18n="smartOrganize">Smart Organize</strong>
+            <small data-i18n="smartOrganizeCopy">Clean up work tabs into native groups.</small>
+          </span>
+        </button>
+
+        <button class="toolbar-action" type="button" data-toolbar-action="vertical-tabs">
+          <span class="toolbar-action-icon" aria-hidden="true">☰</span>
+          <span>
+            <strong data-i18n="verticalTabs">Vertical Tabs</strong>
+            <small data-i18n="verticalTabsCopy">Browse tabs and groups in the side panel.</small>
+          </span>
+        </button>
+
+        <button class="toolbar-action" type="button" data-toolbar-action="current-page-chat">
+          <span class="toolbar-action-icon" aria-hidden="true">⌁</span>
+          <span>
+            <strong data-i18n="chatWithCurrentPage">Chat with Current Page</strong>
+            <small data-i18n="chatWithCurrentPageCopy">Ask about the active page from the sidebar.</small>
+          </span>
+        </button>
+
+        <button class="toolbar-action" type="button" data-toolbar-action="dashboard">
+          <span class="toolbar-action-icon" aria-hidden="true">▦</span>
+          <span>
+            <strong data-i18n="openDashboardShort">Dashboard</strong>
+            <small data-i18n="openDashboardCopy">Review and adjust smart groups.</small>
+          </span>
+        </button>
+      </section>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

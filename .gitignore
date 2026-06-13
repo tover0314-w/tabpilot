@@ -7,5 +7,6 @@
 dist/
 
 artifacts/
+output/
 
 extension/private-beta-ai-settings.json

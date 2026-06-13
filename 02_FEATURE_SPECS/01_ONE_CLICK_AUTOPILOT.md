@@ -2,7 +2,7 @@
 
 ## 1. 功能目标
 
-用户点击 Chrome toolbar 的插件图标后，无需输入指令，TabMosaic AI 自动完成：
+用户点击 Chrome toolbar 的插件图标后进入极简动作菜单；选择 Smart Organize 后，无需输入指令，TabMosaic AI 自动完成：
 
 1. 扫描当前浏览器所有普通窗口 tabs。
 2. 检测安全重复 tabs。
@@ -21,6 +21,7 @@
 
 | 项 | 默认建议 | 状态 |
 |---|---|---|
+| Toolbar 入口 | 点击插件 icon 打开极简 dropdown；Smart Organize 为第一动作，Vertical Tabs 为第二动作 | CONFIRMED BY USER |
 | 整理范围 | 当前浏览器所有普通窗口，不处理 incognito | CONFIRMED |
 | Sidebar | 自动打开 active window 的 sidebar | CONFIRMED |
 | 分类应用 | 自动应用 | CONFIRMED BY DISCUSSION |
@@ -34,6 +35,8 @@
 
 ```text
 用户点击插件 icon
+→ 极简 toolbar menu 打开
+→ 用户点击 Smart Organize
 → sidebar 打开并显示 “Scanning tabs..."
 → 系统收集所有普通窗口 tabs metadata
 → 检测重复 tabs
@@ -94,7 +97,7 @@ Sidebar：
 
 ```gherkin
 Given 当前浏览器所有普通窗口共有 20+ tabs
-When 用户点击插件图标
+When 用户点击插件图标并选择 Smart Organize
 Then 插件自动扫描并整理当前浏览器所有普通窗口
 And 浏览器顶部 tab bar 显示 4-10 个原生 tab groups
 And group 名称反映任务/项目/主题

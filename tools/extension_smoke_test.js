@@ -9,9 +9,13 @@ const BACKGROUND_PATH = path.join(EXTENSION_DIR, "background.js");
 const DIAGNOSTICS_PATH = path.join(EXTENSION_DIR, "diagnostics.js");
 const MANIFEST_PATH = path.join(EXTENSION_DIR, "manifest.json");
 const LOCALES_DIR = path.join(EXTENSION_DIR, "_locales");
+const PROVIDER_REGISTRY_PATH = path.join(EXTENSION_DIR, "provider_registry.js");
 
 const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
-const backgroundCode = fs.readFileSync(BACKGROUND_PATH, "utf8");
+const providerRegistryCode = fs.readFileSync(PROVIDER_REGISTRY_PATH, "utf8");
+const backgroundSource = fs.readFileSync(BACKGROUND_PATH, "utf8");
+const backgroundCode = stripStaticImportsForVm(backgroundSource);
+const providerRegistryVmCode = transformProviderRegistryForVm(providerRegistryCode);
 const context = {
   console,
   URL,
@@ -43,11 +47,20 @@ const context = {
         async set() {},
         async remove() {}
       }
+    },
+    permissions: {
+      async contains() {
+        return true;
+      },
+      async request() {
+        return true;
+      }
     }
   }
 };
 
 vm.createContext(context);
+vm.runInContext(providerRegistryVmCode, context, { filename: PROVIDER_REGISTRY_PATH });
 vm.runInContext(backgroundCode, context, { filename: BACKGROUND_PATH });
 
 const tests = [];
@@ -77,13 +90,23 @@ function assertDeepEqual(actual, expected, message) {
   }
 }
 
+function stripStaticImportsForVm(source) {
+  return source.replace(/^import[\s\S]*?;\n\n/m, "");
+}
+
+function transformProviderRegistryForVm(source) {
+  return source.replace(/export const /g, "var ");
+}
+
 function tab(overrides) {
   const parsed = context.parseUrl(overrides.url || "https://example.com/");
+  const title = overrides.title || "Untitled";
+  const titleDuplicate = context.buildTitleDuplicateKey(title, parsed);
   return {
     id: overrides.id,
     windowId: overrides.windowId || 1,
     index: overrides.index || 0,
-    title: overrides.title || "Untitled",
+    title,
     favIconUrl: overrides.favIconUrl || "",
     restoreUrl: context.isRestorableUrl(overrides.url || "", parsed) ? overrides.url : "",
     lastAccessed: overrides.lastAccessed || 0,
@@ -96,6 +119,13 @@ function tab(overrides) {
     exactUrlHash: parsed.exactHash,
     trackingUrlHash: parsed.trackingHash,
     reviewUrlHash: parsed.reviewHash,
+    domainDuplicateHash: parsed.domainDuplicateHash,
+    domainDuplicateLabel: parsed.domainDuplicateLabel,
+    domainDuplicateReason: parsed.domainDuplicateReason,
+    samePageReviewEligible: parsed.samePageReviewEligible,
+    titleDuplicateHash: titleDuplicate.key ? context.simpleHash(titleDuplicate.key) : "",
+    titleDuplicateLabel: titleDuplicate.label,
+    titleDuplicateReason: titleDuplicate.reason,
     active: Boolean(overrides.active),
     pinned: Boolean(overrides.pinned),
     audible: Boolean(overrides.audible),
@@ -209,9 +239,9 @@ function largeSyntheticSnapshot(tabCount = 180) {
   };
 }
 
-test("manifest keeps one-click action and narrow permissions", () => {
+test("manifest keeps toolbar menu action and narrow permissions", () => {
   assertEqual(manifest.manifest_version, 3, "Manifest version");
-  assert(!manifest.action.default_popup, "Manifest action must not define default_popup");
+  assertEqual(manifest.action.default_popup, "popup.html", "Manifest action should open the compact toolbar menu");
   assertEqual(manifest.default_locale, "en", "Manifest default locale");
   assertEqual(manifest.name, "__MSG_extensionName__", "Manifest name should use Chrome i18n");
   assertEqual(manifest.description, "__MSG_extensionDescription__", "Manifest description should use Chrome i18n");
@@ -230,6 +260,11 @@ test("manifest keeps one-click action and narrow permissions", () => {
   }
 
   assertDeepEqual(manifest.host_permissions, ["https://api.deepseek.com/*"], "Host permissions should stay narrow");
+  assertDeepEqual(
+    manifest.optional_host_permissions,
+    ["http://*/*", "https://*/*"],
+    "Optional host permissions should be broad only for user-triggered temporary site access"
+  );
 
   const iconPaths = new Set([
     ...Object.values(manifest.icons || {}),
@@ -239,6 +274,21 @@ test("manifest keeps one-click action and narrow permissions", () => {
   for (const iconPath of iconPaths) {
     assert(fs.existsSync(path.join(EXTENSION_DIR, iconPath)), `Missing icon file: ${iconPath}`);
   }
+
+  const popupPath = path.join(EXTENSION_DIR, manifest.action.default_popup);
+  const popupJsPath = path.join(EXTENSION_DIR, "popup.js");
+  assert(fs.existsSync(popupPath), "Toolbar popup HTML should exist");
+  assert(fs.existsSync(popupJsPath), "Toolbar popup JS should exist");
+
+  const popupHtml = fs.readFileSync(popupPath, "utf8");
+  const popupJs = fs.readFileSync(popupJsPath, "utf8");
+  const expectedActions = ["smart-organize", "vertical-tabs", "current-page-chat", "dashboard"];
+
+  for (const action of expectedActions) {
+    assert(popupHtml.includes(`data-toolbar-action="${action}"`), `Missing toolbar action: ${action}`);
+  }
+
+  assert(popupJs.includes("RUN_TOOLBAR_ACTION"), "Toolbar popup should delegate actions to the service worker");
 });
 
 test("locales include matching English and Chinese message keys", () => {
@@ -258,6 +308,35 @@ test("locales include matching English and Chinese message keys", () => {
     assert(en[key]?.message, `English locale missing manifest key: ${key}`);
     assert(zh[key]?.message, `Chinese locale missing manifest key: ${key}`);
   }
+});
+
+test("toolbar popup delegates user-gesture actions to background", () => {
+  const popupPath = path.join(EXTENSION_DIR, manifest.action.default_popup);
+  const popupHtml = fs.readFileSync(popupPath, "utf8");
+  const popupJs = fs.readFileSync(path.join(EXTENSION_DIR, "popup.js"), "utf8");
+  const actionMatches = Array.from(popupHtml.matchAll(/data-toolbar-action="([^"]+)"/g), (match) => match[1]);
+  const expectedActions = ["smart-organize", "vertical-tabs", "current-page-chat", "dashboard"];
+
+  assertDeepEqual(actionMatches, expectedActions, "Toolbar popup should expose only the confirmed compact action set in order");
+  assert(!popupHtml.includes("apiKey") && !popupHtml.includes("settings"), "Toolbar popup must not become an AI settings page");
+  assert(popupJs.includes("chrome.runtime.sendMessage"), "Toolbar popup should delegate to background through runtime messaging");
+  assert(popupJs.includes('type: "RUN_TOOLBAR_ACTION"'), "Toolbar popup should send RUN_TOOLBAR_ACTION messages");
+  assert(popupJs.includes("activeWindowId") && popupJs.includes("activeTabId"), "Toolbar popup should pass active tab/window hints for the user gesture");
+  assert(popupJs.includes("chrome.tabs.query({ active: true, lastFocusedWindow: true })"), "Toolbar popup should resolve the active tab from the focused window");
+  assert(!popupJs.includes("chrome.sidePanel.open"), "Toolbar popup should not open the side panel directly");
+  assert(!popupJs.includes("chrome.tabs.group"), "Toolbar popup should not manipulate tab groups directly");
+
+  for (const action of expectedActions) {
+    assert(backgroundCode.includes(`"${action}"`), `Background toolbar action allowlist should include ${action}`);
+  }
+
+  assert(backgroundCode.includes("const TOOLBAR_ACTIONS = new Set"), "Background should keep a toolbar action allowlist");
+  assert(backgroundCode.includes("Unsupported toolbar action"), "Background should reject unsupported toolbar actions");
+  assert(backgroundCode.includes('message.type === "RUN_TOOLBAR_ACTION"'), "Background should handle RUN_TOOLBAR_ACTION");
+  assert(backgroundCode.includes('chrome.runtime.getURL("dashboard.html")'), "Dashboard toolbar action should open the dashboard page");
+  assert(backgroundCode.includes('source: "toolbar-menu"'), "Smart Organize should run through the toolbar-menu organize source");
+  assert(backgroundCode.includes("await openSidePanelForWindow(activeWindowId)"), "Toolbar side-panel actions should open the side panel through the background service worker");
+  assert(backgroundCode.includes('action === "vertical-tabs" ? "vertical_tabs" : "agent"'), "Vertical Tabs should switch the sidebar mode instead of starting organize");
 });
 
 test("UI i18n references resolve to locale messages", () => {
@@ -321,8 +400,18 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelHtml.includes('id="dashboardTopButton"'), "Sidepanel should expose Dashboard as a top-right icon button");
   assert(!sidepanelHtml.includes('id="scanButton"'), "Sidepanel should not keep the old header refresh button");
   assert(sidepanelJs.includes('dashboardTopButton.addEventListener("click", openDashboard)'), "Top-right Dashboard button should open Dashboard");
-  assert(sidepanelHtml.includes('data-i18n="ask"'), "Chat action should read like a conversation, not a settings preview");
+  assert(sidepanelHtml.includes('data-i18n-aria-label="ask"'), "Chat send action should read like a conversation, not a settings preview");
   assert(sidepanelHtml.indexOf("agent-thread") < sidepanelHtml.indexOf("chatForm"), "Conversation should sit before the composer");
+  assert(
+    sidepanelHtml.indexOf('class="chat-form agent-composer"') < sidepanelHtml.indexOf('id="agentContextBar"') &&
+      sidepanelHtml.indexOf('id="agentContextBar"') < sidepanelHtml.indexOf('id="chatInput"'),
+    "Active chat context should live inside the bottom composer before the input"
+  );
+  assert(css.includes(".tab-agent-shell .chat-panel") && css.includes("overflow: visible;"), "Sidepanel should keep one scroll container instead of nesting chatPanel scrolling inside agent-thread");
+  assert(sidepanelJs.includes('const agentThread = document.querySelector(".agent-thread")'), "Sidepanel should scroll the real conversation container");
+  assert(sidepanelJs.includes("scrollAgentThreadToBottom"), "Sidepanel should keep long conversations anchored to the latest message");
+  assert(sidepanelJs.includes("CHAT_THREAD_LIMIT = 22"), "Sidepanel should retain enough visible chat history for ten Q/A turns");
+  assert(sidepanelJs.includes('agentThread.classList.toggle("long-chat"'), "Sidepanel should use a denser long-chat view after several turns");
   assert(sidepanelHtml.includes('class="prompt-row"') && sidepanelHtml.includes("hidden"), "Suggested refinements should not crowd the default chat surface");
   assert(!sidepanelHtml.includes('data-i18n="browserResult"'), "Sidepanel should not expose a dashboard-like Browser Result section");
   assert(sidepanelHtml.includes('<details class="glass-details sidepanel-details" hidden>'), "Technical browser lists should be hidden from the default chat surface");
@@ -333,6 +422,12 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("function upsertSystemChatMessage"), "Latest organize output should update as a chat assistant message");
   assert(sidepanelJs.includes("function renderRunMessageCard"), "Latest organize output should use the shared AI message card markup");
   assert(sidepanelJs.includes("run-message-card"), "Latest organize output should appear as an AI message card");
+  assert(sidepanelJs.includes("function renderClassificationInsights"), "Latest organize output should render classification refinement insights");
+  assert(sidepanelJs.includes("classification-refinements"), "Classification refinements should stay inside the assistant message card");
+  assert(sidepanelJs.includes("mergeSuggestions"), "Classification refinements should render merge suggestions");
+  assert(backgroundCode.includes("function buildClassificationInsights"), "Background should build classification refinement insights");
+  assert(backgroundCode.includes("function buildLocalClassificationMergeSuggestions"), "Background should build local merge refinement suggestions");
+  assert(css.includes(".classification-refinements"), "Classification refinements should have scoped styling");
   assert(sidepanelJs.includes('status: `run-${status}`'), "Latest organize output should get a chat message status class");
   assert(sidepanelJs.includes("chatMessages.push(message)"), "Latest organize output should stay in chronological chat order");
   assert(sidepanelJs.includes("function parseAgentCommand"), "Sidepanel chat should route direct agent commands");
@@ -346,7 +441,87 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes("function buildAIAgentConversationHistory"), "Sidepanel should build short-term Agent conversation context");
   assert(sidepanelJs.includes("conversationHistory"), "Sidepanel should send short-term conversation context to the AI Agent");
   assert(sidepanelJs.includes("AI_AGENT_CONVERSATION_LIMIT = 4"), "Sidepanel should cap Agent conversation context to four turns");
+  assert(sidepanelJs.includes('"selected_tabs"'), "Sidebar context should support selected-tab chat scope");
+  assert(sidepanelJs.includes("function shouldRouteContextTabsQuestion"), "Sidebar should route group/selected-tab deep questions");
+  assert(sidepanelJs.includes("function shouldRouteContextTabsFollowUp"), "Sidebar should route natural follow-ups back to group/selected-tabs context");
+  assert(sidepanelJs.includes("function isExplicitContextTabsManagementQuestion"), "Context-tabs follow-ups should avoid the over-broad generic tab-management guard");
+  assert(sidepanelJs.includes("function shouldRouteAgentWebSearch"), "Sidebar should route explicit web search requests as an internal Agent tool");
+  assert(sidepanelJs.includes("search_web_provider"), "Sidebar web search should use the Agent search tool contract");
+  assert(sidepanelJs.includes('type: "RUN_AGENT_WEB_SEARCH"'), "Sidebar should execute web search through the internal Agent tool executor");
+  assert(sidepanelJs.includes('status: "web-search"'), "Sidebar should render successful web search as an assistant message card");
+  assert(sidepanelJs.includes("agentWebSearchNeedsProvider"), "Sidebar should explain provider setup when web search is not configured");
+  assert(sidepanelJs.includes("toolCardSearchWeb"), "Sidebar should render web search as a tool-card state");
+  assert(sidepanelJs.includes("await summarizeContextTabs(text)"), "Group/selected-tab questions should trigger context tab reading");
+  assert(sidepanelJs.includes('type: "SUMMARIZE_CONTEXT_TABS"'), "Sidebar should call the background context-tabs agent flow");
+  assert(sidepanelJs.includes("contextConversationHistory"), "Context-tab requests should send short local context conversation history");
+  assert(sidepanelJs.includes("function buildContextTabsChatHistory"), "Sidebar should build short local context-tabs conversation history");
+  assert(sidepanelJs.includes("function rememberContextTabsChatContext"), "Sidebar should remember group/selected-tabs chat context in session only");
+  assert(sidepanelJs.includes("CONTEXT_TABS_CHAT_CONVERSATION_LIMIT = 20"), "Context-tabs chat should cap history to ten Q/A turns");
+  assert(sidepanelJs.includes("chrome.permissions.request"), "Context tab reads should request optional site access only after the user asks");
+  assert(sidepanelJs.includes("chrome.permissions.contains"), "Context tab reads should check existing site access before requesting temporary origins");
+  assert(sidepanelJs.includes("chrome.permissions.remove"), "Context tab reads should release optional site access after the answer");
+  assert(sidepanelJs.includes("const originsToRequest = []"), "Context tab permission requests should separate newly requested origins");
+  assert(sidepanelJs.includes("const alreadyGrantedOrigins = []"), "Context tab permission requests should preserve already-granted origins");
+  assert(sidepanelJs.includes("grantedOrigins: granted ? originsToRequest : []"), "Context tab permission cleanup should release only origins granted for this temporary session");
+  assert(sidepanelJs.includes("await releaseContextTabOriginPermissions(permissionSession.grantedOrigins)"), "Temporary context tab permissions should be released from the session-owned origin list");
+  assert(sidepanelJs.includes("return `${url.protocol}//${url.hostname}/*`;"), "Context tab permission origins should use Chrome match patterns without ports");
+  assert(!sidepanelJs.includes("url.port ? `:${url.port}`"), "Context tab permission origins must not include ports in Chrome match patterns");
+  assert(sidepanelJs.includes("CONTEXT_TABS_PERMISSION_LIMIT = 6"), "Optional site access should be capped to the beta tab limit");
+  assert(sidepanelJs.includes("function isSensitivePermissionTarget"), "Optional site access should skip sensitive targets by default");
+  assert(sidepanelJs.includes('status: "tool-card"'), "Context tab reads should first render an Agent tool card");
+  assert(sidepanelJs.includes("function renderToolCard"), "Sidebar should render Agent tool cards as chat messages");
+  assert(sidepanelJs.includes("function buildContextTabsRunningToolCard"), "Running context tool cards should share one scope-aware builder");
+  assert(sidepanelJs.includes("read_selected_tabs_pages"), "Selected-tabs running tool cards should use the selected-tabs tool name");
+  assert(sidepanelJs.includes('msg("toolCardReadSelectedTabs")'), "Selected-tabs running tool cards should use selected-tabs copy");
+  assert(sidepanelJs.includes("function updateLatestToolCard"), "Sidebar should update the running tool card after extraction");
+  assert(sidepanelJs.includes('status: "context-summary"'), "Context tab answers should render as normal assistant messages");
+  assert(sidepanelJs.includes("function renderContextTabsSummary"), "Context tab answers should have a simple message-card renderer");
+  assert(sidepanelJs.includes("function renderContextGroupSummary"), "Context tab answers should render a compact group summary");
+  assert(sidepanelJs.includes("context-group-summary"), "Group summaries should stay inside the assistant message card");
+  assert(
+    sidepanelJs.indexOf('<p class="chat-answer">${escapeHtml(summary?.summary || summary?.answer || "")}</p>') <
+      sidepanelJs.indexOf("${groupSummary ? renderContextGroupSummary(groupSummary) : \"\"}"),
+    "Context tab answers should lead with assistant prose before summary metadata"
+  );
+  assert(sidepanelJs.includes("const skippedBreakdown = Array.isArray(toolCard.skippedBreakdown)"), "Tool cards should render skipped reason breakdowns when available");
+  assert(sidepanelJs.includes(".map(formatContextSkipBreakdownItem)"), "Tool cards should reuse readable skipped-reason labels");
+  assert(backgroundCode.includes("function buildContextGroupSummary"), "Background should build explicit group summary metadata");
+  assert(backgroundCode.includes("suggestedNextSteps"), "Group summary should include safe next-step suggestions");
+  assert(backgroundCode.includes("Approve Chrome site access for the selected work pages"), "Missing site access should produce a concrete retry next step");
+  assert(backgroundCode.includes("function buildContextSkipBreakdown"), "Background should build structured skipped-tab reason counts");
+  assert(sidepanelJs.includes("function formatContextSkipBreakdownItem"), "Sidebar should render skipped-tab reason chips");
+  assert(sidepanelJs.includes("context-summary-skips"), "Skipped-tab breakdown should stay inside the compact group summary card");
+  assert(sidepanelJs.includes("skipReasonMissingPermission"), "Skipped-tab reason chips should distinguish missing site access from restricted pages");
+  assert(sidepanelJs.includes("function shouldRouteContextTabsRegroupQuestion"), "Sidebar should route content regroup requests for selected/group tabs");
+  assert(sidepanelJs.includes("await regroupContextTabs(text)"), "Content regroup requests should trigger the regroup agent flow");
+  assert(sidepanelJs.includes('type: "REGROUP_CONTEXT_TABS"'), "Sidebar should call the background context regroup agent flow");
+  assert(sidepanelJs.includes("function renderRegroupPreview"), "Content regroup previews should render as assistant message cards");
+  assert(sidepanelJs.includes("content-regroup-card"), "Content regroup previews should use a compact chat-card style");
+  assert(backgroundCode.includes('message.type === "REGROUP_CONTEXT_TABS"'), "Background should handle the content regroup agent message");
+  assert(backgroundCode.includes("function applyRegroupTabsDraft"), "Background should apply regroup previews only after Apply");
+  assert(backgroundCode.includes('draft.type === "regroup_tabs"'), "Chat Apply should route regroup drafts through the Apply-gated path");
+  assert(sidepanelJs.includes('includeInAIAgentContext: false'), "Tool-card messages should stay out of chat memory");
+  assert(sidepanelJs.includes("PAGE_CHAT_CONVERSATION_LIMIT = 20"), "Current-page chat should cap local page-chat context at ten Q/A turns");
+  assert(sidepanelJs.includes("function buildPageChatHistory"), "Current-page chat should build short local Page Agent context");
+  assert(sidepanelJs.includes("pageConversationHistory"), "Current-page chat should pass page-chat history to the Page Agent");
   assert(sidepanelJs.includes('status === "summary"'), "Current-page summary messages should be excluded from AI Agent conversation context");
+  assert(sidepanelJs.includes("PAGE_CHAT_CONTEXT_TTL_MS"), "Current-page chat should keep only a short-lived local follow-up context");
+  assert(sidepanelJs.includes("function shouldRouteCurrentPageQuestion"), "Current-page chat should route explicit page questions without an Ask Page button");
+  assert(sidepanelJs.includes("function shouldRouteCurrentPageFollowUp"), "Current-page chat should route natural follow-ups back to page Q&A");
+  assert(sidepanelJs.includes("await summarizeCurrentTab(text)"), "Current-page follow-ups should re-read visible text after the user asks");
+  assert(sidepanelJs.includes("function summarizeSelectedPageRegion"), "Sidebar should support user-triggered selected-region page context");
+  assert(sidepanelJs.includes('type: "SUMMARIZE_PAGE_REGION"'), "Sidebar should call the selected page-region background flow");
+  assert(sidepanelJs.includes("isPageRegionCommand(normalized)"), "Selected-region commands should route before broad summary commands");
+  assert(sidepanelJs.includes('toolName: "extract_selected_page_region"'), "Selected-region reads should render an explicit Agent tool card");
+  assert(backgroundCode.includes('message.type === "SUMMARIZE_PAGE_REGION"'), "Background should handle selected page-region summaries");
+  assert(backgroundCode.includes("function pickReadablePageRegion"), "Background should inject a user-click region picker");
+  assert(backgroundCode.includes("TabMosaic: click one visible page section"), "Injected region picker should show simple page-local guidance");
+  assert(backgroundCode.includes("function captureSelectedRegionScreenshot"), "Selected-region flow should capture only after the user picks a region");
+  assert(backgroundCode.includes("chrome.tabs.captureVisibleTab"), "Selected-region screenshot crop should use Chrome's visible-tab capture API");
+  assert(backgroundCode.includes("function cropSelectedRegionScreenshot"), "Selected-region screenshot should be cropped before any context metadata is built");
+  assert(backgroundCode.includes("fullVisibleTabCaptureDiscarded: true"), "Full visible-tab capture should be discarded after crop");
+  assert(backgroundCode.includes("imageDataUploaded: false"), "Selected-region screenshot image bytes must not be uploaded in the text-only Page Agent flow");
+  assert(sidepanelJs.includes("isExplicitTabManagementQuestion"), "Current-page follow-ups should not steal explicit tab-management questions");
   assert(sidepanelJs.includes('runQuickChatCommand("restore closed"'), "Restore quick action should route through chat command handling");
   assert(sidepanelJs.includes("function renderChatThread"), "Sidepanel should render a multi-message chat thread");
   assert(sidepanelJs.includes("disableStaleChatDraftButtons"), "Sidepanel should disable stale draft Apply/Cancel buttons");
@@ -382,8 +557,16 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.includes('type: "FOCUS_DASHBOARD_TAB"'), "Sidepanel tab search should reuse the existing tab focus action");
   assert(sidepanelJs.includes("await summarizeCurrentTab(pageQuestion)"), "Chat command should support current-page summary and page questions");
   assert(sidepanelJs.includes("extractPageQuestion(text)"), "Chat command should extract current-page questions");
+  assert(sidepanelJs.includes("干嘛|做什么|有什么用"), "Natural Chinese current-page questions should route to current-page chat");
+  assert(sidepanelJs.includes("有什么内容|包含什么|显示什么"), "Chinese current-page content questions should route to current-page chat");
+  assert(sidepanelJs.includes("what is this page (for|about)"), "Natural English current-page questions should route to current-page chat");
+  assert(sidepanelJs.includes("what (content|information)"), "English current-page content questions should route to current-page chat");
+  assert(sidepanelJs.includes("what about|how about"), "Natural English current-page follow-ups should route to current-page chat");
+  assert(sidepanelJs.includes("what are|what is"), "Natural English current-page follow-up questions should route to current-page chat");
+  assert(sidepanelJs.includes("还有|那|然后呢"), "Natural Chinese current-page follow-ups should route to current-page chat");
   assert(sidepanelJs.includes("function renderChatSummary"), "Current-page summary should render as a chat message");
   assert(sidepanelJs.includes('status: "summary"'), "Summary rendering should use the chat panel summary state");
+  assert(sidepanelJs.includes('summary?.status === "loading"'), "Current-page loading states should be replaceable chat messages");
   assert(sidepanelJs.includes("summaryPanel.hidden = true"), "Legacy summary panel should stay hidden when summary is mirrored into chat");
   assert(sidepanelJs.includes("await organizeNow()"), "Chat command should support organize again");
   assert(sidepanelJs.includes("await undoLast()"), "Chat command should support Undo");
@@ -400,12 +583,13 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(sidepanelJs.indexOf("await askMetadataAgent(text)") < sidepanelJs.indexOf("buildOpenChatFallbackAnswer(text)"), "Open-ended fallback should run after AI Agent fallback");
   assert(sidepanelJs.includes('status: "ai-agent"'), "AI Agent answers should render as assistant messages");
   assert(sidepanelJs.includes("function renderAIAgentCard"), "AI Agent answers should use a simple assistant message card");
-  assert(sidepanelJs.includes("agentMetadataPrivacy"), "AI Agent answers should disclose metadata-only context");
-  assert(sidepanelJs.includes("renderAIAgentNextSteps"), "AI Agent answers should show safe next-step suggestions without applying actions");
-  assert(sidepanelJs.includes("function renderAIAgentActions"), "AI Agent answers should render validated safe action chips");
-  assert(sidepanelJs.includes("getAIAgentActionLabel"), "AI Agent action chips should use localized labels");
+  assert(!sidepanelJs.includes("agentMetadataPrivacy"), "AI Agent answers should not show a per-message privacy footnote in the chat bubble");
+  assert(!sidepanelJs.includes("renderAIAgentNextSteps"), "AI Agent answers should not render a separate suggested-next-steps panel");
+  assert(!sidepanelJs.includes("function renderAIAgentActions"), "AI Agent open answers should not render action chips");
+  assert(!sidepanelJs.includes("getAIAgentActionLabel"), "AI Agent open answers should not need action-chip labels");
+  assert(!sidepanelJs.includes("tabs.length ? renderChatMatchedTabs(tabs, draft.matchedTabCount"), "AI Agent open answers should not render tab rows");
   assert(!sidepanelJs.includes("ask_page: msg"), "AI Agent should not render a separate Ask page chip");
-  assert(sidepanelJs.includes("renderQuickCommandActions("), "AI Agent action chips should reuse safe chat quick commands");
+  assert(sidepanelJs.includes("renderQuickCommandActions("), "Safe quick commands should still reuse chat chips where explicitly shown");
   assert(sidepanelJs.includes('response.result?.status === "draft"'), "AI Agent action drafts should render as Apply/Cancel chat drafts");
   assert(sidepanelJs.includes("latestChatDraft = response.result.draft"), "AI Agent action drafts should become the active local draft");
   assert(css.includes(".run-message-card"), "Latest organize message card should have scoped styling");
@@ -416,15 +600,45 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(css.includes(".chat-thread-message.assistant"), "Assistant chat messages should have scoped styling");
   assert(css.includes(".chat-summary-card"), "Current-page summary chat message should have scoped styling");
   assert(css.includes(".ai-agent-card"), "AI Agent answer should remain a simple message card");
-  assert(css.includes(".chat-summary-question"), "Current-page question should have scoped chat styling");
+  assert(css.includes(".agent-tool-card"), "Agent tool cards should have scoped styling");
+  assert(css.includes(".context-tab-summary-row"), "Context-tab summaries should have scoped styling");
+  assert(!css.includes(".chat-summary-question"), "Current-page chat should not render a separate question label block");
+  assert(!css.includes(".agent-privacy-note"), "AI Agent chat should not carry a per-message privacy footnote style");
   assert(css.includes(".agent-context-bar"), "Composer context status should have scoped styling");
+  assert(css.includes('grid-template-areas:') && css.includes('"context context"') && css.includes('"input send"'), "Composer should stack context above the input row");
+  assert(css.includes(".tab-agent-shell .agent-composer .agent-context-bar"), "Composer context row should be scoped inside the chat composer");
+  assert(css.includes(".tab-agent-shell .agent-composer .agent-context-label::after"), "Composer context row should visually separate scope and target");
+  assert(sidepanelJs.includes("function getCompactCurrentTabContextName"), "Current-tab context should use a compact display name");
+  assert(sidepanelJs.includes("formatSidebarHostname(context.hostname)"), "Current-tab context should prefer a short site label over the full page title");
+  assert(sidepanelJs.includes("getSidebarContextFullName(normalized)"), "Current-tab full page title should remain available as tooltip context");
+  assert(css.includes("Chat UX v0.168: stacked context composer"), "Sidebar should keep the stacked context composer polish");
+  assert(css.includes("grid-area: context") && css.includes("border-bottom: 1px solid"), "Composer context should be a top row, not an inline input prefix");
+  assert(css.includes("grid-area: input") && css.includes("grid-area: send"), "Composer input and send button should sit below the context row");
+  assert(css.includes(".tab-agent-shell .agent-composer .agent-context-dot") && css.includes("display: block"), "Composer context row should keep a subtle active-context indicator");
+  assert(css.includes("overflow-x: hidden") && css.includes("overscroll-behavior-x: none"), "Sidebar chat should prevent horizontal drift in long conversations");
+  assert(css.includes("max-height: none") && css.includes("overflow: visible"), "Sidebar chat panel should remain a plain message stream, not a nested scroll panel");
+  assert(sidepanelJs.includes("agentThread.scrollLeft = 0"), "Sidebar chat auto-scroll should keep horizontal scroll pinned to zero");
+  assert(sidepanelJs.includes("function resetHorizontalScroll") && sidepanelJs.includes("document.scrollingElement.scrollLeft = 0"), "Sidebar should prevent document-level horizontal drift");
+  assert(css.includes(".tab-agent-shell .chat-thread-message.assistant.tool-card"), "Tool-card messages should visually read as assistant state");
+  assert(css.includes(".chat-thread-message.assistant.tool-card") && css.includes("background: transparent"), "Tool-card message wrapper should not look like a standalone panel");
+  assert(css.includes(".agent-tool-card") && css.includes("display: inline-flex"), "Tool-card content should render as a lightweight inline status");
   assert(css.includes("backdrop-filter: blur"), "Minimal UI should use glass blur styling");
   assert(en.openDashboard?.message && zh.openDashboard?.message, "Header Dashboard action should be localized");
   assert(en.contextCurrentTab?.message && zh.contextCurrentTab?.message, "Sidebar context copy should be localized");
+  assert(en.contextSelectedTabs?.message && zh.contextSelectedTabs?.message, "Selected-tabs context copy should be localized");
+  assert(en.readingContextTabs?.message && zh.readingContextTabs?.message, "Context-tabs loading copy should be localized");
+  assert(en.toolCardReadGroupPages?.message && zh.toolCardReadGroupPages?.message, "Tool-card title should be localized");
+  assert(en.toolCardReadSelectedTabs?.message && zh.toolCardReadSelectedTabs?.message, "Selected-tabs tool-card title should be localized");
+  assert(en.toolCardSelectPageRegion?.message && zh.toolCardSelectPageRegion?.message, "Selected-region tool-card title should be localized");
+  assert(en.toolCardDataVisibleText?.message && zh.toolCardDataVisibleText?.message, "Tool-card data disclosure should be localized");
+  assert(en.toolCardDataSelectedRegion?.message && zh.toolCardDataSelectedRegion?.message, "Selected-region data disclosure should be localized");
+  assert(en.toolCardStorageSessionOnly?.message && zh.toolCardStorageSessionOnly?.message, "Tool-card storage disclosure should be localized");
+  assert(en.toolCardRegionPending?.message && zh.toolCardRegionPending?.message, "Selected-region pending state should be localized");
+  assert(en.toolCardRegionSelected?.message && zh.toolCardRegionSelected?.message, "Selected-region completed state should be localized");
   assert(en.agentCommandSummarize?.message && zh.agentCommandSummarize?.message, "Agent command response copy should be localized");
+  assert(en.agentCommandSelectRegion?.message && zh.agentCommandSelectRegion?.message, "Selected-region command response copy should be localized");
   assert(en.agentCommandAskPage?.message && zh.agentCommandAskPage?.message, "Ask-page command response copy should be localized");
-  assert(en.currentPageAnswer?.message && zh.currentPageAnswer?.message, "Current-page chat summary label should be localized");
-  assert(en.currentPageQuestion?.message && zh.currentPageQuestion?.message, "Current-page question label should be localized");
+  assert(!en.currentPageQuestion && !zh.currentPageQuestion, "Current-page chat should not require a separate question label");
   assert(en.agentCapabilitiesAnswer?.message && zh.agentCapabilitiesAnswer?.message, "Agent capability answer should be localized");
   assert(en.agentNextStepReview?.message && zh.agentNextStepReview?.message, "Agent next-step answer should be localized");
   assert(en.agentOverviewAnswer?.message && zh.agentOverviewAnswer?.message, "Read-only agent answer copy should be localized");
@@ -444,9 +658,9 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(en.agentChatFallbackAnswer?.message && zh.agentChatFallbackAnswer?.message, "Open-ended chat generic fallback should be localized");
   assert(en.askingAIAgent?.message && zh.askingAIAgent?.message, "Metadata AI Agent loading copy should be localized");
   assert(en.agentAIAnswerFailed?.message && zh.agentAIAnswerFailed?.message, "Metadata AI Agent failure copy should be localized");
-  assert(en.agentMetadataPrivacy?.message && zh.agentMetadataPrivacy?.message, "Metadata AI Agent privacy copy should be localized");
-  assert(en.suggestedNextSteps?.message && zh.suggestedNextSteps?.message, "Metadata AI Agent next-step copy should be localized");
   assert(en.moreBrowserDetails?.message && zh.moreBrowserDetails?.message, "Folded detail summary should be localized");
+  assert(en.classificationRefinementNote?.message && zh.classificationRefinementNote?.message, "Classification refinement note should be localized");
+  assert(en.classificationMergeReason?.message && zh.classificationMergeReason?.message, "Classification merge reason should be localized");
 });
 
 test("dashboard follows minimal glass workbench structure", () => {
@@ -459,6 +673,8 @@ test("dashboard follows minimal glass workbench structure", () => {
     "dashboard-workbench",
     "dashboard-rail",
     "dashboard-nav-segment",
+    "dashboard-agent-workbench",
+    "dashboard-agent-panels",
     "dashboard-filter-chips",
     "dashboard-group-grid",
     "dashboard-details-section"
@@ -468,6 +684,15 @@ test("dashboard follows minimal glass workbench structure", () => {
   }
 
   assert(dashboardCss.includes("backdrop-filter: blur"), "Dashboard should use glass blur styling");
+  assert(!dashboardHtml.includes('id="dashboardAgentSearchInput"'), "Dashboard should not expose search as a top-level UI control");
+  assert(!dashboardHtml.includes("data-agent-search-mode"), "Dashboard should not expose Tabs/Web/Saved search modes");
+  assert(!dashboardCss.includes(".dashboard-agent-search"), "Dashboard should not carry a visible search surface");
+  assert(dashboardHtml.includes('id="dashboardAgentTasks"'), "Dashboard workbench should include a lightweight task area");
+  assert(dashboardHtml.includes('id="dashboardAgentCollections"'), "Dashboard workbench should include a lightweight collections area");
+  assert(!dashboardJs.includes("agentSearchProviderBoundary"), "External search disclosure should live in Agent chat, not Dashboard search UI");
+  assert(backgroundCode.includes("search_web_provider"), "Agent search should mean provider-backed web search, not Dashboard UI search");
+  assert(dashboardJs.includes("sanitizeTabForBrowserWork"), "Dashboard should sanitize tabs before saving tasks or collections");
+  assert(!dashboardJs.includes("restoreUrl:") && !dashboardJs.includes("fullUrl:"), "Dashboard work items should not store full restore URLs in the first slice");
   assert(dashboardJs.includes("function renderGroupCard"), "Dashboard should render workbench group cards");
   assert(dashboardJs.includes("function renderGroupTabs"), "Dashboard should render expanded group tab rows");
   assert(dashboardJs.includes("getTabsForGroup"), "Dashboard should connect group cards to local tab rows");
@@ -482,6 +707,10 @@ test("dashboard follows minimal glass workbench structure", () => {
   assert(dashboardCss.includes(".dashboard-favicon img"), "Dashboard should style favicon image assets");
   assert(dashboardCss.includes(".dashboard-workspace-row"), "Dashboard should style saved workspace rows");
   assert(dashboardCss.includes(".dashboard-more-tabs"), "Dashboard expandable tab rows should have scoped styling");
+  assert(
+    dashboardCss.includes("grid-template-columns: auto auto minmax(0, 1fr) minmax(92px, auto)"),
+    "Dashboard tab rows should keep checkbox, favicon, title, and action columns aligned"
+  );
   assert(dashboardJs.includes("type: \"ORGANIZE_NOW\""), "Dashboard primary CTA should use existing organize action");
   assert(dashboardJs.includes("SAVE_CURRENT_WORKSPACE"), "Dashboard save should use the background workspace action");
   assert(!dashboardHtml.includes("dashboard-sidebar"), "Dashboard should not use the old basic sidebar layout");
@@ -570,10 +799,15 @@ test("dashboard saves local workspace snapshots without full URLs or page text",
   assert(dashboardHtml.includes("data-i18n=\"savedWorkspaces\""), "Saved workspaces section should be localized");
   assert(dashboardJs.includes("SAVED_WORKSPACES_KEY"), "Dashboard should load saved workspaces from local storage");
   assert(dashboardJs.includes("DELETE_SAVED_WORKSPACE"), "Dashboard should support deleting a local workspace snapshot");
+  assert(dashboardJs.includes("RESTORE_SAVED_WORKSPACE"), "Dashboard should support restoring a local workspace snapshot");
+  assert(dashboardJs.includes("restoreWorkspaceConfirm"), "Dashboard should confirm before restoring a local workspace snapshot");
+  assert(dashboardJs.includes('data-workspace-action="restore"'), "Saved workspace rows should expose a restore action");
   assert(dashboardJs.includes("deleteWorkspaceConfirm"), "Dashboard should confirm before deleting a local workspace snapshot");
   assert(dashboardJs.includes('data-workspace-action="delete"'), "Saved workspace rows should expose a delete action");
   assert(en.savedWorkspacesCopy?.message.includes("Local snapshots only"), "English saved workspace copy should set local-only scope");
   assert(zh.savedWorkspacesCopy?.message.includes("仅本地快照"), "Chinese saved workspace copy should set local-only scope");
+  assert(en.restoreWorkspaceConfirm?.message.includes("will not reopen closed pages"), "English restore workspace confirm should state restore limits");
+  assert(zh.restoreWorkspaceConfirm?.message.includes("不会重新打开已关闭网页"), "Chinese restore workspace confirm should state restore limits");
   assert(en.deleteWorkspaceConfirm?.message.includes("does not restore, close, or move tabs"), "English delete workspace confirm should state tab safety");
   assert(zh.deleteWorkspaceConfirm?.message.includes("不会恢复、关闭或移动标签页"), "Chinese delete workspace confirm should state tab safety");
 });
@@ -642,6 +876,201 @@ test("saved workspace deletion only updates local workspace storage", async () =
     context.chrome.tabs = originalTabs;
     context.chrome.tabGroups = originalTabGroups;
     context.chrome.windows = originalWindows;
+  }
+});
+
+test("saved workspace restore regroups only still-open local tab ids", async () => {
+  const originalStorageLocal = context.chrome.storage.local;
+  const originalTabs = context.chrome.tabs;
+  const originalTabGroups = context.chrome.tabGroups;
+  const originalWindows = context.chrome.windows;
+  const originalRuntimeSendMessage = context.chrome.runtime.sendMessage;
+  const setValues = [];
+  const groupUpdates = [];
+  const currentTabs = [
+    {
+      id: 101,
+      windowId: 1,
+      index: 0,
+      title: "Planning doc",
+      url: "https://docs.example/planning",
+      groupId: 900,
+      active: false,
+      pinned: false,
+      audible: false,
+      discarded: false,
+      incognito: false
+    },
+    {
+      id: 102,
+      windowId: 1,
+      index: 1,
+      title: "Planning issue",
+      url: "https://github.com/acme/project/issues/1",
+      groupId: -1,
+      active: true,
+      pinned: false,
+      audible: false,
+      discarded: false,
+      incognito: false
+    },
+    {
+      id: 103,
+      windowId: 1,
+      index: 2,
+      title: "Pinned billing",
+      url: "https://billing.example/account",
+      groupId: -1,
+      active: false,
+      pinned: true,
+      audible: false,
+      discarded: false,
+      incognito: false
+    }
+  ];
+  let currentGroups = [
+    {
+      id: 900,
+      windowId: 1,
+      title: "Old Group",
+      color: "grey",
+      collapsed: false
+    }
+  ];
+  let nextGroupId = 1000;
+
+  context.chrome.storage.local = {
+    async get(keys) {
+      assert(Array.isArray(keys), "Workspace restore should read current run and saved workspace storage together");
+      return {
+        "tabmosaic.currentRun": {
+          status: "completed",
+          summary: {
+            tabCount: 3,
+            groupCount: 1,
+            windowCount: 1
+          },
+          groups: []
+        },
+        "tabmosaic.savedWorkspaces": [
+          {
+            id: "ws_restore",
+            name: "Planning Workspace",
+            groups: [
+              {
+                id: 11,
+                windowId: 1,
+                name: "Planning",
+                color: "blue",
+                tabIds: [101, 102, 999]
+              },
+              {
+                id: 12,
+                windowId: 1,
+                name: "Billing",
+                color: "yellow",
+                tabIds: [103]
+              }
+            ],
+            tabs: [
+              { id: 101, windowId: 1, title: "Planning doc", hostname: "docs.example", groupId: 11 },
+              { id: 102, windowId: 1, title: "Planning issue", hostname: "github.com", groupId: 11 },
+              { id: 103, windowId: 1, title: "Pinned billing", hostname: "billing.example", groupId: 12 },
+              { id: 999, windowId: 1, title: "Closed tab", hostname: "closed.example", groupId: 11 }
+            ]
+          }
+        ]
+      };
+    },
+    async set(value) {
+      setValues.push(value);
+    },
+    async remove() {
+      throw new Error("Workspace restore should not delete local storage");
+    }
+  };
+  context.chrome.windows = {
+    async getAll() {
+      return [
+        {
+          id: 1,
+          focused: true,
+          state: "normal",
+          incognito: false,
+          tabs: currentTabs
+        }
+      ];
+    }
+  };
+  context.chrome.tabGroups = {
+    async query() {
+      return currentGroups;
+    },
+    async update(groupId, update) {
+      groupUpdates.push({ groupId, update });
+      const group = currentGroups.find((item) => item.id === groupId);
+      if (group) {
+        Object.assign(group, update);
+      }
+    }
+  };
+  context.chrome.tabs = {
+    async ungroup(tabIds) {
+      for (const tabId of Array.isArray(tabIds) ? tabIds : [tabIds]) {
+        const currentTab = currentTabs.find((item) => item.id === tabId);
+        if (currentTab) currentTab.groupId = -1;
+      }
+    },
+    async group({ tabIds }) {
+      const groupId = nextGroupId++;
+      for (const tabId of tabIds) {
+        const currentTab = currentTabs.find((item) => item.id === tabId);
+        if (currentTab) currentTab.groupId = groupId;
+      }
+      currentGroups = currentGroups.filter((group) => group.id !== 900);
+      currentGroups.push({
+        id: groupId,
+        windowId: 1,
+        title: "",
+        color: "grey",
+        collapsed: false
+      });
+      return groupId;
+    },
+    async remove() {
+      throw new Error("Workspace restore must not close tabs");
+    },
+    async create() {
+      throw new Error("Workspace restore must not reopen tabs without saved full URLs");
+    }
+  };
+  context.chrome.runtime.sendMessage = async () => {};
+
+  try {
+    const result = await context.restoreSavedWorkspace({ workspaceId: "ws_restore" });
+
+    assertEqual(result.restoredTabs, 2, "Workspace restore should restore only open unprotected tabs");
+    assertEqual(result.restoredGroups, 1, "Workspace restore should create one group for restorable tabs");
+    assertEqual(result.skippedTabs, 2, "Workspace restore should skip closed or protected tabs");
+    assertEqual(result.run.source, "workspace-restore", "Workspace restore run source");
+    assertEqual(result.run.summary.undoAvailable, true, "Workspace restore should be undoable");
+    assertEqual(currentTabs.find((item) => item.id === 101).groupId, 1000, "First open tab restored to new group");
+    assertEqual(currentTabs.find((item) => item.id === 102).groupId, 1000, "Second open tab restored to new group");
+    assertEqual(currentTabs.find((item) => item.id === 103).groupId, -1, "Pinned saved tab should stay ungrouped");
+    assertDeepEqual(groupUpdates[0].update, {
+      title: "Planning",
+      color: "blue",
+      collapsed: false
+    }, "Restored workspace group metadata");
+    assert(setValues.some((value) => value["tabmosaic.lastUndo"]), "Workspace restore should store an undo snapshot first");
+    assert(setValues.some((value) => value["tabmosaic.currentRun"]?.source === "workspace-restore"), "Workspace restore should publish a run");
+    assert(!JSON.stringify(setValues).includes("https://closed.example"), "Workspace restore should not persist full URLs");
+  } finally {
+    context.chrome.storage.local = originalStorageLocal;
+    context.chrome.tabs = originalTabs;
+    context.chrome.tabGroups = originalTabGroups;
+    context.chrome.windows = originalWindows;
+    context.chrome.runtime.sendMessage = originalRuntimeSendMessage;
   }
 });
 
@@ -731,6 +1160,39 @@ test("dashboard tab titles focus existing browser tabs", () => {
   assert(en.openTab?.message && zh.openTab?.message, "Dashboard tab focus copy should be localized");
 });
 
+test("dashboard selected tabs open Sidebar Agent context", () => {
+  const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
+  const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
+  const dashboardCss = fs.readFileSync(path.join(EXTENSION_DIR, "styles.css"), "utf8");
+  const screenshotTool = fs.readFileSync(path.join(ROOT_DIR, "tools", "capture_ui_screenshots.js"), "utf8");
+  const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
+  const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
+
+  assert(dashboardHtml.includes('id="chatSelectedTabsButton"'), "Dashboard should expose a selected-tabs chat action");
+  assert(dashboardHtml.includes('id="chatSelectedTabsButton"') && dashboardHtml.includes("disabled") && dashboardHtml.includes("hidden"), "Selected-tabs chat action should stay hidden until useful");
+  assert(dashboardJs.includes("let selectedDashboardTabIds = new Set()"), "Dashboard should keep selected tab state locally");
+  assert(dashboardJs.includes('data-tab-select'), "Dashboard tab rows should expose a checkbox selection control");
+  assert(dashboardJs.includes("function buildSidebarSelectedTabsContext"), "Dashboard should build selected-tabs Sidebar context");
+  assert(dashboardJs.includes('scope: "selected_tabs"'), "Dashboard selected-tabs context should preserve selected-tabs scope");
+  assert(dashboardJs.includes('["current_tab", "current_group", "selected_tabs"]'), "Dashboard context sanitizer should allow selected-tabs scope");
+  assert(dashboardJs.includes("chatWithSelectedDashboardTabs"), "Dashboard should open Sidebar from selected tabs");
+  assert(dashboardJs.includes("openSidebarForDashboardContext(windowId)"), "Selected-tabs chat should open the linked Sidebar window");
+  assert(dashboardJs.includes("selectedWindowId !== nextWindowId"), "Dashboard should keep selected-tabs chat scoped to one window at a time");
+  assert(dashboardJs.includes('msg("selectedTabsWindowReset")'), "Dashboard should explain when selected-tabs context moves to another window");
+  assert(dashboardJs.includes("showDashboardSelectionNotice"), "Dashboard should render a lightweight selected-tabs reset notice");
+  assert(dashboardJs.includes('dataset.statusScope = "selection"'), "Dashboard selected-tabs reset notice should be scoped as a selection status");
+  assert(dashboardCss.includes(".dashboard-tab-select"), "Selected-tabs checkbox should have scoped Dashboard styling");
+  assert(dashboardCss.includes(".dashboard-tabrow.selected-for-chat"), "Selected tab rows should have a subtle selected state");
+  assert(dashboardCss.includes('.dashboard-chip-status[data-status-scope="selection"]'), "Selected-tabs reset notice should reuse compact Dashboard chip styling");
+  assert(screenshotTool.includes("dashboard-selected-tabs.png"), "UI screenshots should cover Dashboard selected-tabs state");
+  assert(screenshotTool.includes("#chatSelectedTabsButton:not([hidden])"), "Dashboard selected-tabs screenshot should wait for the linked Agent action");
+  assert(!dashboardJs.includes("SUMMARIZE_CONTEXT_TABS"), "Dashboard selection must not read page text directly");
+  assert(!dashboardJs.includes("chrome.tabs.remove"), "Dashboard selected-tabs chat must not close tabs");
+  assert(en.chatSelectedTabs?.message && zh.chatSelectedTabs?.message, "Selected-tabs chat copy should be localized");
+  assert(en.selectedTabsWindowReset?.message && zh.selectedTabsWindowReset?.message, "Selected-tabs cross-window reset copy should be localized");
+  assert(en.selectTabForChat?.message && zh.selectTabForChat?.message, "Selected-tabs checkbox copy should be localized");
+});
+
 test("dashboard filter chips filter smart groups", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
@@ -808,6 +1270,20 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
     "Sidebar Tab Agent completion message lightly mentions DeepSeek help or local fallback.",
     "Ask the Sidebar Agent to move Chrome extension docs tabs into Extension Planning",
     "The AI move draft updates real Chrome native tab groups only after Apply and does not close tabs.",
+    "CONTEXT_FIXTURE_HOST",
+    "tabmosaic-manual.test",
+    "Context Fixture Guide",
+    "data-copy-context-prompt",
+    "Copy Selected-Tabs Prompt",
+    "Mention ORBITALPLANNING, BUGLANTERN, and GLASSHARBOR",
+    "--keep-fixture-server",
+    "waitForFixtureServerShutdown",
+    "Keeps the local fixture server alive only for tabmosaic-manual.test until you press Ctrl+C.",
+    "Manual QA fixture tab rows",
+    "ORBITALPLANNING",
+    "BUGLANTERN",
+    "GLASSHARBOR",
+    "rerun with --keep-fixture-server",
     "Local QA Notes",
     "data-qa-notes",
     "data-copy-real-profile-template",
@@ -821,7 +1297,7 @@ test("disposable manual QA checklist covers current MVP workflows", () => {
   }
 });
 
-test("AI host guardrail matches manifest host permission", () => {
+test("AI provider permissions support BYOK hosts without broad required host permissions", () => {
   const dashboardJs = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.js"), "utf8");
   const dashboardHtml = fs.readFileSync(path.join(EXTENSION_DIR, "dashboard.html"), "utf8");
   const verifier = fs.readFileSync(path.join(ROOT_DIR, "tools", "verify_release_package.js"), "utf8");
@@ -831,20 +1307,90 @@ test("AI host guardrail matches manifest host permission", () => {
   const allowedHostPermission = "https://api.deepseek.com/*";
   const allowedHost = new URL(allowedHostPermission.replace("*", "")).hostname;
 
-  assertDeepEqual(manifest.host_permissions, [allowedHostPermission], "Private beta should expose only the DeepSeek host permission");
-  assert(backgroundCode.includes(`const SUPPORTED_AI_HOSTNAME = "${allowedHost}"`), "Background AI host guardrail should match manifest");
+  assertDeepEqual(manifest.host_permissions, [allowedHostPermission], "Default required AI host permission should stay narrow");
+  assertDeepEqual(manifest.optional_host_permissions, ["http://*/*", "https://*/*"], "Temporary page-content access and BYOK provider origins should stay optional");
+  assert(providerRegistryCode.includes(`DEFAULT_AI_HOSTNAME = "${allowedHost}"`), "Provider registry default AI host should match manifest");
+  assert(backgroundSource.includes('from "./provider_registry.js"'), "Background should import shared provider registry");
+  assert(dashboardJs.includes('from "./provider_registry.js"'), "Dashboard should import shared provider registry");
+  assert(backgroundCode.includes("async function ensureAIProviderPermission"), "Background should require explicit permission for custom AI providers");
+  assert(backgroundCode.includes("chrome.permissions.request({ origins: [origin] })"), "Background should request only the configured provider origin");
+  assert(dashboardJs.includes("async function ensureAIProviderPermission"), "Dashboard should request custom provider permission from the settings UI");
+  assert(dashboardJs.includes("chrome.permissions.request({ origins: [origin] })"), "Dashboard should request only the configured provider origin");
+  assert(dashboardHtml.includes('id="aiProviderPresetSelect"'), "Dashboard AI settings should expose provider presets");
+  assert(dashboardHtml.includes('id="localModelHelp"'), "Dashboard AI settings should expose local model setup help");
+  assert(dashboardHtml.includes('list="aiModelOptions"'), "Dashboard model input should expose provider model suggestions");
+  assert(dashboardHtml.includes('id="aiModelOptions"'), "Dashboard should render a model suggestion datalist");
+  assert(dashboardJs.includes("function syncLocalModelHelp"), "Dashboard should render local model setup help from preset selection");
+  assert(dashboardJs.includes("function updateAIModelOptions"), "Dashboard should update model suggestions from connection results");
+  assert(dashboardJs.includes("result.modelSuggestions"), "Dashboard should consume model suggestions returned by the provider test");
+  assert(dashboardJs.includes("formatAIConnectionDiagnostics"), "Dashboard should render compact provider connection diagnostics");
+  assert(dashboardJs.includes("formatAIConnectionTroubleshooting"), "Dashboard should render provider troubleshooting next steps");
+  assert(dashboardJs.includes("buildAIConnectionFailureTroubleshootingCodes"), "Dashboard should render failure-specific AI troubleshooting");
+  assert(backgroundCode.includes("buildAIConnectionTroubleshootingCodes"), "Background should return provider troubleshooting codes without extra probes");
+  assert(backgroundCode.includes("buildAIConnectionDiagnostics"), "Background should return provider connection diagnostics without extra probes");
+  assert(dashboardJs.includes('presetId === "ollama"'), "Dashboard should include Ollama setup guidance");
+  assert(dashboardJs.includes('presetId === "lmstudio"'), "Dashboard should include LM Studio setup guidance");
+  assert(providerRegistryCode.includes("AI_PROVIDER_PRESETS"), "Provider presets should live in the shared registry");
+  assert(providerRegistryCode.includes("AI_PROVIDER_HOST_IDS"), "Provider host labels should live in the shared registry");
+  for (const providerToken of [
+    "https://api.openai.com/v1",
+    "https://openrouter.ai/api/v1",
+    "https://generativelanguage.googleapis.com/v1beta/openai",
+    "https://api.groq.com/openai/v1",
+    "https://api.together.xyz/v1",
+    "https://api.mistral.ai/v1",
+    "https://api.x.ai/v1",
+    "https://api.perplexity.ai",
+    "https://api.cerebras.ai/v1",
+    "https://api.fireworks.ai/inference/v1",
+    "https://api.deepinfra.com/v1/openai",
+    "https://api.siliconflow.cn/v1",
+    "https://api.moonshot.ai/v1",
+    "https://api.minimax.io/v1",
+    "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "http://localhost:1234/v1",
+    "http://localhost:11434/v1"
+  ]) {
+    assert(providerRegistryCode.includes(providerToken), `Provider registry should include ${providerToken}`);
+  }
+  for (const [presetId] of context.AI_PROVIDER_PRESETS || []) {
+    assert(dashboardHtml.includes(`value="${presetId}"`), `Dashboard select should expose provider preset ${presetId}`);
+  }
+  assert(backgroundCode.includes("getOpenAICompatibleModelsUrl"), "Background should support provider-specific model-list endpoints");
+  assert(backgroundCode.includes("testOpenAICompatibleChatModel"), "Background should fall back to a synthetic chat ping when /models is unavailable");
+  assert(backgroundCode.includes('"Reply with OK."'), "Synthetic chat ping should not contain real tab or page data");
   assertEqual(context.normalizeAIBaseUrl(allowedHostPermission.replace("*", "")), "https://api.deepseek.com", "Background should normalize the manifest host");
-  assert(dashboardJs.includes(`url.hostname !== "${allowedHost}"`), "Dashboard AI host guardrail should match manifest");
-  assert(dashboardHtml.includes(`<b>${allowedHostPermission}</b>`), "Dashboard permission copy should show the same host permission");
-  assert(dashboardHtml.includes('data-i18n="aiBaseUrlBetaLimit"'), "Dashboard AI settings should explain the private-beta host limit");
-  assert(en.aiBaseUrlBetaLimit?.message.includes(allowedHost), "English AI host limit copy should mention DeepSeek host");
-  assert(zh.aiBaseUrlBetaLimit?.message.includes(allowedHost), "Chinese AI host limit copy should mention DeepSeek host");
+  assertEqual(context.normalizeAIBaseUrl("https://api.openai.com/v1/"), "https://api.openai.com/v1", "Background should allow HTTPS OpenAI-compatible providers");
+  assertEqual(context.normalizeAIBaseUrl("http://localhost:11434/v1/"), "http://localhost:11434/v1", "Background should allow localhost model endpoints");
+  assert(dashboardHtml.includes(`<b>${allowedHostPermission}</b>`), "Dashboard permission copy should show the default AI host permission");
+  assert(dashboardHtml.includes("Custom hosts are requested explicitly"), "Dashboard permission copy should explain custom provider origin prompts");
+  assert(dashboardHtml.includes('data-i18n="aiBaseUrlBetaLimit"'), "Dashboard AI settings should explain BYOK Base URL boundaries");
+  assert(en.aiBaseUrlBetaLimit?.message.includes("OpenAI-compatible"), "English AI Base URL copy should mention OpenAI-compatible providers");
+  assert(zh.aiBaseUrlBetaLimit?.message.includes("OpenAI-compatible"), "Chinese AI Base URL copy should mention OpenAI-compatible providers");
+  assert(en.providerPreset?.message && en.providerPresetCopy?.message, "English locale should include provider preset copy");
+  assert(zh.providerPreset?.message && zh.providerPresetCopy?.message, "Chinese locale should include provider preset copy");
+  assert(en.aiConnectionNextSteps?.message && en.aiTroubleshootOllama?.message, "English locale should include AI troubleshooting copy");
+  assert(zh.aiConnectionNextSteps?.message && zh.aiTroubleshootOllama?.message, "Chinese locale should include AI troubleshooting copy");
+  assert(en.modelSuggestionsCopy?.message && zh.modelSuggestionsCopy?.message, "Model suggestion helper copy should be localized");
+  assert(en.aiConnectionDiagnostics?.message && zh.aiConnectionDiagnostics?.message, "AI connection diagnostic copy should be localized");
+  assert(en.ollamaSetupTitle?.message && en.lmStudioSetupTitle?.message, "English locale should include local model setup copy");
+  assert(zh.ollamaSetupTitle?.message && zh.lmStudioSetupTitle?.message, "Chinese locale should include local model setup copy");
+  assert(en.localModelSetupNote?.message.includes("minimized metadata"), "English local model copy should keep the data boundary clear");
+  assert(en.apiKeyOptionalLocal?.message.includes("Optional for local endpoints"), "English locale should explain local endpoint keys are optional");
   assert(backgroundCode.includes("private-beta-ai-settings.json"), "Background should support local private-beta AI config for full-flow testing");
   assert(configTool.includes("DEEPSEEK_API_KEY"), "Private beta AI config tool should read the local DeepSeek env key");
   assert(configTool.includes("key was copied") && !configTool.includes("console.log(apiKey"), "Private beta AI config tool must not print the API key");
   assert(verifier.includes("private-beta-ai-settings\\.json"), "Release verifier must reject private beta AI config in package zips");
-  assert(!dashboardJs.includes("api.openai.com"), "Dashboard must not silently allow OpenAI host without confirmation");
-  assert(!backgroundCode.includes("api.openai.com"), "Background must not silently allow OpenAI host without confirmation");
+
+  try {
+    context.normalizeAIBaseUrl("http://api.openai.com/v1");
+    assert(false, "Remote HTTP AI providers should fail");
+  } catch (error) {
+    assert(
+      String(error?.message || "").includes("Remote AI provider Base URLs must use HTTPS"),
+      "Remote HTTP AI providers should explain HTTPS requirement"
+    );
+  }
 });
 
 test("dashboard rule deletion requires confirmation", () => {
@@ -916,6 +1462,7 @@ test("duplicate safety audit stores only counts and allowed types", () => {
     skippedTabs: 1,
     duplicateTypes: {
       exact: 1,
+      "title-review": 2,
       "https://private.example/secret": 1
     },
     url: "https://private.example/secret",
@@ -927,6 +1474,7 @@ test("duplicate safety audit stores only counts and allowed types", () => {
   assertEqual(event.requestedTabs, 3, "Duplicate safety requested tabs");
   assertEqual(event.closedTabs, 2, "Duplicate safety closed tabs");
   assertEqual(event.duplicateTypes.exact, 1, "Duplicate safety exact count");
+  assertEqual(event.duplicateTypes["title-review"], 2, "Duplicate safety title review count");
   assertEqual(event.duplicateTypes.unknown, 1, "Duplicate safety unknown count");
   assert(!serialized.includes("https://private.example/secret"), "Duplicate safety audit must not include URL");
   assert(!serialized.includes("private.example"), "Duplicate safety audit must not include hostname");
@@ -947,6 +1495,8 @@ test("current run snapshot strips restorable URLs and page text", () => {
   privateSnapshot.tabs[0].url = "https://private.example/secret?token=abc#fragment";
   privateSnapshot.tabs[0].fullUrl = "https://private.example/secret?token=abc#fragment";
   privateSnapshot.tabs[0].pageText = "Confidential page body";
+  privateSnapshot.tabs[0].domainDuplicateHash = "domain-secret";
+  privateSnapshot.tabs[0].titleDuplicateHash = "title-secret";
 
   const runSnapshot = context.sanitizeSnapshotForRun(privateSnapshot);
   const undoSnapshot = context.buildUndoSnapshot(privateSnapshot);
@@ -961,6 +1511,8 @@ test("current run snapshot strips restorable URLs and page text", () => {
   assert(!("exactUrlHash" in runTab), "Current run snapshot must not keep exact URL hash");
   assert(!("trackingUrlHash" in runTab), "Current run snapshot must not keep tracking URL hash");
   assert(!("reviewUrlHash" in runTab), "Current run snapshot must not keep review URL hash");
+  assert(!("domainDuplicateHash" in runTab), "Current run snapshot must not keep domain-specific duplicate hash");
+  assert(!("titleDuplicateHash" in runTab), "Current run snapshot must not keep title duplicate hash");
   assertEqual(runTab.favIconUrl, "https://private.example/favicon.ico", "Current run snapshot should keep only sanitized favicon display URL");
   assert(!runSnapshotJson.includes("https://private.example/secret"), "Current run snapshot must not include full URL");
   assert(!runSnapshotJson.includes("token=abc"), "Current run snapshot must not include query token");
@@ -985,6 +1537,10 @@ test("current tab summary confirms sensitive pages before extraction", () => {
     { id: 22, title: "Stripe billing dashboard" },
     sensitiveParsed
   );
+  const databaseCheck = context.buildSummaryPrivacyCheck(
+    { id: 24, title: "Settings | Database | ai-music" },
+    context.parseUrl("https://supabase.com/dashboard/project/ai-music/settings/database?token=abc")
+  );
   const normalCheck = context.buildSummaryPrivacyCheck(
     { id: 23, title: "Chrome extension docs" },
     normalParsed
@@ -1005,9 +1561,25 @@ test("current tab summary confirms sensitive pages before extraction", () => {
       text: "The Free plan includes local tab grouping. The Pro plan includes workspace history, multi-tab summaries, and advanced rules. Enterprise plans add team controls."
     }
   });
+  const longKeyPoints = context.buildKeyPoints(
+    ["搜索热点"],
+    [
+      "hao123是汇集全网优质网址及资源的中文上网导航及时收录影视音乐小说游戏等分类的网址和内容让您的网络生活更简单精彩上网从hao123开始并继续包含大量热点新闻网址导航娱乐视频财经体育等长文本内容"
+    ]
+  );
+  const chromePageReason = context.buildUnsupportedPageReadReason(context.parseUrl("chrome://extensions"));
+  const sitePermissionReason = context.buildScriptInjectionReadReason(
+    new Error('Cannot access contents of url "https://example.com/". Extension manifest must request permission to access this host.'),
+    context.parseUrl("https://example.com/")
+  );
+  const protectedPageReason = context.buildScriptInjectionReadReason(
+    new Error("The extensions gallery cannot be scripted."),
+    context.parseUrl("https://chrome.google.com/webstore")
+  );
   const sensitiveSerialized = JSON.stringify({ sensitiveCheck, blockedSummary });
 
   assertEqual(sensitiveCheck.requiresConfirmation, true, "Sensitive summary should require confirmation");
+  assertEqual(databaseCheck.requiresConfirmation, true, "Database settings pages should require confirmation before page text reading");
   assertEqual(sensitiveCheck.tabId, 22, "Sensitive summary confirmation should bind to tab id");
   assert(
     sensitiveCheck.reason.includes("billing") || sensitiveCheck.reason.includes("stripe"),
@@ -1018,6 +1590,11 @@ test("current tab summary confirms sensitive pages before extraction", () => {
   assert(blockedSummary.keyPoints.includes("No page body was read."), "Blocked sensitive summary should state no body was read");
   assertEqual(questionAnswer.question, "What does the Pro plan include?", "Local page Q&A should preserve the user question");
   assert(questionAnswer.summary.includes("Pro plan includes workspace history"), "Local page Q&A should answer from visible page text");
+  assert(longKeyPoints.every((point) => point.length <= 140), "Local page key points should not dump oversized visible text into the chat card");
+  assert(chromePageReason.includes("browser or extension pages"), "Chrome internal page unreadable copy should be specific");
+  assert(sitePermissionReason.includes("permission to read this site"), "Site permission unreadable copy should be specific");
+  assert(protectedPageReason.includes("protected from extension content reading"), "Protected page unreadable copy should be specific");
+  assert(chromePageReason !== sitePermissionReason, "Unreadable page copy should not collapse all failures into one message");
   assert(!sensitiveSerialized.includes("https://billing.stripe.com/customer/secret"), "Sensitive confirmation must not expose full URL");
   assert(!sensitiveSerialized.includes("token=abc"), "Sensitive confirmation must not expose query token");
 
@@ -1299,22 +1876,235 @@ test("duplicate policy closes only safe exact/tracking duplicates", () => {
       id: 28,
       title: "Pinned pair",
       url: "https://example.com/d"
+    }),
+    tab({
+      id: 29,
+      title: "PRD edit",
+      url: "https://docs.google.com/document/d/doc-secret-123/edit"
+    }),
+    tab({
+      id: 30,
+      title: "PRD preview",
+      url: "https://docs.google.com/document/d/doc-secret-123/preview"
+    }),
+    tab({
+      id: 31,
+      title: "Launch video",
+      url: "https://www.youtube.com/watch?v=video-secret-1&t=20"
+    }),
+    tab({
+      id: 32,
+      title: "Launch video later",
+      url: "https://youtu.be/video-secret-1?t=40"
+    }),
+    tab({
+      id: 33,
+      title: "Different video",
+      url: "https://www.youtube.com/watch?v=video-secret-2"
+    }),
+    tab({
+      id: 34,
+      title: "Search tabs",
+      url: "https://www.google.com/search?q=tab+manager"
+    }),
+    tab({
+      id: 35,
+      title: "Search music",
+      url: "https://www.google.com/search?q=ai+music"
+    }),
+    tab({
+      id: 36,
+      title: "TabMosaic PR conversation",
+      url: "https://github.com/tover0314-w/tabpilot/pull/42"
+    }),
+    tab({
+      id: 37,
+      title: "TabMosaic PR files",
+      url: "https://github.com/tover0314-w/tabpilot/pull/42/files?diff=split"
+    }),
+    tab({
+      id: 38,
+      title: "Different GitHub issue",
+      url: "https://github.com/tover0314-w/tabpilot/issues/43"
+    }),
+    tab({
+      id: 39,
+      title: "Jira issue",
+      url: "https://tabmosaic.atlassian.net/browse/TAB-123?focusedCommentId=100"
+    }),
+    tab({
+      id: 40,
+      title: "Jira issue activity",
+      url: "https://tabmosaic.atlassian.net/browse/TAB-123?atlOrigin=secret"
+    }),
+    tab({
+      id: 41,
+      title: "Linear issue",
+      url: "https://linear.app/acme/issue/TAB-123/fix-sidebar"
+    }),
+    tab({
+      id: 42,
+      title: "Linear issue comments",
+      url: "https://linear.app/acme/issue/TAB-123/fix-sidebar?comment=secret"
+    }),
+    tab({
+      id: 43,
+      title: "Figma file",
+      url: "https://www.figma.com/file/figmaSecret/Product?node-id=1"
+    }),
+    tab({
+      id: 44,
+      title: "Figma comments",
+      url: "https://www.figma.com/file/figmaSecret/Product?type=design&node-id=2"
+    }),
+    tab({
+      id: 45,
+      title: "Notion page",
+      url: "https://www.notion.so/acme/Launch-plan-0123456789abcdef0123456789abcdef?pvs=4"
+    }),
+    tab({
+      id: 46,
+      title: "Notion page database view",
+      url: "https://www.notion.so/0123456789abcdef0123456789abcdef?v=secret"
+    }),
+    tab({
+      id: 47,
+      title: "Drive file",
+      url: "https://drive.google.com/file/d/driveSecret/view?usp=sharing"
+    }),
+    tab({
+      id: 48,
+      title: "Drive file preview",
+      url: "https://drive.google.com/file/d/driveSecret/preview"
+    }),
+    tab({
+      id: 49,
+      title: "Chrome extension permissions guide - Acme Docs",
+      url: "https://docs.acme.example/chrome-extension-permissions"
+    }),
+    tab({
+      id: 50,
+      title: "Chrome extension permissions guide | Acme Docs",
+      url: "https://docs.acme.example/guides/chrome-extension-permissions"
+    }),
+    tab({
+      id: 51,
+      title: "Chrome extension permissions guide - Other Docs",
+      url: "https://docs.other.example/chrome-extension-permissions"
+    }),
+    tab({
+      id: 52,
+      title: "GitHub run summary",
+      url: "https://github.com/tover0314-w/tabpilot/actions/runs/123456789"
+    }),
+    tab({
+      id: 53,
+      title: "GitHub run job",
+      url: "https://github.com/tover0314-w/tabpilot/actions/runs/123456789/job/987654"
+    }),
+    tab({
+      id: 54,
+      title: "GitHub commit",
+      url: "https://github.com/tover0314-w/tabpilot/commit/abcdef1234567890abcdef1234567890abcdef12"
+    }),
+    tab({
+      id: 55,
+      title: "GitHub commit diff",
+      url: "https://github.com/tover0314-w/tabpilot/commit/abcdef1234567890abcdef1234567890abcdef12?diff=split"
+    }),
+    tab({
+      id: 56,
+      title: "Drive open file",
+      url: "https://drive.google.com/open?id=driveOpenSecret"
+    }),
+    tab({
+      id: 57,
+      title: "Drive download file",
+      url: "https://drive.google.com/uc?id=driveOpenSecret&export=download"
+    }),
+    tab({
+      id: 58,
+      title: "Dropbox spec",
+      url: "https://www.dropbox.com/scl/fi/dropboxSecret/spec.pdf?rlkey=secret"
+    }),
+    tab({
+      id: 59,
+      title: "Dropbox spec preview",
+      url: "https://www.dropbox.com/scl/fi/dropboxSecret/spec.pdf?dl=0"
+    }),
+    tab({
+      id: 60,
+      title: "Miro planning board",
+      url: "https://miro.com/app/board/miroSecretBoard/"
+    }),
+    tab({
+      id: 61,
+      title: "Miro planning board comments",
+      url: "https://miro.com/app/board/miroSecretBoard/?moveToWidget=secret"
+    }),
+    tab({
+      id: 62,
+      title: "Canva deck",
+      url: "https://www.canva.com/design/canvaSecretDeck/edit"
+    }),
+    tab({
+      id: 63,
+      title: "Canva deck view",
+      url: "https://www.canva.com/design/canvaSecretDeck/view?utm_content=secret"
+    }),
+    tab({
+      id: 64,
+      title: "Coda launch doc",
+      url: "https://coda.io/d/Launch-plan_dSecretCoda123/Overview_suSecret"
+    }),
+    tab({
+      id: 65,
+      title: "Coda launch doc section",
+      url: "https://coda.io/d/Launch-plan_dSecretCoda123/Tasks_suOther"
     })
   ];
   const duplicates = context.detectDuplicateGroups(tabs);
   const closePlan = context.buildSafeDuplicateClosePlan(duplicates, tabs);
   const closeIds = closePlan.closeTabs.map((item) => item.tabId).sort((a, b) => a - b);
   const reviewGroup = duplicates.find((group) => group.type === "same-page-review");
+  const domainReviewGroups = duplicates.filter((group) => group.type === "domain-review");
+  const titleReviewGroup = duplicates.find((group) => group.type === "title-review");
+  const domainReviewTabIds = domainReviewGroups.flatMap((group) => group.tabIds).sort((a, b) => a - b);
 
   assert(duplicates.some((group) => group.type === "exact" && group.action === "safe-close-candidate"), "Exact duplicate group");
   assert(duplicates.some((group) => group.type === "tracking" && group.action === "safe-close-candidate"), "Tracking duplicate group");
   assert(reviewGroup, "Hash/query different tabs should enter review");
   assertEqual(reviewGroup.action, "review", "Review duplicate action");
+  assert(titleReviewGroup, "Normalized title matches should enter review");
+  assertEqual(titleReviewGroup.action, "review", "Title duplicate action");
+  assertDeepEqual(titleReviewGroup.tabIds, [49, 50], "Title review should include same-host normalized title matches only");
+  assert(!JSON.stringify(titleReviewGroup).includes("permissions"), "Title duplicate label must not expose the page title");
+  assertEqual(domainReviewGroups.length, 15, "Domain-specific duplicate rules should create review groups for same SaaS objects");
+  assertDeepEqual(domainReviewTabIds, [29, 30, 31, 32, 36, 37, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65], "Domain-specific review should include same document/video/work object pairs only");
+  assert(domainReviewGroups.every((group) => group.action === "review"), "Domain-specific duplicates must be review-only");
+  assert(!JSON.stringify(domainReviewGroups).includes("video-secret"), "Domain-specific duplicate labels must not expose YouTube query values");
+  assert(!JSON.stringify(domainReviewGroups).includes("TAB-123"), "Domain-specific duplicate labels must not expose issue IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("figmaSecret"), "Domain-specific duplicate labels must not expose Figma file IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("driveSecret"), "Domain-specific duplicate labels must not expose Drive file IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("driveOpenSecret"), "Domain-specific duplicate labels must not expose Drive open IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("123456789"), "Domain-specific duplicate labels must not expose GitHub Actions run IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("abcdef123"), "Domain-specific duplicate labels must not expose GitHub commit IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("dropboxSecret"), "Domain-specific duplicate labels must not expose Dropbox IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("miroSecretBoard"), "Domain-specific duplicate labels must not expose Miro board IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("canvaSecretDeck"), "Domain-specific duplicate labels must not expose Canva design IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("dSecretCoda123"), "Domain-specific duplicate labels must not expose Coda doc IDs");
+  assert(!JSON.stringify(domainReviewGroups).includes("0123456789abcdef"), "Domain-specific duplicate labels must not expose Notion page IDs");
+  assert(!duplicates.some((group) => group.tabIds.includes(33)), "Different YouTube videos should not be grouped by stripped query");
+  assert(!duplicates.some((group) => group.tabIds.includes(34) || group.tabIds.includes(35)), "Different search queries should not be grouped as duplicates");
+  assert(!duplicates.some((group) => group.tabIds.includes(38)), "Different GitHub issues should not be grouped with pull requests");
+  assert(!duplicates.some((group) => group.tabIds.includes(51)), "Same normalized title on a different host should not be grouped");
   assert(closeIds.includes(22), "Safe exact duplicate should close");
   assert(closeIds.includes(24), "Safe tracking duplicate should close");
   assert(!closeIds.includes(21), "Active tab must not close");
   assert(!closeIds.includes(27), "Pinned tab must not close");
   assert(!closeIds.includes(25) && !closeIds.includes(26), "Hash review tabs must not auto-close");
+  assert(!domainReviewTabIds.some((tabId) => closeIds.includes(tabId)), "Domain-specific review tabs must not auto-close");
+  assert(!titleReviewGroup.tabIds.some((tabId) => closeIds.includes(tabId)), "Title review tabs must not auto-close");
 });
 
 test("large synthetic tab planning stays bounded and private", () => {
@@ -1382,6 +2172,619 @@ test("AI validation rejects invented ids and duplicate assignments", () => {
 
   assertEqual(byTabId.size, 1, "AI validation should keep only one valid assignment");
   assertEqual(byTabId.get(31).name, "Chrome Extension Docs", "AI validation should keep first valid group");
+});
+
+test("Agentic Classification V2 derives metadata features and rejects weak domain groups", () => {
+  const supabaseTab = tab({
+    id: 81,
+    title: "Settings | Database | ai-music | Supabase",
+    url: "https://supabase.com/dashboard/project/ai-music/settings/database"
+  });
+  const githubTab = tab({
+    id: 82,
+    title: "Improve agent tools by workflow",
+    url: "https://github.com/acme/tabmosaic/pull/42"
+  });
+  const semanticSupabase = context.buildAIClassificationTab(supabaseTab);
+  const semanticGithub = context.buildAIClassificationTab(githubTab);
+  const sanitized = context.sanitizeTabsForAIClassification([
+    {
+      tabId: 83,
+      title: "Private planning title",
+      hostname: "private.example",
+      path: "/secret",
+      fullUrl: "https://private.example/secret?token=abc",
+      pageText: "Confidential page body"
+    }
+  ]);
+  const byTabId = context.validateAIClassification(
+    {
+      groups: [
+        {
+          name: "github.com",
+          color: "grey",
+          confidence: 0.96,
+          reason: "Weak domain-only grouping",
+          tabIds: [82]
+        },
+        {
+          name: "Supabase Database Settings",
+          color: "green",
+          confidence: 0.91,
+          project: "ai-music",
+          workflow: "Database Settings",
+          artifactType: "database_settings",
+          intent: "configure",
+          evidence: ["title mentions Database", "path includes settings/database"],
+          classificationMode: "metadata_semantic",
+          domainOnlyRisk: false,
+          tabIds: [81]
+        }
+      ]
+    },
+    snapshot([supabaseTab, githubTab])
+  );
+  const splitSuggestionTabs = [
+    tab({
+      id: 91,
+      title: "Database | ai-music | Supabase",
+      url: "https://supabase.com/dashboard/project/ai-music/settings/database"
+    }),
+    tab({
+      id: 92,
+      title: "Auth | ai-music | Supabase",
+      url: "https://supabase.com/dashboard/project/ai-music/auth/users"
+    }),
+    tab({
+      id: 93,
+      title: "Deployments | tabmosaic | Vercel",
+      url: "https://vercel.com/dashboard/tabmosaic/deployments"
+    }),
+    tab({
+      id: 94,
+      title: "Deployment Logs | tabmosaic | Vercel",
+      url: "https://vercel.com/dashboard/tabmosaic/deployments/123/logs"
+    }),
+    tab({
+      id: 95,
+      title: "Review sidebar refinement PR",
+      url: "https://github.com/acme/tabmosaic/pull/50"
+    }),
+    tab({
+      id: 96,
+      title: "Fix sidebar refinement commit",
+      url: "https://github.com/acme/tabmosaic/commit/abc123"
+    })
+  ];
+  const splitInsights = context.buildClassificationInsights({
+    snapshot: snapshot(splitSuggestionTabs),
+    appliedGroups: [
+      {
+        name: "Dev Tools",
+        tabIds: [91, 92, 93, 94]
+      },
+      {
+        name: "PR Review",
+        windowId: 1,
+        tabIds: [95]
+      },
+      {
+        name: "Review Fix",
+        windowId: 1,
+        tabIds: [96]
+      }
+    ],
+    aiSplitSuggestions: context.validateAIClassificationSplitSuggestions({
+      splitSuggestions: [
+        {
+          fromGroup: "Dev Tools",
+          suggestedGroups: ["Supabase Production", "Deployment Debugging"],
+          reason: "The broad group contains different metadata workflows."
+        }
+      ]
+    }),
+    aiMergeSuggestions: context.validateAIClassificationMergeSuggestions({
+      mergeSuggestions: [
+        {
+          groups: ["PR Review", "Review Fix"],
+          suggestedGroup: "Tabmosaic Code Review",
+          reason: "Both groups are code review work for the same project."
+        }
+      ]
+    })
+  });
+
+  assertEqual(semanticSupabase.inferredArtifactType, "database_settings", "Supabase tab artifact type");
+  assertEqual(semanticSupabase.inferredWorkflow, "production_config", "Supabase tab workflow");
+  assertEqual(semanticSupabase.projectCandidate, "ai-music", "Supabase project candidate");
+  assertEqual(semanticSupabase.domainCategory, "dev_infra", "Supabase domain category");
+  assertEqual(semanticSupabase.sensitiveHint, "database", "Supabase sensitive hint");
+  assertEqual(semanticSupabase.domainOnlyRisk, true, "Supabase should flag domain-only grouping risk");
+  assertEqual(semanticGithub.inferredArtifactType, "pull_request", "GitHub PR artifact type");
+  assertEqual(semanticGithub.inferredWorkflow, "code_review", "GitHub PR workflow");
+  assertEqual(semanticGithub.projectCandidate, "tabmosaic", "GitHub repo project candidate");
+  assert(!("fullUrl" in sanitized[0]), "Classification sanitization must not keep fullUrl");
+  assert(!("pageText" in sanitized[0]), "Classification sanitization must not keep pageText");
+  assertEqual(sanitized[0].inferredArtifactType, "web_page", "Sanitized payload should derive artifact type");
+  assert(!byTabId.has(82), "AI validation should reject weak domain-only group names");
+  assertEqual(byTabId.get(81).name, "Supabase Database Settings", "AI validation should keep semantic group names");
+  assert(byTabId.get(81).reason.includes("settings/database"), "AI validation should keep metadata evidence as reason");
+  assertEqual(byTabId.get(81).classificationMode, "metadata_semantic", "AI validation should keep classification mode");
+  assertEqual(splitInsights.splitSuggestions.length, 2, "Classification insights should combine AI and local split suggestions");
+  assertEqual(splitInsights.splitSuggestions[0].fromGroup, "Dev Tools", "Classification split suggestion source group");
+  assert(splitInsights.splitSuggestions.some((suggestion) => suggestion.suggestedGroups.join(" ").includes("Ai Music")), "Local split suggestions should surface project/workflow groups");
+  assert(splitInsights.splitSuggestions.every((suggestion) => suggestion.type === "split"), "Classification insights should expose split suggestions only");
+  assert(splitInsights.mergeSuggestions.length >= 1, "Classification insights should surface merge suggestions");
+  assert(splitInsights.mergeSuggestions.some((suggestion) => suggestion.suggestedGroup.includes("Code Review")), "Merge suggestions should surface shared workflow group names");
+  assert(splitInsights.mergeSuggestions.every((suggestion) => suggestion.type === "merge"), "Classification merge insights should expose merge suggestions only");
+});
+
+test("Sidebar Agent tool registry has capped multi-tab tools and Apply-gated actions", () => {
+  const registry = context.getAgentToolRegistry();
+  const promptRegistry = context.buildAIAgentToolRegistryForPrompt();
+  const multiTabTool = registry.readOnly.find((tool) => tool.name === "extract_selected_tabs_visible_text");
+  const regionTool = registry.readOnly.find((tool) => tool.name === "extract_selected_page_region");
+  const toolCard = registry.readOnly.find((tool) => tool.name === "render_tool_card");
+  const searchOpenTabs = registry.readOnly.find((tool) => tool.name === "search_open_tabs");
+  const searchSavedWork = registry.readOnly.find((tool) => tool.name === "search_saved_work");
+  const searchWebProvider = registry.readOnly.find((tool) => tool.name === "search_web_provider");
+  const applyGroupPlan = registry.action.find((tool) => tool.name === "apply_group_plan");
+  const createTodo = registry.action.find((tool) => tool.name === "create_todo_from_tabs");
+  const saveSelectedTabs = registry.action.find((tool) => tool.name === "save_selected_tabs");
+
+  assert(multiTabTool, "Tool registry should include selected/group visible-text extraction");
+  assertEqual(multiTabTool.readsPageText, true, "Multi-tab extraction should be marked as page-text reading");
+  assertEqual(multiTabTool.maxTabs, 6, "Multi-tab extraction should be capped at 6 tabs");
+  assertEqual(multiTabTool.storage, "session_only", "Multi-tab extraction should stay session-only");
+  assert(String(multiTabTool.confirmation).includes("tool_card"), "Multi-tab extraction should require tool-card disclosure");
+  assert(regionTool, "Tool registry should include selected page-region extraction");
+  assertEqual(regionTool.readsPageText, true, "Selected-region extraction should be marked as page-text reading");
+  assertEqual(regionTool.storage, "session_only", "Selected-region extraction should stay session-only");
+  assert(String(regionTool.confirmation).includes("element_picker"), "Selected-region extraction should require a user picker");
+  assert(regionTool.dataUsed.includes("safe_link_labels"), "Selected-region extraction should disclose safe link labels only");
+  assert(regionTool.dataUsed.includes("cropped_screenshot_metadata"), "Selected-region extraction should disclose cropped screenshot metadata");
+  assert(toolCard, "Tool registry should include render_tool_card");
+  assert(searchOpenTabs, "Tool registry should include local open-tab search");
+  assertEqual(searchOpenTabs.readsPageText, false, "Open-tab search should not read page text");
+  assert(searchSavedWork, "Tool registry should include local saved-work search");
+  assertEqual(searchSavedWork.storage, "local", "Saved-work search should search local work items");
+  assert(searchWebProvider, "Tool registry should include provider-backed web search");
+  assertEqual(searchWebProvider.sendsToExternalProvider, true, "Web search should disclose external provider use");
+  assert(searchWebProvider.dataUsed.includes("user_typed_query"), "Web search should send only the user-typed query by default");
+  assertEqual(applyGroupPlan.confirmation, "apply_required", "Group plan application should require Apply");
+  assertEqual(createTodo.storage, "local", "Tab todos should be stored locally");
+  assertEqual(saveSelectedTabs.storage, "local_metadata_only", "Saved selected tabs should be metadata-only in the first slice");
+  assert(promptRegistry.rejected.includes("read_all_tabs_in_background"), "Prompt registry should reject background all-tab reads");
+  assert(promptRegistry.rules.some((rule) => rule.includes("capped at 6 tabs")), "Prompt registry should disclose the private beta cap");
+});
+
+test("Context-tab extraction shows tool-card counts and skips unsafe reads", async () => {
+  const oldScripting = context.chrome.scripting;
+  context.chrome.scripting = {
+    async executeScript({ target }) {
+      if (target.tabId === 104) {
+        throw new Error("Script crashed while reading the page");
+      }
+
+      if (target.tabId === 105) {
+        return [{ result: { title: "Empty", text: "", headings: [], description: "", selectedText: "" } }];
+      }
+
+      return [
+        {
+          result: {
+            title: `Readable tab ${target.tabId}`,
+            text: `Visible text for tab ${target.tabId}.`,
+            headings: ["Overview", "Details"],
+            description: "Readable page description.",
+            selectedText: ""
+          }
+        }
+      ];
+    }
+  };
+
+  try {
+    const targets = [
+      { id: 101, title: "Alpha", rawUrl: "https://example.com/a", hostname: "example.com", path: "/a", urlScheme: "https", pinned: false, audible: false, incognito: false },
+      { id: 102, title: "Pinned", rawUrl: "https://example.com/b", hostname: "example.com", path: "/b", urlScheme: "https", pinned: true, audible: false, incognito: false },
+      { id: 103, title: "Chrome Extensions", rawUrl: "chrome://extensions", hostname: "", path: "/extensions", urlScheme: "chrome", pinned: false, audible: false, incognito: false },
+      { id: 104, title: "Blocked", rawUrl: "https://example.com/c", hostname: "example.com", path: "/c", urlScheme: "https", pinned: false, audible: false, incognito: false },
+      { id: 105, title: "Empty", rawUrl: "https://example.com/d", hostname: "example.com", path: "/d", urlScheme: "https", pinned: false, audible: false, incognito: false },
+      { id: 106, title: "Beta", rawUrl: "https://example.com/e", hostname: "example.com", path: "/e", urlScheme: "https", pinned: false, audible: false, incognito: false },
+      { id: 107, title: "Over cap one", rawUrl: "https://example.com/f", hostname: "example.com", path: "/f", urlScheme: "https", pinned: false, audible: false, incognito: false },
+      { id: 108, title: "Over cap two", rawUrl: "https://example.com/g", hostname: "example.com", path: "/g", urlScheme: "https", pinned: false, audible: false, incognito: false }
+    ];
+    const extraction = await context.extractVisibleTextFromContextTabs(targets, { scope: "selected_tabs" });
+    const reasons = extraction.skippedTabs.map((item) => item.reason);
+
+    assertEqual(extraction.readableTabs.length, 2, "Context extraction should read only safe, non-empty tabs");
+    assertEqual(extraction.toolCard.scope.type, "selected_tabs", "Tool card should preserve selected-tabs scope");
+    assertEqual(extraction.toolCard.scope.requestedTabCount, 8, "Tool card should report requested tab count");
+    assertEqual(extraction.toolCard.scope.readTabCount, 2, "Tool card should report readable tab count");
+    assertEqual(extraction.toolCard.scope.skippedTabCount, 6, "Tool card should report skipped tab count");
+    assertEqual(extraction.toolCard.scope.maxTabs, 6, "Tool card should report the beta read cap");
+    assert(extraction.toolCard.skippedBreakdown.some((item) => item.reason === "over_cap" && item.count === 2), "Tool card should count over-cap skipped tabs");
+    assert(extraction.toolCard.skippedBreakdown.some((item) => item.reason === "protected" && item.count === 1), "Tool card should count protected skipped tabs");
+    assert(extraction.skippedTabs.every((tab) => tab.reasonLabel), "Skipped tabs should include human-readable reason labels");
+    assert(reasons.includes("over_cap"), "Context extraction should skip tabs over the beta cap");
+    assert(reasons.includes("protected"), "Context extraction should skip protected tabs");
+    assert(reasons.includes("restricted"), "Context extraction should skip restricted browser pages");
+    assert(reasons.includes("unreadable"), "Context extraction should report injection failures");
+    assert(reasons.includes("empty"), "Context extraction should report pages with no readable content");
+    assertEqual(
+      context.buildContextExtractionSkipReason(
+        new Error("Cannot access contents of url \"https://example.com/private\". Extension manifest must request permission to access this host."),
+        targets[0]
+      ),
+      "missing_permission",
+      "Context extraction should distinguish missing temporary site access from restricted browser pages"
+    );
+    const missingPermissionSkippedTab = context.buildContextSkippedTab(targets[0], "missing_permission");
+    const missingPermissionToolCard = context.buildContextToolCard({
+      scopeType: "selected_tabs",
+      requestedCount: 1,
+      readCount: 0,
+      skippedCount: 1,
+      skippedTabs: [missingPermissionSkippedTab]
+    });
+    const missingPermissionSummary = context.buildLocalContextTabsSummary({
+      question: "What are these selected tabs saying?",
+      context: { scope: "selected_tabs", tabCount: 1 },
+      targetTabs: [targets[0]],
+      readableTabs: [],
+      skippedTabs: [missingPermissionSkippedTab],
+      toolCard: missingPermissionToolCard
+    });
+
+    assert(
+      missingPermissionSummary.answer.includes("Chrome site access was not granted"),
+      "Missing site access answer should explain the Chrome permission in plain language"
+    );
+    assert(
+      missingPermissionSummary.answer.includes("No page body was read, sent to AI, or stored"),
+      "Missing site access answer should preserve the privacy boundary"
+    );
+    assert(
+      missingPermissionSummary.recommendations.some((item) => item.includes("Approve Chrome site access")),
+      "Missing site access fallback should tell the user to approve Chrome site access"
+    );
+    assert(
+      missingPermissionSummary.groupSummary.suggestedNextSteps.some((item) => item.includes("Approve Chrome site access")),
+      "Missing site access next steps should explain the permission retry path"
+    );
+
+    const metadataOnlyToolCard = context.buildContextToolCard({
+      scopeType: "selected_tabs",
+      requestedCount: 3,
+      readCount: 0,
+      skippedCount: 3,
+      skippedTabs: extraction.skippedTabs.slice(0, 3)
+    });
+    const metadataOnlySummary = context.buildLocalContextTabsSummary({
+      question: "What are these selected tabs saying?",
+      context: { scope: "selected_tabs", tabCount: 3 },
+      targetTabs: targets.slice(1, 4),
+      readableTabs: [],
+      skippedTabs: extraction.skippedTabs.slice(0, 3),
+      toolCard: metadataOnlyToolCard
+    });
+
+    assertEqual(metadataOnlyToolCard.status, "metadata_only", "Zero-readable tool card should mark metadata-only fallback");
+    assertEqual(metadataOnlySummary.provider, "metadata", "Zero-readable context answer should stay metadata-only");
+    assertEqual(metadataOnlySummary.groupSummary.source, "metadata", "Zero-readable group summary should disclose metadata source");
+    assert(metadataOnlySummary.answer.includes("No page body was read, sent to AI, or stored"), "Zero-readable context answer should state no page body was read or sent");
+    assert(metadataOnlySummary.answer.includes("answered from metadata only"), "Zero-readable answer should use natural metadata-only copy");
+    assert(metadataOnlySummary.recommendations.some((item) => item.includes("normal http/https work pages")), "Zero-readable context answer should give a concrete retry path");
+    assert(metadataOnlySummary.groupSummary.suggestedNextSteps.some((item) => item.includes("metadata only")), "Zero-readable next steps should explain the metadata-only fallback");
+  } finally {
+    context.chrome.scripting = oldScripting;
+  }
+});
+
+test("Multi-tab Page Agent sends capped visible context without full URLs", async () => {
+  const fetchCalls = [];
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: "The selected tabs are mainly about database setup and deployment checks.",
+                  keyPoints: [
+                    "One tab covers Supabase database settings.",
+                    "Another tab covers deployment readiness."
+                  ],
+                  tabSummaries: [
+                    {
+                      tabId: 201,
+                      title: "Supabase database settings",
+                      summary: "Database configuration, pooling, and backups.",
+                      usefulFor: "Checking backend configuration before launch.",
+                      suggestedAction: "review"
+                    },
+                    {
+                      tabId: 999,
+                      title: "Invented",
+                      summary: "This should be dropped.",
+                      usefulFor: "Nothing",
+                      suggestedAction: "keep"
+                    }
+                  ],
+                  recommendations: ["Review the database settings tab before changing production config."],
+                  confidence: 0.88
+                })
+              }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const fakeApiKey = "sk-" + "contextsecret";
+  const readableTabs = Array.from({ length: 7 }, (_, index) => ({
+    tabId: 201 + index,
+    title: index === 0 ? "Supabase database settings" : `Deployment note ${index}`,
+    hostname: index === 0 ? "supabase.com" : "vercel.com",
+    path: index === 0 ? "/dashboard/project/ai-music/settings/database" : `/docs/${index}`,
+    page: {
+      description: index === 0 ? "Configure database pooling, backups, and migrations." : "Deployment checklist.",
+      headings: ["Overview", "Configuration"],
+      selectedText: index === 0 ? "postgres://user:secret@db.example:5432/postgres" : "",
+      visibleText: index === 0
+        ? `Database settings include pooling, backups, and migrations. Visit https://supabase.com/dashboard/project/ai-music/settings/database?token=abc. Secret ${fakeApiKey}.`
+        : `Deployment note ${index} with production readiness details.`
+    }
+  }));
+  const skippedTabs = [
+    { tabId: 301, title: "Chrome Extensions", hostname: "", reason: "restricted" },
+    { tabId: 302, title: "Pinned Email", hostname: "mail.example", reason: "protected" }
+  ];
+  const toolCard = context.buildContextToolCard({
+    scopeType: "selected_tabs",
+    requestedCount: 8,
+    readCount: 6,
+    skippedCount: 2,
+    skippedTabs
+  });
+  const sidebarContext = {
+    scope: "selected_tabs",
+    tabCount: 8,
+    tabIds: readableTabs.map((item) => item.tabId)
+  };
+  const fallback = context.buildLocalContextTabsSummary({
+    question: "What are these selected tabs about?",
+    context: sidebarContext,
+    targetTabs: readableTabs.map((item) => ({
+      id: item.tabId,
+      title: item.title,
+      hostname: item.hostname
+    })),
+    readableTabs,
+    skippedTabs,
+    toolCard
+  });
+  const output = await context.callOpenAICompatibleContextTabsAgent(
+    {
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-v4-flash",
+      apiKey: "sk-secret"
+    },
+    {
+      question: "What are these selected tabs about?",
+      context: sidebarContext,
+      readableTabs,
+      skippedTabs,
+      toolCard,
+      conversationHistory: [
+        {
+          role: "user",
+          text: "Earlier I asked about https://supabase.com/dashboard/project/ai-music/settings/database?token=abc"
+        },
+        {
+          role: "assistant",
+          text: "It was mainly about database settings and deployment readiness."
+        },
+        {
+          role: "tool",
+          text: "This role should be dropped."
+        }
+      ],
+      language: "en"
+    }
+  );
+  const validated = context.validateAIContextTabsAnswer(output, fallback);
+
+  assertEqual(fetchCalls.length, 1, "Multi-tab Page Agent fetch call count");
+  assertEqual(fetchCalls[0].url, "https://api.deepseek.com/chat/completions", "Multi-tab Page Agent endpoint");
+  assert(fetchCalls[0].options.signal, "Multi-tab Page Agent fetch should carry an abort signal");
+
+  const bodyText = fetchCalls[0].options.body || "";
+  const body = JSON.parse(bodyText);
+  const userContent = JSON.parse(body.messages[1].content);
+
+  assertEqual(userContent.context.scope, "selected_tabs", "Multi-tab Agent payload should keep selected-tabs context");
+  assertEqual(userContent.toolCard.scope.type, "selected_tabs", "Multi-tab Agent payload should include selected-tabs tool-card scope");
+  assertEqual(userContent.toolCard.scope.maxTabs, 6, "Multi-tab Agent payload should disclose the beta cap");
+  assertEqual(userContent.toolCard.storage, "session_only", "Multi-tab Agent payload should disclose session-only storage");
+  assertEqual(userContent.tabs.length, 6, "Multi-tab Agent payload should cap readable tabs at six");
+  assertEqual(userContent.tabs[0].tabId, 201, "Multi-tab Agent payload should include real tab ids");
+  assertEqual(userContent.skippedTabs.length, 2, "Multi-tab Agent payload should include skipped-tab reasons");
+  assertEqual(userContent.skippedTabs[0].reasonLabel, "restricted page", "Multi-tab Agent payload should include safe skipped-tab labels");
+  assert(userContent.skippedBreakdown.some((item) => item.reason === "restricted" && item.count === 1), "Multi-tab Agent payload should include skipped reason breakdown");
+  assert(userContent.toolCard.skippedBreakdown.some((item) => item.reason === "protected" && item.count === 1), "Multi-tab Agent tool-card payload should include skipped breakdown");
+  assertEqual(userContent.conversationHistory.length, 2, "Multi-tab Agent payload should keep only user/assistant context history");
+  assert(userContent.conversationHistory[0].text.includes("[redacted URL: supabase.com]"), "Multi-tab Agent history should redact full URLs");
+  assert(userContent.tabs[0].visibleText.includes("[redacted URL: supabase.com]"), "Multi-tab Agent payload should redact full URLs but keep host context");
+  assert(!bodyText.includes("https://supabase.com/dashboard/project/ai-music/settings/database"), "Multi-tab Agent payload must not include full URLs");
+  assert(!bodyText.includes("token=abc"), "Multi-tab Agent payload must not include query tokens");
+  assert(!bodyText.includes(fakeApiKey), "Multi-tab Agent payload must redact API-key-like strings");
+  assert(!bodyText.includes("postgres://user:secret"), "Multi-tab Agent payload must redact connection strings");
+  assert(bodyText.includes("Full URLs, query strings, hashes"), "Multi-tab Agent payload should disclose privacy boundary");
+  assert(bodyText.includes("up to 10 local context Q/A turns"), "Multi-tab Agent payload should disclose local follow-up context");
+  assert(bodyText.includes("cloud storage are not included"), "Multi-tab Agent payload should disclose no cloud storage");
+  assertEqual(validated.provider, "deepseek", "Multi-tab Agent validation should mark DeepSeek provider");
+  assertEqual(validated.aiUsed, true, "Multi-tab Agent validation should mark AI usage");
+  assertEqual(fallback.groupSummary.label, "Selected tabs", "Local context summary should label selected-tab scope");
+  assertEqual(fallback.groupSummary.source, "visible_text", "Local context summary should disclose visible text source");
+  assertEqual(fallback.groupSummary.tabCount, 7, "Local context summary should count target tabs");
+  assertEqual(fallback.groupSummary.readTabCount, 7, "Local context summary should count readable tabs before prompt cap");
+  assertEqual(fallback.groupSummary.skippedTabCount, 2, "Local context summary should count skipped tabs");
+  assert(fallback.groupSummary.skippedBreakdown.some((item) => item.reason === "restricted" && item.count === 1), "Local context summary should include skipped breakdown");
+  assert(fallback.recommendations[0].includes("1 restricted page"), "Local context summary should explain skipped reasons in plain language");
+  assert(fallback.groupSummary.topHosts.includes("supabase.com"), "Local context summary should include top host evidence");
+  assert(fallback.groupSummary.themes.length > 0, "Local context summary should include themes");
+  assert(fallback.groupSummary.suggestedNextSteps.length > 0, "Local context summary should include safe next steps");
+  assertEqual(validated.groupSummary.label, "Selected tabs", "AI validation should preserve local group summary");
+  assertEqual(validated.tabSummaries.length, 1, "Multi-tab Agent validation should drop invented tab summaries");
+  assertEqual(validated.tabSummaries[0].tabId, 201, "Multi-tab Agent validation should keep real tab summaries");
+  assertEqual(validated.privacy.sentPageText, true, "Multi-tab Agent validation should report visible text upload");
+  assertEqual(validated.privacy.sentFullUrls, false, "Multi-tab Agent validation should report no full URL upload");
+  assertEqual(validated.privacy.storedCloud, false, "Multi-tab Agent validation should report no TabMosaic cloud storage");
+});
+
+test("Content regroup agent previews Apply-gated groups from visible context only", async () => {
+  const fetchCalls = [];
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: "I can split these tabs into database work and launch docs before you apply anything.",
+                  groups: [
+                    {
+                      name: "Database Work",
+                      color: "green",
+                      reason: "The visible content focuses on pooling, backups, migrations, and schema settings.",
+                      tabIds: [201]
+                    },
+                    {
+                      name: "Launch Docs",
+                      color: "blue",
+                      reason: "The visible content focuses on deployment readiness and release checks.",
+                      tabIds: [202, 999, 201]
+                    }
+                  ],
+                  confidence: 0.84
+                })
+              }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const fakeApiKey = "sk-" + "regroupsecret";
+  const readableTabs = [
+    {
+      tabId: 201,
+      title: "Supabase database settings",
+      hostname: "supabase.com",
+      path: "/dashboard/project/ai-music/settings/database",
+      page: {
+        description: "Configure database pooling, backups, and migrations.",
+        headings: ["Database", "Pooling", "Backups"],
+        selectedText: "postgres://user:secret@db.example:5432/postgres",
+        visibleText: `Database settings include pooling, backups, migrations, and schema changes. Visit https://supabase.com/dashboard/project/ai-music/settings/database?token=abc. Secret ${fakeApiKey}.`
+      }
+    },
+    {
+      tabId: 202,
+      title: "Deployment checklist",
+      hostname: "vercel.com",
+      path: "/docs/deployments",
+      page: {
+        description: "Deployment checklist.",
+        headings: ["Deploy", "Checks"],
+        selectedText: "",
+        visibleText: "Deployment readiness, preview checks, environment variables, and release validation."
+      }
+    }
+  ];
+  const skippedTabs = [
+    { tabId: 301, title: "Chrome Extensions", hostname: "", reason: "restricted" }
+  ];
+  const toolCard = context.buildContextToolCard({
+    scopeType: "selected_tabs",
+    requestedCount: 3,
+    readCount: 2,
+    skippedCount: 1,
+    skippedTabs
+  });
+  const sidebarContext = {
+    scope: "selected_tabs",
+    tabCount: 3,
+    tabIds: [201, 202, 301]
+  };
+  const output = await context.callOpenAICompatibleContextRegroupAgent(
+    {
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-v4-flash",
+      apiKey: "sk-secret"
+    },
+    {
+      instruction: "Regroup these selected tabs by what the pages are actually about.",
+      context: sidebarContext,
+      readableTabs,
+      skippedTabs,
+      toolCard,
+      language: "en"
+    }
+  );
+  const draft = context.validateAIContextRegroupDraft(output, {
+    instruction: "Regroup these selected tabs by what the pages are actually about.",
+    context: sidebarContext,
+    readableTabs,
+    skippedTabs,
+    toolCard,
+    provider: "deepseek"
+  });
+
+  assertEqual(fetchCalls.length, 1, "Content regroup agent fetch call count");
+  assertEqual(fetchCalls[0].url, "https://api.deepseek.com/chat/completions", "Content regroup agent endpoint");
+  assert(fetchCalls[0].options.signal, "Content regroup agent fetch should carry an abort signal");
+
+  const bodyText = fetchCalls[0].options.body || "";
+  const body = JSON.parse(bodyText);
+  const userContent = JSON.parse(body.messages[1].content);
+
+  assertEqual(userContent.task, "Create an Apply/Cancel preview for regrouping this selected tab context by actual visible page content.", "Content regroup payload task");
+  assertEqual(userContent.context.scope, "selected_tabs", "Content regroup payload should keep selected-tabs context");
+  assertEqual(userContent.toolCard.scope.readTabCount, 2, "Content regroup payload should include read count");
+  assertEqual(userContent.toolCard.storage, "session_only", "Content regroup payload should disclose session-only storage");
+  assertEqual(userContent.tabs.length, 2, "Content regroup payload should include readable tabs");
+  assert(userContent.tabs[0].visibleText.includes("[redacted URL: supabase.com]"), "Content regroup payload should redact full URLs but keep host context");
+  assert(!bodyText.includes("https://supabase.com/dashboard/project/ai-music/settings/database"), "Content regroup payload must not include full URLs");
+  assert(!bodyText.includes("token=abc"), "Content regroup payload must not include query tokens");
+  assert(!bodyText.includes(fakeApiKey), "Content regroup payload must redact API-key-like strings");
+  assert(!bodyText.includes("postgres://user:secret"), "Content regroup payload must redact connection strings");
+  assert(bodyText.includes("The browser will not change unless the user clicks Apply"), "Content regroup payload should disclose Apply-gated behavior");
+  assert(userContent.rules.includes("Use only tabIds from tabs."), "Content regroup payload should tell the model not to invent tab ids");
+
+  assertEqual(draft.type, "regroup_tabs", "Content regroup validation should create a regroup draft");
+  assertEqual(draft.status, "regroup-preview", "Content regroup validation should keep preview status");
+  assertEqual(draft.provider, "deepseek", "Content regroup validation should mark DeepSeek provider");
+  assertEqual(draft.aiUsed, true, "Content regroup validation should mark AI usage");
+  assertEqual(draft.groups.length, 2, "Content regroup validation should keep usable groups");
+  assertDeepEqual(draft.groups[0].tabIds, [201], "Content regroup validation should keep real tab ids");
+  assertDeepEqual(draft.groups[1].tabIds, [202], "Content regroup validation should drop invented and duplicate tab ids");
+  assertEqual(draft.matchedTabCount, 2, "Content regroup draft should count matched tabs");
+  assertEqual(draft.privacy.sentPageText, true, "Content regroup draft should report visible text upload");
+  assertEqual(draft.privacy.sentFullUrls, false, "Content regroup draft should report no full URL upload");
+  assertEqual(draft.privacy.storedCloud, false, "Content regroup draft should report no cloud storage");
+  assert(draft.risk.includes("No browser changes happen until Apply"), "Content regroup draft should explain Apply-gated risk");
+  assertEqual(draft.toolCard.scope.readTabCount, 2, "Content regroup draft should preserve tool-card disclosure");
 });
 
 test("AI classification request sends minimized tab metadata only", async () => {
@@ -1457,6 +2860,10 @@ test("AI classification request sends minimized tab metadata only", async () => 
   assertEqual(firstTab.hostname, "private.example", "AI payload should include hostname");
   assertEqual(firstTab.path, "/secret", "AI payload should include path");
   assertEqual(firstTab.active, true, "AI payload should include tab state");
+  assertEqual(firstTab.inferredArtifactType, "web_page", "AI payload should include metadata-derived artifact type");
+  assertEqual(firstTab.inferredWorkflow, "general", "AI payload should include metadata-derived workflow");
+  assertEqual(firstTab.domainCategory, "general_web", "AI payload should include metadata-derived domain category");
+  assertEqual(firstTab.domainOnlyRisk, false, "Generic private example should not be flagged as domain-only risk");
   assert(!("fullUrl" in firstTab), "AI payload must not include fullUrl field");
   assert(!("restoreUrl" in firstTab), "AI payload must not include restoreUrl field");
   assert(!("favIconUrl" in firstTab), "AI payload must not include favIconUrl field");
@@ -1466,6 +2873,438 @@ test("AI classification request sends minimized tab metadata only", async () => 
   assert(!bodyText.includes("token=abc"), "AI payload must not include URL query token");
   assert(!bodyText.includes("Confidential page body"), "AI payload must not include page text");
   assert(bodyText.includes("No page body or full URL"), "AI payload should include privacy note");
+});
+
+test("Page Agent sends current visible page text without full URLs", async () => {
+  const fetchCalls = [];
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: "This Database settings page is for Supabase database configuration. Check connection pooling, backups, and migration impact before changing settings.",
+                  keyPoints: [
+                    "Connection pooling affects how apps connect to the database.",
+                    "Backups and restore options matter before risky changes.",
+                    "Review migration and connection details before applying changes."
+                  ],
+                  suggestedGroup: "Supabase Database",
+                  suggestedAction: "review",
+                  confidence: 0.86
+                })
+              }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const parsedUrl = context.parseUrl("https://supabase.com/dashboard/project/ai-music/settings/database?token=abc#keys");
+  const fakeApiKey = "sk-" + "abc123secret";
+  const page = {
+    title: "Settings | Database | ai-music",
+    description: "Configure database backups, connection pooling, and database settings.",
+    headings: ["Database", "Connection pooling", "Backups"],
+    selectedText: "postgres://user:secret@db.example:5432/postgres",
+    text: `Database settings include backups, connection pooling, migration options, and project connection strings. Secret sample ${fakeApiKey} should be redacted. Read more at https://supabase.com/dashboard/project/ai-music/settings/database?token=abc.`
+  };
+  const fallback = context.buildLocalPageSummary({
+    tab: { title: page.title },
+    parsedUrl,
+    page,
+    question: "What should I check before changing database settings?"
+  });
+  const output = await context.callOpenAICompatiblePageAgent(
+    {
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-v4-flash",
+      apiKey: "sk-secret"
+    },
+    {
+      question: "What should I check before changing database settings?",
+      tab: { title: page.title },
+      parsedUrl,
+      page,
+      conversationHistory: [
+        {
+          role: "user",
+          text: "What is this page? https://supabase.com/dashboard/project/ai-music/settings/database?token=abc"
+        },
+        {
+          role: "assistant",
+          text: "It is the Supabase Database settings page."
+        },
+        {
+          role: "tool",
+          text: "This should be dropped."
+        }
+      ],
+      language: "en"
+    }
+  );
+  const validated = context.validateAIPageAnswer(output, fallback);
+
+  assertEqual(fetchCalls.length, 1, "Page Agent fetch call count");
+  assertEqual(fetchCalls[0].url, "https://api.deepseek.com/chat/completions", "Page Agent endpoint");
+  assert(fetchCalls[0].options.signal, "Page Agent fetch should carry an abort signal");
+
+  const bodyText = fetchCalls[0].options.body || "";
+  const body = JSON.parse(bodyText);
+  const userContent = JSON.parse(body.messages[1].content);
+  const history = userContent.conversationHistory || [];
+
+  assertEqual(userContent.page.title, page.title, "Page Agent payload should include page title");
+  assertEqual(userContent.page.hostname, "supabase.com", "Page Agent payload should include hostname");
+  assert(userContent.page.visibleText.includes("Database settings include backups"), "Page Agent payload should include visible page text");
+  assert(userContent.page.visibleText.includes("[redacted URL: supabase.com]"), "Page Agent payload should keep useful host context when redacting URLs");
+  assertEqual(history.length, 2, "Page Agent payload should keep only user and assistant page-chat history");
+  assert(history[0].text.includes("[redacted URL: supabase.com]"), "Page Agent history should redact full URLs");
+  assert(!bodyText.includes("https://supabase.com/dashboard/project/ai-music/settings/database"), "Page Agent payload must not include full URL");
+  assert(!bodyText.includes("token=abc"), "Page Agent payload must not include query tokens");
+  assert(!bodyText.includes("postgres://user:secret"), "Page Agent payload must redact connection strings");
+  assert(!bodyText.includes(fakeApiKey), "Page Agent payload must redact API-key-like strings");
+  assert(bodyText.includes("visible page text"), "Page Agent payload should disclose that visible text is sent");
+  assert(bodyText.includes("cloud storage are not included"), "Page Agent payload should disclose no cloud storage by TabMosaic");
+  assertEqual(validated.provider, "deepseek", "Page Agent validation should mark DeepSeek provider");
+  assertEqual(validated.aiUsed, true, "Page Agent validation should mark AI usage");
+  assertEqual(validated.privacy.sentPageText, true, "Page Agent validation should report page text upload");
+  assertEqual(validated.privacy.sentFullUrls, false, "Page Agent validation should report no full URLs");
+  assertEqual(validated.privacy.storedCloud, false, "Page Agent validation should report no TabMosaic cloud storage");
+  assertEqual(validated.suggestedAction, "review", "Page Agent validation should keep safe page actions");
+  assert(validated.summary.includes("connection pooling"), "Page Agent answer should validate");
+});
+
+test("Page Agent sends safe GitHub PR site skill without repo path", async () => {
+  const fetchCalls = [];
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: "This looks like a GitHub pull request. Review the change intent, files changed, tests, CI status, and any risky areas visible on the page.",
+                  keyPoints: [
+                    "The page exposes PR review cues.",
+                    "Visible files and checks should drive the review.",
+                    "Missing diff or CI context should be called out."
+                  ],
+                  suggestedGroup: "Code Review",
+                  suggestedAction: "review",
+                  confidence: 0.84
+                })
+              }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const parsedUrl = context.parseUrl("https://github.com/byteprivate/rocket-ops-private/pull/42/files?token=abc#diff");
+  const page = {
+    title: "Improve provider registry checks · Pull Request",
+    description: "Review pull request changes and checks.",
+    headings: ["Conversation", "Files changed", "Checks"],
+    selectedText: "",
+    text: "Files changed include provider_registry.js and extension_smoke_test.js. Checks are passing. Review test coverage and provider preset safety."
+  };
+
+  const fallback = context.buildLocalPageSummary({
+    tab: { title: page.title },
+    parsedUrl,
+    page,
+    question: "What should I review on this PR?"
+  });
+  const output = await context.callOpenAICompatiblePageAgent(
+    {
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-v4-flash",
+      apiKey: "sk-secret"
+    },
+    {
+      question: "What should I review on this PR?",
+      tab: { title: page.title },
+      parsedUrl,
+      page,
+      conversationHistory: [],
+      language: "en"
+    }
+  );
+  const validated = context.validateAIPageAnswer(output, fallback);
+  const bodyText = fetchCalls[0].options.body || "";
+  const body = JSON.parse(bodyText);
+  const systemPrompt = body.messages[0].content;
+  const userContent = JSON.parse(body.messages[1].content);
+
+  assertEqual(fetchCalls.length, 1, "GitHub PR Page Agent fetch call count");
+  assert(systemPrompt.includes("site-skill hint"), "Page Agent system prompt should allow safe site-skill guidance");
+  assertEqual(userContent.page.hostname, "github.com", "GitHub PR payload should include hostname");
+  assertEqual(userContent.page.siteSkill.id, "github_pull_request_review", "GitHub PR payload should include the PR review site skill");
+  assertEqual(userContent.page.siteSkill.label, "GitHub Pull Request", "GitHub PR site skill should stay generic");
+  assert(userContent.page.siteSkill.capabilities.includes("identify_review_risks"), "GitHub PR site skill should guide review risk analysis");
+  assert(userContent.page.siteSkill.guidance.some((item) => item.includes("code review surface")), "GitHub PR site skill should carry review guidance");
+  assert(userContent.privacyNote.includes("site-skill hint"), "GitHub PR payload should disclose the site-skill hint");
+  assert(!bodyText.includes("byteprivate"), "GitHub PR site skill must not include owner path");
+  assert(!bodyText.includes("rocket-ops-private"), "GitHub PR site skill must not include repo path");
+  assert(!bodyText.includes("/pull/42"), "GitHub PR site skill must not include PR path");
+  assert(!bodyText.includes("token=abc"), "GitHub PR site skill must not include query token");
+  assert(!bodyText.includes("#diff"), "GitHub PR site skill must not include hash");
+  assertEqual(validated.suggestedGroup, "Code Review", "GitHub PR Page Agent should keep code review grouping");
+  assertEqual(validated.suggestedAction, "review", "GitHub PR Page Agent should keep review action");
+});
+
+test("Page Agent sends safe site skills for common work pages", async () => {
+  const fetchCalls = [];
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: "Use the visible page text and the safe site-skill hint to answer this work-page question.",
+                  keyPoints: ["The payload includes a generic page type.", "The payload excludes object-specific path data."],
+                  suggestedGroup: "Work Review",
+                  suggestedAction: "review",
+                  confidence: 0.8
+                })
+              }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const cases = [
+    {
+      url: "https://github.com/byteprivate/rocket-ops-private/issues/77?token=abc#issuecomment",
+      title: "Bug report discussion",
+      text: "The visible issue text describes a reproduction step, expected behavior, and an open blocker.",
+      expectedSkill: "github_issue_triage",
+      expectedLabel: "GitHub Issue",
+      expectedCapability: "extract_acceptance_criteria",
+      forbidden: ["byteprivate", "rocket-ops-private", "/issues/77", "token=abc", "#issuecomment"]
+    },
+    {
+      url: "https://github.com/byteprivate/rocket-ops-private/actions/runs/123456?check_suite_focus=true",
+      title: "CI run details",
+      text: "The visible check page shows one failing job, test output, and retry controls.",
+      expectedSkill: "github_ci_run_review",
+      expectedLabel: "GitHub CI Run",
+      expectedCapability: "identify_failing_jobs",
+      forbidden: ["byteprivate", "rocket-ops-private", "/actions/runs/123456", "check_suite_focus=true"]
+    },
+    {
+      url: "https://linear.app/private-team/issue/TAB-123/fix-dashboard-state?auth=secret",
+      title: "Dashboard state issue",
+      text: "The visible task text has status, priority, owner, and acceptance criteria.",
+      expectedSkill: "project_issue_triage",
+      expectedLabel: "Project Issue",
+      expectedCapability: "extract_status_and_owner",
+      forbidden: ["private-team", "TAB-123", "fix-dashboard-state", "auth=secret"]
+    },
+    {
+      url: "https://company.atlassian.net/browse/SECRET-42?token=abc",
+      title: "Sprint task",
+      text: "The visible Jira task shows priority, assignee, comments, and linked dependencies.",
+      expectedSkill: "project_issue_triage",
+      expectedLabel: "Project Issue",
+      expectedCapability: "extract_status_and_owner",
+      forbidden: ["SECRET-42", "token=abc"]
+    },
+    {
+      url: "https://www.figma.com/file/AbCdPrivate123/Private-Design-System?node-id=0-1",
+      title: "Design review canvas",
+      text: "The visible design file shows frame labels, comments, and handoff notes.",
+      expectedSkill: "design_file_review",
+      expectedLabel: "Design File",
+      expectedCapability: "identify_review_focus",
+      forbidden: ["AbCdPrivate123", "Private-Design-System", "node-id=0-1"]
+    },
+    {
+      url: "https://docs.google.com/document/d/private-doc-id/edit?usp=sharing",
+      title: "Planning document",
+      text: "The visible document has headings, decisions, open questions, and owner notes.",
+      expectedSkill: "collaboration_document_review",
+      expectedLabel: "Collaboration Document",
+      expectedCapability: "extract_decisions_and_tasks",
+      forbidden: ["private-doc-id", "usp=sharing"]
+    },
+    {
+      url: "https://supabase.com/dashboard/project/private-project/settings/database?token=abc#keys",
+      title: "Database settings",
+      text: "The visible console text mentions backups, connection pooling, and migration settings.",
+      expectedSkill: "cloud_project_settings_review",
+      expectedLabel: "Cloud Project Console",
+      expectedCapability: "identify_risky_settings",
+      forbidden: ["private-project", "token=abc", "#keys"]
+    }
+  ];
+
+  for (const item of cases) {
+    const parsedUrl = context.parseUrl(item.url);
+    const page = {
+      title: item.title,
+      description: "",
+      headings: ["Overview", "Details"],
+      selectedText: "",
+      text: item.text
+    };
+    await context.callOpenAICompatiblePageAgent(
+      {
+        baseUrl: "https://api.deepseek.com",
+        model: "deepseek-v4-flash",
+        apiKey: "sk-secret"
+      },
+      {
+        question: "What should I understand here?",
+        tab: { title: page.title },
+        parsedUrl,
+        page,
+        conversationHistory: [],
+        language: "en"
+      }
+    );
+
+    const bodyText = fetchCalls[fetchCalls.length - 1].options.body || "";
+    const body = JSON.parse(bodyText);
+    const userContent = JSON.parse(body.messages[1].content);
+
+    assertEqual(userContent.page.siteSkill.id, item.expectedSkill, `${item.expectedSkill} should be detected`);
+    assertEqual(userContent.page.siteSkill.label, item.expectedLabel, `${item.expectedSkill} label should stay generic`);
+    assert(userContent.page.siteSkill.capabilities.includes(item.expectedCapability), `${item.expectedSkill} should include expected capability`);
+    assertEqual(userContent.page.siteSkill.source, "hostname_path_pattern", `${item.expectedSkill} should disclose pattern source`);
+    assert(userContent.page.siteSkill.dataBoundary.includes("visible_text_only"), `${item.expectedSkill} should disclose visible-text boundary`);
+    for (const forbidden of item.forbidden) {
+      assert(!bodyText.includes(forbidden), `${item.expectedSkill} payload must not include ${forbidden}`);
+    }
+  }
+
+  assertEqual(fetchCalls.length, cases.length, "Common work page site-skill fetch call count");
+});
+
+test("Page Agent selected-region payload stays scoped and session-only", async () => {
+  const fetchCalls = [];
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: "The selected pricing table says Pro includes workspace history and group summaries.",
+                  keyPoints: [
+                    "The region is a pricing table.",
+                    "Pro includes workspace history.",
+                    "Group summaries are shown as a Pro benefit."
+                  ],
+                  suggestedGroup: "Pricing Research",
+                  suggestedAction: "review",
+                  confidence: 0.82
+                })
+              }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const parsedUrl = context.parseUrl("https://example.com/pricing?token=abc#plans");
+  const page = {
+    title: "Plans and Pricing",
+    description: "",
+    headings: ["Pricing"],
+    selectedText: "",
+    text: "Pro plan includes workspace history and group summaries. Team plan includes admin controls.",
+    source: "selected_region",
+    region: {
+      label: "Pricing table",
+      tagName: "section",
+      role: "region",
+      safeLinkLabels: ["Compare plans", "Contact sales"],
+      listItems: ["Pro includes workspace history", "Team includes admin controls"],
+      tableHeaders: ["Plan", "Included features"],
+      tableRows: [
+        ["Plan", "Included features"],
+        ["Pro", "Workspace history and group summaries"],
+        ["Secret URL", "https://example.com/pricing?token=abc"]
+      ],
+      screenshot: {
+        captured: true,
+        type: "image/jpeg",
+        width: 640,
+        height: 320,
+        byteLength: 2048,
+        dataUrl: "data:image/jpeg;base64,SHOULD_NOT_SEND"
+      }
+    }
+  };
+  const fallback = {
+    ...context.buildLocalPageSummary({
+      tab: { title: page.title },
+      parsedUrl,
+      page,
+      question: "What does Pro include?"
+    }),
+    source: "selected_region"
+  };
+  const output = await context.callOpenAICompatiblePageAgent(
+    {
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-v4-flash",
+      apiKey: "sk-secret"
+    },
+    {
+      question: "What does Pro include?",
+      tab: { title: page.title },
+      parsedUrl,
+      page,
+      conversationHistory: [],
+      language: "en"
+    }
+  );
+  const validated = context.validateAIPageAnswer(output, fallback);
+  const bodyText = fetchCalls[0].options.body || "";
+  const body = JSON.parse(bodyText);
+  const userContent = JSON.parse(body.messages[1].content);
+
+  assertEqual(fetchCalls.length, 1, "Selected-region Page Agent fetch call count");
+  assertEqual(userContent.task, "Answer the user's question about the user-selected page region.", "Selected-region payload should scope the task");
+  assertEqual(userContent.page.source, "selected_region", "Selected-region payload should declare its source");
+  assertEqual(userContent.page.region.label, "Pricing table", "Selected-region payload should include the region label");
+  assert(userContent.page.region.safeLinkLabels.includes("Compare plans"), "Selected-region payload should include safe link labels");
+  assert(userContent.page.region.tableHeaders.includes("Included features"), "Selected-region payload should include table structure labels");
+  assertDeepEqual(userContent.page.region.tableRows[1], ["Pro", "Workspace history and group summaries"], "Selected-region payload should preserve bounded table rows");
+  assert(userContent.page.region.tableRows[2][1].includes("[redacted URL: example.com]"), "Selected-region table rows should redact full URLs");
+  assertEqual(userContent.page.region.screenshot.captured, true, "Selected-region payload should include cropped screenshot metadata");
+  assertEqual(userContent.page.region.screenshot.width, 640, "Selected-region screenshot metadata should include bounded width");
+  assertEqual(userContent.page.region.screenshot.imageDataIncluded, false, "Selected-region payload should not include screenshot image data");
+  assertEqual(userContent.page.region.screenshot.imageDataUploaded, false, "Selected-region payload should not upload screenshot image bytes");
+  assert(userContent.privacyNote.includes("one user-selected page region"), "Selected-region payload should disclose the selected-region boundary");
+  assert(userContent.privacyNote.includes("Screenshot image bytes"), "Selected-region payload should disclose that screenshot image bytes are not included");
+  assert(!bodyText.includes("https://example.com/pricing"), "Selected-region payload must not include full URLs");
+  assert(!bodyText.includes("token=abc"), "Selected-region payload must not include query tokens");
+  assert(!bodyText.includes("SHOULD_NOT_SEND"), "Selected-region payload must not include screenshot data URLs");
+  assertEqual(validated.source, "selected_region", "Selected-region validation should preserve fallback source");
+  assert(validated.summary.includes("Pro includes workspace history"), "Selected-region Page Agent answer should validate");
 });
 
 test("AI Agent answer sends minimized tab context and sanitized short conversation only", async () => {
@@ -1538,6 +3377,16 @@ test("AI Agent answer sends minimized tab context and sanitized short conversati
       ]
     }
   });
+  const selectedTabsContext = context.sanitizeAIAgentContext(
+    {
+      scope: "selected_tabs",
+      tabIds: [51, 999, 51],
+      tabCount: 2,
+      title: "Selected planning tabs",
+      windowId: 2
+    },
+    state
+  );
 
   const output = await context.callOpenAICompatibleTabAgent(
     {
@@ -1548,6 +3397,7 @@ test("AI Agent answer sends minimized tab context and sanitized short conversati
     {
       instruction: "Which tab should I review first?",
       state,
+      activeContext: selectedTabsContext,
       conversationHistory: [
         {
           role: "user",
@@ -1577,6 +3427,19 @@ test("AI Agent answer sends minimized tab context and sanitized short conversati
   const firstTab = userContent.state.tabs[0];
   const history = userContent.conversationHistory || [];
 
+  assertEqual(selectedTabsContext.scope, "selected_tabs", "AI Agent context sanitizer should preserve selected-tabs scope");
+  assertDeepEqual(selectedTabsContext.tabIds, [51], "AI Agent context sanitizer should keep only real selected tab ids");
+  assertEqual(userContent.activeContext.scope, "selected_tabs", "AI Agent payload should preserve selected-tabs active context");
+  assertDeepEqual(userContent.activeContext.tabIds, [51], "AI Agent payload should include only valid selected tab ids");
+  assert(userContent.toolRegistry, "AI Agent payload should include the tool registry");
+  assert(
+    userContent.toolRegistry.readOnly.some((tool) => tool.name === "extract_selected_tabs_visible_text" && tool.maxTabs === 6),
+    "AI Agent tool registry should include capped selected/group extraction"
+  );
+  assert(
+    userContent.toolRegistry.action.some((tool) => tool.name === "apply_group_plan" && tool.confirmation === "apply_required"),
+    "AI Agent tool registry should tell the model browser-changing group plans require Apply"
+  );
   assertEqual(firstTab.tabId, 51, "AI Agent payload should include tab id");
   assertEqual(firstTab.title, "Private PRD draft", "AI Agent payload should include title");
   assertEqual(firstTab.hostname, "docs.example", "AI Agent payload should include hostname");
@@ -1779,12 +3642,17 @@ test("AI classification status stays lightweight in sidebar and dashboard", () =
   assert(dashboardJs.includes("summary.aiGroupsSuggested"), "Dashboard should read AI suggested group count");
   assert(dashboardJs.includes('status === "empty"'), "Dashboard should format empty AI output");
   assert(screenshotTool.includes("aiGroupsSuggested: 3"), "Screenshot mock should render AI group count");
+  assert(screenshotTool.includes("sidepanel-context-tabs.png"), "Screenshot mock should include selected-tabs context Agent state");
+  assert(screenshotTool.includes("assertSidepanelLayoutNotClipped"), "Screenshot mock should fail when Sidebar messages or composer are horizontally clipped");
+  assert(screenshotTool.includes('request?.type === "SUMMARIZE_CONTEXT_TABS"'), "Screenshot mock should exercise the selected-tabs context Agent message path");
   assert(en.aiStatus?.message, "English AI status label");
   assert(en.aiGroups?.message, "English AI group label");
   assert(en.aiNoUsableGroups?.message, "English empty AI copy");
   assert(zh.aiStatus?.message, "Chinese AI status label");
   assert(zh.aiGroups?.message, "Chinese AI group label");
   assert(zh.aiNoUsableGroups?.message, "Chinese empty AI copy");
+  assert(en.permissionOptionalSitesCopy?.message && zh.permissionOptionalSitesCopy?.message, "Optional site access permission copy should be localized");
+  assert(en.permissionsNotRequested.message.includes("Not granted by default"), "Permission copy should distinguish default grants from temporary site access");
 });
 
 test("store screenshot drafts are reproducible and marked not final", () => {
@@ -1816,8 +3684,8 @@ test("standalone privacy policy draft stays unpublished and matches privacy boun
   assert(draft.includes("[support email]"), "Privacy policy draft should keep support email placeholder");
   assert(draft.includes("[website URL]"), "Privacy policy draft should keep website URL placeholder");
   assert(draft.includes("saved workspace snapshots"), "Privacy policy draft should cover saved workspace snapshots");
-  assert(draft.includes("does not request `<all_urls>`"), "Privacy policy draft should disclose no all-URLs permission");
-  assert(draft.includes("DeepSeek only if the user enables optional AI classification"), "Privacy policy draft should bound DeepSeek sharing");
+  assert(draft.includes("does not request the literal `<all_urls>`"), "Privacy policy draft should disclose no literal all-URLs permission");
+  assert(draft.includes("configured BYOK AI provider only if the user enables optional AI classification"), "Privacy policy draft should bound BYOK provider sharing");
   assert(draft.includes("does not provide cloud sync, hosted AI accounts, account storage, billing, analytics upload"), "Privacy policy draft should disclose absent cloud/account/analytics paths");
   assert(draft.includes("Dashboard -> Settings -> Clear Local Data"), "Privacy policy draft should document local data deletion");
   assert(draft.includes("Chrome Web Store User Data Policy, including the Limited Use requirements"), "Privacy policy draft should include Limited Use disclosure");
@@ -1836,8 +3704,8 @@ test("Chrome Web Store data disclosure draft stays unsubmitted and conservative"
   assert(draft.includes("Web history / web browsing activity"), "Data disclosure draft should map browsing metadata");
   assert(draft.includes("Website content / website resources"), "Data disclosure draft should map user-triggered page content");
   assert(draft.includes("User-provided content"), "Data disclosure draft should map local chat/rules content");
-  assert(draft.includes("Authentication information"), "Data disclosure draft should cover the optional local DeepSeek API key");
-  assert(draft.includes("optional DeepSeek"), "Data disclosure draft should keep DeepSeek as optional");
+  assert(draft.includes("Authentication information"), "Data disclosure draft should cover the optional local BYOK API key");
+  assert(draft.includes("optional BYOK"), "Data disclosure draft should keep BYOK AI as optional");
   assert(draft.includes("does not sell user data"), "Data disclosure draft should include no-sale posture");
   assert(draft.includes("No analytics upload"), "Data disclosure draft should disclose no analytics upload");
   assert(draft.includes("05_PROJECT/13_PRIVACY_POLICY_DRAFT.md") || storeDraft.includes("05_PROJECT/13_PRIVACY_POLICY_DRAFT.md"), "Disclosure flow should stay connected to the standalone privacy policy draft");
@@ -1846,17 +3714,46 @@ test("Chrome Web Store data disclosure draft stays unsubmitted and conservative"
 
 test("AI connection test does not send tab data", async () => {
   const fetchCalls = [];
+  const permissionChecks = [];
+  const permissionRequests = [];
+  const grantedOrigins = new Set();
+
+  context.chrome.permissions = {
+    async contains(request) {
+      permissionChecks.push(request);
+      return (request.origins || []).every((origin) => grantedOrigins.has(origin));
+    },
+    async request(request) {
+      permissionRequests.push(request);
+      for (const origin of request.origins || []) {
+        grantedOrigins.add(origin);
+      }
+      return true;
+    }
+  };
+
   context.fetch = async (url, options = {}) => {
     fetchCalls.push({ url, options });
+    const modelId = String(url).includes("localhost")
+      ? "llama3.1"
+      : String(url).includes("api.openai.com")
+      ? "gpt-4.1-mini"
+      : "deepseek-v4-flash";
+
     return {
       ok: true,
       async json() {
         return {
           data: [
             {
-              id: "deepseek-v4-flash",
+              id: modelId,
               object: "model",
-              owned_by: "deepseek"
+              owned_by: "test"
+            },
+            {
+              id: `${modelId}-alternate`,
+              object: "model",
+              owned_by: "test"
             }
           ]
         };
@@ -1873,29 +3770,259 @@ test("AI connection test does not send tab data", async () => {
   assertEqual(fetchCalls.length, 1, "AI connection fetch call count");
   assertEqual(fetchCalls[0].url, "https://api.deepseek.com/models", "AI connection should call models endpoint");
   assertEqual(fetchCalls[0].options.method, "GET", "AI connection should use GET");
+  assertEqual(fetchCalls[0].options.headers.Authorization, "Bearer sk-secret", "Remote AI connection should send the saved API key");
   assert(fetchCalls[0].options.signal, "AI connection fetch should carry an abort signal");
   assert(!fetchCalls[0].options.body, "AI connection should not send request body");
   assertEqual(result.modelAvailable, true, "AI connection model availability");
+  assertDeepEqual(result.modelSuggestions, ["deepseek-v4-flash", "deepseek-v4-flash-alternate"], "AI connection should return model-list suggestions");
+  assertEqual(result.diagnostics.providerLabel, "DeepSeek", "AI connection diagnostics should include provider label");
+  assertEqual(result.diagnostics.endpoint, "models", "AI connection diagnostics should show model-list check");
+  assertEqual(result.diagnostics.modelSuggestionCount, 2, "AI connection diagnostics should count suggestions");
+  assertEqual(result.diagnostics.authorizationSent, true, "AI connection diagnostics should disclose Authorization use");
+  assertEqual(result.diagnostics.localEndpoint, false, "AI connection diagnostics should distinguish remote endpoints");
+  assertDeepEqual(result.diagnostics.troubleshootingCodes, [], "Successful remote model-list check should not show troubleshooting next steps");
+  assertEqual(result.diagnostics.sentTabData, false, "AI connection diagnostics must not claim tab data was sent");
   assertEqual(result.privacy.sentTabData, false, "AI connection must not send tab data");
   assertEqual(result.privacy.sentPageText, false, "AI connection must not send page text");
   assertEqual(result.privacy.sentFullUrls, false, "AI connection must not send full URLs");
   assertEqual(context.normalizeAIBaseUrl("https://api.deepseek.com/v1/"), "https://api.deepseek.com/v1", "DeepSeek paths should remain supported");
+  assertEqual(context.normalizeAIBaseUrl("http://localhost:11434/v1/"), "http://localhost:11434/v1", "Localhost model endpoints should remain supported");
+
+  const openAIResult = await context.testAIConnection({
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-4.1-mini",
+    apiKey: "sk-secret",
+    requestPermission: true
+  });
+
+  assertEqual(fetchCalls.length, 2, "Custom AI provider should trigger a second fetch after permission");
+  assertEqual(fetchCalls[1].url, "https://api.openai.com/v1/models", "Custom AI provider should call its own models endpoint");
+  assertEqual(fetchCalls[1].options.headers.Authorization, "Bearer sk-secret", "Custom remote provider should send the API key");
+  assertEqual(permissionRequests.length, 1, "Custom AI provider should request one provider-origin permission");
+  assertDeepEqual(permissionRequests[0], { origins: ["https://api.openai.com/*"] }, "Custom AI provider should request only its origin");
+  assert(permissionChecks.length >= 1, "Custom AI provider should check existing origin permission");
+  assertEqual(openAIResult.provider, "openai", "Known provider hosts should keep provider-specific labels");
+  assertEqual(openAIResult.modelAvailable, true, "Custom AI connection model availability");
+  assert(openAIResult.modelSuggestions.includes("gpt-4.1-mini-alternate"), "Custom AI connection should expose model-list suggestions");
+  assertEqual(openAIResult.diagnostics.providerLabel, "OpenAI", "Custom AI diagnostics should use provider labels");
+  assertEqual(openAIResult.diagnostics.permissionRequired, true, "Custom AI diagnostics should show provider-origin permission was required");
+  assertEqual(openAIResult.diagnostics.permissionOrigin, "https://api.openai.com/*", "Custom AI diagnostics should keep only provider origin");
+
+  const localResult = await context.testAIConnection({
+    baseUrl: "http://localhost:11434/v1",
+    model: "llama3.1",
+    apiKey: "",
+    requestPermission: true
+  });
+
+  assertEqual(fetchCalls.length, 3, "Local model endpoint should trigger a third fetch");
+  assertEqual(fetchCalls[2].url, "http://localhost:11434/v1/models", "Local model endpoint should call its own models endpoint");
+  assert(!fetchCalls[2].options.headers.Authorization, "Local model endpoint without an API key should not send Authorization");
+  assertDeepEqual(permissionRequests[1], { origins: ["http://localhost/*"] }, "Local model endpoint should request only the localhost provider origin");
+  assertEqual(localResult.provider, "local-openai-compatible", "Local model endpoint should be labeled local OpenAI-compatible");
+  assertEqual(localResult.modelAvailable, true, "Local model endpoint model availability");
+  assert(localResult.modelSuggestions.includes("llama3.1-alternate"), "Local model endpoint should expose model-list suggestions");
+  assertEqual(localResult.diagnostics.providerLabel, "Local OpenAI-compatible", "Local AI diagnostics should use local provider label");
+  assertEqual(localResult.diagnostics.localEndpoint, true, "Local AI diagnostics should distinguish local endpoints");
+  assertEqual(localResult.diagnostics.authorizationSent, false, "Local AI diagnostics should show no Authorization header when no key is entered");
+  assertDeepEqual(localResult.diagnostics.troubleshootingCodes, [], "Successful local model-list check should not show troubleshooting next steps");
+
+  const localMissingModelResult = await context.testAIConnection({
+    baseUrl: "http://localhost:11434/v1",
+    model: "missing-local-model",
+    apiKey: "",
+    requestPermission: true
+  });
+
+  assertEqual(fetchCalls.length, 4, "Local missing-model check should trigger a fourth fetch");
+  assertEqual(localMissingModelResult.modelAvailable, false, "Local missing-model check should report missing configured model");
+  assert(
+    localMissingModelResult.diagnostics.troubleshootingCodes.includes("start_ollama_load_model"),
+    "Local missing-model diagnostics should suggest starting/loading Ollama model"
+  );
+  assert(
+    localMissingModelResult.diagnostics.troubleshootingCodes.includes("choose_listed_model"),
+    "Local missing-model diagnostics should suggest choosing a listed model"
+  );
+
+  const previousFetch = context.fetch;
+  context.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url, options });
+
+    if (String(url).endsWith("/models")) {
+      return {
+        ok: false,
+        status: 404,
+        async json() {
+          return {};
+        }
+      };
+    }
+
+    return {
+      ok: true,
+      async json() {
+        return {
+          choices: [
+            {
+              message: { content: "OK" }
+            }
+          ]
+        };
+      }
+    };
+  };
+
+  const fireworksFallbackResult = await context.testAIConnection({
+    baseUrl: "https://api.fireworks.ai/inference/v1",
+    model: "accounts/fireworks/models/llama-v3p1-8b-instruct",
+    apiKey: "sk-secret",
+    requestPermission: true
+  });
+
+  context.fetch = previousFetch;
+
+  assertEqual(fetchCalls[4].url, "https://api.fireworks.ai/inference/v1/models", "Model-list fallback should try /models first");
+  assertEqual(fetchCalls[5].url, "https://api.fireworks.ai/inference/v1/chat/completions", "Model-list fallback should verify chat endpoint");
+  assertEqual(fetchCalls[5].options.method, "POST", "Fallback provider check should call chat completions");
+  assert(
+    String(fetchCalls[5].options.body || "").includes("Reply with OK.") &&
+      !String(fetchCalls[5].options.body || "").includes("github.com") &&
+      !String(fetchCalls[5].options.body || "").includes("pageText"),
+    "Fallback provider check should send only a synthetic prompt"
+  );
+  assertEqual(fireworksFallbackResult.provider, "fireworks", "Known fallback provider host should keep provider-specific label");
+  assertEqual(fireworksFallbackResult.modelAvailable, true, "Fallback provider chat ping should mark the configured model usable");
+  assertDeepEqual(fireworksFallbackResult.modelSuggestions, [], "Synthetic fallback should not invent model suggestions");
+  assertEqual(fireworksFallbackResult.diagnostics.providerLabel, "Fireworks AI", "Fallback diagnostics should include provider label");
+  assertEqual(fireworksFallbackResult.diagnostics.endpoint, "synthetic-chat", "Fallback diagnostics should show synthetic chat check");
+  assertEqual(fireworksFallbackResult.diagnostics.syntheticPromptUsed, true, "Fallback diagnostics should disclose synthetic ping");
+  assertEqual(fireworksFallbackResult.diagnostics.modelListAvailable, false, "Fallback diagnostics should show model-list was unavailable");
+  assertEqual(fireworksFallbackResult.diagnostics.modelSuggestionCount, 0, "Fallback diagnostics should not invent suggestions");
+  assertDeepEqual(
+    fireworksFallbackResult.diagnostics.troubleshootingCodes,
+    ["model_list_unavailable_synthetic_only"],
+    "Fallback diagnostics should explain synthetic-only model-list troubleshooting"
+  );
 
   try {
     await context.testAIConnection({
       baseUrl: "https://api.openai.com/v1",
       model: "gpt-4.1-mini",
-      apiKey: "sk-secret"
+      apiKey: "",
+      requestPermission: true
+    });
+    assert(false, "Remote AI provider without an API key should fail");
+  } catch (error) {
+    assert(
+      String(error?.message || "").includes("API key is required"),
+      "Remote AI provider without an API key should explain the key requirement"
+    );
+  }
+
+  try {
+    await context.testAIConnection({
+      baseUrl: "http://api.openai.com/v1",
+      model: "gpt-4.1-mini",
+      apiKey: "sk-secret",
+      requestPermission: true
     });
     assert(false, "Unsupported AI base URL should fail");
   } catch (error) {
     assert(
-      String(error?.message || "").includes("Current beta supports only https://api.deepseek.com"),
-      "Unsupported AI host should explain the current beta host limit"
+      String(error?.message || "").includes("Remote AI provider Base URLs must use HTTPS"),
+      "Unsupported remote HTTP AI host should explain the HTTPS requirement"
     );
   }
 
-  assertEqual(fetchCalls.length, 1, "Unsupported AI host must not trigger another fetch");
+  assertEqual(fetchCalls.length, 6, "Unsupported remote HTTP AI host and missing remote key must not trigger another fetch");
+});
+
+test("Agent web search tool uses Tavily-style provider only after config", async () => {
+  const oldGet = context.chrome.storage.local.get;
+  const oldFetch = context.fetch;
+  const oldContains = context.chrome.permissions.contains;
+  const fetchCalls = [];
+
+  try {
+    context.chrome.permissions.contains = async () => true;
+    context.chrome.storage.local.get = async () => ({});
+    context.fetch = async () => {
+      fetchCalls.push({ unexpected: true });
+      throw new Error("Search should not fetch before provider config");
+    };
+
+    const missing = await context.runAgentWebSearch({ query: "browser agent search" });
+    assertEqual(missing.status, "not-configured", "Web search should require explicit provider configuration");
+    assertEqual(fetchCalls.length, 0, "Unconfigured web search must not send a network request");
+    assertEqual(missing.privacy.sentQuery, false, "Unconfigured web search should not send the query");
+    assertEqual(missing.privacy.sentTabData, false, "Web search should not send tab data");
+    assertEqual(missing.privacy.sentPageText, false, "Web search should not send page text");
+
+    context.chrome.storage.local.get = async () => ({
+      "tabmosaic.searchSettings": {
+        enabled: true,
+        provider: "tavily",
+        baseUrl: "https://api.tavily.com",
+        apiKey: "tvly-test-key",
+        maxResults: 3,
+        searchDepth: "basic",
+        includeAnswer: true
+      }
+    });
+    context.fetch = async (url, options = {}) => {
+      fetchCalls.push({
+        url,
+        options,
+        body: JSON.parse(options.body || "{}")
+      });
+
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            answer: "A browser work agent combines search, page context, tasks, and safe browser actions.",
+            results: [
+              {
+                title: "Browser agent overview",
+                url: "https://example.com/browser-agent?utm_source=test",
+                content: "Short result snippet about browser work agents.",
+                score: 0.91,
+                raw_content: "SHOULD_NOT_APPEAR"
+              }
+            ]
+          };
+        }
+      };
+    };
+
+    const result = await context.runAgentWebSearch({
+      query: " browser   work agent ",
+      requestPermission: true
+    });
+    const call = fetchCalls[0];
+
+    assertEqual(result.status, "completed", "Configured web search should complete");
+    assertEqual(result.provider, "tavily", "Configured web search should use Tavily first");
+    assertEqual(call.url, "https://api.tavily.com/search", "Tavily search should use the search endpoint");
+    assertEqual(call.options.method, "POST", "Tavily search should use POST");
+    assertEqual(call.options.headers.Authorization, "Bearer tvly-test-key", "Tavily search should send the configured key as Authorization");
+    assertEqual(call.body.query, "browser work agent", "Web search should send only the normalized user query");
+    assertEqual(call.body.max_results, 3, "Web search should respect capped max results");
+    assertEqual(call.body.include_raw_content, false, "Web search should not request raw content by default");
+    assertEqual(call.body.include_images, false, "Web search should not request images by default");
+    assertEqual(result.privacy.sentTabData, false, "Completed web search should not send tab data");
+    assertEqual(result.privacy.sentPageText, false, "Completed web search should not send page text");
+    assertEqual(result.privacy.sentFullUrls, false, "Completed web search should not send browser full URLs");
+    assertEqual(result.results.length, 1, "Web search should expose sanitized results");
+    assertEqual(result.results[0].hostname, "example.com", "Search result should expose safe hostname metadata");
+    assert(!result.results[0].raw_content, "Search result must not keep raw content");
+  } finally {
+    context.chrome.storage.local.get = oldGet;
+    context.fetch = oldFetch;
+    context.chrome.permissions.contains = oldContains;
+  }
 });
 
 test("DeepSeek smoke test stays inside private beta provider guardrails", () => {
@@ -1941,7 +4068,11 @@ test("clear local data removes sensitive local keys and resets run state", async
     "tabmosaic.errorLog",
     "tabmosaic.duplicateSafetyAudit",
     "tabmosaic.savedWorkspaces",
-    "tabmosaic.sidebarContext"
+    "tabmosaic.sidebarContext",
+    "tabmosaic.sidebarMode",
+    "tabmosaic.agentTasks",
+    "tabmosaic.savedCollections",
+    "tabmosaic.searchSettings"
   ];
 
   assertDeepEqual(removedKeys.sort(), expectedKeys.sort(), "Clear local data keys");

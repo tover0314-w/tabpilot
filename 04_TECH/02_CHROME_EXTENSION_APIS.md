@@ -35,10 +35,25 @@
 
 用途：
 
-- 监听 toolbar icon 点击。
-- 触发一键整理。
+- 打开 compact `default_popup` toolbar action menu。
+- 菜单动作通过 `chrome.runtime.sendMessage` 交给 background service worker。
+- Smart Organize 触发一键整理；Vertical Tabs / Current Page Chat 切换 sidebar 模式；Dashboard 打开 dashboard page。
 
-重要：如果配置了 `default_popup`，点击 action 时不会触发 `action.onClicked`。因此 P0 不建议使用传统 popup 作为主入口。
+CONFIRMED BY USER: P0 现在允许 `default_popup`，但它必须是极简动作菜单，不是 settings page。Chrome 配置 `default_popup` 后不会触发 `action.onClicked`，所以所有真实动作必须由 popup 发送 `RUN_TOOLBAR_ACTION` 给 background 处理。
+
+CONFIRMED BY IMPLEMENTATION:
+
+```text
+- popup.html exposes only the confirmed compact action set:
+  Smart Organize, Vertical Tabs, Current Page Chat, Dashboard.
+- popup.js sends `RUN_TOOLBAR_ACTION` to the background service worker with active tab/window hints.
+- popup.js does not call `chrome.sidePanel.open`, `chrome.tabs.group`, or any AI/settings workflow directly.
+- background.js keeps a `TOOLBAR_ACTIONS` allowlist and rejects unsupported toolbar actions.
+- Dashboard opens as a dashboard page instead of running organize.
+- Smart Organize opens Sidebar and then runs organize through the `toolbar-menu` source.
+- Vertical Tabs / Current Page Chat open Sidebar through background and do not start organize.
+- `tools/extension_smoke_test.js` has a regression guard for this contract.
+```
 
 ## 5. scripting + activeTab
 
@@ -50,6 +65,7 @@
 
 - 默认不申请 `<all_urls>`。
 - 使用 `activeTab` 让用户点击/触发后获取当前 tab 临时权限。
+- current-group / selected-tabs 页面问答使用 optional `http://*/*` / `https://*/*`，只在用户主动询问后按具体站点临时请求，回答后释放。
 - 只读取 visible/readable content，不读取表单值、密码字段、storage。
 
 ## 6. storage API
@@ -94,7 +110,23 @@ P0 host permissions：
 ]
 ```
 
-用途：仅用于用户在 Dashboard 中开启 DeepSeek AI 分类后调用 DeepSeek API。请求格式保持 OpenAI-compatible；任意其他 host 需要后续 host-permission confirmation。
+用途：DeepSeek 默认 provider。请求格式保持 OpenAI-compatible；开源/BYOK 方向确认支持用户自配模型/API key。其他 provider host 或 local model endpoint 不放进 required host permissions，而是在用户保存/测试配置时请求对应 origin。
+
+Optional host permissions：
+
+```json
+[
+  "http://*/*",
+  "https://*/*"
+]
+```
+
+用途：
+
+```text
+1. 用户主动发起 current-group / selected-tabs 页面内容问答或内容辅助重分组时，按具体站点临时请求页面读取权限。权限请求由 Sidebar 在 tool card 之后触发，读取完成后释放；拒绝授权时继续返回 metadata / skipped answer。
+2. 用户在 Dashboard Settings 配置非默认 BYOK provider 时，请求该 provider 的具体 origin，例如 https://api.example.com/* 或 http://localhost/*。拒绝授权时不保存启用该 provider。
+```
 
 ### 7.1 当前 UI 权限解释
 
@@ -107,10 +139,11 @@ Dashboard -> Settings -> Permissions & Data Use explains each current permission
 - sidePanel: sidebar control center after toolbar click
 - storage: local settings, rules, Undo/Restore snapshots, optional local API key
 - scripting + activeTab: user-triggered current-page visible text summary
-- https://api.deepseek.com/*: optional DeepSeek classification with user-provided API key
+- optional http/https site access: user-triggered group/selected-tabs visible text read, released after answer; custom BYOK provider origins requested explicitly before save/test
+- https://api.deepseek.com/*: default DeepSeek provider host when the user enables a local API key
 ```
 
-The UI also states that TabMosaic does not request:
+The UI also states that all-URL access is not granted by default, and that TabMosaic does not request:
 
 ```text
 all URLs
@@ -139,4 +172,4 @@ browsingData
 - P0 默认不处理 incognito。
 - P0 默认整理当前浏览器所有普通窗口。
 - `downloads` / `bookmarks` / `history` 权限不进入 P0。
-- `<all_urls>` 仅作为 P1/Pro multi-tab summary 的可选权限候选，进入前需要再次确认。
+- optional `http://*/*` / `https://*/*` 已确认用于用户触发的 group/selected-tabs 内容读取；默认不授予，按具体站点请求，回答后释放。

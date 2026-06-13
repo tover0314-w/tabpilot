@@ -10,6 +10,9 @@ const PACKAGE_PREFIX = "tabmosaic-ai-extension";
 const REQUIRED_ZIP_ENTRIES = [
   "manifest.json",
   "background.js",
+  "provider_registry.js",
+  "popup.html",
+  "popup.js",
   "i18n.js",
   "diagnostics.js",
   "sidepanel.html",

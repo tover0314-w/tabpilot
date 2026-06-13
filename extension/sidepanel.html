@@ -10,7 +10,7 @@
     <main class="app-shell tab-agent-shell">
       <header class="agent-header">
         <div>
-          <p class="eyebrow">TabMosaic AI</p>
+          <p class="eyebrow">TabMosaic</p>
         </div>
         <button
           id="dashboardTopButton"
@@ -21,7 +21,7 @@
           data-i18n-title="openDashboard"
           data-i18n-aria-label="openDashboard"
         >
-          ⊟
+          ▦
         </button>
       </header>
 
@@ -38,6 +38,30 @@
       </section>
 
       <section class="agent-thread" aria-label="Tab agent conversation" data-i18n-aria-label="tabAgentConversation">
+        <section id="verticalTabsPanel" class="vertical-tabs-panel" hidden>
+          <header class="vertical-tabs-header">
+            <div>
+              <p class="eyebrow" data-i18n="verticalTabsHeading">Vertical Tabs</p>
+              <h2 data-i18n="verticalTabsDescription">Browse tabs by window and group.</h2>
+            </div>
+            <div class="vertical-tabs-actions">
+              <button id="verticalTabsOrganizeButton" class="mini-button" type="button" data-i18n="smartOrganize">Smart Organize</button>
+              <button id="verticalTabsChatButton" class="mini-button" type="button" data-i18n="chatAssistant">Chat</button>
+            </div>
+          </header>
+          <label class="vertical-tabs-search">
+            <span data-i18n="searchTabs">Search tabs</span>
+            <input
+              id="verticalTabsSearch"
+              type="search"
+              placeholder="Search tabs..."
+              data-i18n-placeholder="verticalTabsSearchPlaceholder"
+              autocomplete="off"
+            />
+          </label>
+          <div id="verticalTabsList" class="vertical-tabs-list" aria-live="polite"></div>
+        </section>
+
         <section class="agent-message agent-chat-message agent-primary-message" aria-label="Tab agent latest message" data-i18n-aria-label="tabAgentLatestMessage" hidden>
           <section id="statusPanel" class="status-panel agent-message-system" aria-live="polite"></section>
           <div id="metricsGrid" class="metrics-grid agent-result-message"></div>
@@ -53,20 +77,41 @@
       </section>
 
       <section class="agent-composer-section">
-        <div id="agentContextBar" class="agent-context-bar" role="status" aria-live="polite">
-          <span class="agent-context-dot" aria-hidden="true"></span>
-          <span id="agentContextLabel" class="agent-context-label" data-i18n="contextCurrentTab">Current tab</span>
-          <strong id="agentContextName" class="agent-context-name" data-i18n="contextNoTab">No active tab</strong>
-        </div>
         <form id="chatForm" class="chat-form agent-composer">
-          <input
+          <div id="agentContextBar" class="agent-context-bar" role="status" aria-live="polite">
+            <span class="agent-context-dot" aria-hidden="true"></span>
+            <span id="agentContextLabel" class="agent-context-label" data-i18n="contextCurrentTab">Current tab</span>
+            <strong id="agentContextName" class="agent-context-name" data-i18n="contextNoTab">No active tab</strong>
+          </div>
+          <textarea
             id="chatInput"
-            type="text"
             placeholder="Ask about this tab or your tabs..."
             data-i18n-placeholder="chatPlaceholder"
             autocomplete="off"
-          />
-          <button id="chatSendButton" class="secondary-button" type="submit" data-i18n="ask">Ask</button>
+            rows="1"
+          ></textarea>
+          <button
+            id="pageRegionButton"
+            class="secondary-button composer-tool-button"
+            type="button"
+            title="Add page region context"
+            aria-label="Add page region context"
+            data-i18n-title="toolCardSelectPageRegion"
+            data-i18n-aria-label="toolCardSelectPageRegion"
+          >
+            <span aria-hidden="true">+</span>
+          </button>
+          <button
+            id="chatSendButton"
+            class="secondary-button"
+            type="submit"
+            title="Ask"
+            aria-label="Ask"
+            data-i18n-title="ask"
+            data-i18n-aria-label="ask"
+          >
+            <span aria-hidden="true">↑</span>
+          </button>
         </form>
         <div class="prompt-row" aria-label="Suggested refinements" data-i18n-aria-label="suggestedRefinements" hidden>
           <button class="prompt-chip" type="button" data-prompt="GitHub PR to Code Review" data-i18n="promptGithubPr">GitHub PR</button>

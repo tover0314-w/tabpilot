@@ -11,6 +11,8 @@ const SHOULD_RUN_SCREENSHOTS = process.argv.includes("--screenshots");
 
 const syntaxTargets = [
   "extension/background.js",
+  "extension/provider_registry.js",
+  "extension/popup.js",
   "extension/i18n.js",
   "extension/diagnostics.js",
   "extension/sidepanel.js",
@@ -22,10 +24,13 @@ const syntaxTargets = [
   "tools/qa_seed_tabs.js",
   "tools/generate_extension_assets.js",
   "tools/capture_ui_screenshots.js",
+  "tools/capture_real_page_chat_screenshot.js",
   "tools/build_store_screenshots.js",
   "tools/deepseek_smoke_test.js",
   "tools/write_private_beta_ai_config.js",
   "tools/secret_scan.js",
+  "tools/public_repo_audit.js",
+  "tools/provider_registry_check.js",
   "tools/issue_form_smoke_test.js",
   "tools/verify_release_package.js",
   "tools/beta_readiness_check.js",
@@ -42,7 +47,9 @@ function main() {
   }
 
   runStep("Extension smoke", process.execPath, ["tools/extension_smoke_test.js"]);
+  runStep("Provider registry check", process.execPath, ["tools/provider_registry_check.js"]);
   runStep("Issue form smoke", process.execPath, ["tools/issue_form_smoke_test.js"]);
+  runStep("Public repo audit", process.execPath, ["tools/public_repo_audit.js"]);
 
   if (SHOULD_RUN_DEEPSEEK || SHOULD_RUN_DEEPSEEK_FIXTURE) {
     const args = ["tools/deepseek_smoke_test.js"];

@@ -19,6 +19,8 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Exact and tracking-parameter duplicates are closed only when the tab itself is safe to close.
 - Restore Closed reopens safely closed duplicate tabs from a local restore snapshot.
 - Review-only duplicate candidates show candidate tabs in the side panel.
+- Advanced duplicate review now recognizes same-object candidates for Google Workspace, Google Drive, Dropbox, YouTube, GitHub PR/Issue/Discussion/Actions/Commit, Linear, Jira Cloud, Figma, Canva, Miro, Coda, and Notion, while different search queries and different objects are not treated as duplicates.
+- Advanced duplicate review also recognizes same-host normalized-title candidates as review-only `title-review` groups with generic labels.
 - Review candidates can be marked `Keep All` or closed one tab at a time only after a confirmation prompt.
 - Chat previews local tab actions before applying them.
 - The bottom composer can directly run safe commands such as summarize current page, organize again, Undo, Restore Closed, and Open Dashboard.
@@ -34,8 +36,10 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Chat Refine can create local rules like `GitHub PR to Code Review` or `把 docs.google.com 放到文档笔记`.
 - Chat Refine still accepts first English/Chinese local commands for current-tab move, domain rule creation, and group rename, but visible UI responses default to English in the MVP.
 - User rules apply before AI and built-in rules on future organize runs.
-- Current-tab page chat reads visible page text only after a user asks from the sidebar composer, asks for an extra confirmation on sensitive pages, and generates a local extractive summary or answer.
-- The composer can answer `ask page: ...` questions from the current page with local visible-text matching after the same current-page privacy flow.
+- Current-tab page chat reads visible page text only after a user asks from the sidebar composer, asks for an extra confirmation on sensitive pages, and uses DeepSeek Page Agent when a local key is available.
+- Current-tab page chat includes safe site-skill hints for common work pages such as GitHub PRs/issues/CI runs, cloud project consoles, Linear/Jira issues, design files, and collaborative docs, so Page Agent answers can use the right reading strategy without receiving object paths, IDs, or full URLs.
+- The composer can answer `ask page: ...` and natural current-page questions from the current page after the same current-page privacy flow; if DeepSeek fails, it falls back to local visible-text matching.
+- The composer can answer from one user-selected page region with `select region` / `ask region: ...`; TabMosaic highlights the active page, reads only the clicked region's visible text and safe lightweight structure, includes bounded table headers/rows through the same redaction path, renders a session-only tool card, and does not capture screenshots in this first slice.
 - Open Dashboard shows a minimal glass Smart Groups page with a top bar, compact navigation, smart group cards, and folded Duplicate Center.
 - Dashboard default page no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area.
 - Dashboard Smart Groups filter chips can show all groups, AI-source groups, or rule-source groups.
@@ -43,14 +47,20 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 - Dashboard Smart Groups can apply title/color edits back to real Chrome native groups.
 - Dashboard Smart Groups can move a tab into another existing group in the same window, with Undo available; the move control is folded/contextual by default.
 - Dashboard Smart Groups show local tab rows from the latest sanitized run snapshot when group membership is available, with folded `+ N tabs` rows that expand on demand.
+- Dashboard Smart Group tab rows can be selected in the same window and handed to the Sidebar as a `selected_tabs` chat context; page text is still read only after the user asks in the Sidebar.
 - Dashboard Duplicate Center can expand duplicate groups and focus existing duplicate tabs for review without closing anything.
 - Side panel and Dashboard organize errors show a safe-state note that no tabs were moved or closed, plus a simple retry/diagnostics next step.
 - Dashboard keeps unwired design-prototype features, Saved Workspaces, Auto Organize, Settings, and Save Workspace out of the default UI so users see only working MVP actions.
 - Hidden private-beta Settings paths still support diagnostics, local reset, and AI connection tooling when needed for testing.
+- BYOK provider presets and known host labels live in `provider_registry.js`, shared by Dashboard and background.
+- Provider presets include DeepSeek, OpenAI, OpenRouter, Gemini, Groq, Together AI, Mistral AI, xAI, Perplexity, Cerebras, Fireworks AI, DeepInfra, SiliconFlow, Kimi / Moonshot, MiniMax, DashScope / Qwen, LM Studio, and Ollama.
+- Choosing the Ollama or LM Studio preset shows a compact local setup guide before testing the localhost OpenAI-compatible endpoint.
+- Test AI Connection fills model suggestions from the provider's `/models` response when available; fallback synthetic chat checks do not invent suggestions and still send no tab/page data.
+- Test AI Connection also shows compact diagnostics: provider label, `/models` vs synthetic ping, model suggestion count, local vs remote endpoint, Authorization status, and short next-step troubleshooting when the configured model or provider needs attention.
 - Local private-beta DeepSeek config can be generated from `.env.local` into ignored `extension/private-beta-ai-settings.json` for unpacked-extension AI testing without manual Settings entry.
 - Side panel and Dashboard show whether AI classification was applied, fell back, or stayed on local rules.
 - Side panel and Dashboard show how many AI groups were suggested in the latest organize run.
-- AI connection testing and AI classification use request timeouts; classification timeout or provider failure falls back to local rules.
+- AI connection testing and AI classification use request timeouts; classification timeout or provider failure falls back to local rules. Connection testing first tries a provider model-list endpoint, then uses a fixed synthetic chat ping only when model listing is unavailable.
 - Hidden private-beta Settings explains each Chrome permission and what data it supports.
 - Hidden private-beta Settings keeps provider details, privacy defaults, permissions, diagnostics, and local reset under folded sections.
 - Hidden private-beta Settings can copy a redacted local diagnostic snapshot for beta bug reports.
@@ -63,19 +73,21 @@ This is the first runnable Chrome Extension slice for the TabMosaic AI harness.
 
 Protected tabs are never closed: active, pinned, audible, incognito, internal pages, and non-restorable URLs.
 
-Hash/query/same-page review candidates are never auto-closed.
+Hash/query/same-page/title review candidates are never auto-closed.
 
-Local chat commands do not call AI, read page body content, or close tabs. Open-ended and follow-up tab-management questions can call the DeepSeek Agent when a local DeepSeek key is available; that flow sends minimized tab metadata plus short sanitized chat context, and still does not read page body content, send full URLs, or close tabs.
+Local tab-management commands do not read page body content or close tabs. Open-ended and follow-up tab-management questions can call the DeepSeek metadata Agent when a local DeepSeek key is available; that flow sends minimized tab metadata plus short sanitized chat context, and still does not read page body content, send full URLs, or close tabs. Current-page questions use the separate DeepSeek Page Agent only after a user-triggered current-page request and any sensitive-page confirmation.
 
-Dashboard apply currently edits group title/color, focuses existing tabs, supports same-window tab moves into existing groups, supports lightweight drag/drop tab assignment between existing groups in the same window, and exposes compact Undo / Restore Closed actions when available. Hidden private-beta workspace snapshot code remains available for tests, but Saved Workspaces are not shown in the default Dashboard. It does not close tabs directly, create new groups manually, restore saved workspaces, sync cloud data, or move tabs across windows.
+Dashboard apply currently edits group title/color, focuses existing tabs, supports same-window tab moves into existing groups, supports lightweight drag/drop tab assignment between existing groups in the same window, can hand same-window selected tab rows to the Sidebar Agent, and exposes compact Undo / Restore Closed actions when available. Hidden private-beta workspace snapshot code remains available for tests, but Saved Workspaces are not shown in the default Dashboard. It does not close tabs directly, create new groups manually, restore saved workspaces, sync cloud data, read page text from Dashboard, or move tabs across windows.
 
-Dashboard design-prototype features that are not wired yet: manual new groups, workspace restore/history management, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
+Dashboard design-prototype features that are not wired yet: manual new groups, workspace restore/history management, workspace chat, billing and usage, templates, broader multi-tab chat polish beyond the selected-tabs first slice, local model install automation/model picker, cloud sync, and account login.
 
-Current tab summaries and current-page questions do not call AI yet, do not upload page content, and require an extra confirmation before reading sensitive pages.
+Current tab summaries and current-page questions can call DeepSeek Page Agent when a local key is configured. They upload only the current tab's visible extracted text plus up to 10 local page-chat Q/A turns after a user request, do not send full URLs/query/hash or cloud-store summaries, and require an extra confirmation before reading sensitive pages. Common work pages may include a generic site-skill hint, but not object paths, owner/repo names, issue keys, run numbers, design/document IDs, or full URLs. Selected page-region questions use the same Page Agent boundary, but the payload is scoped to the clicked page block and safe structure labels only; screenshots remain future work.
 
 AI classification sends tab title, hostname, path, and tab state only. It does not send page body or full URL.
 
-AI connection testing calls the configured `/models` endpoint only. It does not send tab data, page text, full URLs, or a request body.
+AI connection testing first calls the configured provider model-list endpoint. If the provider does not expose a standard model-list endpoint, it sends one fixed synthetic chat ping (`Reply with OK.`). It does not send tab data, page text, full URLs, chat history, rules, workspace snapshots, or real user content.
+
+AI connection diagnostics reuse that same request path. They do not send an extra probe and do not expose API keys.
 
 AI classification timeout fallback does not send additional data or change duplicate-close behavior; the browser is organized with local rules and the AI status explains the fallback.
 
@@ -83,13 +95,13 @@ Clear AI Key does not close tabs, move tabs, clear local rules, clear recent res
 
 Clear Local Data does not close tabs, move tabs, delete browser history, delete cookies, or touch cloud account data.
 
-Permission explanations do not add new permissions. The extension still does not request all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
+Permission explanations distinguish default grants from temporary site access. The extension does not grant all-URL access by default; user-triggered group/selected-tabs page questions may request specific site access and release it after the answer. It still does not request history, bookmarks, cookies, webRequest, browsingData, or incognito access.
 
 Beta diagnostics are copied locally and exclude URLs, tab titles, page text, hostnames, rule patterns, group names, emails, bearer tokens, and API keys.
 
 Local error summaries are stored only in `chrome.storage.local`, capped to recent entries, and included in copied diagnostics only after redaction.
 
-Duplicate close safety audit entries are stored only as counts and whitelisted event types. They do not include URLs, tab titles, hostnames, page text, rule patterns, group names, or API keys.
+Duplicate close safety audit entries are stored only as counts and whitelisted event types. They do not include URLs, tab titles, hostnames, page text, rule patterns, group names, or API keys. Internal title duplicate hashes are stripped from the stored current run snapshot.
 
 Beta feedback templates are copied locally and do not submit data automatically.
 
@@ -132,7 +144,7 @@ Run the no-dependency smoke test from the repository root:
 node tools/extension_smoke_test.js
 ```
 
-It checks manifest permissions, English-only visible extension page copy, chat-first Tab Agent UI, context-aware composer state, ephemeral chat thread rendering, stale draft button guards, direct composer commands including local workspace save, local capability/help answers, local next-step guidance, current-page chat summary/question rendering, latest-run read-only answers, duplicate-review/closed-tab local answers, active/protected/read-later local answers, local tab search/focus, minimal glass Dashboard layout, Dashboard Smart Groups filters, Dashboard-to-Sidebar context linking, Dashboard local workspace save guardrails, Dashboard tab focus, Dashboard same-window tab move and drag/drop guardrails, Dashboard Undo/Restore guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat action parsing, user-rule priority, duplicate safety policy, 180-tab synthetic local planning guard, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
+It checks manifest permissions, English-only visible extension page copy, chat-first Tab Agent UI, context-aware composer state, ephemeral chat thread rendering, stale draft button guards, direct composer commands including local workspace save, local capability/help answers, local next-step guidance, current-page chat summary/question rendering, latest-run read-only answers, duplicate-review/closed-tab local answers, active/protected/read-later local answers, local tab search/focus, minimal glass Dashboard layout, Dashboard Smart Groups filters, Dashboard-to-Sidebar context linking including selected-tabs context, Dashboard local workspace save guardrails, Dashboard tab focus, Dashboard same-window tab move and drag/drop guardrails, Dashboard Undo/Restore guardrails, permission explanation alignment, redacted local error logs, local duplicate safety audit counts, redacted beta diagnostics and feedback templates, Chat action parsing, user-rule priority, duplicate safety policy, 180-tab synthetic local planning guard, AI output validation, AI connection testing without tab data, AI classification timeout fallback, AI key clearing, and local data deletion.
 
 Release package verification checks the generated zip, checksum, package manifest, required package entries, and forbidden entries such as env files, source maps, `node_modules`, `.DS_Store`, `__MACOSX`, and `.git` metadata against the current manifest version.
 
@@ -182,6 +194,8 @@ Optional DeepSeek/OpenAI-compatible request-format provider smoke test:
 ```bash
 node tools/deepseek_smoke_test.js
 node tools/deepseek_smoke_test.js --classify-fixture
+node tools/deepseek_smoke_test.js --page-agent-fixture
+node tools/deepseek_smoke_test.js --page-agent-10-turn-fixture
 ```
 
-The default provider test calls `/models` only and does not send tab data. The fixture mode sends synthetic test tabs only.
+The default provider test calls DeepSeek `/models` only and does not send tab data. Dashboard connection testing for broader BYOK providers may fall back to a fixed synthetic chat ping when model listing is unavailable. The classification fixture sends synthetic test tabs only. The Page Agent fixtures send synthetic current-page visible text only and do not read real browser pages; the 10-turn fixture scores each turn and fails below the quality threshold.

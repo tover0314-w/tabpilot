@@ -13,6 +13,7 @@
   },
   "action": {
     "default_title": "__MSG_actionTitle__",
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -30,6 +31,10 @@
   ],
   "host_permissions": [
     "https://api.deepseek.com/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
   ],
   "background": {
     "service_worker": "background.js",

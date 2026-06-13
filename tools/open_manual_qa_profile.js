@@ -1,5 +1,6 @@
 const childProcess = require("child_process");
 const fs = require("fs");
+const http = require("http");
 const { createRequire } = require("module");
 const net = require("net");
 const os = require("os");
@@ -11,8 +12,35 @@ const ROOT_DIR = path.resolve(__dirname, "..");
 const EXTENSION_DIR = path.join(ROOT_DIR, "extension");
 const ARTIFACT_DIR = path.join(ROOT_DIR, "artifacts", "manual-qa-profiles");
 const REAL_PROFILE_QA_TEMPLATE_PATH = path.join(ROOT_DIR, "05_PROJECT", "12_REAL_PROFILE_QA_RESULT_TEMPLATE.md");
+const CONTEXT_FIXTURE_HOST = "tabmosaic-manual.test";
+const CONTEXT_FIXTURE_PROMPT =
+  "What decisions or next steps are these pages asking for? Mention ORBITALPLANNING, BUGLANTERN, and GLASSHARBOR if you can read the fixture pages.";
+const CONTEXT_FIXTURE_PAGES = [
+  {
+    path: "/product-roadmap",
+    title: "Manual QA Product Roadmap",
+    heading: "Manual QA Product Planning",
+    body:
+      "ORBITALPLANNING marks the product roadmap page. It covers PRD decisions, MVP requirements, user stories, launch sequencing, and private beta acceptance criteria for the tab agent."
+  },
+  {
+    path: "/release-checklist",
+    title: "Manual QA Release Checklist",
+    heading: "Manual QA Release Checks",
+    body:
+      "BUGLANTERN marks the release QA page. It covers regression testing, Chrome Web Store blockers, privacy review, site-access prompts, and extension runtime validation."
+  },
+  {
+    path: "/interface-review",
+    title: "Manual QA Interface Review",
+    heading: "Manual QA Interface Review",
+    body:
+      "GLASSHARBOR marks the interface review page. It covers Sidebar chat polish, dashboard simplification, glass UI quality, composer context chips, and selected-tabs conversation UX."
+  }
+];
 const IS_DRY_RUN = process.argv.includes("--dry-run");
 const IS_SELF_TEST = process.argv.includes("--self-test");
+const IS_KEEP_FIXTURE_SERVER = process.argv.includes("--keep-fixture-server");
 
 class SkipError extends Error {}
 
@@ -41,6 +69,10 @@ async function main() {
   const extensionDir = path.join(runDir, "extension");
   const realProfileQaTemplate = fs.readFileSync(REAL_PROFILE_QA_TEMPLATE_PATH, "utf8");
   const port = await findFreePort();
+  const contextFixtureServer = IS_DRY_RUN ? null : await startContextFixtureServer();
+  const contextFixtureUrls = contextFixtureServer
+    ? CONTEXT_FIXTURE_PAGES.map((page) => `${contextFixtureServer.origin}${page.path}`)
+    : CONTEXT_FIXTURE_PAGES.map((page) => `http://${CONTEXT_FIXTURE_HOST}:<port>${page.path}`);
 
   if (IS_DRY_RUN) {
     printPlan({
@@ -53,6 +85,8 @@ async function main() {
       sidepanelUrl: "chrome-extension://<extension-id>/sidepanel.html",
       dashboardUrl: "chrome-extension://<extension-id>/dashboard.html",
       realProfileQaTemplatePath: REAL_PROFILE_QA_TEMPLATE_PATH,
+      contextFixtureUrls,
+      keepFixtureServer: IS_KEEP_FIXTURE_SERVER,
       dryRun: true
     });
     return;
@@ -68,6 +102,7 @@ async function main() {
       `--remote-debugging-port=${port}`,
       `--disable-extensions-except=${extensionDir}`,
       `--load-extension=${extensionDir}`,
+      `--host-resolver-rules=MAP ${CONTEXT_FIXTURE_HOST} 127.0.0.1`,
       "--no-first-run",
       "--no-default-browser-check",
       "about:blank"
@@ -103,7 +138,9 @@ async function main() {
         extensionId,
         sidepanelUrl,
         dashboardUrl,
-        realProfileQaTemplate
+        realProfileQaTemplate,
+        contextFixtureUrls,
+        keepFixtureServer: IS_KEEP_FIXTURE_SERVER
       })
     );
 
@@ -111,6 +148,11 @@ async function main() {
     for (const url of urls) {
       await createTarget(port, url);
     }
+    for (const url of contextFixtureUrls) {
+      await createTarget(port, url);
+    }
+
+    await delay(1200);
 
     await createTarget(port, sidepanelUrl);
     await createTarget(port, dashboardUrl);
@@ -118,6 +160,9 @@ async function main() {
     if (IS_SELF_TEST) {
       const targets = await fetchJson(port, "/json/list").catch(() => []);
       assertTargetOpened(targets, checklistUrl, "Manual QA checklist");
+      for (const fixtureUrl of contextFixtureUrls) {
+        assertTargetOpened(targets, fixtureUrl, "Manual QA context fixture");
+      }
       assertTargetOpened(targets, sidepanelUrl, "sidepanel page");
       assertTargetOpened(targets, dashboardUrl, "dashboard page");
       assertChecklistHtml(checklistPath);
@@ -133,16 +178,27 @@ async function main() {
       sidepanelUrl,
       dashboardUrl,
       realProfileQaTemplatePath: REAL_PROFILE_QA_TEMPLATE_PATH,
+      contextFixtureUrls,
+      keepFixtureServer: IS_KEEP_FIXTURE_SERVER,
       dryRun: false
     });
 
     if (IS_SELF_TEST) {
       chrome.kill();
       await delay(500);
+      await stopContextFixtureServer(contextFixtureServer?.server);
       fs.rmSync(runDir, { recursive: true, force: true });
       console.log("PASS self-test closed and cleaned up disposable QA profile");
+    } else {
+      if (IS_KEEP_FIXTURE_SERVER) {
+        await waitForFixtureServerShutdown(contextFixtureServer?.server);
+      } else {
+        await stopContextFixtureServer(contextFixtureServer?.server);
+      }
     }
   } catch (error) {
+    await stopContextFixtureServer(contextFixtureServer?.server);
+
     if (chromeLog) {
       console.error("Chrome log:");
       console.error(chromeLog.trim());
@@ -165,16 +221,25 @@ function printPlan(details) {
   console.log(`extensionDir=${details.extensionDir}`);
   console.log(`remoteDebuggingPort=${details.port}`);
   console.log(`extensionId=${details.extensionId}`);
-  console.log(`seedTabs=${urls.length}`);
+  console.log(`seedTabs=${urls.length + (details.contextFixtureUrls?.length || 0)}`);
   console.log(`checklist=${details.checklistUrl}`);
   console.log(`sidepanel=${details.sidepanelUrl}`);
   console.log(`dashboard=${details.dashboardUrl}`);
   console.log(`realProfileQaTemplate=${details.realProfileQaTemplatePath}`);
+  console.log(`contextFixtureTabs=${details.contextFixtureUrls?.length || 0}`);
+  for (const fixtureUrl of details.contextFixtureUrls || []) {
+    console.log(`contextFixture=${fixtureUrl}`);
+  }
   console.log("");
   console.log("Safety:");
   console.log("- Uses a disposable Chrome profile under artifacts/.");
-  console.log("- Opens synthetic QA URLs only.");
+  console.log("- Opens synthetic QA URLs and local synthetic context pages only.");
   console.log("- Does not read your real Chrome profile, real browser tabs, or .env.local.");
+  if (details.keepFixtureServer) {
+    console.log("- Keeps the local fixture server alive only for tabmosaic-manual.test until you press Ctrl+C.");
+  } else {
+    console.log("- Stops the local fixture server after the fixture tabs load; rerun if those pages are refreshed.");
+  }
   console.log("");
   console.log("Next:");
   console.log("1. Start with the opened Manual QA Checklist tab.");
@@ -182,6 +247,9 @@ function printPlan(details) {
   console.log("3. Copy the QA result from the checklist before sharing feedback.");
   console.log("4. Close the QA browser when finished.");
   console.log(`5. Cleanup after closing: rm -rf ${JSON.stringify(path.dirname(details.profileDir))}`);
+  if (details.keepFixtureServer) {
+    console.log("6. Keep this terminal open while testing fixture links; press Ctrl+C when finished.");
+  }
 
   if (IS_SELF_TEST) {
     console.log("");
@@ -191,6 +259,7 @@ function printPlan(details) {
 
 function renderChecklistHtml(details) {
   const realProfileQaTemplateJson = serializeForScript(details.realProfileQaTemplate);
+  const contextFixturePromptJson = serializeForScript(CONTEXT_FIXTURE_PROMPT);
   const sections = [
     {
       title: "First Run",
@@ -233,6 +302,21 @@ function renderChecklistHtml(details) {
         "The AI move draft updates real Chrome native tab groups only after Apply and does not close tabs.",
         "Dashboard folded settings/details still expose fuller AI status when opened.",
         "AI classification falls back to local rules if the API fails."
+      ]
+    },
+    {
+      title: "Selected Tabs Page Context",
+      items: [
+        "Find the three Manual QA fixture pages: Product Roadmap, Release Checklist, and Interface Review.",
+        "From Dashboard Smart Groups, select at least two same-window Manual QA fixture tab rows and click Chat selected.",
+        "Ask a selected-tabs question that requires page content, such as: What decisions or next steps are these pages asking for?",
+        "When Chrome shows the native site-access prompt, allow access only for the tabmosaic-manual.test fixture origin.",
+        "Confirm the answer mentions fixture markers such as ORBITALPLANNING, BUGLANTERN, or GLASSHARBOR when access is allowed.",
+        "Confirm the tool card says Read selected tabs, shows read/skipped counts, and keeps restricted or denied pages as skipped reason chips.",
+        "Deny or close one site-access prompt and confirm the reply says site access not granted and suggests asking again after approval.",
+        "Ask a follow-up question and confirm it uses the same short local context without reading unrelated tabs.",
+        "Ask to regroup the selected tabs by actual page content and confirm Apply / Cancel appears before native groups change.",
+        "Confirm selected-tabs visible text, summaries, and follow-up context do not appear in diagnostics, feedback templates, local workspaces, or stored run snapshots."
       ]
     },
     {
@@ -424,6 +508,36 @@ function renderChecklistHtml(details) {
         margin-top: 10px;
         font-size: 12px;
       }
+      .fixture-guide {
+        border-color: #c9d8d3;
+        background: linear-gradient(145deg, #ffffff, #f4faf7);
+      }
+      .fixture-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .fixture-card {
+        display: grid;
+        gap: 3px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #ffffff;
+      }
+      .fixture-card span,
+      .fixture-prompt {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .fixture-prompt {
+        padding: 10px;
+        border: 1px dashed #b8c7c2;
+        border-radius: 7px;
+        background: #fbfffd;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
     </style>
   </head>
   <body>
@@ -454,6 +568,7 @@ function renderChecklistHtml(details) {
           <p><a href="${escapeAttribute(details.dashboardUrl)}">Open Dashboard Page</a></p>
         </div>
       </section>
+      ${renderContextFixtureGuide(details)}
       ${sections.map(renderChecklistSection).join("")}
       <section class="warning">
         <h2>Real Profile QA Template</h2>
@@ -468,6 +583,7 @@ function renderChecklistHtml(details) {
       const storageKey = "tabmosaic.manualQaChecklist.v1";
       const notesStorageKey = storageKey + ".notes";
       const realProfileTemplate = ${realProfileQaTemplateJson};
+      const contextFixturePrompt = ${contextFixturePromptJson};
       const checkboxes = Array.from(document.querySelectorAll("input[type='checkbox']"));
       const notes = document.querySelector("[data-qa-notes]");
       const report = document.querySelector("[data-report]");
@@ -532,6 +648,21 @@ function renderChecklistHtml(details) {
         }
       });
 
+      document.querySelector("[data-copy-context-prompt]")?.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(contextFixturePrompt);
+          status.textContent = "Selected-tabs context prompt copied.";
+        } catch {
+          report.value = contextFixturePrompt;
+          report.focus();
+          report.select();
+          const copied = document.execCommand("copy");
+          status.textContent = copied
+            ? "Selected-tabs context prompt copied."
+            : "Clipboard blocked. Select and copy the prompt manually.";
+        }
+      });
+
       function loadSavedState() {
         try {
           return JSON.parse(localStorage.getItem(storageKey) || "{}");
@@ -591,6 +722,44 @@ function renderChecklistHtml(details) {
   </body>
 </html>
 `;
+}
+
+function renderContextFixtureGuide(details) {
+  const fixtureServerCopy = details.keepFixtureServer
+    ? "Fixture links and refreshed fixture tabs stay available while this launcher process keeps running. Keep this terminal open, then press Ctrl+C after QA."
+    : "Use the fixture tabs opened by this launcher. If you refresh them or want live fixture links, rerun with --keep-fixture-server.";
+  const urlsByPath = new Map(
+    (details.contextFixtureUrls || []).map((url) => {
+      try {
+        return [new URL(url).pathname, url];
+      } catch {
+        return ["", url];
+      }
+    })
+  );
+
+  return `
+      <section class="fixture-guide">
+        <p class="eyebrow">Context Fixture Guide</p>
+        <h2>Selected-tabs page-content QA</h2>
+        <p>Use the already opened local synthetic fixture tabs when testing selected-tabs context. Select at least two fixture tab rows in Dashboard Smart Groups, click Chat selected, then ask the copied prompt from the Sidebar composer.</p>
+        <div class="toolbar">
+          <button type="button" data-copy-context-prompt>Copy Selected-Tabs Prompt</button>
+        </div>
+        <p class="fixture-prompt">${escapeHtml(CONTEXT_FIXTURE_PROMPT)}</p>
+        <div class="fixture-list">
+          ${CONTEXT_FIXTURE_PAGES.map((page) => {
+            const url = urlsByPath.get(page.path) || `http://${CONTEXT_FIXTURE_HOST}:<port>${page.path}`;
+            return `
+              <div class="fixture-card">
+                <a href="${escapeAttribute(url)}">${escapeHtml(page.title)}</a>
+                <span>${escapeHtml(page.body)}</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <p>Expected: after approving Chrome site access for <code>${escapeHtml(CONTEXT_FIXTURE_HOST)}</code>, the answer can mention <code>ORBITALPLANNING</code>, <code>BUGLANTERN</code>, and <code>GLASSHARBOR</code>. ${escapeHtml(fixtureServerCopy)}</p>
+      </section>`;
 }
 
 function renderChecklistSection(section, sectionIndex) {
@@ -688,6 +857,83 @@ function isBrandedGoogleChrome(chromePath) {
   return chromePath.includes("/Google Chrome.app/") && !chromePath.includes("Google Chrome for Testing");
 }
 
+function startContextFixtureServer() {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((request, response) => {
+      const url = new URL(request.url || "/", `http://${CONTEXT_FIXTURE_HOST}`);
+      const page = CONTEXT_FIXTURE_PAGES.find((item) => item.path === url.pathname);
+
+      if (!page) {
+        response.writeHead(404, {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store"
+        });
+        response.end("Not found");
+        return;
+      }
+
+      response.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      response.end(renderContextFixturePage(page));
+    });
+
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      resolve({
+        server,
+        port: address.port,
+        origin: `http://${CONTEXT_FIXTURE_HOST}:${address.port}`
+      });
+    });
+  });
+}
+
+function stopContextFixtureServer(server) {
+  if (!server) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    server.close(() => resolve());
+  });
+}
+
+async function waitForFixtureServerShutdown(server) {
+  if (!server) return;
+
+  console.log("");
+  console.log("Fixture server is still running for selected-tabs page-context QA.");
+  console.log("Keep this terminal open while using fixture links or refreshing fixture tabs.");
+  console.log("Press Ctrl+C here when you are done. The disposable QA browser stays open until you close it.");
+
+  await new Promise((resolve) => {
+    const shutdown = () => resolve();
+    process.once("SIGINT", shutdown);
+    process.once("SIGTERM", shutdown);
+  });
+
+  await stopContextFixtureServer(server);
+  console.log("PASS context fixture server stopped");
+}
+
+function renderContextFixturePage(page) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>${escapeHtml(page.title)}</title>
+    <meta name="description" content="${escapeHtml(page.body.slice(0, 160))}">
+  </head>
+  <body>
+    <main>
+      <h1>${escapeHtml(page.heading)}</h1>
+      <p>${escapeHtml(page.body)}</p>
+    </main>
+  </body>
+</html>`;
+}
+
 function findFreePort() {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -753,11 +999,26 @@ function assertChecklistHtml(checklistPath) {
     "READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no",
     "Keep completed real-profile notes private unless they are manually redacted.",
     "tabmosaic.manualQaChecklist.v1",
+    "Context Fixture Guide",
+    "Selected-tabs page-content QA",
+    "data-copy-context-prompt",
+    "Copy Selected-Tabs Prompt",
+    "Mention ORBITALPLANNING, BUGLANTERN, and GLASSHARBOR",
     "Tab Agent Chat UI",
     "Latest organize result appears as one assistant message bubble",
     "AI Verification",
     "Ask the Sidebar Agent to move Chrome extension docs tabs into Extension Planning",
     "The AI move draft updates real Chrome native tab groups only after Apply and does not close tabs.",
+    "Selected Tabs Page Context",
+    "Find the three Manual QA fixture pages",
+    "Manual QA fixture tab rows",
+    "tabmosaic-manual.test",
+    "ORBITALPLANNING",
+    "BUGLANTERN",
+    "GLASSHARBOR",
+    "Deny or close one site-access prompt and confirm the reply says site access not granted",
+    "Ask to regroup the selected tabs by actual page content and confirm Apply / Cancel appears before native groups change.",
+    "rerun with --keep-fixture-server",
     "Dashboard opens directly to Smart Groups",
     "Error States",
     "If organize fails, Sidebar says no tabs were moved or closed.",

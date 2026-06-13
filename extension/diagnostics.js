@@ -11,7 +11,8 @@ const SAFE_SUMMARY_KEYS = [
   "skippedGroups",
   "undoAvailable",
   "closedTabsRestoreAvailable",
-  "aiClassificationStatus"
+  "aiClassificationStatus",
+  "aiClassificationProvider"
 ];
 
 export function buildDiagnosticSnapshot({

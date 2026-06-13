@@ -13,8 +13,8 @@ CONFIRMED BY IMPLEMENTATION:
 ```text
 - MV3 Chrome extension
 - English-only visible Sidebar/Dashboard UI for the MVP
-- one-click toolbar action without default_popup
-- side panel opens from the toolbar action
+- compact toolbar action menu with Smart Organize, Vertical Tabs, Current Page Chat, and Dashboard
+- Smart Organize opens the side panel and runs the organize pipeline
 - first-run privacy gate
 - all normal windows tab scan
 - Chrome native tab groups
@@ -29,7 +29,9 @@ CONFIRMED BY IMPLEMENTATION:
 - Sidebar local next-step guidance answer
 - Sidebar composer direct commands for current-page summary, organize, Undo, Restore Closed, and Dashboard
 - Sidebar current-page summary rendered as a chat message
-- Sidebar local current-page question answering rendered as a chat message
+- Sidebar current-page question answering rendered as a chat message, using DeepSeek Page Agent when local key is available and local visible-text fallback otherwise
+- Sidebar current-page chat keeps up to 10 local Q/A turns for follow-up resolution
+- Sidebar current-page natural follow-ups stay in page chat after the first page answer
 - Sidebar composer read-only answers for latest result, groups, duplicates, and AI status
 - Sidebar composer read-only answers for optimization / memory relief from the latest local organize result, rendered as an assistant message card with safe next-step buttons
 - Sidebar composer read-only answers for duplicate review queue and closed duplicate restore state
@@ -37,10 +39,10 @@ CONFIRMED BY IMPLEMENTATION:
 - Sidebar composer local tab search and focus existing tab
 - Sidebar open-ended fallback answer when DeepSeek is not enabled or no organize context exists
 - Sidebar DeepSeek metadata-only Agent fallback for open-ended tab-management answers after local commands/actions do not match
-- Sidebar DeepSeek metadata-only Agent safe action chips from a validated allowlist
+- Sidebar DeepSeek metadata-only Agent open answers as plain assistant bubbles with no automatic action chips
 - Sidebar DeepSeek metadata-only Agent validated `move_tabs` Apply/Cancel drafts for explicit regroup/move requests
 - local user rules and Rules & Memory
-- current-tab local extractive summary after user click, with sensitive-page confirmation
+- current-tab Page Agent after user click, with sensitive-page confirmation and local visible-text fallback
 - Dashboard Smart Groups and Duplicate Center as the default commercial UI
 - Dashboard Duplicate Center tab details and safe focus existing tab action
 - Chat-first Tab Agent side panel with message thread, compact actions, and bottom composer
@@ -56,10 +58,13 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard local workspace save/delete snapshot path remains available but hidden from the default UI
 - Dashboard compact Undo / Restore Closed actions
 - Sidepanel/Dashboard actionable safe organize error states
-- optional DeepSeek AI classification through OpenAI-compatible request format
-- optional DeepSeek metadata-only Agent answers through OpenAI-compatible request format
+- optional BYOK AI classification through OpenAI-compatible request format, defaulting to DeepSeek
+- optional BYOK metadata-only Agent answers through OpenAI-compatible request format
+- optional BYOK current-tab Page Agent answers through OpenAI-compatible request format after user-triggered page questions
+- optional BYOK selected-tabs/current-group Page Agent answers after user-triggered scoped page questions, with capped visible-text extraction, skipped reason chips, and session-only context
+- selected-tabs/current-group content-assisted regroup drafts that require Apply before changing native Chrome groups
 - local private-beta DeepSeek config injection from `.env.local` into ignored `extension/private-beta-ai-settings.json` for full-flow unpacked-extension testing without manual Settings entry
-- DeepSeek connection test without tab data
+- BYOK provider connection test without tab data
 - AI classification timeout fallback to local rules
 - AI classification status and suggested group count visible in Sidebar and Dashboard
 - Dashboard Clear AI Key
@@ -69,6 +74,7 @@ CONFIRMED BY IMPLEMENTATION:
 - standalone privacy policy draft marked DO NOT PUBLISH YET
 - standalone Chrome Web Store data disclosure draft marked DO NOT SUBMIT YET
 - mock-data Chrome Web Store screenshot drafts
+- mock-data 10-turn side panel chat screenshot for long-chat spacing review
 - GitHub private beta issue forms with privacy redlines
 ```
 
@@ -87,7 +93,7 @@ Verified:
 ```text
 - secret scan
 - JavaScript syntax checks
-- 42 extension smoke tests
+- 47 extension smoke tests
 - synthetic 180-tab local planning guard for classification/dedupe/sanitization
 - issue form smoke tests
 - Chrome runtime smoke with temporary Chrome for Testing profile and synthetic tabs
@@ -111,12 +117,16 @@ Verified:
 - Sidebar duplicate-review/closed-tab local answers in runtime smoke
 - Sidebar active/protected/read-later local answers in runtime smoke
 - Sidebar tab search and Open existing tab in runtime smoke
-- DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer, including safe action chips and a validated Apply/Cancel move draft
+- DeepSeek metadata-only Agent flow in runtime smoke through the real Sidebar composer, including plain open-answer bubbles and a validated Apply/Cancel move draft
 - DeepSeek metadata-only Agent payload minimization, invented-tab-id filtering, and destructive-action rejection in extension smoke
-- mock-data UI screenshot capture, including side panel result/chat states and Dashboard desktop/mobile states
-- disposable manual QA checklist coverage for optional DeepSeek Agent open-answer / move-draft checks
+- DeepSeek Page Agent payload minimization in extension smoke: current visible text only after user request, no full URL/query/hash, and best-effort secret redaction
+- DeepSeek Page Agent synthetic 10-turn current-page conversation fixture, with average score 9.8/10 and lowest turn 8.7/10
+- Sidebar 10-turn mock screenshot verifies long-chat messages sit near the context/composer without a large bottom gap
+- mock-data UI screenshot capture, including side panel result/current-page chat states and Dashboard desktop/mobile states
+- selected-tabs context tool-card runtime coverage and optional per-site access cleanup
+- disposable manual QA checklist coverage for optional BYOK Agent open-answer / move-draft checks plus selected-tabs page-context permission checks against local `tabmosaic-manual.test` fixture pages
 - mock-data Chrome Web Store screenshot drafts, generated as five 1280x800 local PNGs
-- disposable manual QA profile self-test with synthetic QA tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
+- disposable manual QA profile self-test with synthetic QA tabs, local context fixture tabs, current MVP Dashboard checklist coverage, and blank real-profile QA template copy control
 - real-profile QA result template exists, but completed real-profile QA is still pending
 - standalone privacy policy draft exists, but final policy URL / wording is still pending user confirmation
 - standalone Chrome Web Store data disclosure draft exists, but final data category checkboxes / Limited Use wording are still pending user confirmation
@@ -157,8 +167,7 @@ Verified:
 - local DeepSeek key is stored only in the temporary extension storage
 - real Sidebar composer submits an open-ended tab-management question
 - DeepSeek metadata-only Agent returns an assistant message card
-- relevant tab rows, safe action chips, and safe next-step suggestions render
-- clicking a safe action chip continues the same Sidebar chat thread
+- open-ended Agent answers render as plain assistant cards with no relevant tab rows or automatic action chips
 - DeepSeek returns a validated move draft for an explicit regroup request
 - clicking Apply moves matching synthetic tabs into a real native Chrome group without closing tabs
 - page text and full URLs are not read or sent
@@ -192,7 +201,8 @@ OPEN QUESTION / MANUAL QA REQUIRED:
 - Store screenshot drafts exist, but final screenshots and demo video are not approved.
 - Chrome Web Store data disclosure checkboxes and Limited Use wording are drafted but not confirmed.
 - Design-prototype features are not all wired yet: manual new groups, workspace restore/history management, group/workspace chat, billing and usage, templates, multi-tab chat, cloud sync, and account login.
-- Cloud AI page-content chat is not wired; current DeepSeek Agent answers use tab metadata only.
+- Real-profile selected-tabs/current-group page-context QA is not complete. The implemented path is user-triggered, capped, session-only, and covered by synthetic/runtime checks, but the browser-native optional site-access prompt still needs manual acceptance/denial testing in Chrome.
+- Persistent/cloud multi-tab knowledge is not built. Page-content context is not saved as workspace memory or synced to cloud in this beta.
 ```
 
 Manual QA source of truth:
@@ -232,9 +242,11 @@ node tools/open_manual_qa_profile.js --dry-run
 node tools/write_private_beta_ai_config.js
 node tools/open_manual_qa_profile.js --self-test
 node tools/open_manual_qa_profile.js
+# Recommended while testing selected-tabs fixture refresh/link behavior:
+node tools/open_manual_qa_profile.js --keep-fixture-server
 ```
 
-This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, and opens sidepanel/dashboard extension pages. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes for review before sharing plus the blank real-profile QA template for the next manual pass. The checklist includes Tab Agent chat UI, latest organize result as one assistant message bubble, optional DeepSeek Agent open-answer / move-draft checks, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`; if `tools/write_private_beta_ai_config.js` was run first, the copied local extension can use the ignored DeepSeek private-beta config. `--self-test` opens the disposable browser, verifies setup, checklist report controls, and the real-profile template copy control, then closes and removes the temporary profile automatically.
+This opens a temporary Chrome for Testing / Chromium profile, loads a copied unpacked extension, opens a local Manual QA Checklist, opens synthetic QA tabs, opens three local `tabmosaic-manual.test` context fixture pages, and opens sidepanel/dashboard extension pages. Checklist state and local QA notes are saved only in the disposable profile, and the page can copy a Markdown QA result with notes for review before sharing plus the blank real-profile QA template for the next manual pass. The checklist includes a Context Fixture Guide with fixture links and a copyable selected-tabs prompt, Tab Agent chat UI, latest organize result as one assistant message bubble, optional BYOK Agent open-answer / move-draft checks, selected-tabs page-context permission checks, AI status, sensitive-summary confirmation, Undo/Restore, Dashboard Smart Groups, Dashboard Duplicate Center, Dashboard tab focus/move/apply, safe error states, and privacy-output checks. It does not read the user's real Chrome profile, real browser tabs, or `.env.local`; if `tools/write_private_beta_ai_config.js` was run first, the copied local extension can use the ignored DeepSeek private-beta config. `--self-test` opens the disposable browser, verifies setup, local context fixture tabs, checklist report controls, Context Fixture Guide, and the real-profile template copy control, then closes and removes the temporary profile automatically. `--keep-fixture-server` keeps the local fixture server alive until Ctrl+C so fixture links and refreshed fixture tabs continue to work during selected-tabs page-context QA.
 
 For the real-profile path, print or open synthetic QA tabs:
 
@@ -260,6 +272,7 @@ Minimum pass criteria:
 - Undo works
 - Restore Closed works
 - Chat Refine previews before Apply
+- selected-tabs page context reads only after user question and handles Chrome site-access approval/denial clearly
 - Dashboard group title/color apply updates native tab groups
 - current-tab summary reads page body only after click
 - diagnostics and feedback template exclude sensitive data

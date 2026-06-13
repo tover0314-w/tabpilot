@@ -54,6 +54,32 @@
 - User Data FAQ: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
   - web browsing activity、Limited Use、用户数据处理说明。
 
+## Competitor / Reference Products
+
+- Monica homepage: https://monica.im/
+  - 用于调研 Monica 作为 all-in-one AI assistant 的公开功能面：AI chat、summary、writing、translation、search、image/video、multi-platform apps 和 browser extension 入口。
+
+- Monica help center: https://monica.im/help/
+  - 用于调研 Monica 的 browser-side help structure，包括 Chat、Read、Search、Write、Translate、Quick Action、Search Enhance、Video Summary、Agent、Memo、Smart Fill 等功能分类。
+
+- Monica Read feature: https://monica.im/help/Features/Read
+  - 用于调研网页、PDF、图片、截图、URL 等内容读取/总结/对话能力。
+
+- Monica Write feature: https://monica.im/help/Features/Write
+  - 用于调研写作、回复、改写、格式/语气/语言控制等能力。
+
+- Monica Agent feature: https://monica.im/help/Features/AI-Agent/Monica_Agent
+  - 用于调研 Monica Agent 的搜索、写作、自动任务拆解和工具步骤思路。
+
+- Monica Memo feature: https://monica.im/help/Features/Memo
+  - 用于调研保存网页、聊天、图片、PDF 等内容到个人知识库的参考模型。
+
+- Monica Smart Fill feature: https://monica.im/help/Web_Tool/Smart_Fill
+  - 用于调研表格/网页数据辅助处理能力，作为 TabMosaic 后续 structured extraction workflow 的参考。
+
+- Monica pricing page: https://monica.im/pricing
+  - 用于调研 Monica 的付费分层参考。具体价格、额度和权益在制定 TabMosaic 公开定价前需要重新人工核实。
+
 ## 待后续调研
 
 - Chrome built-in AI API 对 extensions 的最新可用性和设备限制。

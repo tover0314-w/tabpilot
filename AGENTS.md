@@ -42,6 +42,8 @@ The P0 aha moment is not a chat answer. The aha moment is:
 
 ```text
 User clicks the extension icon
+→ compact menu opens with Smart Organize first
+→ user clicks Smart Organize
 → all normal windows in the current browser get clean native tab groups
 → safe duplicate tabs are removed
 → sidebar opens and explains what happened
@@ -56,9 +58,9 @@ Do not accidentally turn the product back into a passive chatbot. The chatbot is
 
 These principles are already core to the harness and should not be changed without explicit user confirmation.
 
-### 2.1 One-click first
+### 2.1 Smart Organize first
 
-The main entry is clicking the Chrome extension icon. The user should not need to type a prompt before seeing value.
+The main entry is clicking the Chrome extension icon. The confirmed entry now opens a compact menu; Smart Organize must be the first/default action, and the user should not need to type a prompt before seeing value.
 
 ### 2.2 Native tab groups as the visible result
 
@@ -251,6 +253,8 @@ Stop and ask before finalizing or implementing any of the following:
 - whether user login is required
 - whether multi-tab chat is free or Pro only
 - whether hosted AI is part of MVP
+- open-source license and public repo boundary
+- arbitrary OpenAI-compatible provider host or local model endpoint support
 - pricing, lifetime deal, credits, billing limits
 - analytics collection involving browsing activity
 - Chrome Web Store privacy disclosures
@@ -401,7 +405,7 @@ Must not:
 - assume <all_urls> is acceptable
 - add remote code execution patterns
 - assume cloud upload of URL/page text
-- assume default_popup is compatible with one-click action flow
+- silently add, remove, or repurpose `default_popup` without checking the confirmed toolbar-menu decision
 ```
 
 ### 5.4 Coding Agent
@@ -601,14 +605,16 @@ The intended P0 flow is:
 
 ```text
 Chrome action icon click
-→ background service worker handles click
+→ compact toolbar action menu opens
+→ user chooses Smart Organize
+→ background service worker handles the action
 → side panel opens
 → organize pipeline runs
 → native tab groups update
 → sidebar result renders
 ```
 
-Do not set a traditional `default_popup` as the primary action if it prevents `chrome.action.onClicked` from firing for the one-click organize flow.
+CONFIRMED BY USER: `default_popup` is allowed for the compact toolbar action menu. It must keep Smart Organize as the first/default action, include Vertical Tabs, Current Page Chat, and Dashboard, and delegate real work to the background service worker. Do not turn the popup into a settings page or passive chatbot.
 
 ### 8.2 API expectations
 
@@ -1041,7 +1047,7 @@ For artifact updates, provide the updated file link.
 These items are treated as confirmed by the conversation so far, unless the user later changes them:
 
 ```text
-- P0 aha moment is clicking plugin icon and seeing top tab bar organized.
+- P0 aha moment is clicking plugin icon, choosing Smart Organize from the compact menu, and seeing the top tab bar organized.
 - Top tab bar should show real native Chrome tab groups.
 - Sidebar should open/show results, explain, guide conversation, and support tab chat.
 - Dashboard should exist and is important for paid value.
@@ -1050,6 +1056,9 @@ These items are treated as confirmed by the conversation so far, unless the user
 - P0 language scope is English + Chinese first, multilingual later.
 - P0 default organize scope is all normal windows in the current browser.
 - MVP AI starts with DeepSeek API through an OpenAI-compatible provider abstraction.
+- Product direction is full open source + BYOK, so users can configure their own model/API key.
+- BYOK now supports user-configured OpenAI-compatible HTTPS provider hosts and `http://localhost` local model endpoints through an explicit provider-origin permission flow.
+- "AI Browser Layer for Chrome" is confirmed as positioning language.
 - Users should be able to view organized groups in dashboard and adjust them.
 - Users should be able to chat with a tab or tabs directly in sidebar.
 - The harness must stop and ask user for items that need confirmation.
@@ -1062,6 +1071,7 @@ Still not fully confirmed:
 - final Pro pricing
 - cloud storage defaults
 - domain purchase and trademark clearance
+- open-source license
 ```
 
 ---

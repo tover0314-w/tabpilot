@@ -73,6 +73,13 @@ Sidebar DeepSeek Agent move draft required Apply: pass / fail / not tested
 Sidebar DeepSeek Agent move draft did not close tabs: pass / fail / not tested
 Sidebar Ask page required user-triggered page read: pass / fail / not tested
 Sensitive page summary asked for extra confirmation: pass / fail / not tested
+Selected-tabs chat entry opened Sidebar with selected-tabs scope: pass / fail / not tested
+Selected-tabs page-content answer required a user question first: pass / fail / not tested
+Selected-tabs native Chrome site-access prompt appeared when needed: pass / fail / not tested
+Selected-tabs denied/missing site access was explained clearly: pass / fail / not tested
+Selected-tabs follow-up reused only short local context: pass / fail / not tested
+Selected-tabs content regroup required Apply before native group changes: pass / fail / not tested
+Selected-tabs visible text stayed out of diagnostics/feedback/storage: pass / fail / not tested
 Dashboard opened to Smart Groups: pass / fail
 Dashboard Duplicate Center stayed folded until opened: pass / fail
 Dashboard tab focus opened an existing tab: pass / fail

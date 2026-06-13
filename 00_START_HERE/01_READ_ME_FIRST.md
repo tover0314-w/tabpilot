@@ -7,7 +7,7 @@
 ## 产品当前版本定义
 
 产品名暂定：**TabMosaic AI**  
-一句话：**点一下，所有办公标签页自动归位；在侧边栏继续处理。**
+一句话：**开源 AI browser layer for Chrome；自配模型，整理所有办公标签页，并在侧边栏继续处理。**
 
 命名说明：`TabPilot` 已发现同类 Chrome 扩展和 `tabpilot.ai` 冲突，不适合作为独立开发者 SEO/域名增长的主品牌。
 
@@ -18,7 +18,11 @@ Chrome 顶部 tab bar（当前浏览器所有普通窗口）
   └─ 展示真实的原生 Chrome tab groups
 
 Extension action icon
-  └─ 点击后触发一键自动整理
+  └─ 点击后打开极简 toolbar menu
+      ├─ Smart Organize
+      ├─ Vertical Tabs
+      ├─ Current Page Chat
+      └─ Dashboard
 
 Sidebar Agent
   ├─ 显示整理结果
@@ -39,9 +43,9 @@ Dashboard
 
 ## 最重要的产品共识
 
-### 1. 主入口不是聊天，是点击即整理
+### 1. 主入口不是聊天，是 Smart Organize
 
-用户不应该先打开 sidebar 再想怎么和 AI 说。用户应该点击插件图标，然后立刻看到当前浏览器所有普通窗口的顶部 tab bar 出现清晰分组。
+用户不应该先打开 sidebar 再想怎么和 AI 说。用户应该点击插件图标，在极简菜单中选择 Smart Organize，然后看到当前浏览器所有普通窗口的顶部 tab bar 出现清晰分组。
 
 ### 2. Sidebar 是控制台，不是主舞台
 
@@ -54,6 +58,10 @@ Sidebar 用于解释“刚才发生了什么”、提供 Undo、查看重复 tab
 ### 4. 必须建立信任
 
 自动分组可以大胆一点，因为可撤销。自动关闭 tabs 要非常谨慎，只自动关闭高置信度重复项，active/pinned/audible 绝不自动关闭。
+
+### 5. 开源 + BYOK 是增长和信任策略
+
+项目方向已确认全量开源。用户应该能检查代码、理解数据边界，并使用自己的模型/API key。BYOK 已支持 OpenAI-compatible HTTPS provider host 和 `http://localhost` 本地模型 endpoint，并通过显式 origin 权限流启用。License 仍需单独确认。
 
 ## 如何使用这套文档
 

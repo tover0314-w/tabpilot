@@ -4,6 +4,10 @@
 
 不要在用户体验 aha moment 前拦截。先让用户免费体验一次“点击后顶部 tab bar 变整洁”的价值，再在长期能力处转化。
 
+CONFIRMED BY USER: 产品方向转为全量开源 + BYOK。本地扩展、prompt/schema、provider abstraction 和隐私实现应随 public repo 开源；商业化优先放在可选 hosted AI、云同步、长期 memory、团队协作、支持和托管体验。
+
+Monica 参考、AI Browser Layer 全量 feature list、以及 open-source self-use / hosted cloud 双模式商业模型见 `02_FEATURE_SPECS/14_MONICA_REFERENCE_AI_BROWSER_LAYER_COMMERCIAL_MODEL.md`。该文档提出的 login、hosted AI gateway、cloud memory/sync、Free/Plus/Pro pricing 和 usage billing 仍是 `CONFIRM`，不能直接当作已确认实现范围。
+
 ## 2. 免费版价值
 
 免费版应足够让用户感受到产品价值：
@@ -14,13 +18,15 @@
 - Undo/Restore。
 - Current tab summary 限量。
 - Dashboard V0 当前 workspace。
-- 用户自配 DeepSeek API key 支持；任意 OpenAI-compatible host 需要后续 host-permission confirmation。
+- 用户自配模型/API key 支持。Private beta 默认 DeepSeek；OpenAI-compatible HTTPS provider host 和 `http://localhost` local model endpoint 通过显式 origin 权限流启用。
+- 开源核心扩展、隐私说明、prompt/schema 和 provider abstraction。
 
 ## 3. Pro 价值
 
 Pro 应该围绕长期工作区和更强 AI：
 
 - Hosted AI。
+- Managed provider routing。
 - Unlimited / higher-limit organize。
 - Multi-tab chat。
 - Group summary。
@@ -49,7 +55,7 @@ Pro 应该围绕长期工作区和更强 AI：
 基础一键整理
 基础去重
 每天/每周有限 AI hosted organize
-自配 API key 无限使用
+自配 API key / model 无限使用（由用户承担模型成本）
 当前 tab summary 少量
 Dashboard V0
 最多 3 个 saved workspace
@@ -108,11 +114,12 @@ Workspace chat: high credits
 ## 8. 已决定的 P0 商业化边界
 
 - 基础一键整理免费，不在首次 aha 前设置付费墙。
-- 用户自配 DeepSeek key 不限制使用量。
+- 用户自配模型/API key 不限制使用量。
 - Hosted AI 有免费额度，超出后升级或改用自配 key。
 - Current tab summary 免费少量额度，具体数字在定价页前再定。
 - Multi-tab chat 默认 Pro only。
 - Lifetime deal 不进入 P0，可作为早期增长实验。
 - 团队版不进入 P0。
+- License、public repo 范围和 hosted/pro 开源边界需要单独确认。
 
 Pro 定价区间仍需在商业化页面前单独确认。

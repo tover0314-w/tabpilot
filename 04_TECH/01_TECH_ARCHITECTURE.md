@@ -83,9 +83,30 @@ Chrome Extension MV3
 ## 3. 点击插件流程
 
 ```ts
-chrome.action.onClicked.addListener(async (tab) => {
-  const activeWindowId = tab.windowId;
+// popup.html
+smartOrganizeButton.addEventListener("click", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
+  await chrome.runtime.sendMessage({
+    type: "RUN_TOOLBAR_ACTION",
+    action: "smart-organize",
+    activeWindowId: tab?.windowId,
+    activeTabId: tab?.id
+  });
+});
+
+// background.js
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type !== "RUN_TOOLBAR_ACTION") return false;
+
+  runToolbarAction(message, sender).then(sendResponse);
+  return true;
+});
+
+async function runToolbarAction(message, sender) {
+  const activeWindowId = message.activeWindowId ?? sender?.tab?.windowId;
+
+  await chrome.storage.local.set({ "tabmosaic.sidebarMode": { mode: "agent" } });
   await chrome.sidePanel.open({ windowId: activeWindowId });
   await emitToSidePanel('ORGANIZE_STARTED', { activeWindowId });
 
@@ -101,12 +122,12 @@ chrome.action.onClicked.addListener(async (tab) => {
   const result = await applyPlan(validatedPlan, safeDedupeActions);
 
   await emitToSidePanel('ORGANIZE_COMPLETED', { result, undoSnapshotId: undoSnapshot.id });
-});
+}
 ```
 
 ## 4. Manifest 建议
 
-不要设置 `default_popup`，以便 action click 直接触发整理流程。
+CONFIRMED BY USER: 设置 `default_popup` 为极简 toolbar action menu。popup 不承载复杂设置，不直接执行分组；它只收集当前 active tab/window 并向 background 发送动作消息。
 
 ```json
 {
@@ -114,7 +135,8 @@ chrome.action.onClicked.addListener(async (tab) => {
   "name": "TabMosaic AI",
   "version": "0.1.0",
   "action": {
-    "default_title": "Organize tabs"
+    "default_title": "Open TabMosaic menu",
+    "default_popup": "popup.html"
   },
   "permissions": [
     "tabs",

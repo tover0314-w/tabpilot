@@ -2,11 +2,11 @@
 
 Status: DO NOT PUBLISH YET
 Decision state: CONFIRM before publishing
-Last updated: 2026-06-10
+Last updated: 2026-06-12
 Audience: public website / Chrome Web Store privacy policy URL
 Placeholders to replace: `[Developer name]`, `[support email]`, `[website URL]`, `[CONFIRM DATE]`
 
-This is a standalone draft for review. It must not be published or submitted to Chrome Web Store until the user confirms the final developer identity, support email, website/privacy policy URL, data-use disclosures, optional DeepSeek scope, and final wording.
+This is a standalone draft for review. It must not be published or submitted to Chrome Web Store until the user confirms the final developer identity, support email, website/privacy policy URL, data-use disclosures, optional BYOK AI provider scope, and final wording.
 
 ---
 
@@ -24,9 +24,9 @@ Full URLs may be stored locally only when needed to restore duplicate tabs that 
 
 Saved workspace snapshots are created only when the user clicks Save. They are stored locally on the user's device and contain minimized workspace metadata such as group names, colors, counts, tab title, hostname, path, and group mapping. They do not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
 
-TabMosaic AI reads visible page text only when the user asks for a current-tab summary or page question. Sensitive pages require an extra confirmation before visible page text is read. The current build summarizes that content locally and does not automatically send page text to an AI provider.
+TabMosaic AI reads visible page text only when the user asks for a current-tab summary or page question. Sensitive pages require an extra confirmation before visible page text is read. When the user asks about a specific selected page region, the extension may transiently capture the current visible tab after the user clicks a region, crop the capture in memory to that selected region, discard the full visible-tab capture and cropped image bytes, and keep only cropped screenshot metadata for the text-only Page Agent. The current build does not upload screenshot image bytes or data URLs.
 
-If the user enables optional AI classification, TabMosaic AI sends a structured classification request containing tab title, hostname, path, window ID, and tab state to DeepSeek using an OpenAI-compatible request format. Full URLs and page text are not sent for classification by default.
+If the user enables optional BYOK AI classification, TabMosaic AI sends a structured classification request containing tab title, hostname, path, window ID, and tab state to the configured OpenAI-compatible provider. DeepSeek is the default provider; custom HTTPS provider hosts and `http://localhost` local model endpoints require an explicit Chrome origin permission prompt before use. Full URLs and page text are not sent for classification by default.
 
 ## How We Use Data
 
@@ -48,7 +48,7 @@ Users can also clear only the locally saved AI API key from Dashboard -> Setting
 
 TabMosaic AI does not sell user data and does not use user data for advertising.
 
-The extension shares data with DeepSeek only if the user enables optional AI classification and provides an API key. In that case, the extension sends tab title, hostname, path, window ID, and tab state for classification. Users should review DeepSeek's own terms and privacy policy before enabling it.
+The extension shares data with the configured BYOK AI provider only if the user enables optional AI classification and provides an API key. DeepSeek is the default provider. In that case, the extension sends tab title, hostname, path, window ID, and tab state for classification; visible page text is sent only after a user-triggered page or selected-tabs question. For selected-region chat, the text-only Page Agent receives cropped screenshot metadata only, not screenshot image bytes or data URLs. Users should review their chosen provider's own terms and privacy policy before enabling it.
 
 Redacted diagnostics and feedback templates are copied locally to the clipboard only after the user clicks the relevant Dashboard button. They are not uploaded automatically. Copied diagnostics exclude URLs, tab titles, hostnames, rule patterns, group names, page text, emails, bearer tokens, and API keys.
 
@@ -61,9 +61,10 @@ TabMosaic AI currently uses these Chrome permissions:
 - `sidePanel`: open the sidebar control center after the user clicks the extension icon.
 - `storage`: store local settings, rules, snapshots, diagnostics, and optional API settings.
 - `scripting` and `activeTab`: read visible text from the current active tab only after a user-triggered summary or page question action.
-- `https://api.deepseek.com/*`: call DeepSeek only when optional AI classification is enabled with a user-provided API key.
+- `http://*/*` and `https://*/*` as optional site access: requested only for the specific sites involved in a user-triggered group or selected-tabs page question, then released after the answer; also used to request the specific origin of a user-configured BYOK AI provider before testing or saving.
+- `https://api.deepseek.com/*`: call DeepSeek only when optional BYOK AI features are enabled with a user-provided API key.
 
-TabMosaic AI does not request `<all_urls>`, browsing history, bookmarks, cookies, `webRequest`, `browsingData`, or incognito access in the current build.
+TabMosaic AI does not request the literal `<all_urls>` permission, browsing history, bookmarks, cookies, `webRequest`, `browsingData`, or incognito access in the current build. All-website access is not granted by default.
 
 ## Limited Use
 

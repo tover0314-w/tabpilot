@@ -1,7 +1,7 @@
 # Chrome Web Store Submission Draft
 
 Status: DO NOT SUBMIT YET  
-Last checked: 2026-06-10  
+Last checked: 2026-06-12
 Decision state: CONFIRM before publishing  
 Scope: TabMosaic AI private-beta extension package
 
@@ -10,13 +10,37 @@ This document is a draft for Chrome Web Store submission and privacy-policy prep
 ## Official Sources Checked
 
 - Chrome Web Store Program Policies: https://developer.chrome.com/docs/webstore/program-policies/policies
+- Extensions quality guidelines FAQ: https://developer.chrome.com/docs/webstore/program-policies/quality-guidelines-faq
 - Privacy Policies: https://developer.chrome.com/docs/webstore/program-policies/privacy
 - Limited Use: https://developer.chrome.com/docs/webstore/program-policies/limited-use
 - Fill out the privacy fields: https://developer.chrome.com/docs/webstore/cws-dashboard-privacy
 - Disclosure Requirements: https://developer.chrome.com/docs/webstore/program-policies/disclosure-requirements
+- User Data FAQ: https://developer.chrome.com/docs/webstore/program-policies/user-data-faq
+- Review process: https://developer.chrome.com/docs/webstore/review-process
+- Permissions list: https://developer.chrome.com/docs/extensions/reference/permissions-list
+- `chrome.tabs`: https://developer.chrome.com/docs/extensions/reference/api/tabs
+- `chrome.sidePanel`: https://developer.chrome.com/docs/extensions/reference/api/sidePanel
+- `chrome.scripting`: https://developer.chrome.com/docs/extensions/reference/api/scripting
+- `activeTab`: https://developer.chrome.com/docs/extensions/develop/concepts/activeTab
 - Complete your listing information: https://developer.chrome.com/docs/webstore/cws-dashboard-listing
 - Supplying Images: https://developer.chrome.com/docs/webstore/images
 - Creating a great listing page: https://developer.chrome.com/docs/webstore/best-listing
+
+## Official Policy Review Notes - 2026-06-12
+
+Status: RESEARCHED / NOT SUBMITTED
+
+This is a policy-readiness note, not Chrome Web Store approval. Actual acceptance can only be verified by submitting the final extension package and completing review.
+
+Current posture:
+
+- Tab management is a recognized narrow browser function under Chrome's single-purpose guidance, so the listing should stay centered on organizing open work tabs, duplicate review, Undo/Restore, and user-triggered sidebar/dashboard controls.
+- `tabs` is justified but sensitive because it exposes tab `url`, `pendingUrl`, `title`, and `favIconUrl`. The store wording must explain why open-tab metadata, tab IDs/state, grouping, duplicate safety, focus, and restore need this permission.
+- `sidePanel` is the normal MV3 permission for sidebar UI. Programmatic `sidePanel.open()` must remain tied to an extension user gesture; the compact toolbar menu and background allowlist are aligned with that direction.
+- `scripting` plus `activeTab` is the preferred narrow path for current-tab extraction. Do not add required broad host permissions for current-page chat.
+- Optional host access for selected-tabs/group page questions and custom BYOK provider origins must stay user-triggered, origin-scoped, and minimally retained. Broad host patterns can lengthen review and should not become required permissions without a separate confirmation gate.
+- Web browsing activity and website content/resource disclosure should remain conservative because the product handles open-tab metadata and user-triggered visible text.
+- The privacy policy URL, support email, final data-use categories, Limited Use certification, single-purpose copy, and final screenshots still need user confirmation before submission.
 
 ## Confirmation Gates
 
@@ -25,7 +49,7 @@ CONFIRM before submission:
 - Final product name and public developer identity.
 - Public website / privacy policy URL.
 - Public support email.
-- Whether optional DeepSeek user-key classification remains in the first public build.
+- Whether optional BYOK user-key AI remains in the first public build.
 - Whether any hosted AI, account, sync, billing, or analytics is added before submission.
 - Final Chrome Web Store data-use checkboxes.
 - Final privacy policy wording.
@@ -61,18 +85,19 @@ Status: CONFIRM
 
 | Permission | Draft justification |
 |---|---|
-| `tabs` | Required to read tab title, URL components, window, pinned/audible/active state, and tab IDs so TabMosaic can organize all normal windows, protect sensitive tabs from closure, detect safe duplicates, and reopen closed duplicates. |
+| `tabs` | Required to read tab title, URL components, window, pinned/audible/active state, and tab IDs so TabMosaic can organize all normal windows, protect sensitive tabs from closure, detect safe duplicates, reopen closed duplicates, and transiently capture the visible tab only after a user-selected page-region action so the capture can be cropped in memory and discarded. |
 | `tabGroups` | Required to create and update real Chrome native tab groups in the browser's top tab bar. |
 | `sidePanel` | Required to open the sidebar control center after the user clicks the toolbar icon. |
 | `storage` | Required to store local settings, rules, Undo/Restore snapshots, redacted diagnostics, local safety audit counts, and the optional local AI API key. |
 | `scripting` | Required only for user-triggered current-tab summary; injects a content extractor into the active page after the user clicks Summarize Current Tab. |
 | `activeTab` | Required to limit page-content access to the active tab after a user gesture. |
-| `https://api.deepseek.com/*` | Optional host permission used only when the user enables DeepSeek AI classification and saves their own API key. The request format remains OpenAI-compatible, but other hosts are not supported in this private-beta package. |
+| `http://*/*`, `https://*/*` | Optional site access requested only for the specific sites involved in a user-triggered group or selected-tabs page question, then released after the answer. Also used to request the specific origin of a user-configured BYOK AI provider before Save/Test. |
+| `https://api.deepseek.com/*` | Default DeepSeek provider host used only when the user enables BYOK AI features with a user-provided API key. Custom provider hosts are requested explicitly as optional origins. |
 
-Permissions not requested:
+Permissions not granted by default / not requested:
 
 ```text
-<all_urls>
+all URLs by default
 history
 bookmarks
 cookies
@@ -88,7 +113,7 @@ Status: CONFIRM
 Recommended answer:
 
 ```text
-No, TabMosaic AI does not execute remotely hosted code. The extension package contains its executable JavaScript. If the user enables optional DeepSeek classification, the extension sends a structured API request to DeepSeek using an OpenAI-compatible request format and validates the JSON response before applying tab-group changes.
+No, TabMosaic AI does not execute remotely hosted code. The extension package contains its executable JavaScript. If the user enables optional BYOK AI, the extension sends a structured API request to the configured OpenAI-compatible provider using a data-only request format and validates the JSON response before applying tab-group changes.
 ```
 
 Risk note:
@@ -106,13 +131,14 @@ Current local data handled:
 
 | Data | Purpose | Stored where | Shared? |
 |---|---|---|---|
-| Tab title | Classification and sidebar/dashboard display | Local current run snapshot | Sent to DeepSeek only if user enables optional AI classification |
-| Hostname and path | Classification, duplicate detection, rule matching | Local current run snapshot | Sent to DeepSeek only if user enables optional AI classification |
+| Tab title | Classification and sidebar/dashboard display | Local current run snapshot | Sent to configured BYOK provider only if user enables optional AI classification |
+| Hostname and path | Classification, duplicate detection, rule matching | Local current run snapshot | Sent to configured BYOK provider only if user enables optional AI classification |
 | Full URL | Restore closed duplicate tabs | Local restore snapshot only | Not included in copied diagnostics; not sent to AI by default |
-| Tab state | Protect active, pinned, audible, incognito, internal, and non-restorable tabs | Local current run snapshot | Sent to DeepSeek only if user enables optional AI classification |
-| Page text | Current-tab summary after user click | Not stored as a cloud record in current build | Not sent to AI/cloud in current build |
+| Tab state | Protect active, pinned, audible, incognito, internal, and non-restorable tabs | Local current run snapshot | Sent to configured BYOK provider only if user enables optional AI classification |
+| Page text | Current-tab summary after user click | Not stored as a cloud record in current build | Sent to configured BYOK provider only after user-triggered page/context question |
+| Selected-region screenshot metadata | User-selected page-region chat after the user clicks one page region | Session-only response metadata only; full visible-tab capture and cropped image bytes are discarded | Only cropped metadata is included in the text-only Page Agent payload; screenshot image bytes/data URLs are not shared |
 | User rules | Apply future classification preferences | Local storage | Not shared |
-| Optional API key | User-provided DeepSeek classification | Local storage | Used only to call DeepSeek when AI classification is enabled |
+| Optional API key | User-provided BYOK AI classification and Agent answers | Local storage | Used only to call the configured provider when AI features are enabled |
 | Redacted diagnostics | User-triggered beta feedback | Clipboard only when user clicks copy | Shared only if user manually sends it |
 | Local error summaries | Debug beta issues | Local capped storage | Included only in redacted user-copied diagnostics |
 | Duplicate safety audit counts | Track close/restore outcomes for beta trust checks | Local capped storage | Included only as count-only user-copied diagnostics |
@@ -120,7 +146,7 @@ Current local data handled:
 Recommended store disclosure posture:
 
 ```text
-TabMosaic handles browsing metadata to provide the user-facing tab organization feature. It does not request browsing history, cookies, bookmarks, webRequest, browsingData, or all-URLs access. Optional AI classification is off by default and uses the user's own API key.
+TabMosaic handles browsing metadata to provide the user-facing tab organization feature. It does not request browsing history, cookies, bookmarks, webRequest, browsingData, or default all-URLs access. Optional per-site access is requested only after the user asks to read a group or selected tabs, and is released after the answer. Optional AI classification is off by default and uses the user's own API key.
 ```
 
 ## Privacy Policy Draft
@@ -145,7 +171,7 @@ Saved workspace snapshots are created only when the user clicks Save. They are s
 
 TabMosaic AI reads visible page text only when the user asks for a current-tab summary or page question. Sensitive pages require an extra confirmation before visible page text is read. The current build summarizes that content locally and does not automatically send page text to an AI provider.
 
-If the user enables optional AI classification, TabMosaic AI sends a structured classification request containing tab title, hostname, path, window ID, and tab state to DeepSeek using an OpenAI-compatible request format. Full URLs and page text are not sent for classification by default.
+If the user enables optional BYOK AI classification, TabMosaic AI sends a structured classification request containing tab title, hostname, path, window ID, and tab state to the configured OpenAI-compatible provider. DeepSeek is the default provider; custom provider origins require explicit permission before use. Full URLs and page text are not sent for classification by default.
 
 ## How We Use Data
 
@@ -167,15 +193,15 @@ Users can also clear only the locally saved AI API key from Dashboard -> Setting
 
 TabMosaic AI does not sell user data and does not use user data for advertising.
 
-The extension shares data with DeepSeek only if the user enables optional AI classification and provides an API key. In that case, the extension sends tab title, hostname, path, window ID, and tab state for classification. Users should review DeepSeek's own terms and privacy policy before enabling it.
+The extension shares data with the configured BYOK AI provider only if the user enables optional AI classification and provides an API key. In that case, the extension sends tab title, hostname, path, window ID, and tab state for classification; visible page text is sent only after a user-triggered page/context question. Users should review their chosen provider's own terms and privacy policy before enabling it.
 
 Redacted diagnostics and feedback templates are copied locally to the clipboard only after the user clicks the relevant Dashboard button. They are not uploaded automatically.
 
 ## Permissions
 
-TabMosaic AI currently uses `tabs`, `tabGroups`, `sidePanel`, `storage`, `scripting`, `activeTab`, and `https://api.deepseek.com/*`. The DeepSeek host is used only when optional AI classification is enabled with a user-provided API key.
+TabMosaic AI currently uses `tabs`, `tabGroups`, `sidePanel`, `storage`, `scripting`, `activeTab`, optional `http://*/*` / `https://*/*` site access, and `https://api.deepseek.com/*`. Optional site access is requested only for the specific sites involved in a user-triggered group or selected-tabs page question, then released after the answer. It is also used to request custom BYOK provider origins before Save/Test. The DeepSeek host is used only when optional BYOK AI features are enabled with a user-provided API key.
 
-TabMosaic AI does not request `<all_urls>`, browsing history, bookmarks, cookies, `webRequest`, `browsingData`, or incognito access in the current build.
+TabMosaic AI does not request the literal `<all_urls>` permission, browsing history, bookmarks, cookies, `webRequest`, `browsingData`, or incognito access in the current build. All-website access is not granted by default.
 
 ## Limited Use
 
@@ -212,7 +238,7 @@ Current beta features:
 - Local rules from sidebar refinement
 - Current-tab summary after user click
 - Dashboard for Smart Groups and Duplicate Center, with private-beta diagnostics/settings hidden from the default commercial UI
-- Optional DeepSeek classification with the user's own API key using an OpenAI-compatible request format
+- Optional BYOK AI classification with the user's own API key using an OpenAI-compatible request format
 
 Privacy-first defaults:
 - No all-URLs permission
@@ -259,7 +285,7 @@ Important boundaries:
 - [ ] User confirms final product name.
 - [ ] User confirms public developer name and support email.
 - [ ] User confirms privacy policy URL.
-- [ ] User confirms optional DeepSeek AI remains in public build.
+- [ ] User confirms optional BYOK AI remains in public build.
 - [ ] User confirms final single-purpose field.
 - [ ] User confirms permission justifications.
 - [ ] User confirms remote-code declaration.

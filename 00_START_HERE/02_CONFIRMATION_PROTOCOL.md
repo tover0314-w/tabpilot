@@ -18,6 +18,7 @@
 - 目标用户首发选择：当前已定办公/知识工作者优先；变更前必须确认。
 - 主语言：当前 MVP 可见 UI 已改为 English-only；中文资源保留但不默认启用。后续重新启用中文默认体验前必须确认。
 - 是否定位成 productivity extension，还是 AI research workspace。
+- 开源 license、public repo 范围、是否采用 open-core 或双许可证。
 
 ### B. P0 默认行为
 
@@ -42,6 +43,7 @@
 - MVP 是否继续使用 DeepSeek API 起步。
 - 是否提供 hosted AI。
 - 首发支持 DeepSeek / OpenAI / Claude / Gemini / 本地模型中的哪些。
+- 是否支持任意 OpenAI-compatible provider host 或 local model endpoint，以及对应 host permission / localhost UX。
 - 是否需要用户登录后才能使用 hosted AI。
 - AI 分类是否需要 streaming progress。
 

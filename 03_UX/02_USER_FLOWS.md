@@ -5,6 +5,8 @@
 ```text
 用户安装扩展
 → 点击插件 icon
+→ 极简动作菜单出现
+→ 用户点击 Smart Organize
 → 出现轻量隐私说明
 → 用户点击 Start
 → Sidebar 打开显示 Scanning tabs
@@ -19,6 +21,7 @@
 ```text
 用户打开很多 tabs
 → 点击插件 icon
+→ 用户点击 Smart Organize
 → Sidebar 显示整理中
 → 自动整理当前浏览器所有普通窗口
 → 顶部 groups 更新

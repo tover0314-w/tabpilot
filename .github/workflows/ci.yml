@@ -29,6 +29,8 @@ jobs:
       - name: Syntax check
         run: |
           node --check extension/background.js
+          node --check extension/provider_registry.js
+          node --check extension/popup.js
           node --check extension/i18n.js
           node --check extension/diagnostics.js
           node --check extension/sidepanel.js
@@ -40,8 +42,12 @@ jobs:
           node --check tools/qa_seed_tabs.js
           node --check tools/generate_extension_assets.js
           node --check tools/capture_ui_screenshots.js
+          node --check tools/build_store_screenshots.js
           node --check tools/deepseek_smoke_test.js
+          node --check tools/write_private_beta_ai_config.js
           node --check tools/secret_scan.js
+          node --check tools/public_repo_audit.js
+          node --check tools/provider_registry_check.js
           node --check tools/issue_form_smoke_test.js
           node --check tools/verify_release_package.js
           node --check tools/beta_readiness_check.js
@@ -50,8 +56,14 @@ jobs:
       - name: Extension smoke test
         run: node tools/extension_smoke_test.js
 
+      - name: Provider registry check
+        run: node tools/provider_registry_check.js
+
       - name: Issue form smoke test
         run: node tools/issue_form_smoke_test.js
+
+      - name: Public repo audit
+        run: node tools/public_repo_audit.js
 
       - name: Package extension
         run: node tools/package_extension.js

@@ -33,7 +33,8 @@ browsingData
 ```text
 Summarize current tab
 Chat with current page
-Summarize selected tabs / P1
+Summarize selected tabs / current group
+Improve selected tabs / current group using page content
 ```
 
 实现：
@@ -41,6 +42,13 @@ Summarize selected tabs / P1
 - `activeTab` + `scripting.executeScript`。
 - 只提取 visible/readable content。
 - 排除 form/password/hidden fields。
+- Current-tab Page Agent upload is allowed only after the user explicitly asks a current-page question and completes any sensitive-page confirmation.
+- Page Agent prompt redacts obvious full URLs, query tokens, API-key-like strings, bearer/JWT tokens, and database connection strings best-effort before sending to DeepSeek.
+- Selected page-region chat is user-triggered through the Sidebar and a page-local click picker. After the user clicks a readable region, the background may transiently capture the current visible tab, crop it in memory to the selected region, discard the full visible-tab capture, and keep only cropped screenshot metadata. Screenshot image bytes are not sent to the text-only Page Agent, stored, logged, added to chat memory, diagnostics, feedback templates, or workspace memory.
+- Current-group / selected-tabs extraction is confirmed for the next beta slice only after the user initiates that scoped question or content-assisted regrouping request.
+- Before multi-tab extraction, Sidebar must render a tool card with tool name, scope, tab count, data type, session-only storage boundary, and skipped tabs.
+- Multi-tab extraction is capped at 6 tabs per batch in private beta.
+- Multi-tab extracted text and derived summaries remain session-only; do not persist them to `chrome.storage.local`, IndexedDB, cloud storage, diagnostics, or feedback templates.
 
 ## 3. AI 数据最小化
 
@@ -75,6 +83,9 @@ stripe
 aws
 cloudflare
 admin
+database
+connection
+supabase
 medical
 health
 password
@@ -84,9 +95,10 @@ localhost
 
 行为：
 
-- 不自动读取正文。
+- 不后台自动读取正文。
 - 不自动关闭。
-- summary 前二次确认。
+- current-tab summary 前二次确认。
+- multi-tab/group reads skip sensitive/restricted tabs or require extra confirmation before reading those pages.
 
 ## 5. Undo 安全
 
@@ -103,10 +115,13 @@ actionsApplied
 
 ## 6. Secret Handling
 
-- 用户自配 API key 只存本地。
+- 用户自配 API key / provider config 只存本地。
 - 尽量使用 chrome.storage.local + 用户设备保护。
 - Hosted AI key 只在后端。
 - 不在日志中写入完整 URL 或 page text。
+- 开源/BYOK 模式下，provider host、model、payload boundary 和 permission request 必须对用户可见。
+- BYOK 支持 OpenAI-compatible HTTPS provider host 和 `http://localhost` local model endpoint。非默认 provider origin 必须在用户保存/测试配置前显式请求；不得为了 BYOK 静默扩大 required host permissions。
+- Remote provider Base URL 必须使用 HTTPS；HTTP 仅允许 localhost-style local model endpoints。Base URL 不允许包含 username、password、query string 或 hash。
 
 Hidden private-beta `Clear Local Data` removes the local API key along with local rules, saved workspace snapshots, run state, Undo/Restore snapshots, chat draft, local error log, duplicate close safety audit, and privacy acceptance. It does not touch tabs, cookies, browser history, or any cloud account data.
 
@@ -148,11 +163,15 @@ summary_requested
 
 CONFIRMED BY IMPLEMENTATION:
 
-Hidden private-beta Settings includes `Permissions & Data Use`, which explains the current manifest permissions and DeepSeek host permission in English MVP copy. It also explicitly says the extension does not request all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
+Hidden private-beta Settings includes `Permissions & Data Use`, which explains the current manifest permissions, optional per-site access, DeepSeek default host permission, and custom BYOK provider-origin permission prompts in English MVP copy. It explicitly says all-URL access is not granted by default and that the extension does not request history, bookmarks, cookies, webRequest, browsingData, or incognito access.
 
 Hidden private-beta Settings also includes `Beta Diagnostics`, a user-triggered local clipboard copy of a redacted QA snapshot and beta feedback Markdown template. It is not analytics and does not upload data. The sanitizer excludes URLs, tab titles, hostnames, rule patterns, group names, page text, emails, bearer tokens, and API keys.
 
-Current-tab summary is local and user-triggered. Before content extraction, the side panel asks the background script to check current-tab metadata. If hostname, path, or title indicates a sensitive page, the user must confirm before visible text is read; cancellation means no page body is read. The background script also re-checks the active tab and requires the confirmed tab ID before executing `chrome.scripting.executeScript`.
+Current-tab summary and page chat are user-triggered. Before content extraction, the side panel asks the background script to check current-tab metadata. If hostname, path, or title indicates a sensitive page, the user must confirm before visible text is read; cancellation means no page body is read. The background script also re-checks the active tab and requires the confirmed tab ID before executing `chrome.scripting.executeScript`.
+
+Current-group and selected-tabs page-content reads are user-triggered and confirmed for the next beta slice. They must go through a capped batch extractor, render a compact tool card before extraction, read at most 6 tabs per batch, skip unreadable Chrome/internal/protected pages, and skip or extra-confirm sensitive pages. Missing temporary site access is reported as a separate `missing_permission` skip reason instead of being merged into generic restricted/unreadable states. The Sidebar may request optional `http://*/*` / `https://*/*` site access only for the specific origins in that user-triggered batch. Before requesting, it checks which origins are already granted, requests only missing origins, and releases only the origins granted for that temporary context-read session after the answer. This flow must not run during one-click organize, must not grant all-URL access by default, must not revoke pre-existing origin permissions, and must not persist extracted multi-tab text or summaries.
+
+When a local BYOK provider key is configured, current-tab Page Agent may send the extracted visible text to that configured provider after the user-triggered flow. Private beta defaults to DeepSeek but supports user-configured OpenAI-compatible HTTPS providers and `http://localhost` local endpoints with explicit origin permission. The payload contains current-tab title, hostname, visible text, selected text, headings, description, cropped selected-region screenshot metadata when applicable, and up to 10 local page-chat Q/A turns only. It excludes screenshot image bytes/data URLs, full visible-tab screenshots, full URLs, query/hash, cookies, form values, hidden DOM, browser history, workspace memory, multi-tab page bodies, and TabMosaic cloud storage. Provider failure falls back to local visible-text summary / matching.
 
 The local `currentRun` state used by the sidebar/dashboard strips restore URLs, URL hashes, raw/full URLs, and page text before storing UI state. It may keep tab title, hostname, and path because those are the documented P0 metadata used for local grouping review. Undo snapshots keep only tab IDs, window IDs, indices, and previous group IDs.
 
@@ -172,7 +191,9 @@ The extension also keeps a local-only duplicate close safety audit for beta vali
 - 确认 active/pinned/audible 不被自动关闭。
 - 确认 incognito 不被自动处理。
 - 确认敏感页面 summary 前有二次确认，取消时不读取正文。
-- 确认 currentRun、logs、诊断、反馈模板、AI payload 不含完整 URL/page text。
+- 确认 currentRun、logs、诊断、反馈模板和 metadata AI payload 不含完整 URL/page text；Page Agent payload 只在用户触发后包含当前页 visible text，且不含 full URL/query/hash/明显 secrets。
+- 确认 group/selected-tabs 内容读取只有用户发起后运行，先显示 tool card，最多 6 tabs，敏感/受限/缺少站点权限页面跳过或额外确认，且不持久保存多页面正文/摘要。
+- 确认 group/selected-tabs 临时站点权限只请求缺失 origin，并且完成后只释放本次新授权的 origin，不撤销用户此前已有的站点/provider 权限。
 - 确认 savedWorkspaces 不含完整 URL、restore URL、URL hashes、favicon URL 或 page text。
 - 确认 Undo snapshot 只保存恢复分组所需的最小字段。
 - 确认 API key 不出现在客户端日志。

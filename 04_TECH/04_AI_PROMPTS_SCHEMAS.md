@@ -2,6 +2,8 @@
 
 ## 1. 自动分类 Prompt
 
+Classifier V2 prompt/schema requirements are specified in `02_FEATURE_SPECS/12_AGENTIC_CLASSIFICATION_AND_CONTEXT_TOOLS.md`. The key change is that classification should infer project, workflow, artifact type, and intent before creating groups, and should flag domain-only grouping risk.
+
 ```text
 You are a browser tab organization agent.
 
@@ -73,31 +75,115 @@ Return JSON in this schema:
 
 ## 4. Current Tab Summary Prompt
 
+CONFIRMED BY IMPLEMENTATION:
+
+Current-tab page chat uses DeepSeek through the OpenAI-compatible chat endpoint when a local private-beta key is available. It is user-triggered from the Sidebar composer, and sensitive pages require confirmation before extraction. If no AI provider is configured, the extension returns a provider-configuration prompt before reading page body content. If the configured provider fails or returns invalid JSON, the extension returns an explicit AI-error answer instead of presenting a local extractive summary as an AI answer.
+
 ```text
-You are summarizing a browser tab for a busy knowledge worker.
+You are TabMosaic's Page Agent.
 
-Return concise, useful output.
-Do not include hidden assumptions.
-If the page appears sensitive, mention that the summary is based only on visible extracted text.
+Answer questions about the current browser page using only the provided visible page text, page title, hostname, selected text, headings, safe site-skill hint, and up to 10 local page-chat Q/A turns.
 
-Page metadata:
-{{metadata}}
+Rules:
+- Use a site-skill hint only as reading guidance, never as page content or hidden evidence.
+- Use page-chat history only to resolve follow-up references.
+- Do not invent facts that are not in the visible text.
+- Do not mention full URLs, hidden DOM, cookies, or browser internals.
+- Do not apply browser actions.
+- If visible text is insufficient, say what is missing and answer from available context.
+- Return only valid JSON.
 
-Extracted visible text:
-{{text}}
-
-Return JSON:
+User payload:
 {
-  "title": "...",
-  "summary": "...",
-  "keyPoints": ["..."],
-  "suggestedGroup": "...",
-  "suggestedAction": "keep | close | read_later",
-  "confidence": 0.0
+  "userQuestion": "...",
+  "privacyNote": "Input contains current-tab title, hostname, visible page text, selected text, headings, description, and up to 10 local page-chat Q/A turns only. Full URL, query string, hash, cookies, form values, hidden DOM, browser history, workspace memory, and cloud storage are not included. Obvious token-like strings and connection strings are redacted best-effort before upload.",
+  "page": {
+    "title": "...",
+    "hostname": "supabase.com",
+    "description": "...",
+    "headings": ["..."],
+    "selectedText": "...",
+    "visibleText": "...",
+    "siteSkill": {
+      "id": "github_pull_request_review | github_issue_triage | github_ci_run_review | cloud_project_settings_review | project_issue_triage | design_file_review | collaboration_document_review",
+      "label": "generic page type label",
+      "source": "hostname_path_pattern",
+      "capabilities": ["generic task capabilities for this page type"],
+      "guidance": ["generic reading guidance for this page type"],
+      "dataBoundary": "visible_text_only_no_object_path_or_number"
+    }
+  },
+  "conversationHistory": [
+    {
+      "role": "user | assistant",
+      "text": "short sanitized page-chat turn"
+    }
+  ],
+  "schema": {
+    "answer": "direct conversational answer grounded in visible text",
+    "keyPoints": ["up to four concise supporting points"],
+    "suggestedGroup": "short Chrome tab group name",
+    "suggestedAction": "keep | read_later | review",
+    "confidence": 0.0
+  }
 }
 ```
 
-## 5. Multi-tab Summary Prompt / P1
+Validation rules:
+
+- Empty answers are rejected.
+- `suggestedAction` is limited to `keep`, `read_later`, or `review`.
+- Full URLs, internal tab IDs, obvious API keys, bearer tokens, JWTs, and connection strings are redacted from prompt/output best-effort.
+- Site-skill hints are generic. They may include page type and reading guidance for common work pages, but not owner/repo names, issue keys, PR/run numbers, design/document IDs, project slugs, full URL, query string, hash, hidden DOM, or additional page content.
+- Page Agent output never creates or applies browser actions.
+
+### 4.1 Selected Page Region Payload
+
+CONFIRMED BY IMPLEMENTATION / FIRST SLICE:
+
+When `page.source = "selected_region"`, the Page Agent prompt is scoped to one user-clicked page block. The extension may transiently call `chrome.tabs.captureVisibleTab` after the user selects the block, crop the capture to that block in memory, discard the full visible-tab capture, and keep only cropped screenshot metadata in the text-only prompt.
+
+The current text-only Page Agent payload does not include screenshot image bytes or a data URL. Vision-model image upload is a separate future flow that requires provider capability work and user confirmation.
+
+```json
+{
+  "task": "Answer the user's question about the user-selected page region.",
+  "privacyNote": "Input contains current-tab title, hostname, visible text from one user-selected page region, region headings, safe link labels, list/table structure text, cropped region screenshot metadata, and up to 10 local page-chat Q/A turns only. Screenshot image bytes, full visible-tab screenshots, full URL, query string, hash, cookies, form values, hidden DOM, unrelated page DOM, browser history, workspace memory, and cloud storage are not included.",
+  "page": {
+    "source": "selected_region",
+    "title": "...",
+    "hostname": "example.com",
+    "visibleText": "...",
+    "region": {
+      "label": "Pricing table",
+      "tagName": "section",
+      "role": "region",
+      "safeLinkLabels": ["Compare plans"],
+      "listItems": ["..."],
+      "tableHeaders": ["Plan", "Included features"],
+      "tableRows": [["Pro", "Workspace history and group summaries"]],
+      "screenshot": {
+        "captured": true,
+        "type": "image/jpeg",
+        "width": 640,
+        "height": 320,
+        "byteLength": 2048,
+        "source": "user_selected_region_crop",
+        "imageDataIncluded": false,
+        "imageDataUploaded": false,
+        "imageDataStored": false,
+        "fullVisibleTabCaptureDiscarded": true
+      }
+    }
+  }
+}
+```
+
+## 5. Multi-tab Summary Prompt / Current Beta
+
+CONFIRMED BY USER:
+
+Current-group and selected-tabs page Q&A may read visible text by default after the user initiates that scoped question. The batch is capped at 6 tabs in private beta, must render a tool card before extraction, skips or extra-confirms sensitive/restricted pages, and keeps extracted context session-only.
 
 ```text
 You are helping the user understand a set of browser tabs.
@@ -130,6 +216,49 @@ Return JSON:
   "suggestedActions": []
 }
 ```
+
+Input constraints:
+
+```text
+- include only selected/current-group tab title, hostname, visible text, selected text, headings, and short session-only per-tab summaries
+- do not include full URL, query, hash, cookies, form values, hidden DOM, browser history, saved workspace contents, or cloud memory
+- redact obvious token-like strings, API keys, bearer/JWT tokens, and connection strings best-effort before provider upload
+- do not persist extracted visible text or generated multi-tab summaries
+```
+
+### 5.1 Tool Card Schema
+
+The Sidebar should render a compact assistant-message tool card before multi-tab extraction. This is user-facing transparency, not a debug panel.
+
+```json
+{
+  "toolName": "read_group_pages",
+  "label": "Read group pages",
+  "scope": {
+    "type": "current_group",
+    "name": "Product Planning",
+    "requestedTabCount": 9,
+    "readTabCount": 6,
+    "skippedTabCount": 3
+  },
+  "dataUsed": ["visible_text", "title", "hostname", "headings"],
+  "storage": "session_only",
+  "status": "running | completed | partial | failed",
+  "skippedReasons": ["sensitive", "restricted", "unreadable", "over_cap"],
+  "skippedBreakdown": [
+    { "reason": "restricted", "label": "restricted page", "count": 1 },
+    { "reason": "over_cap", "label": "over beta cap", "count": 2 }
+  ]
+}
+```
+
+Validation:
+
+- `readTabCount` must be `<= 6` in private beta.
+- `storage` must be `session_only`.
+- Tool cards must not display full URLs, raw page text, API keys, internal tab IDs, or hidden debug payloads.
+- `skippedBreakdown` may include only reason codes, safe labels, and counts. It must not include full URLs, raw page text, hidden DOM, or secrets.
+- Failed or partial tool cards should still leave the chat usable with metadata-only fallback.
 
 ## 6. Chat to Action Prompt
 
@@ -236,6 +365,8 @@ User payload:
   }
 }
 ```
+
+UI note: open-ended Agent answers should stay conversational and render as answer text only. The Sidebar should not render a separate `Suggested next steps` block, automatic relevant tab rows, `Open tab`, `Groups`, `Open Dashboard`, or compact safe action chips for ordinary answers. A validated `move_tabs` draft may still render matched tab rows plus Apply / Cancel when the user explicitly asks to move or regroup tabs.
 
 Validation:
 

@@ -63,6 +63,36 @@
 
       <main class="dashboard-stage">
         <section class="dashboard-page active" data-page="workspace">
+          <section class="dashboard-agent-workbench" aria-label="Browser Workbench" data-i18n-aria-label="browserWorkbench">
+            <div class="dashboard-agent-panels">
+              <section class="dashboard-agent-panel">
+                <div class="dashboard-agent-panel-head">
+                  <div>
+                    <p class="section-title" data-i18n="workQueue">Work Queue</p>
+                    <small data-i18n="workQueueCopy">Todos linked to tabs, search results, or saved context.</small>
+                  </div>
+                  <button id="createTodoFromSelectionButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="createTodo" disabled>
+                    Create todo
+                  </button>
+                </div>
+                <div id="dashboardAgentTasks" class="dashboard-agent-list"></div>
+              </section>
+
+              <section class="dashboard-agent-panel">
+                <div class="dashboard-agent-panel-head">
+                  <div>
+                    <p class="section-title" data-i18n="collections">Collections</p>
+                    <small data-i18n="collectionsCopy">Saved browser work, local-first.</small>
+                  </div>
+                  <button id="saveSelectionCollectionButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="saveSelection" disabled>
+                    Save selection
+                  </button>
+                </div>
+                <div id="dashboardAgentCollections" class="dashboard-agent-list"></div>
+              </section>
+            </div>
+          </section>
+
           <div class="dashboard-filter-chips" aria-label="Group filters">
             <button class="dashboard-chip active" type="button" data-filter="all">
               <span data-i18n="allGroups">All</span>
@@ -79,6 +109,16 @@
             <button id="workspaceRefreshButton" class="dashboard-chip" type="button" data-i18n="refresh" hidden>Refresh</button>
             <button id="saveWorkspaceButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="saveWorkspace" disabled hidden>
               Save
+            </button>
+            <button
+              id="chatSelectedTabsButton"
+              class="dashboard-chip dashboard-run-action"
+              type="button"
+              data-i18n="chatSelectedTabsZero"
+              disabled
+              hidden
+            >
+              Chat selected
             </button>
             <button id="dashboardUndoButton" class="dashboard-chip dashboard-run-action" type="button" data-i18n="undo" disabled>
               Undo
@@ -143,12 +183,12 @@
               <div>
                 <h3 data-i18n="aiClassification">AI Classification</h3>
                 <p class="settings-intro" data-i18n="aiClassificationCopy">
-                  Use your local DeepSeek key for tab grouping. TabMosaic sends minimized tab metadata only.
+                  Use your own OpenAI-compatible provider for tab grouping and Agent answers. TabMosaic keeps payloads minimized.
                 </p>
               </div>
               <label class="checkbox-row">
                 <input id="aiEnabledInput" type="checkbox" />
-                <span data-i18n="useDeepSeek">Use DeepSeek for AI classification</span>
+                <span data-i18n="useDeepSeek">Use my AI provider for classification and Agent answers</span>
               </label>
 
               <label>
@@ -160,27 +200,61 @@
                   data-i18n-placeholder="apiKeyStoredPlaceholder"
                   autocomplete="off"
                 />
+                <small data-i18n="apiKeyOptionalLocal">Required for remote providers. Optional for local endpoints that do not use auth.</small>
               </label>
 
               <details class="settings-advanced settings-provider-details">
                 <summary>
                   <span data-i18n="providerDetails">Provider details</span>
-                  <small data-i18n="providerDetailsCopy">OpenAI-compatible fields kept for later providers.</small>
+                  <small data-i18n="providerDetailsCopy">DeepSeek by default; custom OpenAI-compatible and local endpoints are supported.</small>
                 </summary>
                 <div class="settings-provider-grid">
+                  <label class="provider-preset-field">
+                    <span data-i18n="providerPreset">Provider preset</span>
+                    <select id="aiProviderPresetSelect" aria-label="Provider preset" data-i18n-aria-label="providerPreset">
+                      <option value="custom" data-i18n="customProviderPreset">Custom OpenAI-compatible</option>
+                      <option value="deepseek">DeepSeek</option>
+                      <option value="openai">OpenAI</option>
+                      <option value="openrouter">OpenRouter</option>
+                      <option value="gemini">Gemini</option>
+                      <option value="groq">Groq</option>
+                      <option value="together">Together AI</option>
+                      <option value="mistral">Mistral AI</option>
+                      <option value="xai">xAI</option>
+                      <option value="perplexity">Perplexity</option>
+                      <option value="cerebras">Cerebras</option>
+                      <option value="fireworks">Fireworks AI</option>
+                      <option value="deepinfra">DeepInfra</option>
+                      <option value="siliconflow">SiliconFlow</option>
+                      <option value="kimi">Kimi / Moonshot</option>
+                      <option value="minimax">MiniMax</option>
+                      <option value="dashscope">DashScope / Qwen</option>
+                      <option value="lmstudio">LM Studio</option>
+                      <option value="ollama">Ollama</option>
+                    </select>
+                    <small data-i18n="providerPresetCopy">
+                      Presets only fill Base URL and model. You can edit both before Save or Test.
+                    </small>
+                  </label>
+
                   <label>
                     <span data-i18n="baseUrl">Base URL</span>
                     <input id="aiBaseUrlInput" type="url" value="https://api.deepseek.com" />
                     <small data-i18n="aiBaseUrlBetaLimit">
-                      Private beta only supports api.deepseek.com. Other OpenAI-compatible hosts need a later permission confirmation.
+                      Supports HTTPS OpenAI-compatible endpoints and http://localhost local models. Custom hosts ask for provider-origin permission.
                     </small>
                   </label>
 
                   <label>
                     <span data-i18n="model">Model</span>
-                    <input id="aiModelInput" type="text" value="deepseek-v4-flash" />
+                    <input id="aiModelInput" type="text" value="deepseek-v4-flash" list="aiModelOptions" />
+                    <datalist id="aiModelOptions"></datalist>
+                    <small data-i18n="modelSuggestionsCopy">
+                      Test AI Connection can fill suggestions from the provider's model list.
+                    </small>
                   </label>
                 </div>
+                <aside id="localModelHelp" class="provider-local-help" hidden></aside>
               </details>
 
               <div class="settings-actions">
@@ -258,14 +332,21 @@
                   </div>
                   <div class="row permission-row">
                     <span>
+                      <b>http://*/*, https://*/*</b>
+                      <small data-i18n="permissionOptionalSitesCopy">Optional site access is requested only for the specific sites in a user-triggered group or selected-tabs page question, then released after the answer.</small>
+                    </span>
+                    <strong data-i18n="userTriggered">User triggered</strong>
+                  </div>
+                  <div class="row permission-row">
+                    <span>
                       <b>https://api.deepseek.com/*</b>
-                      <small data-i18n="permissionDeepSeekCopy">Used only when you enable DeepSeek classification and save your own API key.</small>
+                      <small data-i18n="permissionDeepSeekCopy">Used only when you enable a BYOK AI provider. Custom hosts are requested explicitly before testing or saving.</small>
                     </span>
                     <strong data-i18n="optional">Optional</strong>
                   </div>
                 </div>
                 <p class="permission-note" data-i18n="permissionsNotRequested">
-                  Not requested: all URLs, history, bookmarks, cookies, webRequest, browsingData, or incognito access.
+                  Not granted by default: all URLs. Never requested: history, bookmarks, cookies, webRequest, browsingData, or incognito access.
                 </p>
               </section>
             </details>

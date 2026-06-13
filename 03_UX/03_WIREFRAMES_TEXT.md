@@ -40,28 +40,30 @@ CONFIRMED BY USER: Sidebar 首屏必须是类似 OpenAI 的对话框，用作 Ta
 └─────────────────────────────┘
 ```
 
-## 3. Sidebar：当前页面总结
+## 3. Sidebar：当前页面对话
 
 ```text
 ┌─────────────────────────────┐
-│ Current Tab Summary         │
-├─────────────────────────────┤
-│ chrome.sidePanel API        │
+│ TabMosaic               ▦    │
 │                             │
-│ This page explains how Chrome│
-│ extensions can use the       │
-│ browser side panel for UI.   │
+│ User                        │
+│ ┌─────────────────────────┐ │
+│ │ 当前页面有什么内容？      │ │
+│ └─────────────────────────┘ │
 │                             │
-│ Key points                  │
-│ 1. side panel 是 extension  │
-│    page。                   │
-│ 2. 可通过用户动作打开。       │
-│ 3. 适合伴随浏览的工具。       │
+│ Assistant                   │
+│ ┌─────────────────────────┐ │
+│ │ This is the Database     │ │
+│ │ settings page for the    │ │
+│ │ Supabase ai-music        │ │
+│ │ project.                 │ │
+│ │ • Review connection info │ │
+│ │ • Check pooling/backups  │ │
+│ │ • Keep with backend setup│ │
+│ └─────────────────────────┘ │
 │                             │
-│ Suggested group:            │
-│ Chrome Extension Docs       │
-│                             │
-│ [Move] [Save] [Ask more]    │
+│ Current tab · Supabase page │
+│ Ask about this tab...    ↑  │
 └─────────────────────────────┘
 ```
 

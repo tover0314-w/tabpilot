@@ -2,11 +2,15 @@
 
 ## Aha moment 定义
 
-用户点击插件图标后，当前浏览器所有普通窗口的顶部 tab bar 立刻从混乱变为清晰的原生 tab groups，并且重复 tabs 被安全清理。
+用户点击插件图标后，在极简 toolbar menu 选择 Smart Organize，当前浏览器所有普通窗口的顶部 tab bar 从混乱变为清晰的原生 tab groups，并且重复 tabs 被安全清理。
 
 用户的内心感受应该是：
 
 > 这就是我本来要花 10 分钟手动做的事情，它点一下做完了。
+
+开源/BYOK 是信任层，不取代 aha moment。用户应该同时感到：
+
+> 我能看到它怎么处理数据，也能用自己的模型。
 
 ## Aha moment 的组成
 
@@ -77,7 +81,7 @@ Sidebar 展示：
 
 ### Action
 
-点击 TabMosaic AI icon。
+点击 TabMosaic AI icon，选择 Smart Organize。
 
 ### After
 

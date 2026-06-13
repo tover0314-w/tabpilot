@@ -1,0 +1,101 @@
+name: UI bug report
+description: Report Sidebar, Dashboard, toolbar menu, settings, or visual polish problems.
+title: "[UI Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for UI and interaction issues.
+
+        Privacy guardrails:
+        - Do not paste API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+        - Redact screenshots before attaching them.
+        - Review every note before submitting.
+  - type: input
+    id: extension_version
+    attributes:
+      label: Extension version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: UI surface
+      options:
+        - Sidebar chat
+        - Sidebar organize result
+        - Sidebar context or tool card
+        - Dashboard smart groups
+        - Dashboard settings
+        - Toolbar menu
+        - Vertical tabs
+        - Permission prompt flow
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, viewport size if relevant.
+      placeholder: "Chrome 126, macOS, side panel about 420px wide"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected UI behavior
+      description: Describe the intended interaction or visual result.
+      placeholder: "Messages should remain visible above the composer without being clipped."
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual UI behavior
+      description: Describe what looked wrong. Avoid real tab titles or page content.
+      placeholder: "Only two message cards were visible after several turns."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Use synthetic tabs, generic prompts, or mock data.
+      placeholder: |
+        1. Open the side panel.
+        2. Send five generic page-chat prompts.
+        3. Scroll to the latest answer.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Blocks core use
+        - Confusing but usable
+        - Visual polish
+        - Accessibility concern
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot_note
+    attributes:
+      label: Screenshot or recording note
+      description: Optional. Say whether a redacted screenshot is attached. Do not attach private content.
+      placeholder: "Attached redacted screenshot with emails, URLs, and page content removed."
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy_check
+    attributes:
+      label: Privacy check
+      options:
+        - label: I did not include API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+          required: true
+        - label: I reviewed any screenshots or recordings before submitting and redacted private browser content.
+          required: true
+

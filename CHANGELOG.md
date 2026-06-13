@@ -1,5 +1,981 @@
 # Changelog
 
+## v0.170 — 2026-06-12
+
+Changed:
+
+- Added real public-page Sidebar QA coverage for current-page Page Agent conversations and selected page-region context.
+- `tools/capture_real_page_chat_screenshot.js` now supports repeated `--question` turns, `--region-question`, `--region-only`, progress logs, and explicit `--ai` DeepSeek configuration from `.env.local` without printing the key.
+- Current-page chat without a configured AI provider now returns a setup prompt before reading page body content.
+- Current-page AI provider failure now renders an explicit AI-error answer instead of using local visible-text extraction as a fake AI response.
+- Selected page-region UI no longer exposes internal commands such as `select region:` in the user message bubble.
+- The page-region tool state now renders as a lighter assistant state (`Waiting for click` / `Region selected`) with minimal session-only context copy.
+
+Verified:
+
+- Real temporary Chrome profile + temporary extension copy + public `https://www.hao123.com/` + DeepSeek from local `.env.local`.
+- Four-turn current-page Page Agent chat stayed in `current_tab` scope and rendered as normal assistant messages.
+- Selected page-region flow opened the page-local picker, clicked a visible page block, rendered `Region selected`, and answered from that selected block context.
+
+Safety:
+
+- The real-page capture uses a temporary Chrome profile and temporary extension copy only.
+- `--ai` is explicit; without `--ai`, the script verifies the no-model configuration prompt.
+- The API key is read from `.env.local` for local QA only and is not printed.
+- The script grants temporary host access only to the copied extension for the requested public URL.
+- Generated screenshots remain in ignored `artifacts/` output and are not release/package inputs.
+
+## v0.169 — 2026-06-12
+
+Changed:
+
+- Shortened the visible current-tab context label in the Sidebar composer.
+- The composer now shows source-style labels such as `Current tab · Supabase` instead of full browser titles such as `Settings | Database | ai-music | Supabase`.
+- Full titles remain available as hover tooltip context, but the visible UI no longer looks like multiple tabs are selected.
+- Smoke guards now require the current-tab context display to prefer a compact site label.
+
+Safety:
+
+- This slice changes Sidebar display copy, local smoke guards, generated screenshots, and documentation only.
+- It does not change page-read triggers, optional site-permission prompts, AI request behavior, data retention, analytics, tab closing, Undo/Restore, or native grouping behavior.
+- Current-tab page content is still user-triggered and not guaranteed on browser/internal/protected pages.
+
+## v0.168 — 2026-06-12
+
+Changed:
+
+- Adjusted the Sidebar bottom composer from an inline context-prefix layout to a stacked layout.
+- The active context now appears as a compact top row inside the same composer surface, while the user input and send button sit below it.
+- This keeps current-tab / selected-tabs / group scope visible without making the tab label feel like part of the user's typed prompt.
+- Smoke guards, Sidebar specs, Tab Chat specs, Test Plan, and the feature discussion guide now reflect the stacked composer direction.
+
+Safety:
+
+- This slice changes Sidebar visual styling, local smoke guards, generated screenshots, and documentation only.
+- It does not change page-read triggers, optional site-permission prompts, DeepSeek call triggers, data retention, analytics, tab closing, Undo/Restore, or native grouping behavior.
+- Current-tab content remains user-triggered and may be unavailable on browser/extension/internal/protected pages.
+
+## v0.167 — 2026-06-12
+
+Changed:
+
+- Added an optional `--keep-fixture-server` mode to the disposable manual QA launcher.
+- When enabled, the local `tabmosaic-manual.test` fixture server stays alive until Ctrl+C, so selected-tabs fixture links and refreshed fixture tabs continue to work during page-context QA.
+- The Manual QA Checklist now explains whether fixture links are live or whether testers should use the already opened fixture tabs.
+- QA Runbook, Test Plan, Private Beta Handoff, and smoke guards now document the keep-alive mode.
+
+Safety:
+
+- This slice changes manual QA tooling and documentation only.
+- It does not change extension permissions, page-read triggers, optional site-permission prompts, AI request behavior, data retention, analytics, tab closing, Undo/Restore, or native grouping behavior.
+- The keep-alive server serves only local synthetic fixture pages for the disposable QA profile.
+
+## v0.166 — 2026-06-12
+
+Changed:
+
+- Made the disposable Manual QA Checklist easier to use for selected-tabs page-context testing.
+- Added a `Context Fixture Guide` with the three local `tabmosaic-manual.test` fixture pages, stable marker text, and a copyable selected-tabs prompt.
+- The copied prompt asks the Sidebar Agent to answer from selected fixture pages and mention `ORBITALPLANNING`, `BUGLANTERN`, and `GLASSHARBOR` when page text is readable.
+- Manual QA self-test and smoke tests now guard the fixture guide, copy prompt, fixture markers, and temporary fixture-server note.
+- QA Runbook, Test Plan, and Private Beta Handoff now point testers to the guide instead of making them infer the selected-tabs context flow.
+
+Safety:
+
+- This slice changes manual QA tooling, local smoke guards, and documentation only.
+- It does not change extension permissions, page-read triggers, optional site-permission prompts, AI request behavior, data retention, analytics, tab closing, Undo/Restore, or native grouping behavior.
+- The fixture pages remain local synthetic content in a disposable Chrome profile.
+
+## v0.165 — 2026-06-12
+
+Changed:
+
+- Tightened the Sidebar chat UX around the bottom composer and assistant cards.
+- The active context chip now sits in the same composer row as the textarea, so `Selected tabs · 8 tabs` feels like an input prefix instead of a separate status strip.
+- Assistant and user bubbles now use quieter glass gradients and lighter shadows, reducing the dashboard/control-panel feeling in the chat thread.
+- Context-read tool states remain visible for trust, but are visually treated as small inline assistant state instead of a standalone panel.
+- The Sidebar message stream no longer keeps the old nested `chatPanel` scroll/card behavior, so 10-turn conversations scroll to the latest messages instead of getting stuck near the first turns.
+- Screenshot capture now fails if the side panel horizontally drifts or clips message cards/composer content.
+- Sidebar Agent and UI design docs now explicitly guard this one-surface composer and AI-chat-like message style.
+
+Safety:
+
+- This slice changes Sidebar visual styling, local smoke guards, and documentation only.
+- It does not change page-read triggers, optional site-permission prompts, DeepSeek call triggers, data retention, analytics, tab closing, Undo/Restore, or native grouping behavior.
+- Current-tab and selected/group visible-text reads remain user-triggered, capped where applicable, and session-only.
+
+## v0.164 — 2026-06-12
+
+Changed:
+
+- Added stable local context fixture pages to the disposable manual QA profile.
+- `tools/open_manual_qa_profile.js` now opens three `tabmosaic-manual.test` synthetic pages for selected-tabs page-context testing: Product Roadmap, Release Checklist, and Interface Review.
+- The fixture pages include stable visible-text markers (`ORBITALPLANNING`, `BUGLANTERN`, `GLASSHARBOR`) so testers can verify that page content was actually read after approving Chrome site access.
+- The Manual QA Checklist, QA Runbook, Test Plan, and Private Beta Handoff now point testers to the local fixture pages for selected-tabs permission approval/denial checks.
+
+Safety:
+
+- This slice changes manual QA tooling and documentation only.
+- It does not add required host permissions, broaden extension access, read real browser tabs, read `.env.local`, call AI, store page text, add analytics, close tabs, or change browser grouping behavior.
+- The fixture pages are local synthetic content opened in a disposable Chrome profile.
+
+## v0.163 — 2026-06-12
+
+Changed:
+
+- Improved the selected-tabs/current-group zero-readable fallback copy.
+- When Chrome site access is missing or denied, the assistant now says plainly that Chrome site access was not granted, confirms that no page body was read/sent/stored, answers from titles/hostnames only, and gives a retry path.
+- Generic zero-readable batches now say the answer is metadata-only instead of sounding like a technical extraction failure.
+- Smoke tests now guard the plain-language missing-permission answer and the preserved privacy boundary.
+
+Safety:
+
+- This slice changes assistant fallback wording only.
+- It does not request broader permissions, change page-read triggers, call AI in new situations, store page text, add analytics, close tabs, or apply browser changes.
+- Missing or denied site access still results in metadata-only answers unless the user approves the Chrome site-access prompt and asks again.
+
+## v0.162 — 2026-06-12
+
+Changed:
+
+- Further softened Sidebar context-read tool states.
+- `Read selected tabs` / `Read group pages` now render as a small inline assistant status pill instead of a standalone tool-looking card.
+- Tool disclosure still shows read count, visible-text boundary, session-only storage, and skipped count, but uses subtle separators instead of multiple UI chips.
+- Specs and test coverage now guard that multi-tab tool disclosure reads as lightweight assistant state.
+
+Safety:
+
+- This slice is Sidebar visual polish plus documentation/test updates only.
+- It does not change permission behavior, page-read triggers, AI request triggers, data retention, analytics, tab closing, Undo/Restore, or browser grouping behavior.
+- Multi-tab visible-text reads remain user-triggered, capped, optional-site-permission gated, and session-only.
+
+## v0.161 — 2026-06-12
+
+Changed:
+
+- Merged the Sidebar active-context strip into the bottom chat composer.
+- The composer now shows context as an inline chip, such as `Current tab` or `Selected tabs · 8 tabs`, so selected-tab/page context feels like part of the chat input instead of a separate status bar.
+- Selected-tabs context copy no longer repeats `Selected tabs` twice.
+- Multi-tab context answers now lead with assistant prose before compact read/skipped metadata.
+- Tool-card styling was softened into lightweight assistant state inside the chat stream.
+- The disposable manual QA checklist and real-profile QA template now include selected-tabs page-context permission approval/denial checks.
+
+Safety:
+
+- This slice changes Sidebar UX, manual QA tooling, and documentation only.
+- It does not broaden permissions, request all-site access, read page text automatically, call AI in new situations, store multi-tab context, add analytics, close tabs, or apply browser changes.
+- Selected-tabs/current-group visible-text reads remain user-triggered, capped, optional-site-permission gated, and session-only.
+
+## v0.160 — 2026-06-12
+
+Changed:
+
+- Refreshed controlled local/private-beta runtime evidence against the current build.
+- Ran temporary Chrome runtime smoke, 96-tab large runtime probe, UI screenshot capture, and store screenshot draft capture on synthetic data.
+- QA evidence now records that the current build still passes the real native group, Dashboard, Sidebar, selected-tabs context, content-regroup Apply, large-tab, and screenshot paths without using the user's real Chrome profile.
+
+Safety:
+
+- This is verification/evidence only; no extension runtime behavior changed in this slice.
+- The refreshed runtime checks used temporary Chrome profiles, synthetic tabs, synthetic page content, and ignored local artifacts.
+- This run did not use the user's real Chrome profile, real browsing data, page contents, API keys, or completed real-profile QA notes.
+- DeepSeek Agent-flow was not rerun in this slice to avoid unnecessary provider/API-key usage; prior DeepSeek Agent-flow evidence remains carried forward and should be rerun only when intentionally testing AI provider behavior.
+
+## v0.159 — 2026-06-12
+
+Changed:
+
+- Polished selected-tabs context tool-card wording.
+- The Sidebar now builds running context tool cards with a scope-aware helper, so selected-tabs questions show `Read selected tabs` immediately instead of briefly saying `Read group pages`.
+- The same helper is used by selected-tabs Q&A and content-assisted regrouping, reducing copy drift between the two paths.
+- Locale keys and smoke tests now guard the selected-tabs running tool-card title and tool name.
+
+Safety:
+
+- This slice is wording/UX consistency only.
+- It does not change permissions, read additional pages, call AI in new situations, store extracted context, add analytics, close tabs, or apply browser changes.
+- Multi-tab visible-text reading remains user-triggered, capped, tool-card disclosed, and session-only.
+
+## v0.158 — 2026-06-12
+
+Changed:
+
+- Improved the selected-tabs/current-group missing site-access retry UX.
+- Context answers now recommend approving Chrome site access when skipped tabs were unreadable because temporary site access was not granted.
+- The compact tool card now includes the top skipped-reason labels, so users can see `site access not granted` directly in the tool-card message instead of only in the group summary.
+- Smoke tests now guard both the concrete retry next step and the tool-card skipped-reason rendering.
+
+Safety:
+
+- This slice is explanation/UI polish for already user-triggered context reads.
+- It does not request broader permissions, read additional pages, run background extraction, call AI in new situations, store extracted context, add analytics, close tabs, or apply browser changes.
+- One-click organize remains metadata-only; multi-tab visible-text reading remains capped, tool-card disclosed, and session-only.
+
+## v0.157 — 2026-06-12
+
+Changed:
+
+- Added a clearer multi-tab context skip reason for missing temporary site access.
+- If selected-tabs/current-group visible-text extraction fails because Chrome did not grant site access, the background now labels it as `missing_permission` instead of merging it into generic restricted/unreadable pages.
+- Sidebar skipped-reason chips now render `site access not granted`, so users can understand when they need to approve the Chrome site-access prompt.
+- Smoke tests now guard the new skip reason, locale key, and Sidebar rendering path.
+
+Safety:
+
+- This slice changes explanation and classification of failed reads only.
+- It does not request broader permissions, read more pages, auto-read in the background, call AI in new situations, store extracted context, add analytics, close tabs, or apply browser changes.
+- One-click organize remains metadata-only; multi-tab visible-text reading remains user-triggered, capped, tool-card disclosed, and session-only.
+
+## v0.156 — 2026-06-12
+
+Changed:
+
+- Hardened the Sidebar selected-tabs/current-group temporary site-permission session.
+- Before requesting optional per-site access for multi-tab visible-text reads, the Sidebar now checks which origins already have access and requests only missing origins.
+- After the answer or regroup preview finishes, the Sidebar releases only origins granted for that temporary context-read session, preserving any permissions that already existed before the request.
+- Smoke tests now guard the existing-permission check, session-owned origin list, and cleanup path.
+
+Safety:
+
+- This slice does not add new permissions, broaden host access, read pages automatically, call AI in new situations, store extracted context, add analytics, close tabs, or apply browser grouping changes.
+- One-click organize remains metadata-only. Multi-tab visible-text reading still requires a user question from the Sidebar, a tool card, capped reads, and session-only handling.
+
+## v0.155 — 2026-06-12
+
+Changed:
+
+- Polished the Dashboard Smart Groups tab-row layout after screenshot review.
+- Dashboard tab rows now keep the checkbox, favicon, title, and action columns aligned so tab titles sit naturally next to their favicons instead of drifting right.
+- Added a generated Dashboard selected-tabs screenshot that captures the `Chat selected (N)` state when users select multiple tabs from the Smart Groups board.
+- Smoke tests now guard both the denser Dashboard row layout and the selected-tabs screenshot state.
+
+Safety:
+
+- This slice is UI and screenshot-fixture polish only.
+- It does not read page text from Dashboard, call AI, request new permissions, broaden host access, store extracted context, add analytics, close tabs, or apply browser grouping changes.
+- Selected-tabs chat still opens through the Sidebar Agent flow; Dashboard selection remains minimized local metadata until the user asks from the sidebar.
+
+## v0.154 — 2026-06-12
+
+Changed:
+
+- Added zero-readable fallback polish for current-group and selected-tabs Agent answers.
+- When every requested context tab is skipped or unreadable, the local answer now explicitly says no page body was read, sent to AI, or stored, then answers from titles/hostnames only.
+- The context tool card now marks zero-readable batches as `metadata_only`, and the summary next steps explain how to retry with normal readable work pages.
+- Specs, backlog, test plan, smoke tests, and QA evidence now document and guard the zero-readable fallback behavior.
+
+Safety:
+
+- This slice does not read more pages, request new permissions, broaden host access, call AI when no pages are readable, upload page bodies, store extracted context, add analytics, close tabs, or apply browser changes.
+- Sensitive, restricted, protected, empty, unavailable, over-cap, and unreadable tabs remain skipped in the multi-tab context flow.
+
+## v0.153 — 2026-06-12
+
+Changed:
+
+- Added Dashboard selected-tabs multi-window UX polish.
+- When the user selects a Dashboard tab from another Chrome window, the previous selected-tabs set is still reset to keep selected-tabs chat same-window scoped, but the Dashboard now explains the reset with a compact status chip.
+- The notice reuses the minimal glass Dashboard status area and auto-clears, so it does not add a new panel or clutter the Smart Groups board.
+- Specs, backlog, test plan, smoke tests, and QA evidence now document and guard the selected-tabs reset notice.
+
+Safety:
+
+- This slice does not enable cross-window selected-tabs chat, read page text from Dashboard, call AI, request host permissions, store page content, add analytics, close tabs, or apply browser changes.
+- Dashboard selected-tabs context remains minimized local metadata only; visible-text extraction still happens later from Sidebar only after the user asks and the tool-card flow runs.
+
+## v0.152 — 2026-06-12
+
+Changed:
+
+- Added multi-tab skipped reason breakdown first slice for current-group and selected-tabs Agent answers.
+- Context extraction now labels skipped tabs with safe reason labels and aggregates reason counts for sensitive, restricted, protected, empty, unreadable, closed, and over-cap tabs.
+- Sidebar group summary cards now render compact skipped reason chips, and multi-tab Page Agent payloads include safe skipped reason breakdown counts.
+- Specs, prompt schema, test plan, backlog, README, smoke tests, and QA evidence now document and guard the skipped reason breakdown.
+
+Safety:
+
+- This slice does not read additional page text, request additional permissions, broaden host access, send full URLs, store extracted multi-tab text, add analytics, or apply browser changes.
+- Skipped breakdown data contains only reason codes, safe labels, and counts; it excludes full URLs, raw page text, hidden DOM, cookies, form values, history, workspace memory, and secrets.
+- Real-profile optional permission prompt QA remains pending.
+
+## v0.151 — 2026-06-12
+
+Changed:
+
+- Added selected page-region cropped screenshot metadata first slice.
+- After the user asks for page-region context and clicks a readable page block, the background can transiently capture the visible tab, crop it in memory to the selected region, discard the full visible-tab capture, and keep only cropped screenshot metadata.
+- Page Agent payload, tool registry, Sidebar tool card, prompt schema, privacy controls, store disclosure drafts, test plan, backlog, README, and smoke tests now document and guard the selected-region screenshot boundary.
+
+Safety:
+
+- Screenshot image bytes/data URLs are not sent to the text-only Page Agent, stored, added to chat memory, copied into diagnostics/feedback templates, or saved to workspace memory.
+- The flow remains user-triggered, element-picker-gated, sensitive-page-confirmed, session-only, and does not add manifest permissions, host permissions, analytics, cloud storage, or browser-changing actions.
+- Vision-model image upload remains future work and requires separate provider capability work plus confirmation.
+
+## v0.150 — 2026-06-12
+
+Changed:
+
+- Recorded Chrome Web Store permission and data-disclosure policy review notes from official Chrome documentation.
+- Store submission draft now explains the current posture for `tabs`, `sidePanel`, `scripting`, `activeTab`, optional host access, BYOK provider origins, web browsing activity, and website content disclosure.
+- Chrome Web Store data disclosure draft now maps browsing metadata, user-triggered visible text, BYOK API key storage, and in-product prominent disclosures to conservative dashboard categories.
+- Launch checklist, public launch decision packet, backlog, and research todo now record the completed policy review and keep actual store acceptance marked as unverified until submission.
+
+Safety:
+
+- This is a docs/research update only.
+- No extension runtime code, manifest permission, host access, tab action, page read, AI request path, storage path, analytics, screenshot capture, or public launch claim was added.
+- Public Chrome Web Store launch remains blocked by confirmation gates, real-profile QA, privacy policy URL, support email, final brand/domain, final disclosures, final screenshots/demo, and beta feedback.
+
+## v0.149 — 2026-06-12
+
+Changed:
+
+- Recorded the Chrome built-in AI extension-support research result from official Chrome documentation.
+- AI provider strategy now treats Chrome built-in AI as a future `chrome_builtin_ai` adapter candidate, not a P0 BYOK/OpenAI-compatible replacement.
+- BYOK provider setup guide now explains why Chrome built-in AI is not a Base URL preset and what an eventual adapter must handle: availability checks, first-use model download, user activation, device/browser constraints, language limits, and BYOK fallback.
+- Backlog and research todo now mark the Chrome built-in AI extension-support research task complete.
+
+Safety:
+
+- This is a docs/research update only.
+- No provider preset, permission, host access, tab action, page read, AI request path, storage path, analytics, or public launch claim was added.
+- Current P0 remains DeepSeek/OpenAI-compatible BYOK plus local rules fallback.
+
+## v0.148 — 2026-06-12
+
+Changed:
+
+- Added a toolbar popup action-flow guard.
+- Smoke tests now verify the compact toolbar popup exposes only Smart Organize, Vertical Tabs, Current Page Chat, and Dashboard in the confirmed order.
+- Smoke tests verify the popup delegates all real work to background via `RUN_TOOLBAR_ACTION`, passes active tab/window hints, and does not open the side panel or manipulate tab groups directly.
+- Smoke tests verify the background keeps a toolbar action allowlist, rejects unsupported actions, opens Dashboard separately, opens the side panel through the background service worker for side-panel actions, and keeps Vertical Tabs from starting organize.
+- Chrome Extension API notes, backlog, and QA evidence now record the toolbar popup user-gesture guard.
+
+Safety:
+
+- This slice changes no UI behavior, permissions, tab actions, page reads, AI calls, storage, analytics, or duplicate-close behavior.
+- It is a regression guard for the already-confirmed compact toolbar menu architecture.
+
+## v0.147 — 2026-06-12
+
+Changed:
+
+- Added advanced SaaS canonical dedupe follow-up.
+- Duplicate Review now recognizes additional same-object candidates for GitHub Actions runs, GitHub commits, Google Drive `open` / `uc` file links, Dropbox shares/files/folders, Miro boards, Canva designs, and Coda docs.
+- Existing Google Workspace, Drive file/folder, YouTube, GitHub PR/issue/discussion, Linear, Jira, Figma, Notion, and normalized-title review behavior remains unchanged.
+- Deduplication spec, test plan, README, backlog, smoke tests, and QA evidence now record the additional SaaS canonical review coverage.
+
+Safety:
+
+- New SaaS canonical duplicate matches are `domain-review` only and are never auto-closed by the safe close plan.
+- Duplicate Review labels stay generic and do not expose raw GitHub run/commit IDs, Drive IDs, Dropbox IDs, Miro board IDs, Canva design IDs, or Coda doc IDs.
+- This slice does not read page text, call AI, request new permissions, upload data, add analytics, or implement semantic/page-body duplicate detection.
+
+## v0.146 — 2026-06-12
+
+Changed:
+
+- Added provider troubleshooting first slice for BYOK and local model testing.
+- `Test AI Connection` diagnostics can now return compact troubleshooting codes for missing local models, model-name mismatch, synthetic-chat fallback, missing API key, provider-origin permission, HTTPS/localhost boundary, and generic provider settings checks.
+- Dashboard renders those codes as short `Next:` guidance after the existing compact connection status.
+- Backlog, AI provider strategy, BYOK setup guide, test plan, README, and QA evidence now record the troubleshooting slice.
+
+Safety:
+
+- Troubleshooting reuses the existing Test AI Connection result and failure path; it adds no extra provider probe.
+- Troubleshooting codes do not include API keys, model-list contents beyond existing suggestions, tab data, page text, full URLs, chat history, rules, workspace snapshots, or real user content.
+- Local model install automation and rich model metadata browsing remain future work.
+
+## v0.145 — 2026-06-12
+
+Changed:
+
+- Expanded current-page site-skill hints into a common work-page registry first slice.
+- Page Agent can now receive generic reading-strategy hints for GitHub issues, GitHub CI runs, cloud project consoles, Linear/Jira project issues, Figma/Canva design files, and collaborative documents in addition to GitHub PRs.
+- The site-skill registry improves current-page chat depth without adding new Sidebar UI, new permissions, or background page reads.
+- Backlog, Tab Chat spec, Agentic Context spec, prompt schema docs, test plan, README, and QA evidence now record the registry slice.
+
+Safety:
+
+- Site-skill hints stay generic and do not include object paths, owner/repo names, issue keys, PR/run numbers, design file IDs, document IDs, full URLs, query strings, hashes, hidden DOM, or additional page content.
+- Local smoke verifies common work-page site-skill payloads exclude path-specific identifiers and tokens.
+- Current-page chat still reads visible text only after the user asks and the existing sensitive-page flow passes.
+
+## v0.144 — 2026-06-12
+
+Changed:
+
+- Added GitHub PR page-skill first slice for current-page Page Agent chat.
+- GitHub pull request pages now pass a generic `github_pull_request_review` site-skill hint into the Page Agent payload so the model treats the visible page as a code-review surface.
+- The Page Agent system prompt now allows safe site-skill hints as reading guidance, while still grounding answers only in visible page text.
+- Backlog, Tab Chat spec, Agentic Context spec, prompt schema docs, test plan, README, and QA evidence now record the GitHub PR site-skill slice.
+
+Safety:
+
+- The site-skill hint is generic and does not include GitHub owner, repo name, PR number, full URL, query string, hash, hidden DOM, or additional page content.
+- The slice adds no new permissions, no background page read, no browser action, no cloud storage, no analytics, and no automatic PR/repo extraction.
+- Current-page chat still reads visible text only after the user asks and the existing sensitive-page flow passes.
+
+## v0.143 — 2026-06-12
+
+Changed:
+
+- Added Gemini provider preset for BYOK/OpenAI-compatible settings.
+- Dashboard provider presets now include Gemini with the official OpenAI-compatible Base URL `https://generativelanguage.googleapis.com/v1beta/openai` and example model `gemini-3.5-flash`.
+- Provider registry, Dashboard select, BYOK provider setup guide, AI provider strategy, backlog, README, smoke tests, and QA evidence now record Gemini.
+
+Safety:
+
+- The preset only fills Base URL and model; it does not save settings, enable AI, request permission, test the provider, or send data by itself.
+- Gemini still requires the user's own API key.
+- Non-default provider use still requires explicit Chrome origin permission for `https://generativelanguage.googleapis.com/*`.
+- No new required host permission, built-in API key, analytics, tab action, page read, or provider call was added.
+
+## v0.142 — 2026-06-12
+
+Changed:
+
+- Added provider connection diagnostics first slice for BYOK/OpenAI-compatible settings.
+- `Test AI Connection` now returns provider label, `/models` vs synthetic ping, model suggestion count, local vs remote endpoint, permission origin, Authorization status, and no-tab/no-page/no-full-URL flags.
+- Dashboard renders the diagnostics as a compact single-line status after the existing connection result.
+- BYOK provider setup guide, AI provider strategy, backlog, test plan, README, and QA evidence now record connection diagnostics.
+
+Safety:
+
+- Diagnostics reuse the existing model-list or synthetic ping request; no extra provider probe is added.
+- Diagnostics do not include API keys, tab data, page text, full URLs, chat history, rules, workspace snapshots, or real user content.
+- Synthetic chat fallback still does not invent model suggestions.
+- No new permissions, analytics, storage, tab actions, page reads, or provider presets were added.
+
+## v0.141 — 2026-06-12
+
+Changed:
+
+- Added normalized-title duplicate review first slice.
+- Duplicate Review now recognizes same-host pages whose cleaned titles match but whose exact URLs differ.
+- Backlog, deduplication spec, test plan, README, and QA evidence now record `title-review`.
+
+Safety:
+
+- Title-review duplicate matches are review-only and are never auto-closed by the safe close plan.
+- Title-review labels stay generic, such as `docs.example.com/similar-title`, and do not expose the page title text.
+- Search pages and YouTube video/result pages are excluded from normalized-title review to reduce noisy false positives.
+- Internal title duplicate hashes are stripped from the stored current run snapshot.
+- This slice does not read page text, call AI, request new permissions, upload data, add analytics, or implement full semantic duplicate detection.
+
+## v0.140 — 2026-06-12
+
+Changed:
+
+- Added provider model suggestions first slice for BYOK/OpenAI-compatible settings.
+- Dashboard model input now uses a native datalist.
+- `Test AI Connection` returns up to 30 model IDs from the provider `/models` response, and Dashboard uses those IDs as editable suggestions.
+- BYOK provider setup guide, AI provider strategy, backlog, test plan, README, and QA evidence now record model-list suggestions.
+
+Safety:
+
+- Presets still only fill Base URL and the default model; they do not save, test, enable AI, request permissions, or send data by themselves.
+- Model suggestions are populated only after the user clicks Test AI Connection.
+- The connection test still sends no tab data, page text, full URLs, chat history, rules, workspace snapshots, or real user content.
+- Synthetic chat fallback does not invent model suggestions.
+- Suggestions are not persisted and do not enable AI automatically.
+
+## v0.139 — 2026-06-12
+
+Changed:
+
+- Added advanced SaaS canonical dedupe polish.
+- Duplicate Review now recognizes same-object candidates for Google Drive files/folders, GitHub PRs/issues/discussions, Linear issues, Jira Cloud issues, Figma files/designs/prototypes, and Notion pages.
+- Existing Google Workspace same-document and YouTube same-video handling remains unchanged.
+- Backlog, deduplication spec, test plan, README, and QA evidence now record the SaaS canonical dedupe polish slice.
+
+Safety:
+
+- New SaaS canonical duplicate matches are `domain-review` only and are never auto-closed by the safe close plan.
+- Duplicate Review labels stay generic and do not expose raw GitHub/Jira/Linear issue IDs, Figma file IDs, Drive file IDs, Notion page IDs, or YouTube video IDs.
+- Different objects, such as a GitHub issue vs PR or different search queries, are not grouped by stripped query/path fallback.
+- Internal domain duplicate hashes remain stripped from the stored current run snapshot.
+
+## v0.138 — 2026-06-12
+
+Changed:
+
+- Added selected page-region table structure polish.
+- Region extraction now includes bounded table rows in addition to table headers, list items, safe link labels, headings, visible text, and ARIA label/role.
+- Page Agent selected-region payload now carries sanitized `tableRows` so pricing/settings/comparison tables can be answered with more structure.
+- Backlog, Tab Chat spec, Agentic Context spec, test plan, README, and QA evidence now record the table-structure first slice.
+
+Safety:
+
+- Table rows are bounded to 8 rows / 6 cells per row before prompt use.
+- Table cell text goes through the same redaction path as page text, so full URLs, query tokens, API-key-like strings, and connection strings are redacted best-effort.
+- No screenshot capture, storage, broader DOM read, new permission, or cloud memory was added.
+
+## v0.137 — 2026-06-12
+
+Changed:
+
+- Added selected page-region context first slice for Sidebar Page Agent chat.
+- Sidebar commands such as `select region`, `ask region: ...`, and Chinese selected-region commands now trigger a page-local element picker.
+- The active page shows a temporary highlight and click-to-select hint; Esc or timeout cancels the read.
+- The Page Agent payload now marks `source: selected_region` and includes only the selected block's visible text, headings, safe link labels, list/table structure labels, and ARIA label/role.
+- Sidebar renders the selected-region read as a compact session-only Agent tool card.
+- Backlog, Tab Chat spec, Agentic Context spec, sprint plan, test plan, README, and QA evidence now record the selected-region first slice.
+- Public repo boundary D-L02 is now documented as confirmed by the user's full-open-source direction; public repo audit still blocks on license, raw archive approval, and real-profile QA.
+
+Safety:
+
+- The first slice does not capture or upload screenshots.
+- It does not read raw full HTML, hidden inputs, password/form values, cookies, storage, scripts/styles, unrelated sibling DOM, full URLs, query strings, hashes, or cloud memory.
+- Sensitive pages still require the existing current-page confirmation before any region text is read.
+- Region context is session-only and is not stored by TabMosaic.
+
+## v0.136 — 2026-06-12
+
+Changed:
+
+- Added advanced domain-specific dedupe first slice.
+- Google Workspace same-document candidates now enter Duplicate Review as review-only groups.
+- YouTube same-video candidates now enter Duplicate Review as review-only groups across `youtube.com/watch` and `youtu.be` URLs.
+- Different YouTube videos and different search queries are no longer grouped just because their query-stripped path matches.
+- Backlog, deduplication spec, sprint plan, test plan, and README now record the advanced dedupe first slice.
+
+Safety:
+
+- Domain-specific duplicate candidates are never auto-closed by the safe close plan.
+- Manual review close still requires user confirmation and keeps Restore Closed available.
+- Internal domain duplicate hashes are stripped from the stored current run snapshot.
+- YouTube review labels do not expose raw video IDs or query values.
+
+## v0.135 — 2026-06-12
+
+Changed:
+
+- Added local LLM setup guidance first slice for Ollama and LM Studio.
+- Dashboard Settings now shows a compact setup card when the user chooses the Ollama or LM Studio preset.
+- The guide explains how to start the local OpenAI-compatible server and then use Test AI Connection.
+- Backlog, BYOK provider setup guide, AI provider strategy, sprint plan, test plan, and README now record the local LLM provider first slice.
+
+Safety:
+
+- The setup guide does not save settings, enable AI, call a provider, install models, request permissions, read tabs, read page text, upload data, or widen host permissions.
+- Localhost endpoints still use the existing explicit origin permission and connection-test boundary.
+- Model install automation, model picker, richer local diagnostics, and Chrome built-in AI remain future work.
+
+## v0.134 — 2026-06-12
+
+Changed:
+
+- Added Dashboard selected-tabs chat entry first slice.
+- Dashboard Smart Group tab rows now have a compact selection checkbox, and `Chat selected` appears only after 2+ same-window tabs are selected.
+- Clicking `Chat selected` opens Sidebar with `selected_tabs` context so the user can ask about those pages in the normal chat UI.
+- The metadata Agent now preserves `selected_tabs` as an active context scope instead of downgrading it to browser-wide context.
+- Backlog, Dashboard spec, Tab Chat spec, Agentic Context spec, sprint plan, and test plan now record the selected-tabs entry as implemented.
+
+Safety:
+
+- Dashboard selection is metadata-only and local; it does not read page text, call AI, upload data, move tabs, or close tabs.
+- Multi-tab visible-text reading still happens only after the user asks in Sidebar and the tool-card / optional site permission flow allows it.
+- Cross-window selected-tabs chat is not mixed in this first slice; selecting a tab from another window resets the current selection.
+
+## v0.133 — 2026-06-12
+
+Changed:
+
+- Added Agentic Classification V2 merge-refinement first slice.
+- AI-provided `mergeSuggestions` are sanitized and preserved as metadata-only classification insights.
+- Local metadata now proposes conservative merge suggestions when small created groups share the same project/workflow signal.
+- Sidebar `Suggested refinements` now renders both split and merge suggestions inside the organize assistant message card.
+- Backlog, auto-classification spec, Agentic Context spec, sprint plan, and test plan now record split/merge suggestions as implemented and real-profile QA as pending.
+
+Safety:
+
+- Merge suggestions are metadata-only and do not read page bodies.
+- Suggestions are not applied automatically and do not move, close, rename, or create tabs/groups.
+- No new permissions, no full URLs, no cloud storage, and no page text are added.
+
+## v0.132 — 2026-06-12
+
+Changed:
+
+- Added Agentic Classification V2 split-refinement first slice.
+- AI-provided `splitSuggestions` are sanitized and preserved as metadata-only classification insights.
+- Local metadata also generates conservative split suggestions when a created group contains multiple clear projects/workflows.
+- Sidebar organize completion messages now show folded `Suggested refinements` inside the assistant message card.
+- Backlog, auto-classification spec, Agentic Context spec, sprint plan, and test plan now record split suggestions as implemented and merge/real-profile QA as pending.
+
+Safety:
+
+- Refinement suggestions are metadata-only and do not read page bodies.
+- Suggestions are not applied automatically and do not move, close, rename, or create tabs/groups.
+- No new permissions, no full URLs, no cloud storage, and no page text are added.
+
+## v0.131 — 2026-06-12
+
+Changed:
+
+- Added a group summary first slice for current-group / selected-tabs Agent answers.
+- Context answers now preserve a compact `groupSummary` object with scope label, visible-text/metadata source, read/skipped counts, top hosts, inferred themes, and safe next steps.
+- Sidebar renders the group summary inside the normal assistant message card instead of adding a separate panel.
+- Multi-tab Page Agent payload schema now asks for group-summary-compatible output while keeping local fallback summary available.
+- Backlog, Sidebar Agent, Tab Chat, Agentic Context, sprint, and test-plan docs now mark group summary first slice as implemented.
+
+Safety:
+
+- Group summaries are session-only and are not stored as Tab Knowledge, workspace memory, diagnostics, feedback content, or cloud data.
+- The summary card does not add new permissions, does not read pages in the background, does not send full URLs, and does not apply browser actions.
+
+## v0.130 — 2026-06-12
+
+Changed:
+
+- Added a hidden/private-beta saved workspace restore first slice in Dashboard.
+- `RESTORE_SAVED_WORKSPACE` now regroups currently open saved tabs by local tab ID through the background service worker.
+- Saved workspace rows now expose Restore and Delete actions behind the hidden Saved Workspaces path.
+- Workspace restore stores an Undo snapshot before regrouping and publishes a normal run update with restored/skipped counts.
+- Workspace, Dashboard, data model, sprint, backlog, launch checklist, and test-plan docs now reflect the current restore-first-slice status.
+
+Safety:
+
+- Restore uses only saved local tab IDs plus current live tab state; it does not store or use full URLs.
+- Restore skips missing, closed, pinned, internal, or incognito tabs.
+- Restore does not reopen pages, close tabs, read page text, upload data, or make Saved Workspaces visible in the default Dashboard UI.
+- Full workspace history, reopening closed pages from workspace snapshots, cloud sync, export, and workspace chat remain future work.
+
+## v0.129 — 2026-06-12
+
+Changed:
+
+- Added a provider preset contribution checklist to `04_TECH/10_BYOK_PROVIDER_SETUP.md`.
+- Added a `Provider Preset Contributions` section to `CONTRIBUTING.md`.
+- `tools/provider_registry_check.js` now verifies the BYOK guide keeps the provider contribution safety guidance.
+- `tools/beta_readiness_check.js` now requires `CONTRIBUTING.md` and checks that provider contribution rules stay present.
+- Open-source BYOK strategy now records the shared provider registry, provider registry checker, and provider contribution guidance as implemented launch assets.
+
+Safety:
+
+- Provider contributions remain limited to OpenAI-compatible `chat/completions` presets unless a separate feature spec is created.
+- The contribution guide explicitly forbids provider API keys, required host permissions, broad browser permissions, and real browsing data in provider validation.
+- This change does not alter extension behavior, provider permissions, AI payloads, page-content reading, tab-closing policy, telemetry, package contents, license status, or publication status.
+
+## v0.128 — 2026-06-12
+
+Changed:
+
+- Added `tools/provider_registry_check.js` as a focused BYOK provider registry verifier for open-source contributors.
+- The new check validates provider preset shape, default DeepSeek settings, manifest required host permissions, optional provider host permissions, Dashboard preset options, BYOK guide table coverage, HTTPS/localhost URL boundaries, and known provider host labels.
+- Unified preflight and GitHub Actions now run the provider registry check.
+- GitHub Actions syntax checks now include `extension/provider_registry.js`, `extension/popup.js`, `tools/build_store_screenshots.js`, and `tools/write_private_beta_ai_config.js` to match local preflight coverage.
+- README, INDEX, beta readiness checks, and QA evidence now document the provider registry check.
+
+Safety:
+
+- This makes future provider additions easier to review without widening required host permissions.
+- No provider preset is enabled automatically, and no provider check sends real browsing data or secrets.
+- This change does not alter extension behavior, provider permissions, AI payloads, page-content reading, tab-closing policy, telemetry, package contents, license status, or publication status.
+
+## v0.127 — 2026-06-12
+
+Changed:
+
+- Hardened `tools/public_repo_audit.js` so public-repo auditing now scans tracked plus unignored candidate files for common secret patterns, not only dangerous filenames.
+- Candidate secret scanning covers OpenAI-compatible `sk-...` style API keys and bearer token literals.
+- Synthetic test keys such as `sk-secret` in local tests remain allowed so smoke tests can keep privacy redaction fixtures.
+- README, public repo cleanup checklist, beta readiness checks, and QA evidence now describe the candidate-secret public repo audit boundary.
+
+Safety:
+
+- This improves public-source hygiene before publishing and keeps `READY_PUBLIC_REPO_PUSH=no` until launch blockers are resolved.
+- `.env.local` and `extension/private-beta-ai-settings.json` remain ignored and are still not scanned or published.
+- This change does not alter extension behavior, provider permissions, AI payloads, page-content reading, tab-closing policy, telemetry, package contents, license status, or publication status.
+
+## v0.126 — 2026-06-12
+
+Changed:
+
+- Added `extension/provider_registry.js` as the shared BYOK provider registry for provider presets, known host labels, default DeepSeek host, and default AI settings.
+- Background and Dashboard now import the same provider registry so OpenAI-compatible provider support does not drift between runtime calls and Settings UI.
+- Extension smoke tests now load the shared registry before testing background logic and verify every registry preset appears in the Dashboard provider select.
+- Package generation and release verification now include `provider_registry.js`, `popup.html`, and `popup.js`.
+- Unified preflight now syntax-checks `extension/provider_registry.js` and `extension/popup.js`.
+
+Safety:
+
+- No new provider permission was made required; the required host permission remains `https://api.deepseek.com/*`.
+- Provider presets still do not save, test, enable AI, request permission, or send data by themselves.
+- The release package verifier now catches missing provider registry and toolbar popup files before a zip can be treated as valid.
+- This change does not alter default metadata-only classification, page-content reading defaults, tab-closing policy, telemetry, license status, or publication status.
+
+## v0.125 — 2026-06-12
+
+Changed:
+
+- Expanded Dashboard BYOK provider presets from the original DeepSeek/OpenAI-compatible set to include xAI, Perplexity, Cerebras, Fireworks AI, DeepInfra, SiliconFlow, Kimi / Moonshot, MiniMax, and DashScope / Qwen, while keeping LM Studio and Ollama local endpoint presets.
+- Known provider hosts now get provider-specific local labels instead of all appearing as generic `openai-compatible`.
+- AI connection testing now tries the provider model-list endpoint first and falls back to a fixed synthetic chat ping when a provider does not expose a standard model-list endpoint.
+- Updated BYOK provider setup, AI provider strategy, README, extension README, release notes, test plan, QA evidence, and smoke tests for the expanded provider surface.
+
+Safety:
+
+- Provider presets still only fill Base URL and model. They do not save, test, enable AI, request permission, or send data by themselves.
+- Custom provider origins remain optional/user-triggered; required host permission stays DeepSeek-only.
+- The synthetic chat ping sends only a fixed `Reply with OK.` prompt and no tab data, page text, full URLs, chat history, rules, workspace snapshots, or real user content.
+- This change does not alter default one-click metadata-only classification, page-content reading defaults, tab-closing policy, telemetry, license status, or publication status.
+
+## v0.124 — 2026-06-12
+
+Changed:
+
+- Added `01_PRODUCT/08_BRAND_DOMAIN_PRELIMINARY_SCAN.md` to document the preliminary public-name, SEO, domain, and Chrome Web Store near-conflict scan.
+- The scan flags that a Chrome Web Store extension named `Tab Mosaic` already exists, so `TabMosaic AI` remains a working name rather than a finalized public brand.
+- Added D-001-A for public brand/domain finalization.
+- Updated the public launch decision packet, README, INDEX, launch checklist, open-source strategy, and beta readiness checks to point to the scan.
+
+Safety:
+
+- No product rename, domain purchase, trademark decision, Chrome Web Store listing name, or launch decision was silently finalized.
+- Domain availability and trademark risk remain confirmation-gated.
+- This change does not alter extension behavior, permissions, AI payloads, telemetry, page-content reading, tab-closing policy, license status, or publication status.
+
+## v0.123 — 2026-06-12
+
+Changed:
+
+- Added `05_PROJECT/17_PUBLIC_REPO_CLEANUP_CHECKLIST.md` for the final public-repo hygiene pass before publishing or pushing a public launch branch.
+- Added `tools/public_repo_audit.js` to audit tracked and unignored files before public repo work.
+- The checklist covers keep/exclude file boundaries, generated artifacts, ignored local outputs, raw archive decision gates, secret scans, real-profile QA notes, README audit, draft legal/store docs, and final public push checks.
+- `.gitignore` now ignores `output/` so local generated screenshots/playwright output are not accidentally committed.
+- README, INDEX, launch checklist, and open-source strategy now point to the public repo cleanup checklist and audit command.
+- Unified preflight and GitHub Actions now run the public repo audit.
+- Extended beta readiness checks to require the cleanup checklist, public repo audit script, and verify that `output/` remains ignored.
+
+Safety:
+
+- The cleanup checklist is draft-only and keeps D-L02 public repo boundary as `CONFIRM`.
+- Raw imported archives are not deleted or untracked automatically; they remain a user decision gate.
+- This change does not alter extension behavior, permissions, AI payloads, telemetry, page-content reading, tab-closing policy, license status, or publication status.
+
+## v0.122 — 2026-06-12
+
+Changed:
+
+- Added `05_PROJECT/16_PUBLIC_LAUNCH_DECISION_PACKET.md` to consolidate the remaining public-launch confirmation gates into one approval packet.
+- The packet covers open-source license, public repo boundary, product name/domain, developer identity/support email, privacy policy URL, Chrome Web Store wording/disclosures, BYOK public-build scope, Free/Pro boundary, analytics policy, real-profile QA, screenshots/demo approval, beta ramp, and launch timing.
+- README, INDEX, launch checklist, and open-source strategy now point to the decision packet.
+- Extended beta readiness checks to require the decision packet and verify that it remains confirmation-gated.
+
+Safety:
+
+- No final license, domain, pricing, analytics policy, store disclosure, or public launch decision was silently approved.
+- No `LICENSE` file was added.
+- This change does not alter extension behavior, permissions, AI payloads, telemetry, page-content reading, tab-closing policy, or publication status.
+
+## v0.121 — 2026-06-12
+
+Changed:
+
+- Added `05_PROJECT/15_PUBLIC_LAUNCH_MATERIALS_DRAFT.md` with draft landing page copy/wireframe, before/after demo video storyboard, Product Hunt materials, Hacker News launch post, X/Twitter thread, SEO metadata, and a pre-publish review checklist.
+- Updated the launch checklist to distinguish draft marketing materials from final published/approved assets.
+- README and INDEX now point to the public launch materials draft.
+- Extended beta readiness checks to verify the launch materials draft remains marked draft-only and includes the expected launch surfaces.
+
+Safety:
+
+- The new launch materials are explicitly `DO NOT PUBLISH YET`.
+- They keep public Chrome Web Store launch marked not ready and avoid claiming hosted AI, cloud sync, accounts, billing, unrestricted automation, or automatic background page reading.
+- This change does not alter extension behavior, permissions, AI payloads, telemetry, page-content reading, tab-closing policy, or open-source license status.
+
+## v0.120 — 2026-06-12
+
+Changed:
+
+- Reworked the README first screen for the open-source public repo narrative: product promise, Smart Organize flow, current readiness state, privacy defaults, quick local testing, and core docs.
+- Added `04_TECH/11_PRIVACY_ARCHITECTURE_EXPLAINER.md` to explain minimized metadata classification, user-triggered page reads, selected-tabs/group context reads, BYOK provider boundaries, local storage, diagnostics, and Apply-gated actions.
+- Marked `Open-source README first screen` and `Privacy architecture explainer` complete in the launch checklist.
+- Updated INDEX and README document maps to include the privacy architecture explainer.
+- Extended beta readiness checks to assert the README first screen and privacy explainer remain present.
+
+Safety:
+
+- No extension runtime behavior changed.
+- No `LICENSE` file was added because the open-source license remains a confirmation gate.
+- The privacy explainer documents existing constraints; it does not broaden permissions, add analytics, change page-content reading defaults, alter AI provider payload boundaries, or change tab-closing behavior.
+
+## v0.119 — 2026-06-12
+
+Changed:
+
+- Added `CONTRIBUTING.md` for the public open-source workflow, including privacy redlines, PR expectations, local checks, and confirmation-gated decision boundaries.
+- Added public GitHub issue forms for provider requests, grouping-quality feedback, and UI bugs.
+- Extended `tools/issue_form_smoke_test.js` to validate five issue forms across private beta and public repo feedback paths.
+- README, INDEX, and launch checklist now point to the public contribution and issue-template scaffolding.
+
+Safety:
+
+- Public feedback forms require submitters to review before submitting and avoid API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, and private rule patterns.
+- No `LICENSE` file was added because the open-source license remains a confirmation gate.
+- This change does not alter extension permissions, AI provider behavior, page-content reading, tab-closing behavior, or data upload defaults.
+
+## v0.118 — 2026-06-12
+
+Changed:
+
+- Dashboard AI Settings now includes provider presets for DeepSeek, OpenAI, OpenRouter, Groq, Together AI, Mistral AI, LM Studio, and Ollama.
+- Presets only fill Base URL and model; they do not save, test, enable AI, or request permissions until the user clicks Save or Test.
+- Local OpenAI-compatible endpoints such as Ollama and LM Studio can now be used without an API key when the local server does not require auth.
+- Added `04_TECH/10_BYOK_PROVIDER_SETUP.md` with setup guidance, provider Base URLs, local endpoint notes, permission boundaries, and official reference links.
+
+Safety:
+
+- Remote providers still require HTTPS, explicit provider-origin permission, and a user-provided API key.
+- Local endpoints send no Authorization header when the API key field is blank.
+- BYOK provider presets do not loosen tab/page data minimization.
+
+## v0.117 — 2026-06-12
+
+Changed:
+
+- Sidebar Agent now supports content-assisted regrouping for current-group / selected-tabs contexts.
+- A user request such as regrouping selected tabs by actual page content now renders a tool card, reads capped visible text, and returns an Apply / Cancel regroup preview before native Chrome groups change.
+- The regroup preview renders as an assistant message card with proposed groups, reasons, matched tabs, and safe Apply / Cancel actions.
+- Background apply handling now supports validated `regroup_tabs` drafts and preserves Undo after Apply.
+- Extension smoke tests now cover `REGROUP_CONTEXT_TABS`, content-regroup payload privacy, redaction, invented tab-ID rejection, and Apply-gated preview behavior.
+- Chrome runtime smoke now opens synthetic HTTP pages, verifies visible text extraction through the selected-tabs context flow, renders a content regroup preview, clicks Apply, and verifies real native Chrome groups are created without closing tabs.
+
+Safety:
+
+- One-click organize remains metadata-only and does not read page bodies.
+- Content-assisted regrouping is user-triggered, capped, session-only, and sends no full URLs, query strings, hashes, browser history, saved workspace contents, or TabMosaic cloud memory.
+- AI proposed tab IDs are validated against real readable tabs; invented or duplicate IDs are dropped.
+- No tabs are closed by the regroup preview or Apply path.
+- The automated synthetic HTTP runtime probe uses a temporary fixture host grant because CDP cannot accept Chrome's browser-native optional site permission prompt from the extension page target.
+- Manual/runtime QA for accepting the native optional site permission prompt remains pending.
+
+## v0.116 — 2026-06-12
+
+Changed:
+
+- Dashboard AI Settings now supports BYOK OpenAI-compatible Base URL, model, and API key instead of being DeepSeek-only.
+- DeepSeek remains the default provider; custom HTTPS provider hosts and `http://localhost` local model endpoints require explicit provider-origin permission before save/test.
+- Background AI requests validate provider Base URLs, reject remote HTTP providers, reject username/password/query/hash in Base URLs, and check provider-origin permission before `/models` or `chat/completions` calls.
+- AI result/provider labels are now generic enough for custom providers while preserving the existing DeepSeek default path.
+- Smoke tests now cover custom provider permission requests, localhost endpoint normalization, remote HTTP rejection, and `/models` privacy boundaries.
+- PRD, decisions, provider strategy, privacy/security docs, Chrome API docs, launch checklist, release notes, privacy policy draft, and Chrome Web Store data disclosure draft now reflect full open-source + BYOK provider support.
+
+Safety:
+
+- Required host permissions remain narrow: `https://api.deepseek.com/*` only.
+- Custom provider origins remain user-triggered optional permissions.
+- BYOK does not loosen data minimization: classification still excludes full URLs and page text; page text is sent only after user-triggered page/context questions.
+- Open-source license remains a confirmation gate; no `LICENSE` file has been added.
+
+## v0.115 — 2026-06-12
+
+Changed:
+
+- Product positioning now confirms TabMosaic as an open-source AI browser layer for Chrome.
+- Added `01_PRODUCT/07_OPEN_SOURCE_BYOK_STRATEGY.md` for open-source growth, BYOK model configuration, open-core monetization, and license decision gates.
+- PRD, product strategy, decisions, AI provider strategy, privacy controls, roadmap, risks, and launch checklist now treat BYOK as a core product direction.
+- DeepSeek remains the private-beta default provider, but user-configured model/API key support is now confirmed as the strategic direction.
+
+Safety:
+
+- Open source is confirmed, but license remains a confirmation gate.
+- Arbitrary OpenAI-compatible hosts and local model endpoints were confirmation-gated at this point; v0.116 implements the explicit provider-origin permission flow.
+- BYOK does not loosen data minimization: full URLs, page text, cookies, form values, hidden DOM, and browser history remain excluded by default.
+
+## v0.114 — 2026-06-12
+
+Changed:
+
+- Chrome toolbar click now opens a compact TabMosaic action menu instead of directly relying on `action.onClicked`.
+- The toolbar menu includes Smart Organize, Vertical Tabs, Current Page Chat, and Dashboard.
+- Smart Organize delegates to the background organize pipeline, opens the side panel, preserves first-run privacy gating, and keeps one-click organize metadata-only.
+- The side panel now supports a lightweight Vertical Tabs mode with native group sections, favicons, search, tab focus, and quick return to Chat.
+- Extension smoke and package checks now validate the compact `default_popup` entry instead of rejecting it.
+
+Safety:
+
+- The popup does not read page text, classify tabs, or apply browser changes directly.
+- Vertical Tabs uses tab metadata and native group state only; page content remains user-triggered through the Agent.
+- Dashboard remains a separate explicit entry and is not opened automatically by Smart Organize.
+
+## v0.113 — 2026-06-11
+
+Changed:
+
+- Sidebar now routes current-group and selected-tabs deep questions through a concrete `SUMMARIZE_CONTEXT_TABS` Agent flow instead of the metadata-only fallback.
+- Multi-tab visible-text reads now render a compact assistant-style tool card before extraction, preserve the active scope, cap private-beta reads at 6 tabs, and report read/skipped counts.
+- Background context extraction now skips over-cap, protected, restricted, sensitive, empty, unavailable, and unreadable tabs instead of pretending every tab was read.
+- DeepSeek multi-tab Page Agent now answers from capped visible text, titles, hostnames, headings, skipped reasons, and the tool card only.
+- Group/selected-tabs Page Agent chats now keep session-only follow-up context for the same active scope, capped at 10 local Q/A turns.
+- Multi-tab Agent payloads redact full URLs, query tokens, API-key-like strings, and connection strings best-effort, and validation drops invented tab summaries.
+- Extension smoke tests now cover context-tab tool-card extraction and DeepSeek multi-tab visible-context payload privacy.
+- Chrome runtime smoke now explicitly verifies the selected-tabs context tool-card path and a natural selected-tabs follow-up in a real temporary Chrome extension profile.
+- UI screenshot capture now includes `sidepanel-context-tabs.png` to show selected-tabs Agent output, tool-card disclosure, and compact assistant message styling.
+- Manifest now declares optional `http://*/*` / `https://*/*` site access for user-triggered group/selected-tabs page questions; the Sidebar requests specific origins only after the user asks and releases granted origins after the answer.
+
+Safety:
+
+- One-click organize remains metadata-only.
+- Multi-tab page text is read only after a user-initiated current-group or selected-tabs question.
+- Full URLs are not sent, extracted multi-tab text is not persisted, follow-up context is session-only, cloud summary storage is not added, all-site access is not granted by default, and browser-changing regroup plans still require Apply.
+
+## v0.112 — 2026-06-11
+
+Changed:
+
+- Agentic Classification V2 first slice now derives local metadata features for AI classification: artifact type, workflow, project candidate, domain category, intent, sensitive hint, and domain-only risk.
+- DeepSeek classification prompt now asks for project/workflow/artifact/intent grouping instead of domain-first grouping.
+- AI classification validation now rejects weak domain-only group names such as `github.com`, `YouTube`, `Other`, `Websites`, or `Tabs` so bad AI group names fall back to safer local rules.
+- Sidebar metadata Agent prompt now includes a compact tool registry covering read-only tools, planning tools, action tools, rejected tools, multi-tab visible-text cap, session-only boundary, and Apply-required browser changes.
+- Extension smoke tests now cover Agentic Classification V2 metadata features, weak domain group rejection, and the Sidebar Agent tool registry contract.
+
+Safety:
+
+- This remains metadata-only for one-click organize. It does not read page bodies, broaden permissions, send full URLs, persist multi-tab summaries, change tab-closing behavior, or apply AI actions automatically.
+
+## v0.111 — 2026-06-11
+
+Changed:
+
+- Current-page chat loading states now replace each other instead of leaving multiple internal status messages in the conversation.
+- Chrome internal / restricted page answers now use simpler product copy instead of technical extension error wording.
+- Current-page extraction failures are caught and returned as a normal assistant message.
+- Current-page unreadable replies now distinguish browser/extension pages, missing temporary site permission, protected pages, and empty visible text instead of collapsing them into one generic sentence.
+- Natural content questions such as `当前页面有什么内容` and `what content does this page have` now route to current-page chat instead of the metadata-only Agent fallback.
+- DeepSeek metadata Agent open answers now render as plain assistant message bubbles without automatic tab rows, `Open tab`, `Groups`, or `Open Dashboard` action chips.
+- Sidebar visuals now move closer to a Notion AI-style sidebar: lighter header, calmer glass message bubbles, current-tab context beside the composer, textarea input, and icon send button.
+- UI screenshot capture now uses a realistic current-page Q&A scene for `sidepanel-chat.png` instead of only showing a tab-move draft.
+- Current-page chat now supports short local multi-turn follow-up for the same tab; natural follow-ups continue page Q&A while explicit tab-management questions still use the tab Agent.
+- Current-page chat now uses DeepSeek Page Agent when a local key is available, sending only current-tab visible text plus up to 10 local page-chat Q/A turns after the user asks and any sensitive-page confirmation is completed.
+- Page Agent redacts full URLs, query tokens, API-key-like strings, bearer/JWT tokens, and database connection strings best-effort before upload, then falls back to local visible-text matching if DeepSeek fails.
+- Current-page Page Agent history now keeps up to 10 local Q/A turns for follow-up resolution.
+- Natural follow-ups such as `is point-in-time recovery enabled?`, `could this page help...`, and `summarize the action plan...` now stay in current-page chat after the first page answer.
+- Sidebar chat spacing is tighter: the composer is anchored at the bottom of the side panel, so unused short-chat space no longer appears below the input.
+- Sidebar message cards now use restrained glass micro-gradients so AI/user bubbles feel more natural without adding marketing-style color noise.
+- Sidebar long-chat scrolling now uses the outer Agent thread as the single scroll container, with a soft top fade when scrolled, so 10-turn chats show the latest messages without clipped cards.
+- UI screenshot capture now includes a 10-turn sidepanel chat state for visual review.
+
+Safety:
+
+- This does not broaden permissions, change background page-reading defaults, send page text without a user current-page request, send full URLs, store page body text, change tab-closing behavior, or make AI actions apply automatically. The longer page-chat history remains local/in-memory and is sent only as part of user-triggered current-page requests.
+
+## v0.110 — 2026-06-10
+
+Changed:
+
+- Sidebar current-page questions now recognize more natural prompts such as `what is this page for?` and `这个页面是干嘛的？`.
+- Current-page answers render directly as chat messages without repeating `Current page` / `Question` labels already implied by the composer context.
+- DeepSeek metadata Agent replies render as simpler assistant cards: answer text, optional relevant tab rows, and compact safe action chips only.
+- Sidebar tab rows no longer show internal window IDs in visible chat output.
+
+Safety:
+
+- This does not broaden permissions, change tab-closing behavior, upload page text by default, send full URLs, add analytics, or make AI actions apply without user Apply.
+- Metadata Agent prompts now explicitly tell the model not to restate the visible active context or expose internal tab/window/group IDs; visible Agent text is also sanitized for those IDs before rendering.
+
 ## v0.109 — 2026-06-10
 
 Changed:

@@ -1,5 +1,12 @@
 import { applyI18n, initI18n, msg } from "./i18n.js";
 import { buildDiagnosticSnapshot, buildFeedbackTemplate } from "./diagnostics.js";
+import {
+  AI_PROVIDER_HOST_IDS,
+  AI_PROVIDER_PRESETS,
+  DEFAULT_AI_HOSTNAME,
+  DEFAULT_AI_PROVIDER_ORIGIN,
+  DEFAULT_AI_SETTINGS
+} from "./provider_registry.js";
 
 const CURRENT_RUN_KEY = "tabmosaic.currentRun";
 const AI_SETTINGS_KEY = "tabmosaic.aiSettings";
@@ -8,24 +15,25 @@ const ERROR_LOG_KEY = "tabmosaic.errorLog";
 const DUPLICATE_SAFETY_AUDIT_KEY = "tabmosaic.duplicateSafetyAudit";
 const SAVED_WORKSPACES_KEY = "tabmosaic.savedWorkspaces";
 const SIDEBAR_CONTEXT_KEY = "tabmosaic.sidebarContext";
+const AGENT_TASKS_KEY = "tabmosaic.agentTasks";
+const SAVED_COLLECTIONS_KEY = "tabmosaic.savedCollections";
 const GROUP_COLORS = ["grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan"];
-const DEFAULT_AI_SETTINGS = {
-  enabled: false,
-  provider: "deepseek",
-  baseUrl: "https://api.deepseek.com",
-  model: "deepseek-v4-flash",
-  apiKey: ""
-};
 const GROUP_COLOR_CLASS = new Map(GROUP_COLORS.map((color, index) => [color, `g-${index}`]));
 const GROUP_FILTERS = new Set(["all", "ai", "rules"]);
+const MAX_AGENT_ITEMS = 30;
 
 const refreshButton = document.querySelector("#refreshButton");
 const workspaceRefreshButton = document.querySelector("#workspaceRefreshButton");
 const saveWorkspaceButton = document.querySelector("#saveWorkspaceButton");
+const chatSelectedTabsButton = document.querySelector("#chatSelectedTabsButton");
 const organizeNowButton = document.querySelector("#organizeNowButton");
 const dashboardUndoButton = document.querySelector("#dashboardUndoButton");
 const dashboardRestoreButton = document.querySelector("#dashboardRestoreButton");
 const workspaceActionStatus = document.querySelector("#workspaceActionStatus");
+const createTodoFromSelectionButton = document.querySelector("#createTodoFromSelectionButton");
+const saveSelectionCollectionButton = document.querySelector("#saveSelectionCollectionButton");
+const dashboardAgentTasks = document.querySelector("#dashboardAgentTasks");
+const dashboardAgentCollections = document.querySelector("#dashboardAgentCollections");
 const rulesCountBadge = document.querySelector("#rulesCountBadge");
 const rulesSubtitle = document.querySelector("#rulesSubtitle");
 const allGroupsCount = document.querySelector("#allGroupsCount");
@@ -38,9 +46,12 @@ const dashboardRules = document.querySelector("#dashboardRules");
 const settingsSnapshot = document.querySelector("#settingsSnapshot");
 const aiSettingsForm = document.querySelector("#aiSettingsForm");
 const aiEnabledInput = document.querySelector("#aiEnabledInput");
+const aiProviderPresetSelect = document.querySelector("#aiProviderPresetSelect");
 const aiBaseUrlInput = document.querySelector("#aiBaseUrlInput");
 const aiModelInput = document.querySelector("#aiModelInput");
+const aiModelOptions = document.querySelector("#aiModelOptions");
 const aiKeyInput = document.querySelector("#aiKeyInput");
+const localModelHelp = document.querySelector("#localModelHelp");
 const aiSettingsStatus = document.querySelector("#aiSettingsStatus");
 const testAIButton = document.querySelector("#testAIButton");
 const clearAIKeyButton = document.querySelector("#clearAIKeyButton");
@@ -51,7 +62,11 @@ const clearDataButton = document.querySelector("#clearDataButton");
 const clearDataStatus = document.querySelector("#clearDataStatus");
 let latestRun = null;
 let activeGroupFilter = "all";
+let latestAgentTasks = [];
+let latestSavedCollections = [];
 let draggedDashboardTab = null;
+let selectedDashboardTabIds = new Set();
+let selectionNoticeTimer = null;
 
 await initI18n();
 applyI18n();
@@ -60,11 +75,18 @@ refreshButton.addEventListener("click", loadDashboard);
 workspaceRefreshButton.addEventListener("click", loadDashboard);
 organizeNowButton.addEventListener("click", organizeFromDashboard);
 saveWorkspaceButton.addEventListener("click", saveWorkspaceFromDashboard);
+chatSelectedTabsButton.addEventListener("click", chatWithSelectedDashboardTabs);
 dashboardUndoButton.addEventListener("click", undoFromDashboard);
 dashboardRestoreButton.addEventListener("click", restoreClosedFromDashboard);
 aiSettingsForm.addEventListener("submit", saveAISettings);
+aiProviderPresetSelect?.addEventListener("change", applyAIProviderPreset);
+aiBaseUrlInput.addEventListener("change", () => syncAIProviderPresetSelect(aiBaseUrlInput.value));
 testAIButton.addEventListener("click", testAIConnection);
 clearAIKeyButton.addEventListener("click", clearAIKey);
+createTodoFromSelectionButton?.addEventListener("click", createTodoFromSelectedTabs);
+saveSelectionCollectionButton?.addEventListener("click", saveSelectedTabsAsCollection);
+dashboardAgentTasks?.addEventListener("click", handleBrowserWorkAction);
+dashboardAgentCollections?.addEventListener("click", handleBrowserWorkAction);
 dashboardRules.addEventListener("click", handleRuleAction);
 dashboardGroups.addEventListener("click", handleGroupAction);
 dashboardDuplicates.addEventListener("click", handleGroupAction);
@@ -88,35 +110,50 @@ loadDashboard();
 loadAISettings();
 
 async function loadDashboard() {
-  const result = await chrome.storage.local.get([CURRENT_RUN_KEY, USER_RULES_KEY, SAVED_WORKSPACES_KEY]);
+  const result = await chrome.storage.local.get([
+    CURRENT_RUN_KEY,
+    USER_RULES_KEY,
+    SAVED_WORKSPACES_KEY,
+    AGENT_TASKS_KEY,
+    SAVED_COLLECTIONS_KEY
+  ]);
   renderDashboard(
     result[CURRENT_RUN_KEY],
     result[USER_RULES_KEY] || [],
-    result[SAVED_WORKSPACES_KEY] || []
+    result[SAVED_WORKSPACES_KEY] || [],
+    result[AGENT_TASKS_KEY] || [],
+    result[SAVED_COLLECTIONS_KEY] || []
   );
 }
 
-function renderDashboard(run, rules = [], workspaces = []) {
+function renderDashboard(run, rules = [], workspaces = [], tasks = latestAgentTasks, collections = latestSavedCollections) {
   latestRun = run || null;
+  latestAgentTasks = Array.isArray(tasks) ? tasks : [];
+  latestSavedCollections = Array.isArray(collections) ? collections : [];
   renderRules(rules);
   renderSavedWorkspaces(workspaces);
+  renderDashboardWorkbench();
   syncGroupFilterButtons();
   syncDashboardActionButtons(run);
   renderRuleCount(rules);
 
   if (run?.status === "error") {
+    selectedDashboardTabIds.clear();
     dashboardGroups.innerHTML = renderDashboardError(run.error || msg("scanDidNotFinish"));
     dashboardDuplicates.innerHTML = `<p class="empty">${escapeHtml(msg("noDuplicateDataYet"))}</p>`;
     renderSettingsSnapshot({});
     renderGroupFilterCounts([]);
+    syncDashboardSelectedTabsButton();
     return;
   }
 
   if (!run || !["completed", "closed-restored", "undone"].includes(run.status)) {
+    selectedDashboardTabIds.clear();
     dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(msg("openSidePanelToPopulateDashboard"))}</p>`;
     dashboardDuplicates.innerHTML = `<p class="empty">${escapeHtml(msg("noDuplicateDataYet"))}</p>`;
     renderSettingsSnapshot({});
     renderGroupFilterCounts([]);
+    syncDashboardSelectedTabsButton();
     return;
   }
 
@@ -154,6 +191,7 @@ function syncDashboardActionButtons(run = latestRun) {
   saveWorkspaceButton.disabled = !isWorkspaceSaveableRun(run);
   dashboardUndoButton.disabled = !summary.undoAvailable;
   dashboardRestoreButton.disabled = !summary.closedTabsRestoreAvailable;
+  syncDashboardSelectedTabsButton();
 }
 
 function isWorkspaceSaveableRun(run) {
@@ -230,7 +268,7 @@ async function restoreClosedFromDashboard() {
 async function saveWorkspaceFromDashboard() {
   saveWorkspaceButton.disabled = true;
   saveWorkspaceButton.textContent = msg("saving");
-  workspaceActionStatus.textContent = "";
+  setDashboardActionStatus("");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -239,14 +277,14 @@ async function saveWorkspaceFromDashboard() {
     });
 
     if (!response?.ok) {
-      workspaceActionStatus.textContent = response?.error || msg("couldNotSaveWorkspace");
+      setDashboardActionStatus(response?.error || msg("couldNotSaveWorkspace"));
       return;
     }
 
     renderSavedWorkspaces(response.result?.workspaces || []);
-    workspaceActionStatus.textContent = msg("workspaceSaved");
+    setDashboardActionStatus(msg("workspaceSaved"));
   } catch (error) {
-    workspaceActionStatus.textContent = `${msg("couldNotSaveWorkspace")} ${error?.message || ""}`.trim();
+    setDashboardActionStatus(`${msg("couldNotSaveWorkspace")} ${error?.message || ""}`.trim());
   } finally {
     saveWorkspaceButton.textContent = msg("saveWorkspace");
     syncDashboardActionButtons(latestRun);
@@ -307,9 +345,52 @@ async function handleSavedWorkspaceAction(event) {
   const button = event.target.closest("[data-workspace-action]");
   if (!button) return;
 
-  if (button.dataset.workspaceAction !== "delete") return;
+  if (button.dataset.workspaceAction === "restore") {
+    await restoreSavedWorkspaceFromDashboard(button);
+    return;
+  }
 
-  await deleteSavedWorkspaceFromDashboard(button);
+  if (button.dataset.workspaceAction === "delete") {
+    await deleteSavedWorkspaceFromDashboard(button);
+  }
+}
+
+async function restoreSavedWorkspaceFromDashboard(button) {
+  const workspaceId = button.dataset.workspaceId || "";
+
+  if (!workspaceId) return;
+
+  const confirmed = window.confirm(msg("restoreWorkspaceConfirm"));
+  if (!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = msg("restoring");
+  setDashboardActionStatus("");
+
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: "RESTORE_SAVED_WORKSPACE",
+      workspaceId
+    });
+
+    if (!response?.ok) {
+      setDashboardActionStatus(response?.error || msg("couldNotRestoreWorkspace"));
+      return;
+    }
+
+    const result = response.result || {};
+    renderDashboard(result.run, await loadRules(), result.workspaces || await loadSavedWorkspaces());
+    setDashboardActionStatus(msg("workspaceRestoredMeta", [
+      Number(result.restoredTabs || 0),
+      Number(result.restoredGroups || 0),
+      Number(result.skippedTabs || 0)
+    ]));
+  } catch (error) {
+    setDashboardActionStatus(`${msg("couldNotRestoreWorkspace")} ${error?.message || ""}`.trim());
+  } finally {
+    button.disabled = false;
+    button.textContent = msg("restoreWorkspace");
+  }
 }
 
 async function deleteSavedWorkspaceFromDashboard(button) {
@@ -322,7 +403,7 @@ async function deleteSavedWorkspaceFromDashboard(button) {
 
   button.disabled = true;
   button.textContent = msg("deleting");
-  workspaceActionStatus.textContent = "";
+  setDashboardActionStatus("");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -331,14 +412,14 @@ async function deleteSavedWorkspaceFromDashboard(button) {
     });
 
     if (!response?.ok) {
-      workspaceActionStatus.textContent = response?.error || msg("couldNotDeleteWorkspace");
+      setDashboardActionStatus(response?.error || msg("couldNotDeleteWorkspace"));
       return;
     }
 
     renderSavedWorkspaces(response.result?.workspaces || []);
-    workspaceActionStatus.textContent = msg("workspaceDeleted");
+    setDashboardActionStatus(msg("workspaceDeleted"));
   } catch (error) {
-    workspaceActionStatus.textContent = `${msg("couldNotDeleteWorkspace")} ${error?.message || ""}`.trim();
+    setDashboardActionStatus(`${msg("couldNotDeleteWorkspace")} ${error?.message || ""}`.trim());
   } finally {
     button.disabled = false;
     button.textContent = msg("delete");
@@ -346,6 +427,13 @@ async function deleteSavedWorkspaceFromDashboard(button) {
 }
 
 async function handleGroupAction(event) {
+  const tabSelect = event.target.closest("[data-tab-select]");
+
+  if (tabSelect) {
+    handleDashboardTabSelect(tabSelect);
+    return;
+  }
+
   const button = event.target.closest("[data-group-action]");
 
   if (!button) {
@@ -458,6 +546,23 @@ function buildSidebarGroupContext(card) {
   };
 }
 
+function buildSidebarSelectedTabsContext(tabs = getSelectedDashboardTabs()) {
+  const tabIds = tabs.map((tab) => Number(tab.id)).filter(Number.isInteger);
+  const windowId = toOptionalInteger(tabs[0]?.windowId);
+  const hostnames = Array.from(new Set(tabs.map((tab) => tab.hostname).filter(Boolean))).slice(0, 3);
+
+  return {
+    scope: "selected_tabs",
+    windowId,
+    title: msg("selectedTabsContextTitle", [tabIds.length]),
+    hostname: hostnames.join(", "),
+    tabCount: tabIds.length,
+    tabIds,
+    source: "dashboard",
+    updatedAt: new Date().toISOString()
+  };
+}
+
 async function setSidebarContextFromDashboard(context) {
   await chrome.storage.local.set({ [SIDEBAR_CONTEXT_KEY]: sanitizeSidebarContext(context) });
 }
@@ -468,7 +573,7 @@ function sanitizeSidebarContext(context = {}) {
     : [];
 
   return {
-    scope: ["current_tab", "current_group"].includes(context.scope) ? context.scope : "current_tab",
+    scope: ["current_tab", "current_group", "selected_tabs"].includes(context.scope) ? context.scope : "current_tab",
     tabId: toOptionalInteger(context.tabId),
     groupId: toOptionalInteger(context.groupId),
     windowId: toOptionalInteger(context.windowId),
@@ -480,6 +585,155 @@ function sanitizeSidebarContext(context = {}) {
     source: "dashboard",
     updatedAt: new Date().toISOString()
   };
+}
+
+function handleDashboardTabSelect(control) {
+  const row = control.closest("[data-tab-id]");
+  const tabId = Number(row?.dataset?.tabId);
+  const tab = findDashboardTab(tabId);
+
+  if (!tab || !Number.isInteger(tabId)) {
+    syncDashboardTabSelectionControls();
+    return;
+  }
+
+  const checked = Boolean(control.checked);
+  const selectedWindowId = getSelectedDashboardWindowId();
+  const nextWindowId = toOptionalInteger(tab.windowId || row?.dataset?.windowId);
+
+  if (checked && Number.isInteger(selectedWindowId) && Number.isInteger(nextWindowId) && selectedWindowId !== nextWindowId) {
+    selectedDashboardTabIds.clear();
+    showDashboardSelectionNotice(msg("selectedTabsWindowReset"));
+  }
+
+  if (checked) {
+    selectedDashboardTabIds.add(tabId);
+  } else {
+    selectedDashboardTabIds.delete(tabId);
+  }
+
+  syncDashboardTabSelectionControls();
+}
+
+async function chatWithSelectedDashboardTabs() {
+  const tabs = getSelectedDashboardTabs();
+
+  if (tabs.length < 2) {
+    syncDashboardSelectedTabsButton();
+    return;
+  }
+
+  const windowId = toOptionalInteger(tabs[0]?.windowId);
+  const openSidebarPromise = openSidebarForDashboardContext(windowId);
+  await setSidebarContextFromDashboard(buildSidebarSelectedTabsContext(tabs));
+  await openSidebarPromise;
+  markDashboardSelectedTabRows();
+}
+
+function getSelectedDashboardTabs() {
+  const tabsById = new Map(
+    (latestRun?.snapshot?.tabs || [])
+      .map((tab) => [Number(tab.id), tab])
+      .filter(([tabId]) => Number.isInteger(tabId))
+  );
+
+  return Array.from(selectedDashboardTabIds)
+    .map((tabId) => tabsById.get(tabId))
+    .filter(Boolean);
+}
+
+function getSelectedDashboardWindowId() {
+  const tab = getSelectedDashboardTabs()[0];
+  return toOptionalInteger(tab?.windowId);
+}
+
+function syncDashboardTabSelectionControls() {
+  const renderedTabIds = Array.from(dashboardGroups.querySelectorAll("[data-tab-id]"))
+    .map((row) => Number(row.dataset.tabId))
+    .filter(Number.isInteger);
+  const fallbackTabIds = (latestRun?.snapshot?.tabs || [])
+    .map((tab) => Number(tab.id))
+    .filter(Number.isInteger);
+  const validTabIds = new Set(
+    renderedTabIds.length ? renderedTabIds : fallbackTabIds
+  );
+  selectedDashboardTabIds = new Set(
+    Array.from(selectedDashboardTabIds)
+      .map((tabId) => Number(tabId))
+      .filter((tabId) => validTabIds.has(tabId))
+  );
+
+  dashboardGroups.querySelectorAll("[data-tab-id]").forEach((row) => {
+    const tabId = Number(row.dataset.tabId);
+    const checked = selectedDashboardTabIds.has(tabId);
+    row.classList.toggle("selected-for-chat", checked);
+    row.querySelectorAll("[data-tab-select]").forEach((control) => {
+      control.checked = checked;
+      control.setAttribute("aria-checked", String(checked));
+    });
+  });
+
+  syncDashboardSelectedTabsButton();
+}
+
+function syncDashboardSelectedTabsButton() {
+  const count = getSelectedDashboardTabs().length;
+  chatSelectedTabsButton.hidden = count < 2;
+  chatSelectedTabsButton.disabled = count < 2;
+  chatSelectedTabsButton.textContent = count ? msg("chatSelectedTabs", [count]) : msg("chatSelectedTabsZero");
+  chatSelectedTabsButton.setAttribute("aria-label", msg("chatSelectedTabs", [Math.max(count, 0)]));
+  syncDashboardWorkbenchSelectionButtons(count);
+}
+
+function syncDashboardWorkbenchSelectionButtons(count = getSelectedDashboardTabs().length) {
+  if (createTodoFromSelectionButton) {
+    createTodoFromSelectionButton.disabled = count < 1;
+    createTodoFromSelectionButton.textContent = count ? msg("createTodoFromSelection", [count]) : msg("createTodo");
+  }
+
+  if (saveSelectionCollectionButton) {
+    saveSelectionCollectionButton.disabled = count < 1;
+    saveSelectionCollectionButton.textContent = count ? msg("saveSelectionCount", [count]) : msg("saveSelection");
+  }
+}
+
+function setDashboardActionStatus(text = "") {
+  if (!workspaceActionStatus) return;
+
+  clearTimeout(selectionNoticeTimer);
+  workspaceActionStatus.textContent = text;
+  if (text) {
+    workspaceActionStatus.dataset.statusScope = "action";
+  } else {
+    delete workspaceActionStatus.dataset.statusScope;
+  }
+}
+
+function showDashboardSelectionNotice(text) {
+  if (!workspaceActionStatus) return;
+
+  clearTimeout(selectionNoticeTimer);
+  workspaceActionStatus.textContent = text;
+  workspaceActionStatus.dataset.statusScope = "selection";
+  selectionNoticeTimer = setTimeout(() => {
+    if (workspaceActionStatus.dataset.statusScope === "selection") {
+      workspaceActionStatus.textContent = "";
+      delete workspaceActionStatus.dataset.statusScope;
+    }
+  }, 4200);
+}
+
+function markDashboardSelectedTabRows() {
+  dashboardGroups.querySelectorAll(".dashboard-tabrow.context-active").forEach((element) => {
+    element.classList.remove("context-active");
+  });
+  selectedDashboardTabIds.forEach((tabId) => {
+    dashboardGroups.querySelectorAll("[data-tab-id]").forEach((row) => {
+      if (Number(row.dataset.tabId) === Number(tabId)) {
+        row.classList.add("context-active");
+      }
+    });
+  });
 }
 
 function toOptionalInteger(value) {
@@ -656,13 +910,85 @@ async function loadAISettings() {
   aiEnabledInput.checked = Boolean(settings.enabled);
   aiBaseUrlInput.value = settings.baseUrl || DEFAULT_AI_SETTINGS.baseUrl;
   aiModelInput.value = settings.model || DEFAULT_AI_SETTINGS.model;
+  updateAIModelOptions([], aiModelInput.value);
+  syncAIProviderPresetSelect(settings.baseUrl);
   aiKeyInput.value = "";
   aiKeyInput.placeholder = settings.apiKey
     ? msg("apiKeySavedPlaceholder")
     : msg("apiKeyStoredPlaceholder");
-  aiSettingsStatus.textContent = settings.enabled && settings.apiKey
+  aiSettingsStatus.textContent = canUseAISettings(settings)
     ? msg("aiClassificationEnabled")
     : msg("localRulesActiveUntilKey");
+}
+
+function applyAIProviderPreset() {
+  const preset = AI_PROVIDER_PRESETS.get(aiProviderPresetSelect?.value || "");
+  syncLocalModelHelp(aiProviderPresetSelect?.value || "custom");
+  if (!preset) return;
+
+  aiBaseUrlInput.value = preset.baseUrl;
+  aiModelInput.value = preset.model;
+  updateAIModelOptions([], preset.model);
+  aiSettingsStatus.textContent = msg("providerPresetApplied", [preset.label]);
+}
+
+function syncAIProviderPresetSelect(baseUrl) {
+  if (!aiProviderPresetSelect) return;
+
+  const normalized = safeNormalizeBaseUrl(baseUrl || DEFAULT_AI_SETTINGS.baseUrl);
+  const matched = normalized
+    ? Array.from(AI_PROVIDER_PRESETS.entries()).find(([, preset]) => normalizeBaseUrl(preset.baseUrl) === normalized)
+    : null;
+  aiProviderPresetSelect.value = matched?.[0] || "custom";
+  syncLocalModelHelp(aiProviderPresetSelect.value);
+}
+
+function syncLocalModelHelp(presetId = "custom") {
+  if (!localModelHelp) return;
+
+  const help = buildLocalModelHelp(presetId);
+  localModelHelp.hidden = !help;
+
+  if (!help) {
+    localModelHelp.innerHTML = "";
+    return;
+  }
+
+  localModelHelp.innerHTML = `
+    <strong>${escapeHtml(help.title)}</strong>
+    <ol>
+      ${help.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
+    </ol>
+    <small>${escapeHtml(help.note)}</small>
+  `;
+}
+
+function buildLocalModelHelp(presetId) {
+  if (presetId === "ollama") {
+    return {
+      title: msg("ollamaSetupTitle"),
+      steps: [
+        msg("ollamaSetupStepOne"),
+        msg("ollamaSetupStepTwo"),
+        msg("ollamaSetupStepThree")
+      ],
+      note: msg("localModelSetupNote")
+    };
+  }
+
+  if (presetId === "lmstudio") {
+    return {
+      title: msg("lmStudioSetupTitle"),
+      steps: [
+        msg("lmStudioSetupStepOne"),
+        msg("lmStudioSetupStepTwo"),
+        msg("lmStudioSetupStepThree")
+      ],
+      note: msg("localModelSetupNote")
+    };
+  }
+
+  return null;
 }
 
 async function saveAISettings(event) {
@@ -674,13 +1000,20 @@ async function saveAISettings(event) {
       ...DEFAULT_AI_SETTINGS,
       ...(existing[AI_SETTINGS_KEY] || {})
     };
+    const baseUrl = normalizeBaseUrl(aiBaseUrlInput.value);
+    const apiKey = aiKeyInput.value.trim() || previous.apiKey;
+
+    if (aiEnabledInput.checked && (apiKey || isLocalAIBaseUrl(baseUrl))) {
+      await ensureAIProviderPermission(baseUrl);
+    }
+
     const next = {
       ...previous,
       enabled: Boolean(aiEnabledInput.checked),
-      provider: "deepseek",
-      baseUrl: normalizeBaseUrl(aiBaseUrlInput.value),
+      provider: inferAIProviderId(baseUrl),
+      baseUrl,
       model: aiModelInput.value.trim() || DEFAULT_AI_SETTINGS.model,
-      apiKey: aiKeyInput.value.trim() || previous.apiKey
+      apiKey
     };
 
     await chrome.storage.local.set({ [AI_SETTINGS_KEY]: next });
@@ -695,31 +1028,113 @@ async function testAIConnection() {
   testAIButton.disabled = true;
   testAIButton.textContent = msg("testing");
   aiSettingsStatus.textContent = msg("testingAIConnection");
+  let testedBaseUrl = "";
 
   try {
+    const baseUrl = normalizeBaseUrl(aiBaseUrlInput.value);
+    testedBaseUrl = baseUrl;
+    await ensureAIProviderPermission(baseUrl);
+
     const response = await chrome.runtime.sendMessage({
       type: "TEST_AI_CONNECTION",
-      baseUrl: normalizeBaseUrl(aiBaseUrlInput.value),
+      baseUrl,
       model: aiModelInput.value.trim() || DEFAULT_AI_SETTINGS.model,
-      apiKey: aiKeyInput.value.trim()
+      apiKey: aiKeyInput.value.trim(),
+      requestPermission: true
     });
 
     if (!response?.ok) {
-      aiSettingsStatus.textContent = response?.error || msg("aiConnectionFailed");
+      const troubleshooting = formatAIConnectionTroubleshooting(
+        buildAIConnectionFailureTroubleshootingCodes(testedBaseUrl, response?.error || "")
+      );
+      aiSettingsStatus.textContent = [response?.error || msg("aiConnectionFailed"), troubleshooting].filter(Boolean).join(" ");
       return;
     }
 
     const result = response.result || {};
-    aiSettingsStatus.textContent = result.modelAvailable
+    updateAIModelOptions(result.modelSuggestions || [], result.model || aiModelInput.value);
+    const connectionStatus = result.modelAvailable
       ? msg("aiConnectionOk", [result.model || DEFAULT_AI_SETTINGS.model])
       : msg("aiConnectionModelMissing", [result.model || DEFAULT_AI_SETTINGS.model]);
+    const diagnostics = formatAIConnectionDiagnostics(result.diagnostics);
+    const troubleshooting = formatAIConnectionTroubleshooting(result.diagnostics?.troubleshootingCodes || []);
+    aiSettingsStatus.textContent = [connectionStatus, diagnostics, troubleshooting].filter(Boolean).join(" ");
   } catch (error) {
-    aiSettingsStatus.textContent = `${msg("aiConnectionFailed")} ${error?.message || ""}`.trim();
+    const troubleshooting = formatAIConnectionTroubleshooting(
+      buildAIConnectionFailureTroubleshootingCodes(testedBaseUrl || aiBaseUrlInput.value, error?.message || "")
+    );
+    aiSettingsStatus.textContent = [`${msg("aiConnectionFailed")} ${error?.message || ""}`.trim(), troubleshooting].filter(Boolean).join(" ");
   } finally {
     testAIButton.disabled = false;
     testAIButton.textContent = msg("testAIConnection");
   }
 }
+
+function formatAIConnectionDiagnostics(diagnostics = {}) {
+  if (!diagnostics || typeof diagnostics !== "object") {
+    return "";
+  }
+
+  const endpoint = diagnostics.endpoint === "synthetic-chat" ? "synthetic-chat" : "models";
+  const endpointLabel = endpoint === "synthetic-chat" ? msg("aiConnectionCheckedSynthetic") : msg("aiConnectionCheckedModels");
+  const endpointType = diagnostics.localEndpoint ? msg("localEndpoint") : msg("remoteEndpoint");
+  const auth = diagnostics.authorizationSent ? msg("authorizationHeaderSent") : msg("authorizationHeaderNotSent");
+  const suggestionCopy = endpoint === "synthetic-chat"
+    ? msg("aiConnectionNoModelSuggestions")
+    : msg("aiConnectionModelSuggestionCount", [diagnostics.modelSuggestionCount ?? 0]);
+
+  return msg("aiConnectionDiagnostics", [
+    diagnostics.providerLabel || diagnostics.provider || "OpenAI-compatible",
+    endpointLabel,
+    suggestionCopy,
+    endpointType,
+    auth
+  ]);
+}
+
+function formatAIConnectionTroubleshooting(codes = []) {
+  const items = (Array.isArray(codes) ? codes : [])
+    .map((code) => {
+      const key = AI_CONNECTION_TROUBLESHOOTING_MESSAGES[code];
+      return key ? msg(key) : "";
+    })
+    .filter(Boolean)
+    .slice(0, 3);
+
+  if (!items.length) return "";
+
+  return msg("aiConnectionNextSteps", [items.join("; ")]);
+}
+
+function buildAIConnectionFailureTroubleshootingCodes(baseUrl, errorMessage = "") {
+  const normalized = safeNormalizeBaseUrl(baseUrl);
+  const text = String(errorMessage || "").toLowerCase();
+
+  if (normalized && isLocalAIBaseUrl(normalized)) {
+    if (normalized.includes(":11434")) return ["start_ollama_load_model"];
+    if (normalized.includes(":1234")) return ["start_lmstudio_server_load_model"];
+    return ["check_local_openai_server"];
+  }
+
+  if (text.includes("api key")) return ["add_remote_api_key"];
+  if (text.includes("permission")) return ["approve_provider_permission"];
+  if (text.includes("https")) return ["use_https_or_localhost"];
+
+  return ["check_provider_base_url_model_key"];
+}
+
+const AI_CONNECTION_TROUBLESHOOTING_MESSAGES = {
+  start_ollama_load_model: "aiTroubleshootOllama",
+  start_lmstudio_server_load_model: "aiTroubleshootLMStudio",
+  check_local_openai_server: "aiTroubleshootLocalServer",
+  choose_listed_model: "aiTroubleshootChooseListedModel",
+  check_configured_model_name: "aiTroubleshootCheckModelName",
+  model_list_unavailable_synthetic_only: "aiTroubleshootSyntheticOnly",
+  add_remote_api_key: "aiTroubleshootAddRemoteKey",
+  approve_provider_permission: "aiTroubleshootApprovePermission",
+  use_https_or_localhost: "aiTroubleshootUseHttps",
+  check_provider_base_url_model_key: "aiTroubleshootProviderSettings"
+};
 
 async function clearAIKey() {
   const confirmed = window.confirm(msg("clearAIKeyConfirm"));
@@ -850,18 +1265,114 @@ function normalizeBaseUrl(value) {
     throw new Error(msg("unsupportedAIBaseUrl"));
   }
 
-  if (
-    url.protocol !== "https:" ||
-    url.hostname !== "api.deepseek.com" ||
-    url.username ||
-    url.password ||
-    url.search ||
-    url.hash
-  ) {
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error(msg("unsupportedAIBaseUrl"));
+  }
+
+  if (url.protocol === "http:" && !isLocalAIHostname(url.hostname)) {
+    throw new Error(msg("unsupportedAIBaseUrl"));
+  }
+
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
     throw new Error(msg("unsupportedAIBaseUrl"));
   }
 
   return url.toString().replace(/\/+$/, "");
+}
+
+function safeNormalizeBaseUrl(value) {
+  try {
+    return normalizeBaseUrl(value);
+  } catch {
+    return "";
+  }
+}
+
+function updateAIModelOptions(modelIds = [], currentModel = "") {
+  if (!aiModelOptions) return;
+
+  const models = Array.from(new Set([
+    String(currentModel || "").trim(),
+    ...((Array.isArray(modelIds) ? modelIds : []).map((model) => String(model || "").trim()))
+  ]))
+    .filter(Boolean)
+    .slice(0, 30);
+
+  aiModelOptions.innerHTML = models
+    .map((model) => `<option value="${escapeHtml(model)}"></option>`)
+    .join("");
+}
+
+function canUseAISettings(settings = {}) {
+  if (!settings.enabled) return false;
+  if (String(settings.apiKey || "").trim()) return true;
+  return isLocalAIBaseUrl(settings.baseUrl);
+}
+
+function isLocalAIBaseUrl(baseUrl) {
+  try {
+    const url = new URL(normalizeBaseUrl(baseUrl));
+    return isLocalAIHostname(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+async function ensureAIProviderPermission(baseUrl) {
+  const origin = getAIProviderPermissionOrigin(baseUrl);
+
+  if (origin === DEFAULT_AI_PROVIDER_ORIGIN) {
+    return { granted: true, origin, required: false };
+  }
+
+  if (!chrome.permissions?.contains || !chrome.permissions?.request) {
+    return { granted: true, origin, required: true, reason: "permissions-api-unavailable" };
+  }
+
+  const hasPermission = await chrome.permissions.contains({ origins: [origin] });
+
+  if (hasPermission) {
+    return { granted: true, origin, required: true };
+  }
+
+  const granted = await chrome.permissions.request({ origins: [origin] });
+
+  if (!granted) {
+    throw new Error(msg("aiProviderPermissionDenied", [origin]));
+  }
+
+  return { granted: true, origin, required: true };
+}
+
+function getAIProviderPermissionOrigin(baseUrl) {
+  const url = new URL(normalizeBaseUrl(baseUrl));
+  return `${url.protocol}//${url.hostname}/*`;
+}
+
+function inferAIProviderId(baseUrl) {
+  const url = new URL(normalizeBaseUrl(baseUrl));
+  const hostname = normalizeAIHostname(url.hostname);
+
+  if (hostname === DEFAULT_AI_HOSTNAME) return "deepseek";
+  if (isLocalAIHostname(hostname)) return "local-openai-compatible";
+  return AI_PROVIDER_HOST_IDS.get(hostname) || "openai-compatible";
+}
+
+function isLocalAIHostname(hostname) {
+  const normalized = normalizeAIHostname(hostname);
+  return (
+    normalized === "localhost" ||
+    normalized === "127.0.0.1" ||
+    normalized === "::1" ||
+    normalized.endsWith(".localhost")
+  );
+}
+
+function normalizeAIHostname(hostname) {
+  return String(hostname || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "");
 }
 
 function renderSettingsSnapshot(summary) {
@@ -895,20 +1406,25 @@ function renderGroupFilterCounts(groups) {
 
 function renderGroups(groups, run = latestRun) {
   if (!groups.length) {
+    selectedDashboardTabIds.clear();
     dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(msg("noNativeGroupsLatest"))}</p>`;
+    syncDashboardSelectedTabsButton();
     return;
   }
 
   const filteredGroups = getFilteredGroups(groups, activeGroupFilter);
 
   if (!filteredGroups.length) {
+    selectedDashboardTabIds.clear();
     dashboardGroups.innerHTML = `<p class="empty">${escapeHtml(msg("noGroupsForFilter"))}</p>`;
+    syncDashboardSelectedTabsButton();
     return;
   }
 
   dashboardGroups.innerHTML = filteredGroups
     .map((group, index) => renderGroupCard(group, run, index))
     .join("");
+  syncDashboardTabSelectionControls();
 }
 
 function renderSavedWorkspaces(workspaces = []) {
@@ -936,12 +1452,20 @@ function renderSavedWorkspaceRow(workspace) {
         <small>${escapeHtml(msg("workspaceSavedMeta", [tabCount, groupCount, savedAt]))}</small>
       </div>
       <span>${escapeHtml(msg("localSnapshot"))}</span>
-      <button
-        class="mini-button"
-        type="button"
-        data-workspace-action="delete"
-        data-workspace-id="${escapeHtml(String(workspace.id || ""))}"
-      >${escapeHtml(msg("delete"))}</button>
+      <div class="dashboard-workspace-actions">
+        <button
+          class="mini-button"
+          type="button"
+          data-workspace-action="restore"
+          data-workspace-id="${escapeHtml(String(workspace.id || ""))}"
+        >${escapeHtml(msg("restoreWorkspace"))}</button>
+        <button
+          class="mini-button"
+          type="button"
+          data-workspace-action="delete"
+          data-workspace-id="${escapeHtml(String(workspace.id || ""))}"
+        >${escapeHtml(msg("delete"))}</button>
+      </div>
     </article>
   `;
 }
@@ -959,6 +1483,229 @@ function formatSavedWorkspaceDate(value) {
   } catch {
     return msg("unknownTime");
   }
+}
+
+function renderDashboardWorkbench() {
+  renderAgentTasks();
+  renderSavedCollections();
+  syncDashboardWorkbenchSelectionButtons();
+}
+
+function renderAgentTasks() {
+  if (!dashboardAgentTasks) return;
+
+  if (!latestAgentTasks.length) {
+    dashboardAgentTasks.innerHTML = `<p class="empty">${escapeHtml(msg("noAgentTasksYet"))}</p>`;
+    return;
+  }
+
+  dashboardAgentTasks.innerHTML = latestAgentTasks
+    .slice(0, 3)
+    .map((task) => renderAgentTaskRow(task))
+    .join("");
+}
+
+function renderAgentTaskRow(task) {
+  const count = Array.isArray(task.tabs) ? task.tabs.length : 0;
+  const meta = buildBrowserWorkMeta(task);
+  return `
+    <article class="dashboard-agent-minirow" data-browser-work-kind="task" data-browser-work-id="${escapeHtml(String(task.id || ""))}">
+      <span class="dashboard-agent-minirow-icon" aria-hidden="true">✓</span>
+      <div class="dashboard-agent-minirow-copy">
+        <strong>${escapeHtml(task.title || msg("todo"))}</strong>
+        <small>${escapeHtml(meta || `${msg("tabsCount", [count])} · ${msg("localOnly")}`)}</small>
+        ${renderBrowserWorkTabPreview(task.tabs)}
+      </div>
+      <button class="dashboard-agent-row-action" type="button" data-browser-work-action="ask">
+        ${escapeHtml(msg("askInSidebar"))}
+      </button>
+    </article>
+  `;
+}
+
+function renderSavedCollections() {
+  if (!dashboardAgentCollections) return;
+
+  if (!latestSavedCollections.length) {
+    dashboardAgentCollections.innerHTML = `<p class="empty">${escapeHtml(msg("noCollectionsYet"))}</p>`;
+    return;
+  }
+
+  dashboardAgentCollections.innerHTML = latestSavedCollections
+    .slice(0, 3)
+    .map((collection) => renderCollectionRow(collection))
+    .join("");
+}
+
+function renderCollectionRow(collection) {
+  const count = Array.isArray(collection.tabs) ? collection.tabs.length : 0;
+  const meta = buildBrowserWorkMeta(collection);
+  return `
+    <article class="dashboard-agent-minirow" data-browser-work-kind="collection" data-browser-work-id="${escapeHtml(String(collection.id || ""))}">
+      <span class="dashboard-agent-minirow-icon collection" aria-hidden="true">◇</span>
+      <div class="dashboard-agent-minirow-copy">
+        <strong>${escapeHtml(collection.name || msg("collection"))}</strong>
+        <small>${escapeHtml(meta || `${msg("tabsCount", [count])} · ${msg("localOnly")}`)}</small>
+        ${renderBrowserWorkTabPreview(collection.tabs)}
+      </div>
+      <button class="dashboard-agent-row-action" type="button" data-browser-work-action="ask">
+        ${escapeHtml(msg("askInSidebar"))}
+      </button>
+    </article>
+  `;
+}
+
+function renderBrowserWorkTabPreview(tabs = []) {
+  const safeTabs = Array.isArray(tabs) ? tabs : [];
+  if (!safeTabs.length) return "";
+
+  const preview = safeTabs
+    .slice(0, 2)
+    .map((tab) => {
+      const label = tab.hostname || tab.title || msg("untitled");
+      return `<span>${escapeHtml(label)}</span>`;
+    })
+    .join("");
+  const more = safeTabs.length > 2 ? `<span>${escapeHtml(msg("moreTabsInline", [safeTabs.length - 2]))}</span>` : "";
+
+  return `<div class="dashboard-agent-tab-preview" aria-label="${escapeHtml(msg("linkedTabs"))}">${preview}${more}</div>`;
+}
+
+function buildBrowserWorkMeta(item = {}) {
+  const tabs = Array.isArray(item.tabs) ? item.tabs : [];
+  const count = tabs.length;
+  const group = mostCommonValue(tabs.map((tab) => tab.groupName).filter(Boolean));
+  const host = mostCommonValue(tabs.map((tab) => tab.hostname).filter(Boolean));
+  const source = group || host || msg("selectedTabsCollection");
+  return `${msg("tabsCount", [count])} · ${source} · ${msg("localOnly")}`;
+}
+
+async function handleBrowserWorkAction(event) {
+  const button = event.target.closest("[data-browser-work-action]");
+  if (!button) return;
+
+  const row = button.closest("[data-browser-work-kind][data-browser-work-id]");
+  const action = button.dataset.browserWorkAction;
+  const kind = row?.dataset.browserWorkKind;
+  const itemId = row?.dataset.browserWorkId;
+  const item = findBrowserWorkItem(kind, itemId);
+
+  if (!item || action !== "ask") return;
+
+  await askAboutBrowserWorkItem(item);
+}
+
+function findBrowserWorkItem(kind, itemId) {
+  const list = kind === "collection" ? latestSavedCollections : latestAgentTasks;
+  return list.find((item) => String(item.id || "") === String(itemId || "")) || null;
+}
+
+async function askAboutBrowserWorkItem(item) {
+  const currentTabsById = new Map(
+    (latestRun?.snapshot?.tabs || [])
+      .map((tab) => [Number(tab.id), tab])
+      .filter(([tabId]) => Number.isInteger(tabId))
+  );
+  const tabIds = Array.isArray(item.tabIds)
+    ? item.tabIds.map((tabId) => Number(tabId)).filter((tabId) => currentTabsById.has(tabId))
+    : [];
+
+  if (!tabIds.length) {
+    showDashboardSelectionNotice(msg("browserWorkTabsUnavailable"));
+    return;
+  }
+
+  const tabs = tabIds.map((tabId) => currentTabsById.get(tabId)).filter(Boolean);
+  const windowId = toOptionalInteger(tabs[0]?.windowId);
+  const context = {
+    ...buildSidebarSelectedTabsContext(tabs),
+    title: item.title || item.name || msg("selectedTabsCollection"),
+    source: "dashboard_workbench"
+  };
+
+  const openSidebarPromise = openSidebarForDashboardContext(windowId);
+  await setSidebarContextFromDashboard(context);
+  await openSidebarPromise;
+  showDashboardSelectionNotice(msg("browserWorkSentToSidebar", [tabIds.length]));
+}
+
+async function createTodoFromSelectedTabs() {
+  const selectedTabs = getSelectedDashboardTabs();
+  if (!selectedTabs.length) return;
+
+  const task = {
+    id: `task-${Date.now()}`,
+    title: buildTodoTitle(selectedTabs),
+    status: "open",
+    source: "dashboard_selection",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tabIds: selectedTabs.map((tab) => Number(tab.id)).filter(Number.isInteger),
+    tabs: selectedTabs.map(sanitizeTabForBrowserWork)
+  };
+  const nextTasks = [task, ...latestAgentTasks].slice(0, MAX_AGENT_ITEMS);
+  await chrome.storage.local.set({ [AGENT_TASKS_KEY]: nextTasks });
+  latestAgentTasks = nextTasks;
+  renderAgentTasks();
+  showDashboardSelectionNotice(msg("todoCreatedFromSelection", [selectedTabs.length]));
+}
+
+async function saveSelectedTabsAsCollection() {
+  const selectedTabs = getSelectedDashboardTabs();
+  if (!selectedTabs.length) return;
+
+  const collection = {
+    id: `collection-${Date.now()}`,
+    name: buildCollectionName(selectedTabs),
+    source: "dashboard_selection",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tabIds: selectedTabs.map((tab) => Number(tab.id)).filter(Number.isInteger),
+    tabs: selectedTabs.map(sanitizeTabForBrowserWork)
+  };
+  const nextCollections = [collection, ...latestSavedCollections].slice(0, MAX_AGENT_ITEMS);
+  await chrome.storage.local.set({ [SAVED_COLLECTIONS_KEY]: nextCollections });
+  latestSavedCollections = nextCollections;
+  renderSavedCollections();
+  showDashboardSelectionNotice(msg("collectionSavedFromSelection", [selectedTabs.length]));
+}
+
+function sanitizeTabForBrowserWork(tab) {
+  const group = findDashboardGroup(tab.groupId);
+  return {
+    id: Number(tab.id),
+    windowId: Number(tab.windowId),
+    groupId: Number.isInteger(Number(tab.groupId)) ? Number(tab.groupId) : null,
+    groupName: String(group?.name || tab.groupTitle || "").slice(0, 120),
+    title: String(tab.title || "").slice(0, 180),
+    hostname: String(tab.hostname || "").slice(0, 120),
+    path: String(tab.path || "").slice(0, 180),
+    active: Boolean(tab.active),
+    pinned: Boolean(tab.pinned),
+    audible: Boolean(tab.audible)
+  };
+}
+
+function buildTodoTitle(tabs) {
+  const groups = Array.from(new Set(tabs.map((tab) => findDashboardGroup(tab.groupId)?.name || tab.groupTitle).filter(Boolean)));
+  if (groups.length === 1) return msg("todoReviewGroup", [groups[0]]);
+  const host = mostCommonValue(tabs.map((tab) => tab.hostname).filter(Boolean));
+  return host ? msg("todoReviewHostTabs", [host]) : msg("todoReviewSelectedTabs");
+}
+
+function buildCollectionName(tabs) {
+  const groups = Array.from(new Set(tabs.map((tab) => findDashboardGroup(tab.groupId)?.name || tab.groupTitle).filter(Boolean)));
+  if (groups.length === 1) return groups[0];
+  const host = mostCommonValue(tabs.map((tab) => tab.hostname).filter(Boolean));
+  return host || msg("selectedTabsCollection");
+}
+
+function mostCommonValue(values) {
+  const counts = new Map();
+  values.forEach((value) => {
+    counts.set(value, (counts.get(value) || 0) + 1);
+  });
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
 }
 
 function renderDashboardError(errorText) {
@@ -1084,10 +1831,12 @@ function renderGroupTabs(tabs, group) {
 function renderGroupTabRow(tab, currentGroup) {
   const moveTargets = getDashboardTabMoveTargets(currentGroup, tab);
   const canDrag = moveTargets.length > 0;
+  const isSelected = selectedDashboardTabIds.has(Number(tab.id));
   const classes = [
     "dashboard-tabrow",
     tab.discarded ? "suspended" : "",
     tab.audible ? "audible" : "",
+    isSelected ? "selected-for-chat" : "",
     canDrag ? "draggable" : ""
   ].filter(Boolean).join(" ");
   const badges = [
@@ -1108,6 +1857,14 @@ function renderGroupTabRow(tab, currentGroup) {
       draggable="${canDrag ? "true" : "false"}"
       title="${canDrag ? escapeHtml(msg("dragTabToGroup")) : ""}"
     >
+      <label class="dashboard-tab-select" title="${escapeHtml(msg("selectTabForChat"))}">
+        <input
+          type="checkbox"
+          data-tab-select
+          ${isSelected ? "checked" : ""}
+          aria-label="${escapeHtml(msg("selectTabForChat"))}: ${escapeHtml(title)}"
+        />
+      </label>
       ${renderTabFavicon(tab)}
       <span class="dashboard-tab-title" title="${escapeHtml(tab.hostname || "")}">
         <button

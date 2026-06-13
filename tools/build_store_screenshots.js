@@ -39,12 +39,13 @@ const SCREENSHOTS = [
     accent: "#8b6bb1"
   },
   {
-    name: "04-agent-actions.png",
+    name: "04-page-chat.png",
     source: "sidepanel-chat.png",
-    title: "Ask the Agent to keep working",
-    subtitle: "TabMosaic answers from tab metadata, drafts safe actions, and waits for Apply before changing groups.",
-    note: "Agent chat - mock beta data",
-    frame: { left: 184, top: 178, width: 912, height: 532, position: "top" },
+    title: "Ask about the page you are on",
+    subtitle: "The sidebar stays in the current-tab context, answers from visible page text when you ask, and keeps the UI calm.",
+    note: "Current-page chat - mock beta data",
+    frame: { left: 760, top: 86, width: 360, height: 660, position: "top" },
+    sideText: true,
     accent: "#b46b7d"
   },
   {

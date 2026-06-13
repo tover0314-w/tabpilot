@@ -9,9 +9,10 @@ P0 first slice supports saving the current organized browser state as a local-on
 The saved snapshot is stored in chrome.storage.local under tabmosaic.savedWorkspaces.
 It keeps minimized local metadata needed to show a saved workspace list: group names/colors/counts, tab title/hostname/path/group mapping, and summary counts.
 It does not store full URLs, restore URLs, URL hashes, favicon URLs, page text, summaries, chat history, or cloud data.
-Saved workspace UI is hidden from the default Dashboard because restore/history/workspace chat are not wired yet; the local snapshot storage path remains available for private-beta testing and future P1 workspace work.
+Saved workspace UI remains hidden from the default Dashboard. A private-beta restore first slice is wired for local snapshots, but it only regroups tabs that are still open on the same device by saved local tab IDs.
 Users can delete an individual saved local snapshot from Dashboard after browser confirmation. This only removes the selected item from tabmosaic.savedWorkspaces and does not restore, close, or move tabs.
-Restore workspace, workspace history management, export, cloud sync, and workspace chat remain P1/Pro and are not wired yet.
+Users can restore an individual saved local snapshot from Dashboard after browser confirmation. This saves an Undo snapshot, regroups only currently open, unprotected, non-internal tabs that still match saved local tab IDs, preserves saved group name/color where possible, and reports skipped tabs. It does not reopen closed pages, close tabs, read page text, upload data, or use full URLs.
+Full historical workspace management, reopening closed tabs from workspace history, export, cloud sync, and workspace chat remain P1/Pro and are not wired yet.
 ```
 
 ## 1. 目标
@@ -45,7 +46,8 @@ created/updated time
 
 ### P0
 
-- Save current workspace locally（first slice implemented as local snapshot；restore not wired yet）。
+- Save current workspace locally（first slice implemented as local snapshot）。
+- Restore currently open tabs from a saved local workspace snapshot（private-beta first slice；tabId-based only；does not reopen closed pages）。
 - Delete individual local saved workspace snapshot with confirmation.
 - Dashboard 查看当前 workspace。
 - Apply current dashboard changes to browser。
@@ -53,7 +55,7 @@ created/updated time
 ### P1 / Pro
 
 - Workspace history。
-- Restore workspace。
+- Full workspace restore, including reopening previously closed pages after an explicit future privacy/storage design.
 - Cloud sync。
 - Workspace chat。
 - Export markdown/JSON/CSV。
@@ -93,11 +95,19 @@ Summary: Research workspace for AI browser tab management products.
 用户点击 Restore：
 
 ```text
-当前窗口打开
-→ 按 saved groups 创建原生 tab groups
-→ 重新打开 saved tabs
-→ 尽量恢复顺序和 group color
-→ Sidebar 展示恢复结果
+读取本地 saved workspace snapshot
+→ 找出当前仍然打开、未 pinned、非内部页、非 incognito 的 saved tab IDs
+→ 保存 Undo snapshot
+→ 按 saved groups 重新创建/更新原生 tab groups
+→ 尽量恢复 group name/color
+→ Dashboard 展示 restored/skipped 结果
+```
+
+Current limitation:
+
+```text
+The snapshot does not contain full URLs by design, so the restore first slice cannot reopen closed pages.
+Closed/missing/protected/internal tabs are skipped and counted.
 ```
 
 ## 8. 冲突处理
@@ -109,7 +119,7 @@ Summary: Research workspace for AI browser tab management products.
 [Current Window] [New Window]
 ```
 
-P0 可以只支持新窗口恢复。
+Future full restore can ask current window vs new window. The implemented private-beta first slice only regroups matching tabs that are already open, using their current windows.
 
 ## 9. 验收标准
 
@@ -117,12 +127,21 @@ P0 可以只支持新窗口恢复。
 Given 用户已整理一个窗口
 When 用户点击 Save Workspace
 Then 系统保存当前 tabs、groups、顺序和摘要到本地 snapshot
-And default Dashboard 不显示 Saved Workspaces 入口，直到 restore/history/workspace chat 打通
+And default Dashboard 不显示 Saved Workspaces 入口，直到 restore/history/workspace chat 形成完整用户价值
 And saved snapshot 不包含 full URL、restore URL、page text 或 cloud data
-And Pro 用户后续可以恢复或聊天
+And full history restore / workspace chat remain future Pro candidates
 
 Given 用户在 Dashboard 删除一个 saved workspace snapshot
 When 用户确认删除
 Then 仅删除该本地 snapshot
 And 不恢复、不关闭、不移动任何 tabs
+
+Given 用户保存过一个本地 workspace snapshot
+And 其中部分 saved tabs 仍然打开
+When 用户在隐藏/private-beta Dashboard path 中确认 Restore
+Then 系统只按 saved local tab IDs 重新分组当前仍打开且安全的 tabs
+And 保留 saved group name/color where possible
+And 关闭、missing、pinned、内部页或 incognito tabs 被 skipped
+And 系统不会重新打开网页、关闭 tabs、读取 page text、上传数据或使用 full URL
+And Undo 可以尽量恢复 Restore 前的 group 状态
 ```

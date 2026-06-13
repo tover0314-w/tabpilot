@@ -1,0 +1,110 @@
+name: Grouping quality feedback
+description: Report where Smart Organize grouped tabs too shallowly, too broadly, or by domain instead of work intent.
+title: "[Grouping Quality]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when tab grouping quality feels wrong.
+
+        Privacy guardrails:
+        - Do not paste API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+        - Describe tabs generically, for example "design doc", "ticket tracker", "billing settings", or "code review".
+        - Review copied diagnostics or feedback text before submitting.
+  - type: input
+    id: extension_version
+    attributes:
+      label: Extension version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: workload_shape
+    attributes:
+      label: Workload shape
+      description: Approximate windows/tabs and work style. Keep names generic.
+      placeholder: "3 windows, about 60 tabs, product planning + code review + vendor docs"
+    validations:
+      required: true
+  - type: dropdown
+    id: context_used
+    attributes:
+      label: Context used
+      description: Which grouping path produced the issue?
+      options:
+        - Smart Organize metadata only
+        - Selected-tabs content regrouping
+        - Current-group content regrouping
+        - Dashboard apply or adjustment
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: quality_issue
+    attributes:
+      label: Main quality issue
+      options:
+        - Grouped mostly by domain
+        - Mixed unrelated projects
+        - Split one project into too many groups
+        - Too much Review or Misc
+        - Wrong duplicate decision
+        - Group names unclear
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected_grouping
+    attributes:
+      label: Expected grouping
+      description: Use generic group names and tab types.
+      placeholder: |
+        Expected:
+        - Product Planning: roadmap, PRD, meeting notes
+        - Code Review: pull requests, CI logs, issue tracker
+        - Vendor Setup: provider docs, settings pages
+    validations:
+      required: true
+  - type: textarea
+    id: actual_grouping
+    attributes:
+      label: Actual grouping
+      description: Describe the result without real URLs, real tab titles, or page text.
+      placeholder: |
+        Actual:
+        - github.com mixed PRs from two projects
+        - docs and settings pages went to Misc
+        - provider docs were grouped only by domain
+    validations:
+      required: true
+  - type: textarea
+    id: safe_examples
+    attributes:
+      label: Safe generic examples
+      description: Optional examples using synthetic titles or public docs only.
+      placeholder: |
+        Synthetic tab set:
+        - "Project Alpha Roadmap"
+        - "Project Alpha PR Review"
+        - "Payment Provider Docs"
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: model_provider
+    attributes:
+      label: Model or provider notes
+      description: Optional. Name provider/model only. Do not include API keys, request logs, or private payloads.
+      placeholder: "DeepSeek default / OpenRouter model / local Ollama model"
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy_check
+    attributes:
+      label: Privacy check
+      options:
+        - label: I did not include API keys, bearer tokens, cookies, full URLs, tab titles, page text, emails, screenshots with private content, or private rule patterns.
+          required: true
+        - label: I reviewed all examples before submitting and used generic or synthetic tab descriptions.
+          required: true
+

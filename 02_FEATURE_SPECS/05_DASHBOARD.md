@@ -12,8 +12,9 @@ It no longer shows Latest Result, timestamp, Current Workspace card, or a result
 It shows simplified glass Smart Group cards with local tab rows, softer row dividers, expandable hidden tab rows, and folded Duplicate Center with non-destructive duplicate tab details.
 Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, and Restore Closed.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.
+Dashboard tab rows can be selected in the same window and handed to Sidebar as a `selected_tabs` chat context.
 Saved Workspaces, Auto Organize, Save Workspace, Rules & Memory, and Settings are not shown in the default customer UI because they do not yet solve a complete user job in this MVP.
-Private-beta diagnostics, local reset, AI key test/clear, and workspace snapshot paths still exist for QA and development, but they are not customer-facing value until restore/history/rules workflows are complete.
+Private-beta diagnostics, local reset, AI key test/clear, and workspace snapshot paths still exist for QA and development. Saved Workspaces now has a private-beta restore first slice for currently open tabs, but it should stay hidden until history/full restore/workspace chat become clear customer-facing value.
 ```
 
 ### 0.1 MVP Dashboard User Pain Map
@@ -24,6 +25,7 @@ The default Dashboard should answer four concrete user questions after one-click
 |---|---|---|
 | Smart Groups board | "Where did my work tabs go?" | Shows the current browser groups in a scannable layout and mirrors the real top tab bar. |
 | Tab rows inside each group | "Did the AI put the right pages together?" | Lets the user inspect representative tabs without opening every tab manually. |
+| Select tab rows → Chat selected | "I want to ask about these pages together." | Provides a low-clutter bridge from Dashboard inspection to Sidebar Agent without building dashboard-only chat. |
 | Edit / same-window move / drag assignment | "The grouping is mostly right, but I need to fix a few mistakes." | Turns AI from a black box into an editable result and can apply changes back to native Chrome groups. |
 | Undo / Restore Closed | "What if the extension made a mistake?" | Builds trust by making grouping and safe duplicate cleanup reversible. |
 | Duplicate Center | "Which tabs are safe duplicates and which need my review?" | Keeps risky duplicate decisions out of automatic cleanup and gives the user a non-destructive review place. |
@@ -32,7 +34,7 @@ Items removed from the default customer view:
 
 | Removed from default view | Why it would confuse users now | Required before it returns |
 |---|---|---|
-| Saved Workspaces | A snapshot without restore/history/workspace chat feels like a dead-end archive. | Restore, history management, and workspace chat. |
+| Saved Workspaces | The first restore slice only regroups tabs that are still open, so the default UI could still feel like a partial archive. | Clear naming, history management, full restore expectations, and workspace chat. |
 | Auto Organize / Rules & Memory | Rules are valuable only when users can understand and manage cause/effect clearly. | Rule creation, preview, audit trail, and clear explanation of what changed. |
 | Settings | A commercial product should not make users configure providers, permissions, diagnostics, and reset controls as a main workflow. | A dedicated private-beta/support path or a polished account/settings flow. |
 | Save Workspace | Saving without a clear next action does not solve an immediate tab-management pain. | Restore, naming, history, and "continue this workspace" behavior. |
@@ -51,10 +53,15 @@ Wired now:
 - simplified group cards using sanitized local run snapshot data
 - expandable `+ N tabs` rows that reveal remaining local tab rows on demand
 - tab title focus back to the existing browser tab/window
+- same-window selected tab rows can open Sidebar with selected-tabs context; the action stays hidden until 2+ tabs are selected
+- selected tab rows can create a local Work Queue todo or local Collection from the Dashboard Workbench
+- local Work Queue / Collection rows show linked-tab previews and can send their linked tabs back to Sidebar Agent as a selected-tabs context
+- selecting a tab from another Chrome window resets the selected-tabs set and shows a compact status chip, keeping cross-window chat separate without making the selection feel broken
 - folded same-window tab move into an existing native group
 - drag/drop tabs between existing groups in the same Chrome window
 - folded Duplicate Center with expandable duplicate tab details and safe Open tab actions
 - Save current workspace local snapshot and Saved Workspaces list remain hidden/private-beta paths
+- Restore saved local workspace snapshot remains a hidden/private-beta path; it regroups only currently open saved tab IDs, stores Undo, skips closed/protected/internal tabs, and does not reopen URLs
 - Delete individual saved local workspace snapshot with confirmation remains a hidden/private-beta path
 - Rules & Memory enable/disable/delete with confirmation remains available behind hidden navigation
 - DeepSeek API key save/test/clear remains available behind hidden private-beta Settings, but normal private testing uses `tools/write_private_beta_ai_config.js`
@@ -67,8 +74,9 @@ Not wired yet:
 ```text
 - cross-window tab moves
 - manual new group creation
-- workspace restore / historical workspace management
-- group/workspace chat
+- full workspace restore / historical workspace management
+- workspace chat
+- broader multi-tab chat polish beyond the Dashboard selected-tabs first slice
 - billing and usage UI
 - templates
 - multi-tab chat

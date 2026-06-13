@@ -1,5 +1,6 @@
 const childProcess = require("child_process");
 const fs = require("fs");
+const http = require("http");
 const { createRequire } = require("module");
 const net = require("net");
 const os = require("os");
@@ -13,6 +14,30 @@ const SHOULD_RUN_AGENT_FLOW = process.argv.includes("--agent-flow");
 const LARGE_TAB_COUNT = Number(process.env.TABMOSAIC_LARGE_TAB_COUNT || 96);
 const DEFAULT_AI_BASE_URL = "https://api.deepseek.com";
 const DEFAULT_AI_MODEL = "deepseek-v4-flash";
+const SYNTHETIC_CONTENT_HOST = "tabmosaic-runtime.test";
+const SYNTHETIC_CONTENT_PAGES = [
+  {
+    path: "/product-roadmap",
+    title: "Runtime Product Roadmap",
+    heading: "Runtime Product Planning",
+    body:
+      "ORBITALPLANNING anchors the product roadmap planning page. It covers PRD decisions, MVP requirements, workspace acceptance criteria, and customer user stories for the tab agent."
+  },
+  {
+    path: "/release-qa",
+    title: "Runtime Release QA",
+    heading: "Runtime Debug Notes",
+    body:
+      "BUGLANTERN appears in the release QA page. This page covers debug traces, error reproduction, incident triage, and deployment validation for the extension runtime."
+  },
+  {
+    path: "/interface-review",
+    title: "Runtime Interface Review",
+    heading: "Runtime Design Review",
+    body:
+      "GLASSHARBOR marks the design review page. It covers UI prototype feedback, wireframe decisions, interaction polish, and UX review notes for the sidebar."
+  }
+];
 const TEST_URLS = [
   "https://github.com/acme/app/pull/42",
   "https://github.com/acme/app/pull/43",
@@ -48,7 +73,12 @@ async function main() {
   const port = await findFreePort();
   const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "tabmosaic-chrome-profile."));
   const extensionDir = fs.mkdtempSync(path.join(os.tmpdir(), "tabmosaic-extension."));
+  const syntheticContentServer = SHOULD_RUN_LARGE_TABS ? null : await startSyntheticContentServer();
   fs.cpSync(EXTENSION_DIR, extensionDir, { recursive: true });
+  fs.rmSync(path.join(extensionDir, "private-beta-ai-settings.json"), { force: true });
+  if (syntheticContentServer) {
+    addSyntheticContentHostPermission(extensionDir);
+  }
 
   const chrome = childProcess.spawn(
     chromePath,
@@ -57,12 +87,13 @@ async function main() {
       `--remote-debugging-port=${port}`,
       `--disable-extensions-except=${extensionDir}`,
       `--load-extension=${extensionDir}`,
+      syntheticContentServer ? `--host-resolver-rules=MAP ${SYNTHETIC_CONTENT_HOST} 127.0.0.1` : "",
       "--no-first-run",
       "--no-default-browser-check",
       "--enable-logging=stderr",
       "--v=0",
       "about:blank"
-    ],
+    ].filter(Boolean),
     {
       stdio: ["ignore", "ignore", "pipe"]
     }
@@ -110,12 +141,14 @@ async function main() {
         );
       }, "Sidebar latest organize result did not render as an assistant chat message");
       assert(latestRunMessageRendered, "Latest organize result was not rendered as an assistant chat message");
+      await runSelectedTabsContextRuntimeProbe(cdp, organizeResult.run);
+      await runSyntheticContentRuntimeProbe(port, cdp, syntheticContentServer);
 
       const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
       const groupTitles = groups.map((group) => group.title).sort();
-      assertGroupFamily(groupTitles, ["code review", "pr review", "pull request", "github pr", "review pages", "review tabs"], "code review");
-      assertGroupFamily(groupTitles, ["chrome extension", "extension docs", "chrome docs", "browser extension", "chrome api", "api docs", "api documentation", "developer documentation", "development docs"], "Chrome extension docs");
-      assertGroupFamily(groupTitles, ["docs & notes", "documents", "document", "google docs", "design docs", "not found docs"], "documents/notes");
+      assertGroupFamily(groupTitles, ["code review", "pr review", "pull request", "github pr", "app pr", "app prs", "review pages", "review tabs"], "code review");
+      assertGroupFamily(groupTitles, ["chrome extension", "chrome ext", "extension docs", "ext docs", "chrome docs", "browser extension", "chrome api", "api reference", "api docs", "api documentation", "developer documentation", "development docs"], "Chrome extension docs");
+      assertGroupFamily(groupTitles, ["docs & notes", "documents", "document", "project docs", "google docs", "design docs", "tabmosaic docs", "not found docs"], "documents/notes");
 
       if (SHOULD_RUN_AGENT_FLOW) {
         await runDeepSeekAgentFlow(cdp);
@@ -142,8 +175,9 @@ async function main() {
               panel &&
               !panel.hidden &&
               legacyPanel?.hidden &&
-              /Current page|当前页面/.test(text) &&
-              /cannot be read|could not|classify it from title/i.test(text)
+              panel.querySelector(".chat-summary-card") &&
+              !panel.querySelector(".chat-summary-question") &&
+              /summarize this page/.test(text)
             );
           })()`
         );
@@ -162,7 +196,8 @@ async function main() {
               panel &&
               !panel.hidden &&
               legacyPanel?.hidden &&
-              /Question|问题/.test(text) &&
+              panel.querySelector(".chat-summary-card") &&
+              !panel.querySelector(".chat-summary-question") &&
               /what does this page say about tabs/.test(text)
             );
           })()`
@@ -196,7 +231,7 @@ async function main() {
             const assistantMessages = Array.from(panel?.querySelectorAll(".chat-thread-message.assistant") || []);
             return Boolean(
               userMessages.some((node) => /summarize this page/.test(node.textContent || "")) &&
-              assistantMessages.some((node) => /Current page|当前页面/.test(node.textContent || ""))
+              assistantMessages.some((node) => node.querySelector(".chat-summary-card"))
             );
           })()`
         );
@@ -228,7 +263,7 @@ async function main() {
               const latestAssistant = Array.from(panel?.querySelectorAll(".chat-thread-message.assistant") || []).pop();
               const latestText = latestAssistant?.textContent || "";
               const renderedAIAgent = Boolean(latestAssistant?.querySelector(".ai-agent-card"));
-              const renderedFallback = /local DeepSeek private-beta config|enable DeepSeek|启用 DeepSeek|本地 DeepSeek 私测配置/.test(latestText);
+              const renderedFallback = /local DeepSeek private-beta config|enable DeepSeek|connect a BYOK AI provider|BYOK AI provider|启用 DeepSeek|本地 DeepSeek 私测配置/.test(latestText);
 
               return Boolean(
                 panel &&
@@ -744,7 +779,7 @@ async function main() {
         dashboardActionsCdp.close();
       }
 
-      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
+      console.log("PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, selected-tabs context tool card, selected-tabs follow-up routing, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open");
     } finally {
       cdp.close();
     }
@@ -756,9 +791,287 @@ async function main() {
     throw error;
   } finally {
     await stopChrome(chrome);
+    await stopSyntheticContentServer(syntheticContentServer?.server);
     await removePathWithRetry(profileDir);
     await removePathWithRetry(extensionDir);
   }
+}
+
+async function runSelectedTabsContextRuntimeProbe(cdp, run) {
+  const targetGroup = (run.groups || []).find((group) => Array.isArray(group.tabIds) && group.tabIds.length >= 2);
+  assert(targetGroup, "Could not find a synthetic group with multiple tabs for selected-tabs context probe");
+
+  const selectedTabIds = targetGroup.tabIds.slice(0, 4);
+  await evaluate(
+    cdp,
+    `chrome.storage.local.set({
+      "tabmosaic.sidebarContext": {
+        scope: "selected_tabs",
+        tabIds: ${JSON.stringify(selectedTabIds)},
+        tabCount: ${selectedTabIds.length},
+        windowId: ${JSON.stringify(targetGroup.windowId || run.activeWindowId || null)},
+        groupName: ${JSON.stringify(targetGroup.name || "Selected tabs")},
+        title: "Selected runtime tabs",
+        source: "runtime-smoke",
+        updatedAt: new Date().toISOString()
+      }
+    })`
+  );
+
+  const contextRendered = await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `(() => {
+        const bar = document.querySelector("#agentContextBar");
+        const text = bar?.textContent || "";
+        return Boolean(bar && bar.dataset.contextScope === "selected_tabs" && /Selected tabs/.test(text));
+      })()`
+    );
+  }, "Sidebar did not render selected-tabs context before context Agent probe");
+  assert(contextRendered, "Selected-tabs sidebar context did not render");
+
+  const toolCardsBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card").length`);
+  const contextAnswersBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.context-summary").length`);
+  await submitSidepanelComposer(cdp, "What are these selected tabs about?");
+
+  const contextResult = await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `(() => {
+        const toolCards = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card"));
+        const summaries = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.context-summary"));
+        if (toolCards.length <= ${Number(toolCardsBefore)} || summaries.length <= ${Number(contextAnswersBefore)}) return null;
+
+        const toolCard = toolCards[toolCards.length - 1];
+        const summary = summaries[summaries.length - 1];
+        return {
+          toolText: (toolCard.textContent || "").replace(/\\s+/g, " ").trim(),
+          summaryText: (summary.textContent || "").replace(/\\s+/g, " ").trim(),
+          hasToolCard: Boolean(toolCard.querySelector(".agent-tool-card")),
+          hasAnswerCard: Boolean(summary.querySelector(".context-tabs-card")),
+          contextScope: document.querySelector("#agentContextBar")?.dataset.contextScope || ""
+        };
+      })()`
+    );
+  }, "Selected-tabs context Agent did not render a tool card and assistant answer", 30000);
+
+  assert(contextResult.hasToolCard, "Selected-tabs context flow did not render the tool card component");
+  assert(contextResult.hasAnswerCard, "Selected-tabs context flow did not render the context summary card");
+  assertEqual(contextResult.contextScope, "selected_tabs", "Selected-tabs context flow lost sidebar scope");
+  assert(/Read selected tabs|Read group pages/.test(contextResult.toolText), "Selected-tabs tool card did not identify the read tool");
+  assert(/\d+\/\d+ tabs/.test(contextResult.toolText), "Selected-tabs tool card did not show read/request counts");
+  assert(/Visible text only/.test(contextResult.toolText), "Selected-tabs tool card did not disclose visible-text boundary");
+  assert(/Session-only/.test(contextResult.toolText), "Selected-tabs tool card did not disclose session-only storage");
+  assert(contextResult.summaryText.length > 40, "Selected-tabs context answer was too short");
+  assert(!/https?:\/\//i.test(contextResult.summaryText), "Selected-tabs context answer leaked a full URL");
+  assert(!/\btabId\b|\bgroupId\b|\bwindow\s+\d+\b/i.test(contextResult.summaryText), "Selected-tabs context answer leaked internal ids");
+
+  const followUpToolCardsBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card").length`);
+  const followUpContextAnswersBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.context-summary").length`);
+  await submitSidepanelComposer(cdp, "Which one should I review first?");
+
+  const followUpResult = await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `(() => {
+        const toolCards = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card"));
+        const summaries = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.context-summary"));
+        if (toolCards.length <= ${Number(followUpToolCardsBefore)} || summaries.length <= ${Number(followUpContextAnswersBefore)}) return null;
+
+        const latestTool = toolCards[toolCards.length - 1];
+        const latestSummary = summaries[summaries.length - 1];
+        const text = (latestSummary.textContent || "").replace(/\\s+/g, " ").trim();
+
+        return {
+          toolText: (latestTool.textContent || "").replace(/\\s+/g, " ").trim(),
+          summaryText: text,
+          hasToolCard: Boolean(latestTool.querySelector(".agent-tool-card")),
+          hasAnswerCard: Boolean(latestSummary.querySelector(".context-tabs-card")),
+          userFollowUpRendered: /Which one should I review first\\?/.test(document.querySelector("#chatPanel")?.textContent || "")
+        };
+      })()`
+    );
+  }, "Selected-tabs context follow-up did not stay in the multi-tab Page Agent flow", 30000);
+
+  assert(followUpResult.userFollowUpRendered, "Selected-tabs follow-up user message was not rendered");
+  assert(followUpResult.hasToolCard, "Selected-tabs follow-up did not render a tool card");
+  assert(followUpResult.hasAnswerCard, "Selected-tabs follow-up did not render a context answer card");
+  assert(/Read selected tabs|Read group pages/.test(followUpResult.toolText), "Selected-tabs follow-up tool card did not identify the read tool");
+  assert(followUpResult.summaryText.length > 40, "Selected-tabs follow-up answer was too short");
+  assert(!/https?:\/\//i.test(followUpResult.summaryText), "Selected-tabs follow-up answer leaked a full URL");
+  assert(!/\btabId\b|\bgroupId\b|\bwindow\s+\d+\b/i.test(followUpResult.summaryText), "Selected-tabs follow-up answer leaked internal ids");
+
+  await evaluate(
+    cdp,
+    `chrome.tabs.query({ active: true, lastFocusedWindow: true }).then(([tab]) => chrome.storage.local.set({
+      "tabmosaic.sidebarContext": {
+        scope: "current_tab",
+        tabId: tab?.id || null,
+        windowId: tab?.windowId || null,
+        title: tab?.title || "Current tab",
+        hostname: (() => {
+          try { return new URL(tab?.url || "").hostname; } catch { return ""; }
+        })(),
+        source: "runtime-smoke-reset",
+        updatedAt: new Date().toISOString()
+      }
+    }))`
+  );
+}
+
+async function runSyntheticContentRuntimeProbe(port, cdp, syntheticContentServer) {
+  assert(syntheticContentServer?.origin, "Synthetic content server was not started");
+
+  for (const page of SYNTHETIC_CONTENT_PAGES) {
+    await createTarget(port, `${syntheticContentServer.origin}${page.path}`);
+  }
+
+  const syntheticTabs = await waitFor(async () => {
+    const tabs = await evaluate(cdp, "chrome.tabs.query({})");
+    const tabsByPath = new Map();
+
+    for (const tab of tabs) {
+      try {
+        const url = new URL(tab.url || "");
+        if (url.hostname === SYNTHETIC_CONTENT_HOST) {
+          tabsByPath.set(url.pathname, tab);
+        }
+      } catch {
+        // Ignore non-URL extension targets.
+      }
+    }
+
+    const orderedTabs = SYNTHETIC_CONTENT_PAGES.map((page) => tabsByPath.get(page.path)).filter(Boolean);
+    return orderedTabs.length === SYNTHETIC_CONTENT_PAGES.length ? orderedTabs : null;
+  }, "Synthetic HTTP content tabs did not open");
+  const selectedTabIds = syntheticTabs.map((tab) => tab.id);
+
+  await evaluate(
+    cdp,
+    `chrome.storage.local.set({
+      "tabmosaic.aiSettings": { enabled: false },
+      "tabmosaic.sidebarContext": {
+        scope: "selected_tabs",
+        tabIds: ${JSON.stringify(selectedTabIds)},
+        tabCount: ${selectedTabIds.length},
+        windowId: ${JSON.stringify(syntheticTabs[0]?.windowId || null)},
+        title: "Synthetic runtime content",
+        source: "runtime-synthetic-content",
+        updatedAt: new Date().toISOString()
+      }
+    })`
+  );
+
+  const contextRendered = await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `(() => {
+        const bar = document.querySelector("#agentContextBar");
+        const text = bar?.textContent || "";
+        return Boolean(bar && bar.dataset.contextScope === "selected_tabs" && /Selected tabs/.test(text));
+      })()`
+    );
+  }, "Sidebar did not render selected-tabs context before synthetic content probe");
+  assert(contextRendered, "Synthetic selected-tabs context did not render");
+
+  const toolCardsBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card").length`);
+  const contextAnswersBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.context-summary").length`);
+  await submitSidepanelComposerTrusted(cdp, "What do ORBITALPLANNING BUGLANTERN and GLASSHARBOR say in these selected tabs?");
+
+  const contextResult = await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `(() => {
+        const toolCards = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card"));
+        const summaries = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.context-summary"));
+        if (toolCards.length <= ${Number(toolCardsBefore)} || summaries.length <= ${Number(contextAnswersBefore)}) return null;
+
+        const toolCard = toolCards[toolCards.length - 1];
+        const summary = summaries[summaries.length - 1];
+        return {
+          toolText: (toolCard.textContent || "").replace(/\\s+/g, " ").trim(),
+          summaryText: (summary.textContent || "").replace(/\\s+/g, " ").trim(),
+          hasToolCard: Boolean(toolCard.querySelector(".agent-tool-card")),
+          hasAnswerCard: Boolean(summary.querySelector(".context-tabs-card"))
+        };
+      })()`
+    );
+  }, "Synthetic selected-tabs content Agent did not read HTTP page text", 30000);
+
+  assert(contextResult.hasToolCard, "Synthetic content flow did not render a tool card");
+  assert(contextResult.hasAnswerCard, "Synthetic content flow did not render a context answer card");
+  assert(/3\/3 tabs/.test(contextResult.toolText), `Synthetic content tool card did not show 3/3 reads: ${contextResult.toolText}`);
+  assert(/Visible text only/.test(contextResult.toolText), "Synthetic content tool card did not disclose visible-text boundary");
+  assert(/Session-only/.test(contextResult.toolText), "Synthetic content tool card did not disclose session-only storage");
+  assert(/ORBITALPLANNING/.test(contextResult.summaryText), "Synthetic content answer did not include product page visible text");
+  assert(/BUGLANTERN/.test(contextResult.summaryText), "Synthetic content answer did not include QA/debug visible text");
+  assert(/GLASSHARBOR/.test(contextResult.summaryText), "Synthetic content answer did not include design visible text");
+  assert(!/https?:\/\//i.test(contextResult.summaryText), "Synthetic content answer leaked a full URL");
+  assert(!/\btabId\b|\bgroupId\b|\bwindow\s+\d+\b/i.test(contextResult.summaryText), "Synthetic content answer leaked internal ids");
+
+  const contentCardsBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .content-regroup-card").length`);
+  const regroupToolCardsBefore = await evaluate(cdp, `document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card").length`);
+  await submitSidepanelComposerTrusted(cdp, "Regroup these selected tabs by actual page content");
+
+  const regroupPreview = await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `(() => {
+        const toolCards = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.tool-card"));
+        const cards = Array.from(document.querySelectorAll("#chatPanel .content-regroup-card"));
+        if (toolCards.length <= ${Number(regroupToolCardsBefore)} || cards.length <= ${Number(contentCardsBefore)}) return null;
+
+        const toolCard = toolCards[toolCards.length - 1];
+        const card = cards[cards.length - 1];
+        const applyButton = card.querySelector('[data-chat-action="apply"]');
+        return {
+          toolText: (toolCard.textContent || "").replace(/\\s+/g, " ").trim(),
+          text: (card.textContent || "").replace(/\\s+/g, " ").trim(),
+          groupCount: card.querySelectorAll(".content-regroup-group").length,
+          draftId: applyButton?.dataset.draftId || ""
+        };
+      })()`
+    );
+  }, "Synthetic content regroup preview did not render", 30000);
+
+  assert(/3\/3 tabs/.test(regroupPreview.toolText), `Synthetic regroup tool card did not show 3/3 reads: ${regroupPreview.toolText}`);
+  assert(regroupPreview.groupCount >= 3, `Synthetic regroup preview should show at least 3 groups: ${regroupPreview.text}`);
+  assert(/Product Planning/.test(regroupPreview.text), "Synthetic regroup preview did not include Product Planning");
+  assert(/Debugging/.test(regroupPreview.text), "Synthetic regroup preview did not include Debugging");
+  assert(/Design Review/.test(regroupPreview.text), "Synthetic regroup preview did not include Design Review");
+  assert(regroupPreview.draftId, "Synthetic regroup preview did not expose a draft id");
+  assert(!/https?:\/\//i.test(regroupPreview.text), "Synthetic regroup preview leaked a full URL");
+
+  const tabsBeforeApply = await evaluate(cdp, "chrome.tabs.query({})");
+  await evaluate(
+    cdp,
+    `(() => {
+      const cards = Array.from(document.querySelectorAll("#chatPanel .content-regroup-card"));
+      const latest = cards[cards.length - 1];
+      const applyButton = latest?.querySelector('[data-chat-action="apply"]');
+      if (!applyButton) throw new Error("Synthetic regroup Apply button disappeared");
+      applyButton.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+      return true;
+    })()`
+  );
+
+  const applied = await waitFor(async () => {
+    const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
+    const tabs = await evaluate(cdp, "chrome.tabs.query({})");
+    const syntheticTabsAfter = tabs.filter((tab) => selectedTabIds.includes(tab.id));
+    const groupById = new Map(groups.map((group) => [group.id, group]));
+    const titles = syntheticTabsAfter
+      .map((tab) => groupById.get(tab.groupId)?.title || "")
+      .filter(Boolean);
+
+    return titles.includes("Product Planning") && titles.includes("Debugging") && titles.includes("Design Review")
+      ? { tabs, titles }
+      : null;
+  }, "Synthetic content regroup Apply did not create native groups", 30000);
+
+  assertEqual(applied.tabs.length, tabsBeforeApply.length, "Synthetic content regroup must not close tabs");
+
+  console.log("PASS Chrome runtime read synthetic HTTP page content with a temporary fixture host grant, rendered content regroup preview, and applied native groups");
 }
 
 async function runDeepSeekAgentFlow(cdp) {
@@ -796,9 +1109,8 @@ async function runDeepSeekAgentFlow(cdp) {
           return {
             text,
             hasCard: Boolean(latest.querySelector(".ai-agent-card")),
-            hasPrivacyNote: /Page text and full URLs were not sent|页面正文或完整 URL/.test(text),
             tabRows: latest.querySelectorAll(".chat-tab-row").length,
-            nextSteps: /Suggested next steps|建议下一步/.test(text),
+            hasSeparateNextSteps: /Suggested next steps|建议下一步/.test(text),
             actionButtons: latest.querySelectorAll('[data-chat-action="quick-command"]').length
           };
         })()`
@@ -818,9 +1130,10 @@ async function runDeepSeekAgentFlow(cdp) {
   }
 
   assert(agentAnswer.hasCard, "DeepSeek Agent answer did not render as an assistant card");
-  assert(agentAnswer.hasPrivacyNote, "DeepSeek Agent answer did not disclose metadata-only privacy boundary");
-  assert(agentAnswer.actionButtons >= 1, "DeepSeek Agent answer did not render a safe action chip");
-  assert(!/fullUrl|restoreUrl|pageText|token=abc/i.test(agentAnswer.text), "DeepSeek Agent answer leaked sensitive field names or fixture token text");
+  assert(!agentAnswer.hasSeparateNextSteps, "DeepSeek Agent answer should not render a separate suggested-next-steps panel");
+  assertEqual(agentAnswer.tabRows, 0, "DeepSeek Agent open answer should not render tab rows");
+  assertEqual(agentAnswer.actionButtons, 0, "DeepSeek Agent open answer should not render action chips");
+  assert(!/fullUrl|restoreUrl|pageText|token=abc|window\s+\d+|tabId|groupId/i.test(agentAnswer.text), "DeepSeek Agent answer leaked sensitive field names, fixture token text, or internal ids");
 
   const agentMessageCountBeforeFollowUp = await evaluate(
     cdp,
@@ -847,7 +1160,6 @@ async function runDeepSeekAgentFlow(cdp) {
           return {
             text,
             hasCard: Boolean(latest.querySelector(".ai-agent-card")),
-            hasPrivacyNote: /Page text and full URLs were not sent|页面正文或完整 URL/.test(text),
             actionButtons: latest.querySelectorAll('[data-chat-action="quick-command"]').length
           };
         })()`
@@ -867,79 +1179,8 @@ async function runDeepSeekAgentFlow(cdp) {
   }
 
   assert(followUpAnswer.hasCard, "DeepSeek Agent follow-up did not render as an assistant card");
-  assert(followUpAnswer.hasPrivacyNote, "DeepSeek Agent follow-up did not preserve metadata-only privacy boundary");
-  assert(followUpAnswer.actionButtons >= 1, "DeepSeek Agent follow-up did not render a safe action chip");
-  assert(!/fullUrl|restoreUrl|pageText|token=abc/i.test(followUpAnswer.text), "DeepSeek Agent follow-up leaked sensitive field names or fixture token text");
-
-  const clickedAction = await evaluate(
-    cdp,
-    `(() => {
-      const messages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant.ai-agent"));
-      const latest = messages[messages.length - 1];
-      const button =
-        latest?.querySelector('[data-chat-action="quick-command"][data-command="show groups"]') ||
-        latest?.querySelector('[data-chat-action="quick-command"][data-command="open dashboard"]') ||
-        latest?.querySelector('[data-chat-action="quick-command"]');
-
-      if (!button) return null;
-
-      const beforeUserMessages = document.querySelectorAll("#chatPanel .chat-thread-message.user").length;
-      const beforeAssistantMessages = document.querySelectorAll("#chatPanel .chat-thread-message.assistant").length;
-      const label = button.dataset.label || button.textContent.trim();
-      const command = button.dataset.command || "";
-      button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
-
-      return { label, command, beforeUserMessages, beforeAssistantMessages };
-    })()`
-  );
-  assert(clickedAction?.command, "DeepSeek Agent action chip did not expose a safe chat command");
-
-  let actionContinuation;
-  try {
-    actionContinuation = await waitFor(async () => {
-      return evaluate(
-        cdp,
-        `(() => {
-          const userMessages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.user"));
-          const assistantMessages = Array.from(document.querySelectorAll("#chatPanel .chat-thread-message.assistant"));
-          const latestUser = userMessages[userMessages.length - 1];
-          const fullText = document.querySelector("#chatPanel")?.textContent || "";
-
-          return {
-            userCount: userMessages.length,
-            assistantCount: assistantMessages.length,
-            latestUserText: (latestUser?.textContent || "").replace(/\\s+/g, " ").trim(),
-            fullText: fullText.replace(/\\s+/g, " ").trim(),
-            dashboardOpen: false
-          };
-        })()`
-      ).then(async (state) => {
-        if (clickedAction.command === "open dashboard") {
-          const tabs = await evaluate(cdp, "chrome.tabs.query({})");
-          state.dashboardOpen = tabs.some((tab) => String(tab.url || "").endsWith("/dashboard.html"));
-        }
-
-        const userContinued = state.userCount > clickedAction.beforeUserMessages &&
-          state.latestUserText.includes(clickedAction.label);
-        const assistantContinued = clickedAction.command === "show groups"
-          ? /Current groups|当前分组/.test(state.fullText)
-          : state.assistantCount > clickedAction.beforeAssistantMessages || state.dashboardOpen;
-
-        return userContinued && assistantContinued ? state : null;
-      });
-    }, "DeepSeek Agent action chip did not continue the chat thread");
-  } catch (error) {
-    const chatDebug = await evaluate(
-      cdp,
-      `(() => Array.from(document.querySelectorAll("#chatPanel .chat-thread-message"))
-        .slice(-8)
-        .map((node) => ({
-          className: node.className,
-          text: (node.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 260)
-        })))()`
-    );
-    throw new Error(`${error.message}. clickedAction=${JSON.stringify(clickedAction)} chat=${JSON.stringify(chatDebug)}`);
-  }
+  assertEqual(followUpAnswer.actionButtons, 0, "DeepSeek Agent follow-up should not render action chips");
+  assert(!/fullUrl|restoreUrl|pageText|token=abc|window\s+\d+|tabId|groupId/i.test(followUpAnswer.text), "DeepSeek Agent follow-up leaked sensitive field names, fixture token text, or internal ids");
 
   const tabsBeforeDraftApply = await evaluate(cdp, "chrome.tabs.query({})");
   await submitSidepanelComposer(cdp, "Move the Chrome extension docs tabs into Extension Planning");
@@ -1030,7 +1271,7 @@ async function runDeepSeekAgentFlow(cdp) {
   assertEqual(appliedDraft.tabCount, tabsBeforeDraftApply.length, "AI Agent move draft must not close tabs");
 
   console.log(
-    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer with metadata-only privacy note, ${agentAnswer.tabRows} relevant tab rows, actionButtons=${agentAnswer.actionButtons}, followUp=yes, clickedAction=${clickedAction.command}, continued=${actionContinuation ? "yes" : "no"}, aiDraft=${aiDraft.matchedRows} tabs, aiDraftApplied=${appliedDraft.movedTabs} tabs, nextSteps=${agentAnswer.nextSteps ? "yes" : "no"}`
+    `PASS Chrome runtime DeepSeek Agent flow answered from Sidebar composer as plain assistant cards, tabRows=${agentAnswer.tabRows}, actionButtons=${agentAnswer.actionButtons}, followUp=yes, aiDraft=${aiDraft.matchedRows} tabs, aiDraftApplied=${appliedDraft.movedTabs} tabs`
   );
 }
 
@@ -1066,9 +1307,9 @@ async function runLargeTabsRuntimeProbe(port, extensionId) {
     const groups = await evaluate(cdp, "chrome.tabGroups.query({})");
     const groupTitles = groups.map((group) => group.title).sort();
 
-    assertGroupFamily(groupTitles, ["code review", "pr review", "pull request", "github pr", "review pages", "review tabs"], "code review");
+    assertGroupFamily(groupTitles, ["code review", "pr review", "pull request", "github pr", "app pr", "app prs", "review pages", "review tabs"], "code review");
     assertGroupFamily(groupTitles, ["chrome extension", "extension docs", "chrome docs", "browser extension", "chrome api", "api docs"], "Chrome extension docs");
-    assertGroupFamily(groupTitles, ["docs & notes", "documents", "document", "google docs", "design docs", "not found docs"], "documents/notes");
+    assertGroupFamily(groupTitles, ["docs & notes", "documents", "document", "google docs", "design docs", "tabmosaic docs", "not found docs"], "documents/notes");
     assertGroupFamily(groupTitles, ["product", "planning", "tasks"], "product/tasks");
 
     const runState = await evaluate(cdp, 'chrome.storage.local.get("tabmosaic.currentRun")');
@@ -1231,6 +1472,81 @@ function isBrandedGoogleChrome(chromePath) {
   );
 }
 
+function addSyntheticContentHostPermission(extensionDir) {
+  const manifestPath = path.join(extensionDir, "manifest.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const hostPermission = `http://${SYNTHETIC_CONTENT_HOST}/*`;
+  manifest.host_permissions = Array.from(new Set([...(manifest.host_permissions || []), hostPermission]));
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+function startSyntheticContentServer() {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((request, response) => {
+      const url = new URL(request.url || "/", `http://${SYNTHETIC_CONTENT_HOST}`);
+      const page = SYNTHETIC_CONTENT_PAGES.find((item) => item.path === url.pathname);
+
+      if (!page) {
+        response.writeHead(404, {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store"
+        });
+        response.end("Not found");
+        return;
+      }
+
+      response.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store"
+      });
+      response.end(renderSyntheticContentPage(page));
+    });
+
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      resolve({
+        server,
+        port: address.port,
+        origin: `http://${SYNTHETIC_CONTENT_HOST}:${address.port}`
+      });
+    });
+  });
+}
+
+function stopSyntheticContentServer(server) {
+  if (!server) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    server.close(() => resolve());
+  });
+}
+
+function renderSyntheticContentPage(page) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>${escapeHtml(page.title)}</title>
+    <meta name="description" content="${escapeHtml(page.body.slice(0, 160))}">
+  </head>
+  <body>
+    <main>
+      <h1>${escapeHtml(page.heading)}</h1>
+      <p>${escapeHtml(page.body)}</p>
+    </main>
+  </body>
+</html>`;
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function findFreePort() {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -1341,6 +1657,54 @@ async function submitSidepanelComposer(cdp, text) {
       return true;
     })()`
   );
+}
+
+async function submitSidepanelComposerTrusted(cdp, text) {
+  await evaluate(
+    cdp,
+    `(() => {
+      const input = document.querySelector("#chatInput");
+      if (!input) throw new Error("Sidepanel composer is not available");
+      input.value = ${JSON.stringify(text)};
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.focus();
+      return true;
+    })()`
+  );
+  const buttonCenter = await evaluate(
+    cdp,
+    `(() => {
+      const button = document.querySelector("#chatSendButton");
+      if (!button) throw new Error("Sidepanel send button is not available");
+      const rect = button.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    })()`
+  );
+
+  await cdp.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: buttonCenter.x,
+    y: buttonCenter.y
+  });
+  await cdp.send("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    x: buttonCenter.x,
+    y: buttonCenter.y,
+    button: "left",
+    buttons: 1,
+    clickCount: 1
+  });
+  await cdp.send("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    x: buttonCenter.x,
+    y: buttonCenter.y,
+    button: "left",
+    buttons: 0,
+    clickCount: 1
+  });
 }
 
 async function waitForCurrentRunStatus(cdp, status, message, timeoutMs = 15000) {

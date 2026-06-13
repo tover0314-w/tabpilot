@@ -202,6 +202,20 @@ tabmosaic.savedWorkspaces
 
 P0 saved workspace snapshots do not include full URLs, restore URLs, URL hashes, favicon URLs, page text, cloud IDs, summaries, or chat history. Restore/export/chat are P1.
 
+Current private-beta restore first slice uses only saved local tab IDs plus current live browser tab state:
+
+```ts
+export type SavedWorkspaceRestoreResult = {
+  workspaceId: string;
+  workspaceName: string;
+  restoredTabs: number;
+  restoredGroups: number;
+  skippedTabs: number;
+};
+```
+
+It creates an Undo snapshot before regrouping, restores only currently open unprotected tabs that still match saved tab IDs, and skips missing/closed/pinned/internal/incognito tabs. It does not reopen pages because the saved snapshot intentionally does not store full URLs.
+
 Long-term target shape:
 
 ```ts

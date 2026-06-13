@@ -30,6 +30,9 @@ if (fs.existsSync(outputPath)) {
 const packageFiles = [
   "manifest.json",
   "background.js",
+  "provider_registry.js",
+  "popup.html",
+  "popup.js",
   "i18n.js",
   "diagnostics.js",
   "sidepanel.html",
@@ -81,8 +84,14 @@ function validateManifestAssets(manifest) {
     }
   }
 
-  if (manifest.action?.default_popup) {
-    throw new Error("default_popup must not be set for the one-click action flow");
+  if (manifest.action?.default_popup !== "popup.html") {
+    throw new Error("default_popup must point to the compact toolbar action menu");
+  }
+
+  const popupPath = path.join(EXTENSION_DIR, manifest.action.default_popup);
+
+  if (!fs.existsSync(popupPath)) {
+    throw new Error(`Missing toolbar popup: ${manifest.action.default_popup}`);
   }
 }
 
