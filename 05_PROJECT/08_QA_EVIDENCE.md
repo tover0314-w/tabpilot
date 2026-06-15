@@ -7709,4 +7709,4 @@ Evidence notes:
 
 - The checker is wired into local preflight as a self-test and into GitHub Actions syntax/self-test coverage.
 - `--allow-failure` is required when inspecting a known blocked or failed run so release checks can record evidence without pretending the run is green.
-- The latest checked remote run had zero executed steps, so the remaining blocker is still the GitHub account billing / Actions lock.
+- The checked remote run had zero executed steps, so the remaining blocker is still the GitHub account billing / Actions lock. Future latest-run checks can omit `--run-id` and use `node tools/check_remote_ci_status.js --allow-failure`.
