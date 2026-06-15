@@ -317,6 +317,9 @@ test("manifest keeps toolbar menu action and narrow permissions", () => {
   assert(quickRailJs.includes("OVERFLOW_ACTIONS"), "Quick rail should keep secondary actions behind More");
   assert(quickRailJs.includes('aria-expanded="false"'), "Quick rail More button should expose collapsed state to assistive tech");
   assert(quickRailJs.includes('data-overflow-action="'), "Quick rail overflow actions should be identifiable without adding page reads");
+  assert(quickRailJs.includes("MIN_RAIL_VIEWPORT_WIDTH = 380") && quickRailJs.includes("MIN_RAIL_VIEWPORT_HEIGHT = 480"), "Quick rail should avoid injecting into narrow or very short real pages");
+  assert(quickRailJs.includes("font-size: 0") && quickRailJs.includes("-webkit-appearance: none"), "Quick rail should reset button rendering so only icons are visible");
+  assert(quickRailJs.includes('renderIcon("close")'), "Quick rail hide control should be an icon, not fallback text");
 });
 
 test("locales include matching English and Chinese message keys", () => {
@@ -470,6 +473,10 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "en", "messages.json"), "utf8"));
   const zh = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, "zh_CN", "messages.json"), "utf8"));
 
+  assert(sidepanelHtml.includes('class="sidepanel-body"'), "Sidepanel page should use a scoped body class for visual guards");
+  assert(css.includes("Side panel narrow-state guard") && css.includes("@media (max-width: 260px)"), "Sidepanel should have a narrow-width fallback instead of clipped partial UI");
+  assert(css.includes(".sidepanel-body .tab-agent-shell") && css.includes("display: none !important"), "Narrow sidepanel fallback should hide the full chat UI before it clips");
+  assert(css.includes('content: "Widen"'), "Narrow sidepanel fallback should show a clear resize hint");
   assert(sidepanelHtml.includes("tab-agent-shell"), "Sidepanel should use the Tab Agent layout shell");
   assert(sidepanelHtml.includes("agent-thread"), "Sidepanel should render a conversation thread");
   assert(sidepanelHtml.includes("agent-composer"), "Sidepanel should use a bottom chat composer");
@@ -7143,6 +7150,8 @@ test("AI classification status stays lightweight in sidebar and dashboard", () =
   assert(screenshotTool.includes("Validate Hosted AI/search cost"), "Checklist editor screenshot should show concrete local source-derived suggested steps");
   assert(screenshotTool.includes("quick-rail-page.png"), "Screenshot mock should include the page quick rail");
   assert(screenshotTool.includes("quick-rail-fixture.html"), "Screenshot mock should render quick rail on a normal web page fixture");
+  assert(screenshotTool.includes("sidepanel-narrow-guard.png"), "Screenshot mock should include the narrow Sidepanel guard state");
+  assert(screenshotTool.includes("minBytes") && screenshotTool.includes("sidepanel-narrow-guard"), "Narrow Sidepanel guard screenshot should use an appropriate small-image threshold");
   assert(screenshotTool.includes("sidepanel-template-picker.png"), "Screenshot mock should include the Prompt / Skill Templates picker");
   assert(screenshotTool.includes("sidepanel-at-context-picker.png"), "Screenshot mock should include the @ context picker");
   assert(screenshotTool.includes('#composerPicker[data-trigger=\"mention\"]'), "Screenshot mock should wait for the @ context picker trigger state");

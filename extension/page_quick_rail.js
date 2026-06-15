@@ -1,6 +1,8 @@
 (async () => {
   const ROOT_ID = "tabmosaic-quick-rail-root";
   const HIDDEN_KEY = "tabmosaic.quickRailHidden";
+  const MIN_RAIL_VIEWPORT_WIDTH = 380;
+  const MIN_RAIL_VIEWPORT_HEIGHT = 480;
   const PRIMARY_ACTIONS = [
     { action: "chat", icon: "chat", title: "Open TabMosaic" },
     { action: "read", icon: "page", title: "Ask about this page" },
@@ -13,6 +15,7 @@
 
   if (window.top !== window) return;
   if (!/^https?:$/.test(window.location.protocol)) return;
+  if (window.innerWidth < MIN_RAIL_VIEWPORT_WIDTH || window.innerHeight < MIN_RAIL_VIEWPORT_HEIGHT) return;
   if (document.getElementById(ROOT_ID)) return;
   if (await getHiddenPreference()) return;
 
@@ -35,10 +38,13 @@
       .rail {
         position: fixed;
         top: 46%;
-        right: 12px;
+        right: max(10px, env(safe-area-inset-right));
         z-index: 2147483646;
         display: grid;
+        width: 46px;
+        justify-items: center;
         gap: 6px;
+        box-sizing: border-box;
         padding: 6px;
         border: 1px solid rgba(33, 47, 43, 0.1);
         border-radius: 18px;
@@ -46,26 +52,47 @@
         box-shadow: 0 14px 34px rgba(29, 45, 41, 0.14);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
+        isolation: isolate;
+        overflow: visible;
         transform: translateY(-50%);
+      }
+
+      .rail *,
+      .rail *::before,
+      .rail *::after {
+        box-sizing: border-box;
       }
 
       .action,
       .more,
       .hide {
+        appearance: none;
+        -webkit-appearance: none;
         display: grid;
         place-items: center;
         width: 34px;
+        min-width: 34px;
         height: 34px;
+        min-height: 34px;
+        margin: 0;
+        padding: 0;
         border: 1px solid rgba(33, 47, 43, 0.08);
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.62);
         color: rgba(24, 33, 31, 0.72);
         cursor: pointer;
-        font: 650 0/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 0;
+        line-height: 0;
+        text-indent: 0;
+        user-select: none;
+        white-space: nowrap;
       }
 
       .action svg,
-      .more svg {
+      .more svg,
+      .hide svg {
+        display: block;
         width: 17px;
         height: 17px;
         stroke: currentColor;
@@ -122,18 +149,25 @@
         top: -9px;
         right: -7px;
         width: 18px;
+        min-width: 18px;
         height: 18px;
+        min-height: 18px;
         opacity: 0;
-        font: 650 10px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
       .rail:hover .hide,
       .rail:focus-within .hide {
         opacity: 1;
       }
+
+      @media (max-width: 379px), (max-height: 479px) {
+        .rail {
+          display: none;
+        }
+      }
     </style>
     <nav class="rail" aria-label="TabMosaic quick actions">
-      <button class="hide" type="button" title="Hide TabMosaic quick rail" aria-label="Hide TabMosaic quick rail">x</button>
+      <button class="hide" type="button" title="Hide TabMosaic quick rail" aria-label="Hide TabMosaic quick rail">${renderIcon("close")}</button>
       ${PRIMARY_ACTIONS.map((item) => `
         <button
           class="action"
@@ -293,6 +327,12 @@
           <path d="M12 6.5v.01" />
           <path d="M12 12v.01" />
           <path d="M12 17.5v.01" />
+        </svg>
+      `,
+      close: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 7l10 10" />
+          <path d="M17 7 7 17" />
         </svg>
       `
     };

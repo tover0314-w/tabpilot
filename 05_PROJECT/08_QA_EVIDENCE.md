@@ -7820,3 +7820,53 @@ Evidence notes:
 - The generated unblock packet is ignored local evidence under `artifacts/` and was not committed.
 - The packet does not approve launch decisions, submit to Chrome Web Store, publish marketing copy, run real-profile QA, or read private browser data.
 - It gives the user/account owner one local board for GitHub billing, public-launch decisions, real-profile QA, and post-unblock verification commands.
+
+## 2026-06-15 Real UI Regression And Page Agent QA Refresh
+
+Status: PASSED for local private-beta evidence
+
+Source state verified: fixed the narrow Sidepanel / page quick rail visual regression that could show a clipped vertical strip when Chrome side panel width was too small or a page viewport was too narrow. The refresh also corrected the real-page Page region QA script so it follows the actual user path: click composer `+`, choose `Page region`, click one visible page section, then answer through the Page Agent.
+
+Commands:
+
+```bash
+node tools/extension_smoke_test.js
+node tools/chrome_runtime_smoke_test.js
+node tools/capture_real_page_chat_screenshot.js https://www.hao123.com/ --headless --ai --question "What content does this page have?" --question "Which parts of this page are useful for office work?" --question "Summarize what I should do next with this page." --region-question "What is this selected page region about?"
+node tools/capture_ui_screenshots.js
+node tools/package_extension.js
+node tools/verify_release_package.js dist/tabmosaic-ai-extension-v0.1.0.zip
+```
+
+Result:
+
+```text
+83 smoke tests passed
+PASS Chrome runtime read synthetic HTTP page content with a temporary fixture host grant, rendered content regroup preview, and applied native groups
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, selected-tabs context tool card, selected-tabs follow-up routing, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS real page chat captured
+url=https://www.hao123.com/
+turns=4
+ai=deepseek
+PASS UI screenshots captured
+PASS release package verified for v0.1.0
+sha256=d434083afccc5af5d14a2334a175f250844f1097ef452e8ad17acb040d3a49c1
+```
+
+Generated screenshot evidence:
+
+```text
+artifacts/real-page-chat/hao123-com-multiturn-region-chat-browser-region-picker.png
+artifacts/real-page-chat/hao123-com-multiturn-region-chat.png
+artifacts/ui-screenshots/sidepanel-narrow-guard.png
+artifacts/ui-screenshots/quick-rail-page.png
+artifacts/ui-screenshots/sidepanel-10-turn-chat.png
+```
+
+Evidence notes:
+
+- The hao123 run used the configured local DeepSeek/OpenAI-compatible provider settings and a temporary Chrome profile. The test output redacted the API key.
+- Current-page chat read visible page text after a user-triggered request and did not send full URLs.
+- Page region QA selected one visible region only, then answered from that selected-region context.
+- `sidepanel-narrow-guard.png` exists specifically to prevent the clipped skinny Sidepanel UI regression from coming back.
+- The temporary Chrome runtime tests do not replace the final D-L11 redacted real-profile manual QA pass required before Chrome Web Store/public marketing launch.

@@ -139,7 +139,10 @@ async function main() {
     }
 
     const outputPath = path.join(OUTPUT_DIR, `${baseOutputSlug}.png`);
-    await captureSidepanelScreenshot(sidepanelCdp, outputPath);
+    await captureSidepanelScreenshot(sidepanelCdp, outputPath, {
+      targetUrl,
+      pageTab
+    });
 
     console.log("PASS real page chat captured");
     console.log(`url=${targetUrl}`);
@@ -483,7 +486,7 @@ async function clickPagePoint(cdp, point) {
   });
 }
 
-async function captureSidepanelScreenshot(cdp, outputPath) {
+async function captureSidepanelScreenshot(cdp, outputPath, context = {}) {
   await focusExtensionPageTab(cdp, "sidepanel.html");
 
   await cdp.send("Page.enable", {}, 5000).catch(() => {});
@@ -494,6 +497,7 @@ async function captureSidepanelScreenshot(cdp, outputPath) {
     mobile: false
   });
   await cdp.send("Page.bringToFront", {}, 5000).catch(() => {});
+  await restoreCapturedPageContext(cdp, context);
   await delay(500);
 
   const result = await cdp.send("Page.captureScreenshot", {
@@ -501,6 +505,37 @@ async function captureSidepanelScreenshot(cdp, outputPath) {
     captureBeyondViewport: false
   }, 30000);
   fs.writeFileSync(outputPath, Buffer.from(result.data, "base64"));
+}
+
+async function restoreCapturedPageContext(cdp, context = {}) {
+  if (!context.pageTab?.id || !context.targetUrl) return;
+
+  const targetHost = new URL(context.targetUrl).hostname;
+  await evaluate(
+    cdp,
+    `chrome.storage.local.set({
+      "tabmosaic.sidebarContext": {
+        scope: "current_tab",
+        tabId: ${JSON.stringify(context.pageTab.id)},
+        windowId: ${JSON.stringify(context.pageTab.windowId)},
+        title: ${JSON.stringify(context.pageTab.title || "")},
+        hostname: ${JSON.stringify(targetHost)},
+        source: "real-page-chat-capture",
+        updatedAt: new Date().toISOString()
+      }
+    })`
+  );
+
+  await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `(() => {
+        const bar = document.querySelector("#agentContextBar");
+        const text = (bar?.textContent || "").replace(/\\s+/g, " ").trim();
+        return bar?.dataset.contextScope === "current_tab" && !/chrome-extension/i.test(text) ? text : "";
+      })()`
+    );
+  }, "Sidepanel screenshot context did not restore to the captured page", 5000);
 }
 
 async function focusExtensionPageTab(cdp, pathName, bounds = {}) {
@@ -906,6 +941,7 @@ async function submitSidepanelComposerTrusted(cdp, text) {
     buttons: 0,
     clickCount: 1
   });
+
 }
 
 async function startPageRegionFromComposer(cdp, question) {
@@ -950,6 +986,44 @@ async function startPageRegionFromComposer(cdp, question) {
     type: "mouseReleased",
     x: buttonCenter.x,
     y: buttonCenter.y,
+    button: "left",
+    buttons: 0,
+    clickCount: 1
+  });
+
+  const regionItemCenter = await waitFor(async () => {
+    return evaluate(
+      cdp,
+      `(() => {
+        const item = document.querySelector('[data-picker-action="page-region"]');
+        if (!item || item.closest("[hidden]")) return null;
+        const rect = item.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
+      })()`
+    );
+  }, "Page region picker item did not appear", 5000);
+
+  await cdp.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: regionItemCenter.x,
+    y: regionItemCenter.y
+  });
+  await cdp.send("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    x: regionItemCenter.x,
+    y: regionItemCenter.y,
+    button: "left",
+    buttons: 1,
+    clickCount: 1
+  });
+  await cdp.send("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    x: regionItemCenter.x,
+    y: regionItemCenter.y,
     button: "left",
     buttons: 0,
     clickCount: 1

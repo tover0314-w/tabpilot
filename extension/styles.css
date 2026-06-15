@@ -29,7 +29,8 @@
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
+  overflow-x: hidden;
   background:
     linear-gradient(135deg, rgba(236, 247, 241, 0.95), rgba(245, 246, 241, 0.92) 48%, rgba(232, 240, 243, 0.96)),
     var(--bg);
@@ -2184,7 +2185,7 @@ p {
 
 /* Notion-like AI sidebar refinement: calm page context, lighter messages, real chat composer. */
 .tab-agent-shell {
-  min-width: 320px;
+  min-width: 0;
   height: 100vh;
   padding: 12px 14px 0;
   overflow: hidden;
@@ -6909,6 +6910,64 @@ body,
 
   .tab-agent-shell .agent-composer .agent-context-bar {
     padding-bottom: 5px;
+  }
+}
+
+/* Side panel narrow-state guard: avoid clipped partial UI when Chrome is resized too small. */
+.sidepanel-body {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.sidepanel-body::before,
+.sidepanel-body::after {
+  display: none;
+}
+
+@media (max-width: 260px) {
+  .sidepanel-body {
+    min-height: 100vh;
+    background:
+      linear-gradient(160deg, rgba(246, 248, 246, 0.98), rgba(236, 244, 241, 0.96)),
+      var(--bg);
+  }
+
+  .sidepanel-body .tab-agent-shell {
+    display: none !important;
+  }
+
+  .sidepanel-body::before {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid rgba(33, 47, 43, 0.1);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 12px 28px rgba(29, 45, 41, 0.12);
+    color: rgba(24, 33, 31, 0.72);
+    content: "TM";
+    font-size: 11px;
+    font-weight: 720;
+    transform: translateX(-50%);
+  }
+
+  .sidepanel-body::after {
+    position: fixed;
+    top: 58px;
+    left: 50%;
+    display: block;
+    width: min(96px, calc(100vw - 8px));
+    color: rgba(24, 33, 31, 0.48);
+    content: "Widen";
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-align: center;
+    transform: translateX(-50%);
   }
 }
 

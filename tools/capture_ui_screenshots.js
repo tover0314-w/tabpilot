@@ -524,6 +524,15 @@ async function main() {
         language: "en"
       },
       {
+        name: "sidepanel-narrow-guard.png",
+        path: "/sidepanel.html",
+        viewport: { width: 64, height: 640 },
+        fullPage: false,
+        language: "en",
+        minBytes: 1200,
+        readySelector: ".sidepanel-body"
+      },
+      {
         name: "sidepanel-classification-refinements.png",
         path: "/sidepanel.html",
         viewport: SIDEPANEL_VIEWPORT,
@@ -2073,7 +2082,8 @@ async function captureScreenshot(page, screenshotPath, item) {
   }
 
   const stats = fs.statSync(screenshotPath);
-  if (stats.size < 10000) {
+  const minBytes = Number(item.minBytes || 10000);
+  if (stats.size < minBytes) {
     throw new Error(`${item.name} screenshot looks too small (${stats.size} bytes)`);
   }
 }
