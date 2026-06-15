@@ -100,7 +100,7 @@ READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
 - [x] Chrome Web Store submission review packet generator（local listing/data/privacy/screenshot review；does not submit, publish, upload, or run real-profile QA）。
 - [x] Public launch handoff packet generator（local review packet + HTML decision review；does not approve, publish, submit, or run real-profile QA）。
 - [x] Release candidate review packet generator（local zip/checksum + launch handoff + screenshot review + QA checklist；does not approve, submit, publish, or run real-profile QA）。
-- [ ] Remote GitHub Actions CI green after `9244fe6` push（currently blocked before runner start by GitHub account billing lock; rerun after billing is fixed）。
+- [ ] Remote GitHub Actions CI green after latest `main` push（run `27545389436` for `6bf2347` is currently blocked before runner start by GitHub account billing lock; verify with `node tools/check_remote_ci_status.js --run-id 27545389436 --allow-failure`, then rerun after billing is fixed）。
 - [ ] Final Chrome Web Store screenshots approved by user。
 
 ## Metrics

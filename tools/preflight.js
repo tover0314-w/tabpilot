@@ -36,6 +36,7 @@ const syntaxTargets = [
   "tools/secret_scan.js",
   "tools/public_repo_audit.js",
   "tools/launch_readiness_report.js",
+  "tools/check_remote_ci_status.js",
   "tools/validate_public_launch_decision_reply.js",
   "tools/prepare_public_launch_handoff_packet.js",
   "tools/prepare_release_candidate_packet.js",
@@ -68,6 +69,7 @@ function main() {
   runStep("Release candidate packet self-test", process.execPath, ["tools/prepare_release_candidate_packet.js", "--self-test"]);
   runStep("Public repo audit", process.execPath, ["tools/public_repo_audit.js"]);
   runStep("Launch readiness report", process.execPath, ["tools/launch_readiness_report.js"]);
+  runStep("Remote CI status checker self-test", process.execPath, ["tools/check_remote_ci_status.js", "--self-test"]);
   runStep("Public launch decision reply validator self-test", process.execPath, ["tools/validate_public_launch_decision_reply.js", "--self-test"]);
 
   if (SHOULD_RUN_DEEPSEEK || SHOULD_RUN_DEEPSEEK_FIXTURE) {

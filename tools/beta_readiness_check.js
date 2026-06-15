@@ -32,6 +32,7 @@ const requiredFiles = [
   "05_PROJECT/19_AGENT_SEARCH_WORK_AGENT_IMPLEMENTATION_PLAN.md",
   "tools/public_repo_audit.js",
   "tools/launch_readiness_report.js",
+  "tools/check_remote_ci_status.js",
   "tools/validate_public_launch_decision_reply.js",
   "tools/prepare_public_launch_handoff_packet.js",
   "tools/prepare_release_candidate_packet.js",
@@ -87,6 +88,7 @@ function main() {
   const agentSearchWorkPlan = readText("05_PROJECT/19_AGENT_SEARCH_WORK_AGENT_IMPLEMENTATION_PLAN.md", failures);
   const publicRepoAudit = readText("tools/public_repo_audit.js", failures);
   const launchReadinessReport = readText("tools/launch_readiness_report.js", failures);
+  const checkRemoteCiStatus = readText("tools/check_remote_ci_status.js", failures);
   const validatePublicLaunchDecisionReply = readText("tools/validate_public_launch_decision_reply.js", failures);
   const preparePublicLaunchHandoffPacket = readText("tools/prepare_public_launch_handoff_packet.js", failures);
   const prepareReleaseCandidatePacket = readText("tools/prepare_release_candidate_packet.js", failures);
@@ -374,11 +376,13 @@ function main() {
     [
       "Launch and QA packet self-tests",
       "node --check tools/launch_readiness_report.js",
+      "node --check tools/check_remote_ci_status.js",
       "node --check tools/prepare_public_launch_handoff_packet.js",
       "node --check tools/real_profile_qa_redaction_check.js",
       "node --check tools/prepare_real_profile_qa_packet.js",
       "node --check tools/prepare_store_asset_review_packet.js",
       "node tools/launch_readiness_report.js --json",
+      "node tools/check_remote_ci_status.js --self-test",
       "node tools/real_profile_qa_redaction_check.js --self-test",
       "node tools/prepare_real_profile_qa_packet.js --self-test",
       "node tools/prepare_store_asset_review_packet.js --self-test",
@@ -700,6 +704,20 @@ function main() {
       "D-L03",
       "D-L14",
       "--json"
+    ],
+    failures
+  );
+  requireIncludes(
+    "tools/check_remote_ci_status.js",
+    checkRemoteCiStatus,
+    [
+      "Remote CI status",
+      "GITHUB_ACTIONS_BILLING_LOCK",
+      "REMOTE_CI_STATUS=",
+      "REMOTE_CI_NEXT_ACTION=",
+      "gh run rerun",
+      "--allow-failure",
+      "PASS remote CI status checker self-test"
     ],
     failures
   );

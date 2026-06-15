@@ -7676,3 +7676,37 @@ Evidence notes:
 - This blocker requires the GitHub account owner to resolve billing / Actions account status, then rerun the CI workflow.
 - Suggested rerun command after billing is resolved: `gh run rerun 27545121258`.
 - Public source release code is pushed, but remote CI is not green until GitHub Actions can start jobs again.
+
+## 2026-06-15 Remote CI Status Checker
+
+Source state verified: added `tools/check_remote_ci_status.js`, a read-only GitHub Actions status checker that distinguishes a green remote CI run, a still-running CI run, a real test failure, and the GitHub account billing lock that currently prevents the job from starting.
+
+Commands:
+
+```bash
+node --check tools/check_remote_ci_status.js
+node tools/check_remote_ci_status.js --self-test
+node tools/check_remote_ci_status.js --run-id 27545389436 --allow-failure
+node tools/check_remote_ci_status.js --run-id 27545389436 --json --allow-failure
+```
+
+Result:
+
+```text
+PASS remote CI status checker self-test
+REMOTE_CI_STATUS=blocked
+REMOTE_CI_REASON=GITHUB_ACTIONS_BILLING_LOCK
+REMOTE_CI_RUN_ID=27545389436
+REMOTE_CI_HEAD_SHA=6bf2347193bfabd3d202cdd56feecb42c1004d90
+REMOTE_CI_WORKFLOW=CI
+REMOTE_CI_CONCLUSION=failure
+REMOTE_CI_URL=https://github.com/tover0314-w/tabpilot/actions/runs/27545389436
+REMOTE_CI_MESSAGE=The job was not started because your account is locked due to a billing issue.
+REMOTE_CI_NEXT_ACTION=Resolve GitHub account billing / Actions lock, then run: gh run rerun 27545389436
+```
+
+Evidence notes:
+
+- The checker is wired into local preflight as a self-test and into GitHub Actions syntax/self-test coverage.
+- `--allow-failure` is required when inspecting a known blocked or failed run so release checks can record evidence without pretending the run is green.
+- The latest checked remote run had zero executed steps, so the remaining blocker is still the GitHub account billing / Actions lock.

@@ -52,6 +52,7 @@ jobs:
           node --check tools/secret_scan.js
           node --check tools/public_repo_audit.js
           node --check tools/launch_readiness_report.js
+          node --check tools/check_remote_ci_status.js
           node --check tools/prepare_public_launch_handoff_packet.js
           node --check tools/real_profile_qa_redaction_check.js
           node --check tools/prepare_real_profile_qa_packet.js
@@ -73,6 +74,7 @@ jobs:
       - name: Launch and QA packet self-tests
         run: |
           node tools/launch_readiness_report.js --json
+          node tools/check_remote_ci_status.js --self-test
           node tools/real_profile_qa_redaction_check.js --self-test
           node tools/prepare_real_profile_qa_packet.js --self-test
           node tools/prepare_store_asset_review_packet.js --self-test
