@@ -100,6 +100,7 @@ READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
 - [x] Chrome Web Store submission review packet generator（local listing/data/privacy/screenshot review；does not submit, publish, upload, or run real-profile QA）。
 - [x] Public launch handoff packet generator（local review packet + HTML decision review；does not approve, publish, submit, or run real-profile QA）。
 - [x] Release candidate review packet generator（local zip/checksum + launch handoff + screenshot review + QA checklist；does not approve, submit, publish, or run real-profile QA）。
+- [x] Final launch gate checker（`node tools/final_launch_gate_check.js --include-remote-ci --allow-blocked`；reports package / remote CI / launch gates without approving or publishing）。
 - [ ] Remote GitHub Actions CI green after latest `main` push（currently blocked before runner start by GitHub account billing lock; verify the current latest run with `node tools/check_remote_ci_status.js --allow-failure`, then rerun after billing is fixed）。
 - [ ] Final Chrome Web Store screenshots approved by user。
 

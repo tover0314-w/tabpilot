@@ -29,6 +29,7 @@
 - `tools/public_repo_audit.js`：公开仓库前审计 tracked + 未忽略新增文件，拦截本地输出、私测配置、未确认 license 等风险，并输出 public repo blocker。
 - `tools/launch_readiness_report.js`：读取 public launch tracker 和 public repo audit 输出，打印人类可读 / JSON 的上线阻塞项、owner、下一步输入和当前 readiness。
 - `tools/check_remote_ci_status.js`：读取 GitHub Actions 远端 CI 状态，区分真正测试失败、未完成运行和 GitHub 账号计费锁；支持 `--self-test`、`--json` 和 `--allow-failure`。
+- `tools/final_launch_gate_check.js`：最终上线门禁汇总器，合并 launch readiness、release package 校验和可选远端 CI 状态，输出 `FINAL_LAUNCH_READY` 与剩余 blocker；支持 `--self-test`、`--json`、`--include-remote-ci` 和 `--allow-blocked`。
 - `tools/validate_public_launch_decision_reply.js`：校验用户填写的 D-L03 到 D-L14 public launch decision reply，检查漏项、重复项、未替换 placeholder、keep blocked 项和警告；只读校验，不批准、不改文档、不发布；支持 `--self-test` 和 `--json`。
 - `tools/prepare_public_launch_handoff_packet.js`：生成 ignored 的 public launch handoff 包，汇总 launch gates、本地 HTML 决策审核页、可复制审批回复、截图审核包和真实 QA 包路径；不批准、不发布、不读取私密浏览数据；支持 `--self-test`。
 - `tools/prepare_release_candidate_packet.js`：生成 ignored 的 release candidate 审查包，把扩展 zip/checksum、readiness、store asset review、real-profile QA checklist 和 public launch handoff 汇到一个 README / HTML / JSON manifest 入口；不批准、不提交、不发布、不跑真实 profile QA；支持 `--self-test`。

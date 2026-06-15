@@ -7710,3 +7710,42 @@ Evidence notes:
 - The checker is wired into local preflight as a self-test and into GitHub Actions syntax/self-test coverage.
 - `--allow-failure` is required when inspecting a known blocked or failed run so release checks can record evidence without pretending the run is green.
 - The checked remote run had zero executed steps, so the remaining blocker is still the GitHub account billing / Actions lock. Future latest-run checks can omit `--run-id` and use `node tools/check_remote_ci_status.js --allow-failure`.
+
+## 2026-06-15 Final Launch Gate Checker
+
+Source state verified: added `tools/final_launch_gate_check.js`, a final release gate aggregator that combines launch readiness, release package verification, and optional remote GitHub Actions status into one `FINAL_LAUNCH_READY` report. This prevents the launch state from looking complete when remote CI or public-launch confirmation gates are still blocked.
+
+Commands:
+
+```bash
+node --check tools/final_launch_gate_check.js
+node tools/final_launch_gate_check.js --self-test
+node tools/final_launch_gate_check.js --allow-blocked
+node tools/final_launch_gate_check.js --include-remote-ci --allow-blocked
+node tools/final_launch_gate_check.js --json --include-remote-ci --allow-blocked
+node tools/beta_readiness_check.js
+```
+
+Result:
+
+```text
+PASS final launch gate check self-test
+FINAL_LAUNCH_READY=no
+READY_LOCAL_RELEASE_PACKAGE=yes
+READY_REMOTE_CI=no
+READY_PUBLIC_SOURCE_RELEASE=no
+READY_PUBLIC_MARKETING_LAUNCH=no
+READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
+Blockers: 13
+Needs user input: 11
+Needs QA: 2
+Needs account owner action: 1
+Needs build action: 0
+REMOTE_CI [ACCOUNT OWNER] The job was not started because your account is locked due to a billing issue.
+```
+
+Evidence notes:
+
+- Without `--include-remote-ci`, the checker reports remote CI as skipped and keeps the local source-release view separate from final launch readiness.
+- With `--include-remote-ci`, the checker marks `READY_PUBLIC_SOURCE_RELEASE=no` for the final gate because GitHub Actions cannot start jobs while the account billing lock is active.
+- The checker is wired into local preflight and GitHub Actions as a self-test; it does not approve launch, submit to Chrome Web Store, publish marketing copy, run real-profile QA, or read private browser data.

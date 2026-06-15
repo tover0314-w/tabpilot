@@ -33,6 +33,7 @@ const requiredFiles = [
   "tools/public_repo_audit.js",
   "tools/launch_readiness_report.js",
   "tools/check_remote_ci_status.js",
+  "tools/final_launch_gate_check.js",
   "tools/validate_public_launch_decision_reply.js",
   "tools/prepare_public_launch_handoff_packet.js",
   "tools/prepare_release_candidate_packet.js",
@@ -89,6 +90,7 @@ function main() {
   const publicRepoAudit = readText("tools/public_repo_audit.js", failures);
   const launchReadinessReport = readText("tools/launch_readiness_report.js", failures);
   const checkRemoteCiStatus = readText("tools/check_remote_ci_status.js", failures);
+  const finalLaunchGateCheck = readText("tools/final_launch_gate_check.js", failures);
   const validatePublicLaunchDecisionReply = readText("tools/validate_public_launch_decision_reply.js", failures);
   const preparePublicLaunchHandoffPacket = readText("tools/prepare_public_launch_handoff_packet.js", failures);
   const prepareReleaseCandidatePacket = readText("tools/prepare_release_candidate_packet.js", failures);
@@ -331,6 +333,7 @@ function main() {
       "Uses title, hostname, path, tab state, and group state",
       "Read only after the user asks a page/context question",
       "node tools/public_repo_audit.js",
+      "node tools/final_launch_gate_check.js --include-remote-ci --allow-blocked",
       "node tools/provider_registry_check.js",
       "node tools/prepare_public_launch_handoff_packet.js --self-test",
       "privacy architecture explainer](04_TECH/11_PRIVACY_ARCHITECTURE_EXPLAINER.md)",
@@ -377,12 +380,14 @@ function main() {
       "Launch and QA packet self-tests",
       "node --check tools/launch_readiness_report.js",
       "node --check tools/check_remote_ci_status.js",
+      "node --check tools/final_launch_gate_check.js",
       "node --check tools/prepare_public_launch_handoff_packet.js",
       "node --check tools/real_profile_qa_redaction_check.js",
       "node --check tools/prepare_real_profile_qa_packet.js",
       "node --check tools/prepare_store_asset_review_packet.js",
       "node tools/launch_readiness_report.js --json",
       "node tools/check_remote_ci_status.js --self-test",
+      "node tools/final_launch_gate_check.js --self-test",
       "node tools/real_profile_qa_redaction_check.js --self-test",
       "node tools/prepare_real_profile_qa_packet.js --self-test",
       "node tools/prepare_store_asset_review_packet.js --self-test",
@@ -718,6 +723,21 @@ function main() {
       "gh run rerun",
       "--allow-failure",
       "PASS remote CI status checker self-test"
+    ],
+    failures
+  );
+  requireIncludes(
+    "tools/final_launch_gate_check.js",
+    finalLaunchGateCheck,
+    [
+      "Final launch gate check",
+      "FINAL_LAUNCH_READY=",
+      "READY_REMOTE_CI=",
+      "--include-remote-ci",
+      "--allow-blocked",
+      "REMOTE_CI",
+      "GITHUB_ACTIONS_BILLING_LOCK",
+      "PASS final launch gate check self-test"
     ],
     failures
   );
