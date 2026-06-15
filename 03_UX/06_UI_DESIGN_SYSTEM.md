@@ -539,10 +539,10 @@ TabMosaic 需要读取当前页面文本来生成摘要。
 - 设计:黑底白字"T"或简单几何拼图(保持识别度,不追求精致插画)
 - 状态:无 click 动画(Chrome 不支持)
 
-#### 7.2.2 Toolbar action menu + 首次使用 onboarding
+#### 7.2.2 Action icon + 首次使用 onboarding
 
-> 当前确认:允许 `default_popup`,但它只能是极简 toolbar action menu。
-> 首次隐私说明仍在 sidebar 中展示；popup 不承载复杂 settings。
+> 当前确认:不使用 `default_popup` 作为默认入口。
+> 点击 action icon 直接打开 Sidebar Agent；首次隐私说明仍在 sidebar 中展示。
 
 ```
 ┌────────────────────────────────────────────┐

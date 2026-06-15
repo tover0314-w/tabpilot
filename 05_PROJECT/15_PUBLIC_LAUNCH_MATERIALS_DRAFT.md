@@ -147,10 +147,11 @@ Steps:
 
 ```text
 1. Click the extension icon.
-2. Choose Smart Organize.
-3. TabMosaic scans normal Chrome windows.
-4. Real native tab groups appear in the top tab bar.
-5. The sidebar explains what changed and lets you Undo, Restore, refine, or chat.
+2. The Sidebar Agent opens.
+3. Choose Smart Organize inside the sidebar.
+4. TabMosaic scans normal Chrome windows.
+5. Real native tab groups appear in the top tab bar.
+6. The sidebar explains what changed and lets you Undo, Restore, refine, or chat.
 ```
 
 ### AI Browser Layer Section
@@ -395,10 +396,11 @@ I am building TabMosaic AI, an open-source Chrome extension that organizes messy
 The core flow is:
 
 1. Click the extension icon.
-2. Choose Smart Organize.
-3. Your normal Chrome windows are grouped into native tab groups.
-4. The sidebar explains what changed, what can be undone, and what duplicates need review.
-5. You can ask follow-up questions about the current page, selected tabs, or a group.
+2. The Sidebar Agent opens.
+3. Choose Smart Organize inside the sidebar.
+4. Your normal Chrome windows are grouped into native tab groups.
+5. The sidebar explains what changed, what can be undone, and what duplicates need review.
+6. You can ask follow-up questions about the current page, selected tabs, or a group.
 
 The direction is full open source + BYOK. DeepSeek is the private-beta default, but the extension keeps an OpenAI-compatible provider abstraction and supports custom HTTPS providers plus localhost model endpoints. Provider origins are permission-gated, and local endpoints can run without an API key when the server does not require one.
 

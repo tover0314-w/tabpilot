@@ -26,8 +26,8 @@ Coverage:
 - standalone privacy policy draft guard for unpublished status, confirmation gate, placeholders, saved workspace disclosure, DeepSeek optional-sharing boundary, no all-URLs permission, no cloud/account/analytics paths, local data deletion, and Limited Use disclosure
 - GitHub Actions runs beta readiness after package verification so CI blocks stale readiness evidence
 - manifest permission guardrails
-- compact toolbar popup menu constraint: Smart Organize, Vertical Tabs, Current Page Chat, Dashboard
-- toolbar popup action-flow guard: popup delegates only confirmed actions through `RUN_TOOLBAR_ACTION`, passes active tab/window hints, avoids direct `sidePanel.open` / tab grouping, and background allowlist routes Dashboard, Smart Organize, Vertical Tabs, and Current Page Chat correctly
+- action icon entry constraint: manifest action has no `default_popup`, and clicking the extension icon opens Sidebar Agent directly
+- action click flow guard: background handles `chrome.action.onClicked`, opens `sidePanel`, sets agent mode, and binds current-tab context
 - English-only visible Sidebar/Dashboard copy, with English locale references loaded at runtime
 - Chinese locale key parity kept only as future localization material
 - Chat Refine parser examples, including English and Chinese commands
@@ -265,9 +265,9 @@ Expected:
 - icons/icon16.png, icon32.png, icon48.png, icon128.png exist
 - i18n.js and diagnostics.js exist
 - _locales/en/messages.json and _locales/zh_CN/messages.json exist, but visible extension pages force English copy for the MVP
-- action.default_popup is `popup.html`
-- popup menu includes Smart Organize, Vertical Tabs, Current Page Chat, and Dashboard actions
-- popup delegates actions to the background service worker with `RUN_TOOLBAR_ACTION`
+- action.default_popup is absent
+- background listens to `chrome.action.onClicked`
+- extension icon click opens Sidebar Agent directly and sets current-tab context
 - dist/tabmosaic-ai-extension-v0.1.0.sha256 exists
 - dist/tabmosaic-ai-extension-v0.1.0.package.json exists and states env files are excluded
 - release package verifier passes for the current manifest version

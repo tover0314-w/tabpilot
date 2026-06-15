@@ -199,7 +199,7 @@
 ## Research Tasks
 
 - [x] 验证 Chrome Store 审核对 tabs + sidePanel + scripting 权限的接受度（official policy review completed 2026-06-12；`tabs` is sensitive, `sidePanel` and `scripting` are justified by user-facing sidebar/page-read flows, broad host permissions can lengthen review；actual acceptance only after submission）。
-- [x] 测试 toolbar popup `RUN_TOOLBAR_ACTION` + sidePanel.open 用户手势限制（smoke guard：popup 只发 confirmed actions，background allowlist/openSidePanelForWindow 处理）。
+- [x] 测试 action icon `chrome.action.onClicked` + sidePanel.open 用户手势限制（smoke guard：manifest 不设置 default_popup，background 直接打开 Sidebar Agent）。
 - [x] 测试 synthetic 96 tabs 下真实 Chrome `tabs.group` performance first slice（temporary profile；real-profile manual QA 仍未完成）。
 - [x] 调研 Chrome built-in AI extensions 支持情况（official Chrome docs checked 2026-06-12；future `chrome_builtin_ai` adapter candidate only；not a P0 BYOK replacement and not a Base URL preset）。
 - [x] 调研竞品定价（first pass completed 2026-06-15；see `06_REFERENCES/04_COMPETITOR_PRICING_RESEARCH.md`；exact public prices still need manual recheck before D-047）。

@@ -83,33 +83,29 @@ Chrome Extension MV3
 ## 3. 点击插件流程
 
 ```ts
-// popup.html
-smartOrganizeButton.addEventListener("click", async () => {
-  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-
-  await chrome.runtime.sendMessage({
-    type: "RUN_TOOLBAR_ACTION",
-    action: "smart-organize",
-    activeWindowId: tab?.windowId,
-    activeTabId: tab?.id
-  });
-});
-
 // background.js
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type !== "RUN_TOOLBAR_ACTION") return false;
-
-  runToolbarAction(message, sender).then(sendResponse);
-  return true;
+chrome.action.onClicked.addListener((tab) => {
+  openSidebarFromActionClick(tab).catch(console.error);
 });
 
-async function runToolbarAction(message, sender) {
-  const activeWindowId = message.activeWindowId ?? sender?.tab?.windowId;
+async function openSidebarFromActionClick(tab) {
+  const activeWindowId = tab?.windowId;
 
-  await chrome.storage.local.set({ "tabmosaic.sidebarMode": { mode: "agent" } });
   await chrome.sidePanel.open({ windowId: activeWindowId });
-  await emitToSidePanel('ORGANIZE_STARTED', { activeWindowId });
+  await chrome.storage.local.set({
+    "tabmosaic.sidebarMode": { mode: "agent", source: "action-click" },
+    "tabmosaic.sidebarContext": {
+      scope: "current_tab",
+      tabId: tab?.id,
+      windowId: activeWindowId
+    }
+  });
+}
 
+// Sidebar Smart Organize quick action
+async function runSmartOrganizeFromSidebar(sender) {
+  const activeWindowId = sender?.tab?.windowId;
+  await emitToSidePanel('ORGANIZE_STARTED', { activeWindowId });
   const snapshot = await collectAllNormalWindowTabs();
   const duplicates = detectDuplicates(snapshot);
   const safeDedupeActions = buildSafeDedupeActions(duplicates);
@@ -127,7 +123,7 @@ async function runToolbarAction(message, sender) {
 
 ## 4. Manifest 建议
 
-CONFIRMED BY USER: 设置 `default_popup` 为极简 toolbar action menu。popup 不承载复杂设置，不直接执行分组；它只收集当前 active tab/window 并向 background 发送动作消息。
+CONFIRMED BY LATEST USER CORRECTION: 不设置 `default_popup`。点击 extension action icon 必须直接打开 Sidebar Agent；Smart Organize 放在 Sidebar 内作为首要 quick action。
 
 ```json
 {
@@ -135,8 +131,7 @@ CONFIRMED BY USER: 设置 `default_popup` 为极简 toolbar action menu。popup 
   "name": "TabMosaic AI",
   "version": "0.1.0",
   "action": {
-    "default_title": "Open TabMosaic menu",
-    "default_popup": "popup.html"
+    "default_title": "Open TabMosaic"
   },
   "permissions": [
     "tabs",

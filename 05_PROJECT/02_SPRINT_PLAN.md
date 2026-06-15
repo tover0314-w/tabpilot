@@ -9,7 +9,7 @@
 任务：
 
 - MV3 manifest。
-- compact toolbar popup → `RUN_TOOLBAR_ACTION` background message。
+- action icon click → `chrome.action.onClicked` background handler。
 - sidePanel.open。
 - collectAllNormalWindowTabs()。
 - sidePanel progress UI。

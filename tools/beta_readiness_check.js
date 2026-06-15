@@ -327,7 +327,7 @@ function main() {
       "assets/screenshots/05-browser-workbench.png",
       "assets/screenshots/06-link-to-work.png",
       "No real tabs, URLs, page text, emails, API keys, or private browser profile data are included.",
-      "Choose Smart Organize",
+      "Choose Smart Organize inside the sidebar",
       "Apache-2.0",
       "READY_PUBLIC_SOURCE_RELEASE=yes",
       "This repo is public and source-release ready, but the extension is still a controlled local/private beta.",

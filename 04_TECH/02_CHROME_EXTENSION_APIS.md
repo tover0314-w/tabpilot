@@ -35,23 +35,19 @@
 
 用途：
 
-- 打开 compact `default_popup` toolbar action menu。
-- 菜单动作通过 `chrome.runtime.sendMessage` 交给 background service worker。
-- Smart Organize 触发一键整理；Vertical Tabs / Current Page Chat 切换 sidebar 模式；Dashboard 打开 dashboard page。
+- 点击 extension action icon 后直接打开 Sidebar Agent。
+- background service worker 通过 `chrome.action.onClicked` 接收用户手势，并调用 `chrome.sidePanel.open`。
+- Sidebar 内的 Smart Organize quick action 触发一键整理；Vertical Tabs / Current Page Chat / Dashboard 作为 Sidebar 入口出现。
 
-CONFIRMED BY USER: P0 现在允许 `default_popup`，但它必须是极简动作菜单，不是 settings page。Chrome 配置 `default_popup` 后不会触发 `action.onClicked`，所以所有真实动作必须由 popup 发送 `RUN_TOOLBAR_ACTION` 给 background 处理。
+CONFIRMED BY LATEST USER CORRECTION: P0 默认入口不允许 `default_popup`。Chrome 配置 `default_popup` 后不会触发 `action.onClicked`，会导致用户点击插件时看到 popup/窄条而不是 Sidebar，所以 manifest action 必须保持无 `default_popup`。
 
 CONFIRMED BY IMPLEMENTATION:
 
 ```text
-- popup.html exposes only the confirmed compact action set:
-  Smart Organize, Vertical Tabs, Current Page Chat, Dashboard.
-- popup.js sends `RUN_TOOLBAR_ACTION` to the background service worker with active tab/window hints.
-- popup.js does not call `chrome.sidePanel.open`, `chrome.tabs.group`, or any AI/settings workflow directly.
-- background.js keeps a `TOOLBAR_ACTIONS` allowlist and rejects unsupported toolbar actions.
-- Dashboard opens as a dashboard page instead of running organize.
-- Smart Organize opens Sidebar and then runs organize through the `toolbar-menu` source.
-- Vertical Tabs / Current Page Chat open Sidebar through background and do not start organize.
+- manifest action has no `default_popup`.
+- background.js listens to `chrome.action.onClicked`.
+- action clicks call `openSidePanelForWindow(activeWindowId)` from the background service worker.
+- action clicks set Sidebar mode to `agent` and bind the current tab metadata as `current_tab` context.
 - `tools/extension_smoke_test.js` has a regression guard for this contract.
 ```
 

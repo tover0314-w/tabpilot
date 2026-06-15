@@ -15,7 +15,7 @@ Dashboard
 | 界面 | 角色 | 不该做什么 |
 |---|---|---|
 | Top Tab Bar | 展示真实整理结果 | 不解释复杂逻辑 |
-| Action Icon | 打开极简 toolbar menu：Smart Organize、Vertical Tabs、Current Page Chat、Dashboard | 不做复杂设置页 |
+| Action Icon | 直接打开 Sidebar Agent，并绑定当前 tab 上下文 | 不打开 toolbar popup / 复杂设置页 |
 | Page Quick Rail | 在普通网页右侧提供极简 AI 快捷入口：Chat、Read、Region、Translate、Save | 不做 Monica 式大工具箱，不后台读取页面 |
 | Sidebar | 结果解释、Undo、聊天、总结 | 不承载长期复杂管理 |
 | Dashboard | 长期管理、付费能力、workspace | 不阻塞首次 aha |
@@ -92,7 +92,7 @@ Dashboard
 
 ## 6. Navigation Rules
 
-- 用户第一次点击插件：不进入 dashboard，先看到极简 toolbar menu；Smart Organize 会打开 sidebar 并整理。
+- 用户第一次点击插件：不进入 dashboard，不出现 toolbar popup，直接打开 Sidebar Agent；Smart Organize 是首要 quick action。
 - Sidebar 中需要复杂调整时，引导打开 dashboard。
 - Dashboard 调整完成后，必须能 apply 回浏览器顶部 tab bar。
 - Chat 始终可用，但 scope 要明确。

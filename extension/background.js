@@ -404,6 +404,13 @@ const AGENT_TOOL_REGISTRY = {
   ]
 };
 
+chrome.action?.onClicked?.addListener?.((tab) => {
+  openSidebarFromActionClick(tab).catch((error) => {
+    console.error("[TabMosaic] Failed to open sidebar from action click", error);
+    recordError("ACTION_CLICK_OPEN_SIDEBAR", error).catch(() => {});
+  });
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || typeof message.type !== "string") {
     return false;
@@ -635,6 +642,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   return false;
 });
+
+async function openSidebarFromActionClick(clickedTab) {
+  const activeTab = clickedTab && Number.isInteger(clickedTab.id)
+    ? clickedTab
+    : await resolveToolbarActiveTab({}, {});
+  const activeWindowId = resolveToolbarWindowId({ activeWindowId: activeTab?.windowId }, {}, activeTab);
+
+  await openSidePanelForWindow(activeWindowId);
+  await Promise.all([
+    setSidebarMode("agent", {
+      source: "action-click",
+      activeWindowId,
+      activeTabId: activeTab?.id ?? null
+    }),
+    setSidebarContextFromTab(activeTab, "action-click")
+  ]);
+
+  return {
+    action: "open-sidebar",
+    mode: "agent"
+  };
+}
 
 async function runToolbarAction(message, sender) {
   const action = String(message.action || "");

@@ -7900,3 +7900,36 @@ Evidence notes:
 - `sidepanel-narrow-guard.png` now waits for `.sidepanel-body[data-narrow-sidepanel]`, so the screenshot proves the JavaScript guard activated.
 - The expected narrow state is a small `TM` mark plus `Expand`, not clipped `TA`, `C`, or partial chat cards.
 - Public launch remains blocked by the existing user/QA gates; this entry only documents a local private-beta UI regression fix.
+
+## 2026-06-15 Sidebar-First Action Icon Entry Fix
+
+Status: PASSED for local private-beta evidence
+
+Source state verified: changed the shipped extension action behavior so clicking the TabMosaic AI toolbar icon opens the Sidebar Agent directly instead of opening a toolbar popup/menu. The manifest now keeps `action.default_popup` unset, and the background service worker handles `chrome.action.onClicked` by opening the side panel, setting Sidebar mode to `agent`, and binding the active tab as the current-tab context.
+
+Commands:
+
+```bash
+node --check extension/background.js
+node tools/extension_smoke_test.js
+ALLOW_GOOGLE_CHROME_CLI_EXTENSION=1 node tools/chrome_runtime_smoke_test.js
+node tools/package_extension.js
+node tools/verify_release_package.js
+```
+
+Result:
+
+```text
+83 smoke tests passed
+PASS Chrome runtime loaded extension and exercised organize/restore/chat/dashboard apply/tab move/drag-drop/tab focus/workspace save/delete/duplicate focus/undo/restore plus sidebar composer commands, context-aware composer state, selected-tabs context tool card, selected-tabs follow-up routing, ephemeral chat thread, capability answer, open-ended chat fallback, workspace save command, next-step answer, chat summary/page-question answers, read-only answers, optimization/memory-relief answer, duplicate-review/closed-tab answers, protected/read-later answers, and tab search/open
+PASS release package verified for v0.1.0
+sha256=31b86c55020f3d796a74fdb2663a7e0ec9589d1c04366339b4a8491f2591123c
+```
+
+Evidence notes:
+
+- The smoke guard now fails if `manifest.action.default_popup` is reintroduced.
+- The smoke guard verifies `chrome.action.onClicked` routes through `openSidebarFromActionClick`.
+- Clicking the extension icon is now a Sidebar-first Tab Agent entry; Smart Organize remains available as the primary Sidebar quick action.
+- Temporary Chrome runtime QA passed in a clean profile; direct automation of the user's current Chrome profile was blocked because the Codex Chrome Extension is not installed/enabled in that profile.
+- Public launch remains blocked by the existing user/QA gates; this entry only documents the local private-beta entry-flow fix.

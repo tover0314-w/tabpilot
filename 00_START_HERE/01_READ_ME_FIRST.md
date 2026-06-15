@@ -18,11 +18,11 @@ Chrome 顶部 tab bar（当前浏览器所有普通窗口）
   └─ 展示真实的原生 Chrome tab groups
 
 Extension action icon
-  └─ 点击后打开极简 toolbar menu
-      ├─ Smart Organize
-      ├─ Vertical Tabs
+  └─ 点击后直接打开 Sidebar Agent
+      ├─ Smart Organize quick action
       ├─ Current Page Chat
-      └─ Dashboard
+      ├─ Vertical Tabs / Dashboard entry
+      └─ Chat composer
 
 Sidebar Agent
   ├─ 显示整理结果
@@ -45,7 +45,7 @@ Dashboard
 
 ### 1. 主入口不是聊天，是 Smart Organize
 
-用户不应该先打开 sidebar 再想怎么和 AI 说。用户应该点击插件图标，在极简菜单中选择 Smart Organize，然后看到当前浏览器所有普通窗口的顶部 tab bar 出现清晰分组。
+用户点击插件图标后应该直接看到 Sidebar Agent，而不是一个窄 popup 或复杂菜单。Sidebar 的首要动作是 Smart Organize：用户可以一键让当前浏览器所有普通窗口的顶部 tab bar 出现清晰分组，也可以直接和当前页面/标签组对话。
 
 ### 2. Sidebar 是控制台，不是主舞台
 

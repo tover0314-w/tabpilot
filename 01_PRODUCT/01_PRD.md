@@ -4,7 +4,7 @@
 
 ## 1. 产品概述
 
-TabMosaic AI 是一个面向办公和知识工作场景的开源 Chrome AI browser layer。用户安装扩展后，可以用自配模型/API key 把自己的 Chrome 变成可控的 AI 浏览器工作区。用户点击插件图标后，先进入极简 toolbar action menu；首要动作 Smart Organize 会扫描当前浏览器的所有普通窗口 tabs，识别重复标签页，按任务/项目/主题自动分类，创建或更新 Chrome 原生 tab groups，并在 sidebar 中展示整理进度、结果、Undo、Review、聊天和总结入口。菜单还提供 Vertical Tabs、Current Page Chat 和 Dashboard 入口。
+TabMosaic AI 是一个面向办公和知识工作场景的开源 Chrome AI browser layer。用户安装扩展后，可以用自配模型/API key 把自己的 Chrome 变成可控的 AI 浏览器工作区。用户点击插件图标后，Sidebar Agent 直接打开，并把当前 tab 作为对话上下文；首要 quick action 是 Smart Organize，用来扫描当前浏览器的所有普通窗口 tabs，识别重复标签页，按任务/项目/主题自动分类，创建或更新 Chrome 原生 tab groups，并在 sidebar 中展示整理进度、结果、Undo、Review、聊天和总结入口。Sidebar 同时提供 Current Page Chat、Vertical Tabs 和 Dashboard 入口。
 
 长期来看，TabMosaic AI 不只是 tab manager，而是一个开源、BYOK、AI 维护的浏览器办公工作区：用户可以在 dashboard 里管理长期分组、工作区、规则、摘要和 AI 记忆，也可以选择自己的模型 provider 或后续 hosted AI。
 
@@ -54,7 +54,7 @@ Chrome 已经具备原生 tab group 能力，用户可以 group、label、color-
 
 ### P0 目标
 
-让用户从 toolbar menu 的 Smart Organize 入口，把当前浏览器所有普通窗口中混乱的 tabs 自动整理成接近人工分类效果的 Chrome 原生 tab groups，并安全清理重复 tabs。P0 同时要建立 open-source + BYOK 信任感：用户知道它如何处理数据，也能用自己的模型。
+让用户从 Sidebar 的 Smart Organize 入口，把当前浏览器所有普通窗口中混乱的 tabs 自动整理成接近人工分类效果的 Chrome 原生 tab groups，并安全清理重复 tabs。P0 同时要建立 open-source + BYOK 信任感：用户知道它如何处理数据，也能用自己的模型。
 
 ### P1 目标
 
@@ -69,7 +69,8 @@ Chrome 已经具备原生 tab group 能力，用户可以 group、label、color-
 ```text
 用户打开 73 个 tabs
 → 点击插件图标
-→ 选择 Smart Organize
+→ Sidebar Agent 直接打开
+→ 点击 Smart Organize quick action
 → 当前浏览器所有普通窗口的顶部 tab bar 出现清晰原生 tab groups
 → 系统自动关闭 9 个安全重复 tabs
 → sidebar 自动打开，展示进度、整理结果、Undo、Review、聊天引导
@@ -80,8 +81,8 @@ Chrome 已经具备原生 tab group 能力，用户可以 group、label、color-
 
 | 功能 | 描述 | P0 |
 |---|---|---|
-| Toolbar Action Menu | 点击插件 icon 打开极简动作菜单：Smart Organize、Vertical Tabs、Current Page Chat、Dashboard | 是 |
-| Smart Organize Autopilot | 从 toolbar menu 触发后自动整理当前浏览器所有普通窗口 | 是 |
+| Sidebar Action Entry | 点击插件 icon 直接打开 Sidebar Agent；Smart Organize、Current Page Chat、Vertical Tabs、Dashboard 作为极简 quick actions | 是 |
+| Smart Organize Autopilot | 从 Sidebar quick action 触发后自动整理当前浏览器所有普通窗口 | 是 |
 | Native Tab Groups | 顶部 tab bar 展示原生分组 | 是 |
 | Auto Classification | 规则 + AI 自动分类 | 是 |
 | Safe Deduplication | 自动关闭安全重复 tabs | 是 |

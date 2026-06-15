@@ -36,7 +36,7 @@ Current posture:
 
 - Tab management is a recognized narrow browser function under Chrome's single-purpose guidance, so the listing should stay centered on organizing open work tabs, duplicate review, Undo/Restore, and user-triggered sidebar/dashboard controls.
 - `tabs` is justified but sensitive because it exposes tab `url`, `pendingUrl`, `title`, and `favIconUrl`. The store wording must explain why open-tab metadata, tab IDs/state, grouping, duplicate safety, focus, and restore need this permission.
-- `sidePanel` is the normal MV3 permission for sidebar UI. Programmatic `sidePanel.open()` must remain tied to an extension user gesture; the compact toolbar menu and background allowlist are aligned with that direction.
+- `sidePanel` is the normal MV3 permission for sidebar UI. Programmatic `sidePanel.open()` must remain tied to an extension user gesture; the action icon click opens Sidebar directly through the background service worker.
 - `scripting` plus `activeTab` is the preferred narrow path for current-tab extraction. Do not add required broad host permissions for current-page chat.
 - Optional host access for selected-tabs/group page questions and custom BYOK provider origins must stay user-triggered, origin-scoped, and minimally retained. Broad host patterns can lengthen review and should not become required permissions without a separate confirmation gate.
 - Web browsing activity and website content/resource disclosure should remain conservative because the product handles open-tab metadata and user-triggered visible text.

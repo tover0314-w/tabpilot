@@ -40,7 +40,7 @@ READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
 - [x] MV3 manifest。
 - [x] Extension icons。
 - [x] Extension zip package。
-- [x] compact toolbar popup menu。
+- [x] action icon opens Sidebar Agent directly。
 - [x] sidePanel open。
 - [x] tabs collection。
 - [x] tab groups apply。

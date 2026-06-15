@@ -2,7 +2,7 @@
 
 ## Aha moment 定义
 
-用户点击插件图标后，在极简 toolbar menu 选择 Smart Organize，当前浏览器所有普通窗口的顶部 tab bar 从混乱变为清晰的原生 tab groups，并且重复 tabs 被安全清理。
+用户点击插件图标后，Sidebar Agent 直接打开；用户点击 Sidebar 里的 Smart Organize quick action 后，当前浏览器所有普通窗口的顶部 tab bar 从混乱变为清晰的原生 tab groups，并且重复 tabs 被安全清理。
 
 用户的内心感受应该是：
 

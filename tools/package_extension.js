@@ -85,14 +85,12 @@ function validateManifestAssets(manifest) {
     }
   }
 
-  if (manifest.action?.default_popup !== "popup.html") {
-    throw new Error("default_popup must point to the compact toolbar action menu");
+  if (manifest.action?.default_popup) {
+    throw new Error("default_popup must stay unset so the toolbar icon opens the side panel directly");
   }
 
-  const popupPath = path.join(EXTENSION_DIR, manifest.action.default_popup);
-
-  if (!fs.existsSync(popupPath)) {
-    throw new Error(`Missing toolbar popup: ${manifest.action.default_popup}`);
+  if (!fs.existsSync(path.join(EXTENSION_DIR, "background.js"))) {
+    throw new Error("Missing background service worker for action-click side panel entry");
   }
 }
 

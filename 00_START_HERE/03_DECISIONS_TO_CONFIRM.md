@@ -8,7 +8,7 @@
 |---|---|---|---|
 | D-001 | 产品名 | TabMosaic AI（TabPilot 已有同类 Chrome 扩展和 tabpilot.ai 冲突） | CONFIRMED BY USER DELEGATION |
 | D-001-A | Public brand/domain finalization | 2026-06-15 复扫确认 Chrome Web Store 已有 `Tab Mosaic` 近似扩展，且 TabPilot / TabWeave / TabAtlas / TabCraft / TabMind / TabOrbit 等 `Tab + noun` 命名空间拥挤；TabMosaic AI 可继续作为 working name，但公开品牌、域名购买和商店 listing 名称需重新确认 | CONFIRM |
-| D-002 | P0 主入口 | 点击插件 icon 即自动整理 | CONFIRMED BY DISCUSSION |
+| D-002 | P0 主入口 | 点击插件 icon 直接打开 Sidebar Agent；Smart Organize 是 Sidebar 的首要 quick action | CONFIRMED BY LATEST USER CORRECTION |
 | D-003 | 顶部结果展示 | 使用 Chrome 原生 tab groups | CONFIRMED BY DISCUSSION |
 | D-004 | Sidebar 角色 | 展示结果、引导对话、Undo、总结 | CONFIRMED BY DISCUSSION |
 | D-005 | Dashboard 角色 | 付费核心工作台 | CONFIRMED BY DISCUSSION |
@@ -35,7 +35,7 @@
 | D-026 | 是否默认用页面正文参与一键分类 | 否。one-click organize 保持 metadata-only；页面正文只用于用户主动发起的深度问答或内容辅助重分组 | DECIDED |
 | D-027 | 是否将产品主叙事扩展为 AI Browser Layer for Chrome | 是。TabMosaic starts as tab cleanup, grows into an open-source AI Browser Layer for Chrome | CONFIRMED BY USER |
 | D-028 | New Tab Mission Control 是否进入主入口 / MVP | 用户倾向不要。建议不进入 P0；作为 P1/P2 可选模式观察 | CONFIRM |
-| D-028-A | Toolbar 点击后是否打开下拉动作菜单 | 点击插件 icon 打开极简 dropdown，首要动作是 Smart Organize，第二动作是 Vertical Tabs，另有 Current Page Chat / Dashboard | CONFIRMED BY USER |
+| D-028-A | Toolbar 点击后是否打开下拉动作菜单 | 不作为默认入口。点击插件 icon 必须直接打开 Sidebar Agent；旧 toolbar dropdown 只能作为未来可选入口或 dormant code | CONFIRMED BY LATEST USER CORRECTION |
 | D-029 | 是否把 P0 整理改为 preview-before-apply | 用户倾向不要。建议不改；Smart Organize 自动应用原生分组并保留 Undo，chat/content-assisted regrouping 才 Apply / Cancel | CONFIRM IF CHANGING |
 | D-030 | Workspace 是否改名为 Space | 建议继续使用 Workspace；Space 概念可作为 imported PRD 参考 | CONFIRM IF CHANGING |
 | D-031 | 是否持久保存页面 snapshots / summaries / source maps | 建议暂不进入当前 MVP；任何持久保存都需要单独隐私确认 | CONFIRM |

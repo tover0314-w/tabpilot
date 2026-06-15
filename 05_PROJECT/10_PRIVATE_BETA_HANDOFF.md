@@ -13,8 +13,8 @@ CONFIRMED BY IMPLEMENTATION:
 ```text
 - MV3 Chrome extension
 - English-only visible Sidebar/Dashboard UI for the MVP
-- compact toolbar action menu with Smart Organize, Vertical Tabs, Current Page Chat, and Dashboard
-- Smart Organize opens the side panel and runs the organize pipeline
+- action icon opens the Sidebar Agent directly
+- Smart Organize runs from the Sidebar quick action and starts the organize pipeline
 - first-run privacy gate
 - all normal windows tab scan
 - Chrome native tab groups

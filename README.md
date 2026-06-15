@@ -56,7 +56,8 @@ Most tab managers help after your browser is already messy. TabMosaic starts wit
 
 ```text
 Click extension icon
-Choose Smart Organize
+Sidebar Agent opens
+Choose Smart Organize inside the sidebar
 Get real Chrome native tab groups
 Continue from the sidebar agent
 ```

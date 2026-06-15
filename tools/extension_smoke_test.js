@@ -247,9 +247,9 @@ function largeSyntheticSnapshot(tabCount = 180) {
   };
 }
 
-test("manifest keeps toolbar menu action and narrow permissions", () => {
+test("manifest opens the side panel directly from the action icon and keeps narrow permissions", () => {
   assertEqual(manifest.manifest_version, 3, "Manifest version");
-  assertEqual(manifest.action.default_popup, "popup.html", "Manifest action should open the compact toolbar menu");
+  assert(manifest.action && !manifest.action.default_popup, "Manifest action should not use default_popup; the icon opens Sidebar directly");
   assertEqual(manifest.default_locale, "en", "Manifest default locale");
   assertEqual(manifest.name, "__MSG_extensionName__", "Manifest name should use Chrome i18n");
   assertEqual(manifest.description, "__MSG_extensionDescription__", "Manifest description should use Chrome i18n");
@@ -283,11 +283,7 @@ test("manifest keeps toolbar menu action and narrow permissions", () => {
     assert(fs.existsSync(path.join(EXTENSION_DIR, iconPath)), `Missing icon file: ${iconPath}`);
   }
 
-  const popupPath = path.join(EXTENSION_DIR, manifest.action.default_popup);
-  const popupJsPath = path.join(EXTENSION_DIR, "popup.js");
   const quickRailPath = path.join(EXTENSION_DIR, "page_quick_rail.js");
-  assert(fs.existsSync(popupPath), "Toolbar popup HTML should exist");
-  assert(fs.existsSync(popupJsPath), "Toolbar popup JS should exist");
   assert(fs.existsSync(quickRailPath), "Page quick rail content script should exist");
   assertDeepEqual(
     manifest.content_scripts?.[0]?.matches,
@@ -296,16 +292,13 @@ test("manifest keeps toolbar menu action and narrow permissions", () => {
   );
   assertDeepEqual(manifest.content_scripts?.[0]?.js, ["page_quick_rail.js"], "Manifest should load only the quick rail content script");
 
-  const popupHtml = fs.readFileSync(popupPath, "utf8");
-  const popupJs = fs.readFileSync(popupJsPath, "utf8");
   const quickRailJs = fs.readFileSync(quickRailPath, "utf8");
-  const expectedActions = ["smart-organize", "vertical-tabs", "current-page-chat", "dashboard"];
 
-  for (const action of expectedActions) {
-    assert(popupHtml.includes(`data-toolbar-action="${action}"`), `Missing toolbar action: ${action}`);
-  }
-
-  assert(popupJs.includes("RUN_TOOLBAR_ACTION"), "Toolbar popup should delegate actions to the service worker");
+  assert(backgroundSource.includes("chrome.action?.onClicked?.addListener"), "Background should listen for toolbar action clicks");
+  assert(backgroundSource.includes("openSidebarFromActionClick"), "Background should route toolbar clicks through a dedicated Sidebar opener");
+  assert(backgroundSource.includes('source: "action-click"'), "Toolbar click should mark the Sidebar context source");
+  assert(backgroundSource.includes('setSidebarMode("agent"'), "Toolbar click should open the Tab Agent mode");
+  assert(backgroundSource.includes("await openSidePanelForWindow(activeWindowId)"), "Toolbar click should open the side panel through the background service worker");
   assert(quickRailJs.includes("RUN_QUICK_RAIL_ACTION"), "Quick rail should delegate actions to the service worker");
   assert(!quickRailJs.includes("innerText"), "Quick rail must not read page visible text");
   assert(!quickRailJs.includes("getSelection"), "Quick rail must not read selected text directly");
@@ -341,18 +334,19 @@ test("locales include matching English and Chinese message keys", () => {
   }
 });
 
-test("toolbar popup delegates user-gesture actions to background", () => {
-  const popupPath = path.join(EXTENSION_DIR, manifest.action.default_popup);
-  const popupHtml = fs.readFileSync(popupPath, "utf8");
-  const popupJs = fs.readFileSync(path.join(EXTENSION_DIR, "popup.js"), "utf8");
+test("toolbar action click opens the Tab Agent sidebar directly", () => {
   const quickRailJs = fs.readFileSync(path.join(EXTENSION_DIR, "page_quick_rail.js"), "utf8");
-  const actionMatches = Array.from(popupHtml.matchAll(/data-toolbar-action="([^"]+)"/g), (match) => match[1]);
   const expectedActions = ["smart-organize", "vertical-tabs", "current-page-chat", "dashboard"];
   const expectedQuickRailActions = ["chat", "read", "region", "save", "translate"];
   const expectedPrimaryQuickRailActions = ["chat", "read", "region", "save"];
   const expectedOverflowQuickRailActions = ["translate"];
 
-  assertDeepEqual(actionMatches, expectedActions, "Toolbar popup should expose only the confirmed compact action set in order");
+  assert(!manifest.action.default_popup, "Toolbar icon should not open a popup menu");
+  assert(backgroundSource.includes("chrome.action?.onClicked?.addListener"), "Toolbar icon should be handled by chrome.action.onClicked");
+  assert(backgroundSource.includes("async function openSidebarFromActionClick"), "Background should keep a dedicated action-click Sidebar opener");
+  assert(backgroundSource.includes("await openSidePanelForWindow(activeWindowId)"), "Action click should open the side panel from the service worker");
+  assert(backgroundSource.includes('setSidebarContextFromTab(activeTab, "action-click")'), "Action click should bind current-tab context to the Sidebar");
+  assert(backgroundSource.includes('source: "action-click"'), "Action-click context should be traceable");
   assertDeepEqual(
     extractObjectArrayActions(quickRailJs, "PRIMARY_ACTIONS"),
     expectedPrimaryQuickRailActions,
@@ -363,13 +357,6 @@ test("toolbar popup delegates user-gesture actions to background", () => {
     expectedOverflowQuickRailActions,
     "Quick rail should keep Translate behind More instead of adding a fifth visible icon"
   );
-  assert(!popupHtml.includes("apiKey") && !popupHtml.includes("settings"), "Toolbar popup must not become an AI settings page");
-  assert(popupJs.includes("chrome.runtime.sendMessage"), "Toolbar popup should delegate to background through runtime messaging");
-  assert(popupJs.includes('type: "RUN_TOOLBAR_ACTION"'), "Toolbar popup should send RUN_TOOLBAR_ACTION messages");
-  assert(popupJs.includes("activeWindowId") && popupJs.includes("activeTabId"), "Toolbar popup should pass active tab/window hints for the user gesture");
-  assert(popupJs.includes("chrome.tabs.query({ active: true, lastFocusedWindow: true })"), "Toolbar popup should resolve the active tab from the focused window");
-  assert(!popupJs.includes("chrome.sidePanel.open"), "Toolbar popup should not open the side panel directly");
-  assert(!popupJs.includes("chrome.tabs.group"), "Toolbar popup should not manipulate tab groups directly");
 
   for (const action of expectedActions) {
     assert(backgroundCode.includes(`"${action}"`), `Background toolbar action allowlist should include ${action}`);

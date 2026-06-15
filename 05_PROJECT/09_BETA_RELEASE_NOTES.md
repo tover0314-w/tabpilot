@@ -26,7 +26,7 @@ Click extension icon
 
 - MV3 Chrome extension.
 - English-only visible Sidebar/Dashboard UI for the MVP; Chinese locale resources remain only as future localization material.
-- Compact toolbar action menu using `default_popup`; Smart Organize delegates to the background organize pipeline.
+- Action icon opens the Sidebar Agent directly; Smart Organize runs from the Sidebar quick action.
 - Vertical Tabs opens a lightweight sidebar tab browser.
 - Side panel result/control center.
 - All normal windows scan; incognito is not processed by default.

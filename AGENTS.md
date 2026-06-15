@@ -42,8 +42,7 @@ The P0 aha moment is not a chat answer. The aha moment is:
 
 ```text
 User clicks the extension icon
-→ compact menu opens with Smart Organize first
-→ user clicks Smart Organize
+→ sidebar opens in Tab Agent mode with Smart Organize as the first quick action
 → all normal windows in the current browser get clean native tab groups
 → safe duplicate tabs are removed
 → sidebar opens and explains what happened
@@ -60,7 +59,7 @@ These principles are already core to the harness and should not be changed witho
 
 ### 2.1 Smart Organize first
 
-The main entry is clicking the Chrome extension icon. The confirmed entry now opens a compact menu; Smart Organize must be the first/default action, and the user should not need to type a prompt before seeing value.
+The main entry is clicking the Chrome extension icon. The confirmed entry opens the Sidebar directly in Tab Agent mode; Smart Organize must be the first/default quick action, and the user should not need to type a prompt before seeing value.
 
 ### 2.2 Native tab groups as the visible result
 
@@ -405,7 +404,7 @@ Must not:
 - assume <all_urls> is acceptable
 - add remote code execution patterns
 - assume cloud upload of URL/page text
-- silently add, remove, or repurpose `default_popup` without checking the confirmed toolbar-menu decision
+- silently reintroduce `default_popup` or a toolbar menu as the default entry after the latest confirmed Sidebar-first action behavior
 ```
 
 ### 5.4 Coding Agent
@@ -605,16 +604,15 @@ The intended P0 flow is:
 
 ```text
 Chrome action icon click
-→ compact toolbar action menu opens
-→ user chooses Smart Organize
-→ background service worker handles the action
 → side panel opens
-→ organize pipeline runs
+→ Tab Agent shows Smart Organize as the first quick action
+→ user runs Smart Organize from Sidebar if they want tab organization
+→ background service worker handles the action
 → native tab groups update
 → sidebar result renders
 ```
 
-CONFIRMED BY USER: `default_popup` is allowed for the compact toolbar action menu. It must keep Smart Organize as the first/default action, include Vertical Tabs, Current Page Chat, and Dashboard, and delegate real work to the background service worker. Do not turn the popup into a settings page or passive chatbot.
+CONFIRMED BY LATEST USER CORRECTION: `default_popup` must not be the default toolbar entry. Clicking the extension action icon opens the Sidebar directly in Tab Agent mode. Smart Organize remains the first/default quick action inside the Sidebar. A popup/menu may exist only as dormant or future code, not as the shipped default click behavior.
 
 ### 8.2 API expectations
 
@@ -1047,7 +1045,7 @@ For artifact updates, provide the updated file link.
 These items are treated as confirmed by the conversation so far, unless the user later changes them:
 
 ```text
-- P0 aha moment is clicking plugin icon, choosing Smart Organize from the compact menu, and seeing the top tab bar organized.
+- P0 entry is clicking plugin icon and seeing the Sidebar open directly in Tab Agent mode, with Smart Organize as the first quick action for native tab grouping.
 - Top tab bar should show real native Chrome tab groups.
 - Sidebar should open/show results, explain, guide conversation, and support tab chat.
 - Dashboard should exist and is important for paid value.
