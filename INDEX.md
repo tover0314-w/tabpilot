@@ -31,8 +31,8 @@
 - `tools/check_remote_ci_status.js`：读取 GitHub Actions 远端 CI 状态，区分真正测试失败、未完成运行和 GitHub 账号计费锁；支持 `--self-test`、`--json` 和 `--allow-failure`。
 - `tools/final_launch_gate_check.js`：最终上线门禁汇总器，合并 launch readiness、release package 校验和可选远端 CI 状态，输出 `FINAL_LAUNCH_READY` 与剩余 blocker；支持 `--self-test`、`--json`、`--include-remote-ci` 和 `--allow-blocked`。
 - `tools/validate_public_launch_decision_reply.js`：校验用户填写的 D-L03 到 D-L14 public launch decision reply，检查漏项、重复项、未替换 placeholder、keep blocked 项和警告；只读校验，不批准、不改文档、不发布；支持 `--self-test` 和 `--json`。
-- `tools/prepare_public_launch_handoff_packet.js`：生成 ignored 的 public launch handoff 包，汇总 launch gates、本地 HTML 决策审核页、可复制审批回复、截图审核包和真实 QA 包路径；不批准、不发布、不读取私密浏览数据；支持 `--self-test`。
-- `tools/prepare_release_candidate_packet.js`：生成 ignored 的 release candidate 审查包，把扩展 zip/checksum、readiness、store asset review、real-profile QA checklist 和 public launch handoff 汇到一个 README / HTML / JSON manifest 入口；不批准、不提交、不发布、不跑真实 profile QA；支持 `--self-test`。
+- `tools/prepare_public_launch_handoff_packet.js`：生成 ignored 的 public launch handoff 包，汇总 launch gates、最终上线门禁、本地 HTML 决策审核页、可复制审批回复、截图审核包和真实 QA 路径；不批准、不发布、不读取私密浏览数据；支持 `--self-test` 和可选 `--include-remote-ci`。
+- `tools/prepare_release_candidate_packet.js`：生成 ignored 的 release candidate 审查包，把扩展 zip/checksum、最终上线门禁、store asset review、real-profile QA checklist 和 public launch handoff 汇到一个 README / HTML / JSON manifest 入口；不批准、不提交、不发布、不跑真实 profile QA；支持 `--self-test` 和可选 `--include-remote-ci`。
 - `tools/real_profile_qa_redaction_check.js`：本地检查已脱敏 real-profile QA 报告，拦截 full URL、API key、bearer token、真实邮箱和 token-like query value；支持 `--self-test`。
 - `tools/prepare_real_profile_qa_packet.js`：生成 ignored 的真实 Chrome profile QA 本地包，复制空白结果模板、写入本地 HTML checklist、步骤和脱敏检查命令；不打开 Chrome、不读取 tabs/profile/secrets；支持 `--self-test`。
 - `tools/provider_registry_check.js`：校验 BYOK provider registry、Dashboard 下拉、BYOK guide、manifest host permission 和 provider host label 是否一致。

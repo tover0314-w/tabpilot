@@ -8,6 +8,7 @@ const STORE_ASSET_REVIEW_ROOT = path.join(ROOT_DIR, "artifacts", "store-asset-re
 const REAL_PROFILE_QA_ROOT = path.join(ROOT_DIR, "artifacts", "real-profile-qa");
 const SHOULD_SELF_TEST = process.argv.includes("--self-test");
 const SHOULD_JSON = process.argv.includes("--json");
+const SHOULD_INCLUDE_REMOTE_CI = process.argv.includes("--include-remote-ci");
 
 main();
 
@@ -18,7 +19,8 @@ function main() {
   }
 
   const launchReport = readLaunchReport();
-  const packet = createPacket(launchReport);
+  const finalGateReport = readFinalGateReport();
+  const packet = createPacket({ launchReport, finalGateReport });
   printPacket(packet);
 }
 
@@ -36,29 +38,61 @@ function readLaunchReport() {
   return JSON.parse(result.stdout);
 }
 
-function createPacket(launchReport) {
+function readFinalGateReport() {
+  const args = ["tools/final_launch_gate_check.js", "--json", "--allow-blocked"];
+  if (SHOULD_INCLUDE_REMOTE_CI) args.push("--include-remote-ci");
+
+  const result = childProcess.spawnSync(process.execPath, args, {
+    cwd: ROOT_DIR,
+    encoding: "utf8"
+  });
+
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    return {
+      finalLaunchReady: "unknown",
+      readiness: {},
+      counts: {},
+      remoteCi: {
+        status: "unknown",
+        reason: "FINAL_GATE_CHECK_FAILED",
+        message: result.stderr || result.stdout || "final launch gate check failed"
+      },
+      blockers: []
+    };
+  }
+
+  return JSON.parse(result.stdout);
+}
+
+function createPacket({ launchReport, finalGateReport }) {
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const packetDir = path.join(OUT_ROOT, runId);
   const readmePath = path.join(packetDir, "README.md");
   const decisionReviewPath = path.join(packetDir, "launch-decision-review.html");
   const approvalTemplatePath = path.join(packetDir, "approval-reply-template.txt");
   const gatesPath = path.join(packetDir, "launch-gates.json");
+  const finalGatePath = path.join(packetDir, "final-launch-gate.json");
   const storeReview = findLatestReviewPacket(STORE_ASSET_REVIEW_ROOT, "store-asset-review.md");
   const realProfileQa = findLatestReviewPacket(REAL_PROFILE_QA_ROOT, "real-profile-qa-draft.md");
   const handoff = buildHandoff({
     launchReport,
+    finalGateReport,
     storeReview,
     realProfileQa
   });
   handoff.decisionReviewPath = path.relative(ROOT_DIR, decisionReviewPath);
+  handoff.finalGatePath = path.relative(ROOT_DIR, finalGatePath);
 
   fs.mkdirSync(packetDir, { recursive: true });
   fs.writeFileSync(readmePath, `${renderReadme(handoff)}\n`);
   fs.writeFileSync(decisionReviewPath, renderDecisionReviewHtml(handoff));
   fs.writeFileSync(approvalTemplatePath, `${launchReport.decisionReplyTemplate}\n`);
+  fs.writeFileSync(finalGatePath, `${JSON.stringify(finalGateReport, null, 2)}\n`);
   fs.writeFileSync(gatesPath, `${JSON.stringify({
     generatedAt: new Date().toISOString(),
     readiness: launchReport.readiness,
+    finalLaunchGate: finalGateReport,
     counts: launchReport.counts,
     publicSourceReleaseBlockers: launchReport.publicSourceReleaseBlockers,
     publicLaunchBlockers: launchReport.publicLaunchBlockers,
@@ -67,7 +101,8 @@ function createPacket(launchReport) {
       storeAssets: storeReview,
       realProfileQa
     },
-    localDecisionReview: path.relative(ROOT_DIR, decisionReviewPath)
+    localDecisionReview: path.relative(ROOT_DIR, decisionReviewPath),
+    localFinalGateReport: path.relative(ROOT_DIR, finalGatePath)
   }, null, 2)}\n`);
 
   return {
@@ -76,12 +111,13 @@ function createPacket(launchReport) {
     decisionReviewPath,
     approvalTemplatePath,
     gatesPath,
-    status: launchReport.counts.blockingGates === 0 ? "READY_PUBLIC_LAUNCH_REVIEW" : "BLOCKED_NEEDS_USER_INPUT_OR_QA",
+    finalGatePath,
+    status: finalGateReport.finalLaunchReady === "yes" ? "READY_PUBLIC_LAUNCH_REVIEW" : "BLOCKED_NEEDS_USER_INPUT_OR_QA",
     handoff
   };
 }
 
-function buildHandoff({ launchReport, storeReview, realProfileQa }) {
+function buildHandoff({ launchReport, finalGateReport, storeReview, realProfileQa }) {
   const blockingGates = launchReport.gates.filter((gate) => String(gate.status || "").toLowerCase() !== "ready");
   const userInputGates = blockingGates.filter((gate) => gate.owner.includes("USER INPUT"));
   const qaGates = blockingGates.filter((gate) => gate.owner.includes("QA"));
@@ -89,7 +125,9 @@ function buildHandoff({ launchReport, storeReview, realProfileQa }) {
   return {
     generatedAt: launchReport.generatedAt,
     readiness: launchReport.readiness,
+    finalLaunchGate: finalGateReport,
     counts: launchReport.counts,
+    finalGateCounts: finalGateReport.counts || {},
     blockingGates,
     userInputGates,
     qaGates,
@@ -120,10 +158,15 @@ function renderReadme(handoff) {
     `- READY_PUBLIC_REPO_PUSH=${handoff.readiness.publicRepoPush}`,
     `- READY_PUBLIC_MARKETING_LAUNCH=${handoff.readiness.publicMarketingLaunch}`,
     `- READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=${handoff.readiness.publicChromeWebStoreLaunch}`,
+    `- FINAL_LAUNCH_READY=${handoff.finalLaunchGate.finalLaunchReady || "unknown"}`,
+    `- READY_REMOTE_CI=${handoff.finalLaunchGate.readiness?.remoteCi || "unknown"}`,
     `- Public source release blockers: ${handoff.publicSourceReleaseBlockers}`,
     `- Public launch blockers: ${handoff.counts.blockingGates}`,
     `- Needs user input: ${handoff.counts.userInputGates}`,
     `- Needs QA: ${handoff.counts.qaGates}`,
+    `- Needs account owner action: ${handoff.finalGateCounts.accountOwnerBlockers || 0}`,
+    `- Remote CI: ${handoff.finalLaunchGate.remoteCi?.status || "not checked"} / ${handoff.finalLaunchGate.remoteCi?.reason || "none"}`,
+    `- Remote CI next action: ${handoff.finalLaunchGate.remoteCi?.nextAction || "none"}`,
     "",
     "## Blocking Gates",
     "",
@@ -134,6 +177,7 @@ function renderReadme(handoff) {
     "## Local Review Artifacts",
     "",
     `- Launch decision HTML review: ${handoff.decisionReviewPath || "launch-decision-review.html"}`,
+    `- Final launch gate JSON: ${handoff.finalGatePath || "final-launch-gate.json"}`,
     `- Store asset review packet: ${handoff.storeReview?.reviewPath || "not generated"}`,
     `- Store asset HTML preview: ${handoff.storeReview?.htmlPreviewPath || "not generated"}`,
     `- Store asset review manifest: ${handoff.storeReview?.manifestPath || "not generated"}`,
@@ -358,9 +402,16 @@ function renderDecisionReviewHtml(handoff) {
 
     <section class="summary" aria-label="Readiness summary">
       <div class="metric"><span>Source release</span><strong class="${handoff.readiness.publicSourceRelease}">${escapeHtml(handoff.readiness.publicSourceRelease)}</strong></div>
-      <div class="metric"><span>Repo push</span><strong class="${handoff.readiness.publicRepoPush}">${escapeHtml(handoff.readiness.publicRepoPush)}</strong></div>
-      <div class="metric"><span>Marketing launch</span><strong class="${handoff.readiness.publicMarketingLaunch}">${escapeHtml(handoff.readiness.publicMarketingLaunch)}</strong></div>
+      <div class="metric"><span>Final launch</span><strong class="${handoff.finalLaunchGate.finalLaunchReady}">${escapeHtml(handoff.finalLaunchGate.finalLaunchReady || "unknown")}</strong></div>
+      <div class="metric"><span>Remote CI</span><strong class="${handoff.finalLaunchGate.readiness?.remoteCi || ""}">${escapeHtml(handoff.finalLaunchGate.readiness?.remoteCi || "unknown")}</strong></div>
       <div class="metric"><span>Chrome Web Store</span><strong class="${handoff.readiness.publicChromeWebStoreLaunch}">${escapeHtml(handoff.readiness.publicChromeWebStoreLaunch)}</strong></div>
+    </section>
+
+    <section class="reply" aria-label="Final launch gate">
+      <h2>Final launch gate</h2>
+      <p>FINAL_LAUNCH_READY=${escapeHtml(handoff.finalLaunchGate.finalLaunchReady || "unknown")}</p>
+      <p>Remote CI: ${escapeHtml(handoff.finalLaunchGate.remoteCi?.status || "not checked")} / ${escapeHtml(handoff.finalLaunchGate.remoteCi?.reason || "none")}</p>
+      <p>${escapeHtml(handoff.finalLaunchGate.remoteCi?.nextAction || "No remote CI action recorded.")}</p>
     </section>
 
     <section class="grid" aria-label="Blocking gates">
@@ -453,16 +504,42 @@ function runSelfTest() {
       }
     ]
   };
+  const fakeFinalGateReport = {
+    finalLaunchReady: "no",
+    readiness: {
+      localReleasePackage: "yes",
+      remoteCi: "skipped",
+      publicSourceRelease: "yes",
+      publicMarketingLaunch: "no",
+      publicChromeWebStoreLaunch: "no"
+    },
+    counts: {
+      blockers: 2,
+      userInputBlockers: 1,
+      qaBlockers: 1,
+      accountOwnerBlockers: 0,
+      buildBlockers: 0
+    },
+    remoteCi: {
+      status: "skipped",
+      reason: "REMOTE_CI_NOT_REQUESTED",
+      nextAction: ""
+    }
+  };
   const handoff = buildHandoff({
     launchReport: fakeReport,
+    finalGateReport: fakeFinalGateReport,
     storeReview: { reviewPath: "artifacts/store-asset-review/test/store-asset-review.md" },
     realProfileQa: { reviewPath: "artifacts/real-profile-qa/test/real-profile-qa-draft.md" }
   });
+  handoff.finalGatePath = "artifacts/public-launch-handoff/test/final-launch-gate.json";
   const readme = renderReadme(handoff);
   const decisionHtml = renderDecisionReviewHtml(handoff);
 
   assertIncludes(readme, "Status: BLOCKED - USER INPUT OR QA REQUIRED", "blocked status");
   assertIncludes(readme, "READY_PUBLIC_SOURCE_RELEASE=yes", "source release state");
+  assertIncludes(readme, "FINAL_LAUNCH_READY=no", "final launch state");
+  assertIncludes(readme, "Final launch gate JSON", "final gate JSON path");
   assertIncludes(readme, "launch-decision-review.html", "decision review HTML path");
   assertIncludes(readme, "D-L03", "gate row");
   assertIncludes(readme, "Store asset review packet", "store asset path");
@@ -470,6 +547,7 @@ function runSelfTest() {
   assertIncludes(readme, "Real-profile QA HTML checklist", "real-profile QA HTML checklist path");
   assertIncludes(readme, "This packet is a launch review aid only.", "boundary");
   assertIncludes(decisionHtml, "Public launch decision review", "decision review title");
+  assertIncludes(decisionHtml, "Final launch gate", "final gate HTML section");
   assertIncludes(decisionHtml, "D-L03", "decision review gate");
   assertIncludes(decisionHtml, "Copyable decision reply", "decision review reply");
   assertIncludes(decisionHtml, "does not approve decisions", "decision review boundary");
@@ -491,6 +569,7 @@ function printPacket(packet) {
       decisionReviewPath: packet.decisionReviewPath,
       approvalTemplatePath: packet.approvalTemplatePath,
       gatesPath: packet.gatesPath,
+      finalGatePath: packet.finalGatePath,
       status: packet.status
     }, null, 2));
     return;

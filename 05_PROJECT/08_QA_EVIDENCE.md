@@ -7749,3 +7749,39 @@ Evidence notes:
 - Without `--include-remote-ci`, the checker reports remote CI as skipped and keeps the local source-release view separate from final launch readiness.
 - With `--include-remote-ci`, the checker marks `READY_PUBLIC_SOURCE_RELEASE=no` for the final gate because GitHub Actions cannot start jobs while the account billing lock is active.
 - The checker is wired into local preflight and GitHub Actions as a self-test; it does not approve launch, submit to Chrome Web Store, publish marketing copy, run real-profile QA, or read private browser data.
+
+## 2026-06-15 Release Candidate Packet Includes Final Gate
+
+Source state verified: `tools/prepare_public_launch_handoff_packet.js` and `tools/prepare_release_candidate_packet.js` now include the final launch gate report. When run with `--include-remote-ci`, the generated local handoff and release candidate HTML/JSON files show the GitHub Actions billing lock beside the remaining D-L03 through D-L14 user/QA gates.
+
+Commands:
+
+```bash
+node --check tools/prepare_public_launch_handoff_packet.js
+node tools/prepare_public_launch_handoff_packet.js --self-test
+node --check tools/prepare_release_candidate_packet.js
+node tools/prepare_release_candidate_packet.js --self-test
+node tools/prepare_release_candidate_packet.js --include-remote-ci --json
+rg -n "FINAL_LAUNCH_READY|READY_REMOTE_CI|Remote CI|account owner|billing|275461|finalLaunchGate|BLOCKED_NEEDS" artifacts/release-candidate/2026-06-15T12-31-10-151Z/README.md artifacts/release-candidate/2026-06-15T12-31-10-151Z/release-candidate-manifest.json artifacts/release-candidate/2026-06-15T12-31-10-151Z/release-candidate-review.html
+```
+
+Result:
+
+```text
+PASS public launch handoff packet self-test
+PASS release candidate packet self-test
+Release candidate packet status: BLOCKED_NEEDS_USER_INPUT_OR_QA
+artifacts/release-candidate/2026-06-15T12-31-10-151Z/README.md
+artifacts/release-candidate/2026-06-15T12-31-10-151Z/release-candidate-review.html
+artifacts/release-candidate/2026-06-15T12-31-10-151Z/release-candidate-manifest.json
+FINAL_LAUNCH_READY=no
+READY_REMOTE_CI=no
+Remote CI: blocked / GITHUB_ACTIONS_BILLING_LOCK
+Remote CI next action: Resolve GitHub account billing / Actions lock, then run: gh run rerun 27546154726
+```
+
+Evidence notes:
+
+- The generated RC packet is ignored local evidence under `artifacts/` and was not committed.
+- The packet still does not approve launch, submit to Chrome Web Store, post marketing copy, run real-profile QA, or read private browser data.
+- Final launch remains blocked until GitHub Actions can run, D-L03 through D-L14 are resolved, and one redacted real-profile QA pass is completed.

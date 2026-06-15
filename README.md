@@ -251,6 +251,7 @@ node tools/secret_scan.js
 node tools/public_repo_audit.js
 node tools/launch_readiness_report.js
 node tools/final_launch_gate_check.js --include-remote-ci --allow-blocked
+node tools/prepare_release_candidate_packet.js --include-remote-ci
 node tools/launch_readiness_report.js --template-only
 node tools/prepare_public_launch_handoff_packet.js --self-test
 node tools/real_profile_qa_redaction_check.js --self-test

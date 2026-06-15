@@ -7,6 +7,7 @@ const DIST_DIR = path.join(ROOT_DIR, "dist");
 const OUT_ROOT = path.join(ROOT_DIR, "artifacts", "release-candidate");
 const SHOULD_SELF_TEST = process.argv.includes("--self-test");
 const SHOULD_JSON = process.argv.includes("--json");
+const SHOULD_INCLUDE_REMOTE_CI = process.argv.includes("--include-remote-ci");
 
 main();
 
@@ -20,13 +21,15 @@ function main() {
   runStep("Verify release package", process.execPath, ["tools/verify_release_package.js"]);
 
   const launchReport = runJsonTool("tools/launch_readiness_report.js", ["--json"]);
+  const finalGateReport = runJsonTool("tools/final_launch_gate_check.js", finalGateArgs());
   const storeReview = runJsonTool("tools/prepare_store_asset_review_packet.js", ["--json"]);
   const realProfileQa = runJsonTool("tools/prepare_real_profile_qa_packet.js", ["--json"]);
-  const publicLaunchHandoff = runJsonTool("tools/prepare_public_launch_handoff_packet.js", ["--json"]);
+  const publicLaunchHandoff = runJsonTool("tools/prepare_public_launch_handoff_packet.js", publicLaunchHandoffArgs());
   const packageInfo = readPackageInfo();
   const packet = createPacket({
     packageInfo,
     launchReport,
+    finalGateReport,
     storeReview,
     realProfileQa,
     publicLaunchHandoff
@@ -35,7 +38,7 @@ function main() {
   printPacket(packet);
 }
 
-function createPacket({ packageInfo, launchReport, storeReview, realProfileQa, publicLaunchHandoff }) {
+function createPacket({ packageInfo, launchReport, finalGateReport, storeReview, realProfileQa, publicLaunchHandoff }) {
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const packetDir = path.join(OUT_ROOT, runId);
   const readmePath = path.join(packetDir, "README.md");
@@ -44,6 +47,7 @@ function createPacket({ packageInfo, launchReport, storeReview, realProfileQa, p
   const handoff = buildHandoff({
     packageInfo,
     launchReport,
+    finalGateReport,
     storeReview,
     realProfileQa,
     publicLaunchHandoff
@@ -69,11 +73,11 @@ function createPacket({ packageInfo, launchReport, storeReview, realProfileQa, p
   };
 }
 
-function buildHandoff({ packageInfo, launchReport, storeReview, realProfileQa, publicLaunchHandoff }) {
+function buildHandoff({ packageInfo, launchReport, finalGateReport, storeReview, realProfileQa, publicLaunchHandoff }) {
   const readiness = launchReport.readiness || {};
   const counts = launchReport.counts || {};
   const blockingGates = launchReport.gates?.filter((gate) => String(gate.status || "").toLowerCase() !== "ready") || [];
-  const status = readiness.publicChromeWebStoreLaunch === "yes" && blockingGates.length === 0
+  const status = finalGateReport.finalLaunchReady === "yes"
     ? "READY_FOR_FINAL_SUBMISSION_REVIEW"
     : "BLOCKED_NEEDS_USER_INPUT_OR_QA";
 
@@ -81,7 +85,9 @@ function buildHandoff({ packageInfo, launchReport, storeReview, realProfileQa, p
     generatedAt: new Date().toISOString(),
     status,
     readiness,
+    finalLaunchGate: finalGateReport,
     counts,
+    finalGateCounts: finalGateReport.counts || {},
     packageInfo,
     blockingGates,
     publicSourceReleaseBlockers: launchReport.publicSourceReleaseBlockers,
@@ -187,10 +193,15 @@ function renderReadme(handoff) {
     `- READY_PUBLIC_REPO_PUSH=${handoff.readiness.publicRepoPush}`,
     `- READY_PUBLIC_MARKETING_LAUNCH=${handoff.readiness.publicMarketingLaunch}`,
     `- READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=${handoff.readiness.publicChromeWebStoreLaunch}`,
+    `- FINAL_LAUNCH_READY=${handoff.finalLaunchGate.finalLaunchReady || "unknown"}`,
+    `- READY_REMOTE_CI=${handoff.finalLaunchGate.readiness?.remoteCi || "unknown"}`,
     `- Public source release blockers: ${handoff.publicSourceReleaseBlockers}`,
     `- Public launch blockers: ${handoff.counts.blockingGates}`,
     `- Needs user input: ${handoff.counts.userInputGates}`,
     `- Needs QA: ${handoff.counts.qaGates}`,
+    `- Needs account owner action: ${handoff.finalGateCounts.accountOwnerBlockers || 0}`,
+    `- Remote CI: ${handoff.finalLaunchGate.remoteCi?.status || "not checked"} / ${handoff.finalLaunchGate.remoteCi?.reason || "none"}`,
+    `- Remote CI next action: ${handoff.finalLaunchGate.remoteCi?.nextAction || "none"}`,
     "",
     "## Linked Review Artifacts",
     "",
@@ -344,9 +355,23 @@ function renderHtml(handoff) {
 
     <section class="grid">
       <div class="card metric"><span>Status</span><strong class="blocked">${escapeHtml(handoff.status)}</strong></div>
-      <div class="card metric"><span>Source release</span><strong>${escapeHtml(handoff.readiness.publicSourceRelease)}</strong></div>
-      <div class="card metric"><span>Repo push</span><strong>${escapeHtml(handoff.readiness.publicRepoPush)}</strong></div>
+      <div class="card metric"><span>Final launch</span><strong class="blocked">${escapeHtml(handoff.finalLaunchGate.finalLaunchReady || "unknown")}</strong></div>
+      <div class="card metric"><span>Remote CI</span><strong class="blocked">${escapeHtml(handoff.finalLaunchGate.readiness?.remoteCi || "unknown")}</strong></div>
       <div class="card metric"><span>Store launch</span><strong class="blocked">${escapeHtml(handoff.readiness.publicChromeWebStoreLaunch)}</strong></div>
+    </section>
+
+    <h2>Final launch gate</h2>
+    <section class="grid two">
+      <div class="card">
+        <h3>FINAL_LAUNCH_READY=${escapeHtml(handoff.finalLaunchGate.finalLaunchReady || "unknown")}</h3>
+        <p>Final gate combines package verification, public launch decisions, QA state, and optional remote CI.</p>
+        <code>READY_REMOTE_CI=${escapeHtml(handoff.finalLaunchGate.readiness?.remoteCi || "unknown")}</code>
+      </div>
+      <div class="card">
+        <h3>Remote CI</h3>
+        <p>${escapeHtml(handoff.finalLaunchGate.remoteCi?.status || "not checked")} / ${escapeHtml(handoff.finalLaunchGate.remoteCi?.reason || "none")}</p>
+        <code>${escapeHtml(handoff.finalLaunchGate.remoteCi?.nextAction || "No remote CI action recorded.")}</code>
+      </div>
     </section>
 
     <h2>Extension package</h2>
@@ -412,7 +437,9 @@ function renderManifest(handoff) {
     },
     package: handoff.packageInfo,
     readiness: handoff.readiness,
+    finalLaunchGate: handoff.finalLaunchGate,
     counts: handoff.counts,
+    finalGateCounts: handoff.finalGateCounts,
     publicSourceReleaseBlockers: handoff.publicSourceReleaseBlockers,
     publicLaunchBlockers: handoff.publicLaunchBlockers,
     blockingGates: handoff.blockingGates,
@@ -473,6 +500,18 @@ function runJsonTool(scriptPath, args) {
   return JSON.parse(result.stdout);
 }
 
+function finalGateArgs() {
+  const args = ["--json", "--allow-blocked"];
+  if (SHOULD_INCLUDE_REMOTE_CI) args.push("--include-remote-ci");
+  return args;
+}
+
+function publicLaunchHandoffArgs() {
+  const args = ["--json"];
+  if (SHOULD_INCLUDE_REMOTE_CI) args.push("--include-remote-ci");
+  return args;
+}
+
 function printCaptured(result) {
   if (result.stdout) log(result.stdout.trim());
   if (result.stderr) log(result.stderr.trim());
@@ -511,10 +550,39 @@ function runSelfTest() {
       publicMarketingLaunch: "no",
       publicChromeWebStoreLaunch: "no"
     },
+    finalLaunchGate: {
+      finalLaunchReady: "no",
+      readiness: {
+        localReleasePackage: "yes",
+        remoteCi: "skipped",
+        publicSourceRelease: "yes",
+        publicMarketingLaunch: "no",
+        publicChromeWebStoreLaunch: "no"
+      },
+      counts: {
+        blockers: 1,
+        userInputBlockers: 1,
+        qaBlockers: 0,
+        accountOwnerBlockers: 0,
+        buildBlockers: 0
+      },
+      remoteCi: {
+        status: "skipped",
+        reason: "REMOTE_CI_NOT_REQUESTED",
+        nextAction: ""
+      }
+    },
     counts: {
       blockingGates: 1,
       userInputGates: 1,
       qaGates: 0
+    },
+    finalGateCounts: {
+      blockers: 1,
+      userInputBlockers: 1,
+      qaBlockers: 0,
+      accountOwnerBlockers: 0,
+      buildBlockers: 0
     },
     packageInfo: {
       product: "TabMosaic AI",
@@ -575,12 +643,18 @@ function runSelfTest() {
   assertIncludes(readme, "Release Candidate Review Packet", "README title");
   assertIncludes(readme, "does not approve public launch", "README boundary");
   assertIncludes(readme, "READY_PUBLIC_SOURCE_RELEASE=yes", "source readiness");
+  assertIncludes(readme, "FINAL_LAUNCH_READY=no", "final launch readiness");
+  assertIncludes(readme, "READY_REMOTE_CI=skipped", "remote CI readiness");
   assertIncludes(readme, "release-candidate-review.html", "self path");
   assertIncludes(html, "One local packet for package, store assets, QA, and launch gates.", "HTML title");
+  assertIncludes(html, "Final launch gate", "HTML final gate section");
   assertIncludes(html, "D-L03", "blocking gate");
 
   if (manifest.status !== "BLOCKED_NEEDS_USER_INPUT_OR_QA") {
     throw new Error("Manifest status mismatch");
+  }
+  if (manifest.finalLaunchGate.finalLaunchReady !== "no") {
+    throw new Error("Manifest final launch gate mismatch");
   }
 
   console.log("PASS release candidate packet self-test");
