@@ -207,6 +207,14 @@ chrome://extensions
 05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md
 ```
 
+也可以先生成本地 QA 包：
+
+```bash
+node tools/prepare_real_profile_qa_packet.js
+```
+
+生成后打开 `artifacts/real-profile-qa/<timestamp>/real-profile-qa-checklist.html`，按页面里的顺序测试，再把脱敏结果填到同目录的 `real-profile-qa-draft.md`。
+
 一次性 QA checklist 里也可以直接点击 `Copy Real-Profile Template` 复制同一份空白模板。但不要把真实 full URL、真实 tab title、页面正文、API key、私密截图、邮箱或私有 rule pattern 写进 git。完成版 QA 记录最好先放在本地私密位置，确认脱敏后再分享。
 
 ## 7. 通过标准

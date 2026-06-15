@@ -1,16 +1,25 @@
 # 发布清单
 
+Current readiness:
+
+```text
+READY_CONTROLLED_LOCAL_PRIVATE_BETA=yes
+READY_PUBLIC_SOURCE_RELEASE=yes
+READY_PUBLIC_MARKETING_LAUNCH=no
+READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no
+```
+
 ## Product
 
-- [ ] P0 范围确认。
-- [ ] 产品名确认。
-- [ ] 免费/Pro 权限确认。
-- [ ] 开源 license 确认。
-- [ ] public repo 范围确认。
-- [ ] 默认去重行为确认。
-- [ ] dashboard P0 范围确认。
+- [x] P0 范围确认（Smart Organize + native tab groups + Sidebar Agent + Dashboard Smart Groups）。
+- [x] 工作名确认（TabMosaic AI as working name；final public brand/domain 仍走 D-L03）。
+- [ ] 免费/Pro 权限确认（D-L09，public copy / hosted plan boundary）。
+- [x] 开源 license 确认（Apache-2.0）。
+- [x] public repo 范围确认（D-L02；secrets、ignored artifacts、raw archives、completed real-profile QA notes excluded）。
+- [x] 默认去重行为确认（safe exact/tracking duplicates only, Restore available; hash/query/semantic review）。
+- [x] dashboard P0 范围确认（default Smart Groups + conditional Continue strip + folded Duplicate Center）。
 - [x] Public launch decision packet prepared（`05_PROJECT/16_PUBLIC_LAUNCH_DECISION_PACKET.md`；CONFIRM BEFORE PUBLIC LAUNCH）。
-- [x] Public repo cleanup checklist prepared（`05_PROJECT/17_PUBLIC_REPO_CLEANUP_CHECKLIST.md`；D-L02 still CONFIRM）。
+- [x] Public repo cleanup checklist prepared（`05_PROJECT/17_PUBLIC_REPO_CLEANUP_CHECKLIST.md`；source-release ready, store/marketing still blocked）。
 - [x] Brand/domain preliminary scan prepared（`01_PRODUCT/08_BRAND_DOMAIN_PRELIMINARY_SCAN.md`；D-001-A still CONFIRM）。
 
 ## UX
@@ -87,15 +96,25 @@
 - [x] Hacker News launch post draft（DO NOT POST YET）。
 - [x] X/Twitter thread draft（DO NOT POST YET）。
 - [x] Chrome Web Store screenshot draft generator（local mock-data 1280x800 assets；DO NOT SUBMIT YET）。
+- [x] Chrome Web Store screenshot review packet generator（local mock-data assets；D-L12 remains CONFIRM until user approval）。
+- [x] Chrome Web Store submission review packet generator（local listing/data/privacy/screenshot review；does not submit, publish, upload, or run real-profile QA）。
+- [x] Public launch handoff packet generator（local review packet + HTML decision review；does not approve, publish, submit, or run real-profile QA）。
+- [x] Release candidate review packet generator（local zip/checksum + launch handoff + screenshot review + QA checklist；does not approve, submit, publish, or run real-profile QA）。
 - [ ] Final Chrome Web Store screenshots approved by user。
 
 ## Metrics
 
-- [ ] organize_started。
-- [ ] organize_completed。
-- [ ] undo_clicked。
-- [ ] duplicates_closed。
-- [ ] dashboard_opened。
-- [ ] workspace_saved。
-- [ ] summary_requested。
-- [ ] paywall_seen。
+Current first public build recommendation:
+
+```text
+No remote analytics involving browsing activity until D-L10 is confirmed.
+```
+
+- [ ] organize_started（future only; requires analytics confirmation）。
+- [ ] organize_completed（future only; requires analytics confirmation）。
+- [ ] undo_clicked（future only; requires analytics confirmation）。
+- [ ] duplicates_closed（future only; requires analytics confirmation）。
+- [ ] dashboard_opened（future only; requires analytics confirmation）。
+- [ ] workspace_saved（future only; requires analytics confirmation）。
+- [ ] summary_requested（future only; requires analytics confirmation）。
+- [ ] paywall_seen（future only; requires billing/analytics confirmation）。

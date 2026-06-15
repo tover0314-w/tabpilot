@@ -89,7 +89,17 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard → Rules & Memory lists rules.
 - Dashboard Delete requires confirmation before removing a local rule.
 - Dashboard supports Enable, Disable, and Delete.
+- Dashboard supports a hidden/manual first-slice rule editor for `domain` and `url_pattern` classification rules:
+  - Create a local rule from Pattern + Target group.
+  - Edit existing `Group` rules.
+  - Protected rules cannot be repurposed by this editor; they can only be enabled, disabled, or deleted here.
+  - Saving a rule writes only `tabmosaic.userRules` and does not run organize, move tabs, close tabs, read page text, call providers, or upload data.
+- Dashboard renders human-readable rule rows:
+  - `Group` rules explain metadata-only classification, target group, source, hits, and last-used date.
+  - `Protect` rules explain protected domain/group scope and that matching tabs stay out of auto-move / auto-close flows.
+  - The page includes a compact local-only safety note: rules do not read, upload, move, or close pages by themselves.
 - Hit count and last-used timestamp update when rules match during organize/apply.
+- Protected domain/group rules can be created from Sidebar safe-command previews. They are stored in `tabmosaic.userRules` with `type: protected` and `protectionScope: domain | group`; future organize snapshots use them as safety rules rather than classification rules.
 ```
 
 First supported rule types:
@@ -98,6 +108,7 @@ First supported rule types:
 url_pattern: github.com/*/*/pull/* → Code Review
 domain: docs.google.com → Docs & Notes
 domain: any current hostname mentioned in Chat Refine → target group
+domain/url_pattern: manual Dashboard editor → target group
 ```
 
 First supported Chinese Chat Refine examples:

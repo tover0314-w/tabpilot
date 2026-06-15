@@ -71,6 +71,7 @@ CONFIRMED BY IMPLEMENTATION:
 - Dashboard Clear Local Data
 - local redacted diagnostics and feedback template
 - redaction-safe real-profile QA result template and disposable checklist copy action
+- local-only real-profile QA packet generator with blank draft, copyable commands, and redaction-check self-test
 - standalone privacy policy draft marked DO NOT PUBLISH YET
 - standalone Chrome Web Store data disclosure draft marked DO NOT SUBMIT YET
 - mock-data Chrome Web Store screenshot drafts

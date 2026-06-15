@@ -75,17 +75,92 @@ CONFIRMED BY USER: Sidebar 首屏必须是类似 OpenAI 的对话框，用作 Ta
 └─────────────────────────────┘
 ```
 
+## 3.1 Page Quick Rail：网页右侧快捷入口
+
+CONFIRMED BY USER: 可以参考 Monica 的右侧快捷入口，但 TabMosaic 只做极简 icon rail。
+
+```text
+Browser page
+┌──────────────────────────────────────────┬──┐
+│                                          │AI│  Chat
+│              current webpage             │Pg│  Page
+│                                          │▣ │  Region
+│                                          │+ │  Todo
+└──────────────────────────────────────────┴──┘
+```
+
+Interaction:
+
+```text
+Click Page
+→ Sidebar opens
+→ Composer context row shows `Current page · visible text`
+→ Composer is prefilled with `What is this page about?`
+→ User still sends/confirms the actual request
+→ Page text is read only after the user submits/accepts the tool flow
+```
+
+Rules:
+
+- 默认最多 4 个可见 icon。
+- 不显示大面积文字说明。
+- 不遮挡网页核心控件。
+- 用户可以 hide。
+- 受限页面不显示。
+- 渲染 icon 不等于读取页面。
+
+## 3.2 Sidebar：Prompt / Skill Templates
+
+```text
+┌─────────────────────────────┐
+│ TabMosaic               ▦    │
+│                             │
+│ Assistant                   │
+│ What do you want to do with │
+│ this page?                  │
+│                             │
+│ [Explain page] [Find risks] │
+│ [Make checklist] [Translate]│
+│                             │
+│ Current tab · Supabase      │
+│ +  Ask about this tab...  ↑  │
+└─────────────────────────────┘
+```
+
+Template picker:
+
+```text
+Current page        Selected text
+Page region         Search web
+Save as todo
+
+Only when selected-tabs/group context is active:
+Selected tabs/group Decision brief
+```
+
+Each template declares the context it needs and the data it will use before running.
+
+First beta implementation:
+
+- The `+` button in the bottom composer opens this compact picker.
+- Picker items run existing Sidebar Agent flows and return to the same chat thread.
+- Selected text uses highlighted text only; it does not fall back to full-page reading.
+- Selected-tabs/group-only actions are hidden until that context is active.
+- It does not show unimplemented file upload, full screenshot upload, vision upload, or third-party skill marketplace entries yet.
+- Selected-text rewrite is now wired through the copy-only `Rewrite selection` template and natural selected-text rewrite prompts.
+
 ## 4. Dashboard：Home
 
 CONFIRMED BY USER: Dashboard 默认不要 Latest Result、时间、Current Workspace 这类占空间信息。默认直接进入 Smart Groups。
+CONFIRMED BY USER: Dashboard follows less-is-more. Work Queue, Collections, Project Space navigation, filters, and disabled action chips are hidden from the default customer page.
 
 ```text
 ┌──────────────────────────────────────────────┐
 │ TabMosaic                         Local       │
 ├──────────────────────────────────────────────┤
-│ [All 6] [AI groups 2] [Rule groups 1]         │
-│                                              │
 │ Smart Groups                                 │
+│ 6 groups · 33 tabs · Local                    │
+│                                              │
 │ Product Planning                         Edit │
 │   Q3 planning doc                            │
 │   Product roadmap                            │
@@ -100,7 +175,8 @@ CONFIRMED BY USER: Dashboard 默认不要 Latest Result、时间、Current Works
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ Smart Groups          [All] [AI] [Rules]      │
+│ Smart Groups                                  │
+│ 6 groups · 33 tabs · Local                    │
 ├──────────────────────────────────────────────┤
 │ Product Planning                         Edit │
 │ 8 tabs · docs.google.com · notion.so           │

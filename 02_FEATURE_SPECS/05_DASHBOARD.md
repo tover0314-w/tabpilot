@@ -7,13 +7,15 @@ CONFIRMED BY IMPLEMENTATION:
 ```text
 P0 dashboard is an extension page.
 MVP visible Dashboard UI is English-only to avoid mixed-language friction.
-It now follows a minimal glass Smart Groups layout: top bar, filter chips, Smart Groups board, compact Undo / Restore, and folded Duplicate Center.
+It now follows a less-is-more Smart Groups layout: top bar, one lightweight Smart Groups summary, Smart Groups board, contextual Undo / Restore only when available, and folded Duplicate Center.
 It no longer shows Latest Result, timestamp, Current Workspace card, or a result metrics area on the default Dashboard page.
+It no longer shows the Project Space navigation pill, Work Queue, Collections, All/AI/Rule filter chips, or disabled action chips on the default customer page.
 It shows simplified glass Smart Group cards with local tab rows, softer row dividers, expandable hidden tab rows, and folded Duplicate Center with non-destructive duplicate tab details.
+Dashboard now shows a compact `Continue` strip only when local work signals exist: saved workspace goal, open Work Queue todos, saved memos, saved collections, Later tabs, saved workspace snapshots, or duplicate-review candidates. It is not a Latest Result or Current Workspace card.
 Dashboard apply-back-to-browser supports native group title/color updates, same-window tab moves into existing groups, lightweight same-window drag/drop tab assignment, compact Undo, and Restore Closed.
 Dashboard tab rows can focus the existing browser tab/window from the Dashboard.
 Dashboard tab rows can be selected in the same window and handed to Sidebar as a `selected_tabs` chat context.
-Saved Workspaces, Auto Organize, Save Workspace, Rules & Memory, and Settings are not shown in the default customer UI because they do not yet solve a complete user job in this MVP.
+Work Queue, Collections, Memory, Saved Workspaces, Auto Organize, Save Workspace, Rules & Memory, Settings, and filter chips are not shown in the default customer UI because they do not yet solve a complete user job in this MVP.
 Private-beta diagnostics, local reset, AI key test/clear, and workspace snapshot paths still exist for QA and development. Saved Workspaces now has a private-beta restore first slice for currently open tabs, but it should stay hidden until history/full restore/workspace chat become clear customer-facing value.
 ```
 
@@ -24,6 +26,7 @@ The default Dashboard should answer four concrete user questions after one-click
 | Visible Dashboard element | User pain it solves | Why it stays in MVP |
 |---|---|---|
 | Smart Groups board | "Where did my work tabs go?" | Shows the current browser groups in a scannable layout and mirrors the real top tab bar. |
+| Conditional Continue strip | "What should I pick up next?" | Appears only when local work signals exist, then hands the user to Sidebar Work Brief instead of creating dashboard-only chat. |
 | Tab rows inside each group | "Did the AI put the right pages together?" | Lets the user inspect representative tabs without opening every tab manually. |
 | Select tab rows → Chat selected | "I want to ask about these pages together." | Provides a low-clutter bridge from Dashboard inspection to Sidebar Agent without building dashboard-only chat. |
 | Edit / same-window move / drag assignment | "The grouping is mostly right, but I need to fix a few mistakes." | Turns AI from a black box into an editable result and can apply changes back to native Chrome groups. |
@@ -34,6 +37,10 @@ Items removed from the default customer view:
 
 | Removed from default view | Why it would confuse users now | Required before it returns |
 |---|---|---|
+| Project Space navigation pill | It looked like a product mode without adding a clear customer job. | A real workspace/continue flow that deserves navigation. |
+| Work Queue / Collections panels | They are useful agent outputs, but they made the default Dashboard feel like a second product before users understand groups. | Contextual entry from Sidebar or a dedicated, simpler Workbench tab after tasks/collections mature. |
+| All / AI / Rule filter chips | Filters add decision noise before users know whether the grouping is right. | Return only if user testing shows group boards become too large to scan. |
+| Disabled action chips | Disabled controls made the product look unfinished and cluttered. | Show only contextual actions when they are available. |
 | Saved Workspaces | The first restore slice only regroups tabs that are still open, so the default UI could still feel like a partial archive. | Clear naming, history management, full restore expectations, and workspace chat. |
 | Auto Organize / Rules & Memory | Rules are valuable only when users can understand and manage cause/effect clearly. | Rule creation, preview, audit trail, and clear explanation of what changed. |
 | Settings | A commercial product should not make users configure providers, permissions, diagnostics, and reset controls as a main workflow. | A dedicated private-beta/support path or a polished account/settings flow. |
@@ -45,20 +52,22 @@ Items removed from the default customer view:
 Wired now:
 
 ```text
-- minimal glass Smart Groups shell: topbar, compact navigation, Smart Groups board
-- Smart Groups filter chips for All / AI groups / Rule groups
+- minimal glass Smart Groups shell: topbar, one-line local summary, Smart Groups board
+- conditional Continue strip from local-only signals: `tabmosaic.workspaceGoal`, open Work Queue todos, saved memos, saved Collections, Later tab states, saved workspace count, and duplicate-review count
+- Continue strip actions can send `what should I continue?` to Sidebar, focus a still-open linked source tab, focus a Later tab, or open folded Duplicate Center; it does not read page text or call providers
+- hidden/private-beta Smart Groups filters for All / AI groups / Rule groups
 - Dashboard organize action exists as a hidden/private-beta path, not a default commercial control
-- compact Dashboard Undo / Restore Closed actions when available
+- compact Dashboard Undo / Restore Closed actions only when available
 - folded native group title/color Apply back to browser
 - simplified group cards using sanitized local run snapshot data
 - expandable `+ N tabs` rows that reveal remaining local tab rows on demand
 - tab title focus back to the existing browser tab/window
 - same-window selected tab rows can open Sidebar with selected-tabs context; the action stays hidden until 2+ tabs are selected
-- selected tab rows can create a local Work Queue todo or local Collection from the Dashboard Workbench
+- selected tab rows can still create local Work Queue todos or local Collections through hidden/private-beta paths
 - Sidebar Agent natural-language commands can create local Work Queue todos from current tab, current group, or selected-tabs context
-- local Work Queue / Collection rows show linked-tab previews, linked-source previews, and checklist previews
-- local Work Queue / Collection rows can focus the first still-open linked source tab and can send linked tabs back to Sidebar Agent as a selected-tabs context
-- local Work Queue todos support Done / Reopen / Archive without touching browser tabs, page text, full URLs, or cloud storage
+- local Work Queue / Collection rows still exist as data/model paths but are not shown on the default Dashboard customer page
+- local Work Queue todos support Done / Reopen / Archive, lightweight checklist add/delete/reorder, per-item local source notes, and local `Suggest steps` from saved memos/collections/linked sources in the hidden Dashboard Workbench without touching browser tabs, page text, full URLs, AI/search providers, or cloud storage
+- hidden/local Memory page at `#memory` lists explicit saved memos and collections, supports local search, focuses still-open linked source tabs, and sends a saved-source prompt to Sidebar; it does not read pages, call providers, store full URLs, or create cloud memory
 - selecting a tab from another Chrome window resets the selected-tabs set and shows a compact status chip, keeping cross-window chat separate without making the selection feel broken
 - folded same-window tab move into an existing native group
 - drag/drop tabs between existing groups in the same Chrome window
@@ -66,7 +75,7 @@ Wired now:
 - Save current workspace local snapshot and Saved Workspaces list remain hidden/private-beta paths
 - Restore saved local workspace snapshot remains a hidden/private-beta path; it regroups only currently open saved tab IDs, stores Undo, skips closed/protected/internal tabs, and does not reopen URLs
 - Delete individual saved local workspace snapshot with confirmation remains a hidden/private-beta path
-- Rules & Memory enable/disable/delete with confirmation remains available behind hidden navigation
+- Rules & Memory manual editor first slice remains available behind hidden navigation: create/edit `domain` and `url_pattern` Group rules, enable/disable, delete with confirmation, human-readable `Group` vs `Protect` rows, and a compact local-only safety note
 - DeepSeek API key save/test/clear remains available behind hidden private-beta Settings, but normal private testing uses `tools/write_private_beta_ai_config.js`
 - folded compact privacy defaults remain behind hidden private-beta Settings
 - advanced folded permissions, diagnostics, feedback template, and local data reset remain behind hidden private-beta Settings
@@ -323,6 +332,16 @@ Actions：
 - View hit count。
 - Apply to current browser。
 - See source: manual/chat/correction。
+
+Current implementation:
+
+```text
+- Create/Edit first slice supports `domain` and `url_pattern` Group rules only.
+- Protected rules cannot be repurposed by the form.
+- Delete requires confirmation.
+- The Rules page remains hidden/lightweight and does not add clutter to the default Dashboard.
+- Saving a rule does not run organize, move tabs, close tabs, read page text, call AI/search providers, or upload data.
+```
 
 ## 10. Tab Knowledge
 

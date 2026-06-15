@@ -35,6 +35,7 @@ const packageFiles = [
   "popup.js",
   "i18n.js",
   "diagnostics.js",
+  "page_quick_rail.js",
   "sidepanel.html",
   "sidepanel.js",
   "dashboard.html",

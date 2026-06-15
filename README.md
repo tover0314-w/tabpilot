@@ -166,11 +166,13 @@ Key implementation files:
 
 - [extension/manifest.json](extension/manifest.json)
 - [extension/background.js](extension/background.js)
+- [extension/page_quick_rail.js](extension/page_quick_rail.js)
 - [extension/sidepanel.js](extension/sidepanel.js)
 - [extension/dashboard.js](extension/dashboard.js)
 - [extension/provider_registry.js](extension/provider_registry.js)
 - [tools/extension_smoke_test.js](tools/extension_smoke_test.js)
 - [tools/public_repo_audit.js](tools/public_repo_audit.js)
+- [tools/launch_readiness_report.js](tools/launch_readiness_report.js)
 
 ## Highlights
 
@@ -189,9 +191,10 @@ Key implementation files:
 |---|---|
 | Try it locally | [Self-test guide](05_PROJECT/11_SELF_TEST_GUIDE.md) |
 | Understand the product | [PRD](01_PRODUCT/01_PRD.md), [Strategy](01_PRODUCT/02_PRODUCT_STRATEGY.md), [Aha moment](01_PRODUCT/04_AHA_MOMENT.md) |
-| Understand the agent | [Sidebar Agent](02_FEATURE_SPECS/04_SIDEBAR_AGENT.md), [Tab Chat](02_FEATURE_SPECS/06_TAB_CHAT.md), [Agent tools](02_FEATURE_SPECS/12_AGENTIC_CLASSIFICATION_AND_CONTEXT_TOOLS.md) |
+| Understand the agent | [Sidebar Agent](02_FEATURE_SPECS/04_SIDEBAR_AGENT.md), [Tab Chat](02_FEATURE_SPECS/06_TAB_CHAT.md), [Agent tools](02_FEATURE_SPECS/12_AGENTIC_CLASSIFICATION_AND_CONTEXT_TOOLS.md), [AI browser expansion](02_FEATURE_SPECS/15_AI_BROWSER_RELEVANT_FEATURE_EXPANSION.md) |
 | Configure models | [BYOK provider setup](04_TECH/10_BYOK_PROVIDER_SETUP.md), [AI provider strategy](04_TECH/05_AI_PROVIDER_STRATEGY.md) |
 | Review privacy | [Privacy architecture](04_TECH/11_PRIVACY_ARCHITECTURE_EXPLAINER.md), [Privacy controls](02_FEATURE_SPECS/11_PRIVACY_CONTROLS.md), [Security implementation](04_TECH/07_SECURITY_PRIVACY_IMPLEMENTATION.md) |
+| Review monetization | [Paywall and billing](02_FEATURE_SPECS/10_PAYWALL_BILLING.md), [competitor pricing research](06_REFERENCES/04_COMPETITOR_PRICING_RESEARCH.md) |
 | Contribute | [Contributing](CONTRIBUTING.md), [Issue forms](.github/ISSUE_TEMPLATE/) |
 | Follow launch readiness | [Public launch packet](05_PROJECT/16_PUBLIC_LAUNCH_DECISION_PACKET.md), [Public repo cleanup](05_PROJECT/17_PUBLIC_REPO_CLEANUP_CHECKLIST.md) |
 
@@ -246,6 +249,12 @@ Useful focused checks:
 ```bash
 node tools/secret_scan.js
 node tools/public_repo_audit.js
+node tools/launch_readiness_report.js
+node tools/launch_readiness_report.js --template-only
+node tools/prepare_public_launch_handoff_packet.js --self-test
+node tools/real_profile_qa_redaction_check.js --self-test
+node tools/prepare_real_profile_qa_packet.js --self-test
+node tools/prepare_store_asset_review_packet.js --self-test
 node tools/provider_registry_check.js
 node tools/issue_form_smoke_test.js
 node tools/extension_smoke_test.js

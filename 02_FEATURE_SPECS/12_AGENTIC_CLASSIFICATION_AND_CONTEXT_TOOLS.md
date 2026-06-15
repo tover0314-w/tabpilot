@@ -653,6 +653,10 @@ CONFIRMED BY IMPLEMENTATION / FIRST SLICE:
 - merge AI-provided `splitSuggestions` with conservative local metadata split suggestions when a created group contains multiple projects/workflows
 - surface merge suggestions in the same folded Sidebar refinement note when small groups share the same project/workflow metadata
 - merge AI-provided `mergeSuggestions` with conservative local metadata merge suggestions
+- keep folded refinement notes visible after organize completes, instead of hiding them in the finished assistant message
+- detect broad same-domain groups such as `GitHub`, `Supabase`, `Docs`, or `Dev Tools` and surface metadata workflow split suggestions even for smaller groups when titles/paths imply different jobs
+- route `preview refinements` into a metadata-only `regroup_tabs` safe-command preview that uses real current tab IDs and still requires Apply / Cancel
+- classify GitHub CI run metadata as deployment/debugging work instead of collapsing it into code review when titles/paths support the distinction
 ```
 
 Still pending:

@@ -6,6 +6,14 @@ Use this file as a local copy template after the disposable QA profile passes an
 
 Do not commit a completed real-profile QA result unless it has been manually redacted. Prefer keeping completed real-profile notes outside git.
 
+Before sharing or committing a redacted copy, run:
+
+```bash
+node tools/real_profile_qa_redaction_check.js path/to/redacted-real-profile-qa.md
+```
+
+This check catches high-confidence leaks such as full URLs, API-key-like strings, bearer tokens, real emails, and token-like query values. It is not a substitute for manual review.
+
 ## Privacy Redaction Rules
 
 Do not paste:

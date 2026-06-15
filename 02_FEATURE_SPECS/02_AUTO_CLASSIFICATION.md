@@ -16,7 +16,11 @@ CONFIRMED BY IMPLEMENTATION:
 - Classifier V2 derives artifact/workflow/project/domain/intent/sensitive/domain-only-risk features locally.
 - Weak domain-only AI group names are rejected during validation.
 - AI-provided split/merge suggestions and conservative local metadata split/merge suggestions are surfaced as folded Sidebar refinement notes after organize.
+- Completed organize messages now render those folded refinement notes when suggestions exist, so the user can see where broad groups may be improved without opening Dashboard.
+- Broad same-domain groups such as `GitHub`, `Supabase`, or `Docs` can surface split suggestions from metadata-derived workflow/project signals even when the group is small.
+- Typing `preview refinements` turns the latest metadata split suggestions into a normal Apply/Cancel regrouping preview.
 - Split suggestions are not applied automatically; they only tell the user where a broad group may be improved.
+- Refinement previews are not applied automatically; the browser changes only after the user clicks Apply.
 - Merge suggestions are not applied automatically; they only tell the user which small groups may belong together.
 
 STILL PENDING:

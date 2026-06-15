@@ -109,6 +109,7 @@ Preferred source assets:
 artifacts/store-screenshots/01-one-click-native-groups.png
 artifacts/store-screenshots/02-tab-agent-sidebar.png
 artifacts/store-screenshots/03-smart-groups-dashboard.png
+artifacts/store-asset-review/<latest>/store-asset-review.html
 ```
 
 Important:
@@ -117,6 +118,7 @@ Important:
 Use mock data only.
 Do not show real tab titles, URLs, emails, or private pages.
 Do not imply final Chrome Web Store availability.
+Use the generated `store-asset-review.html` preview for D-L12 review before launch/store use.
 ```
 
 ### Problem Section
@@ -561,6 +563,7 @@ Before publishing any of this:
 [ ] Chrome Web Store status stated accurately.
 [ ] Demo uses synthetic tabs and mock pages only.
 [ ] No real URLs, tab titles, page text, emails, screenshots, or API keys appear.
+[ ] Store screenshot review packet is generated with `node tools/prepare_store_asset_review_packet.js` and shows `READY_FOR_USER_REVIEW`.
 [ ] Claims match the current implementation and launch checklist.
 [ ] User approves final screenshots and demo video.
 ```

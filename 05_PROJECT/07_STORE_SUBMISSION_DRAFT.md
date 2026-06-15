@@ -260,7 +260,7 @@ Chrome Web Store dashboard guidance currently asks for at least one 1280x800 scr
 artifacts/store-screenshots/01-one-click-native-groups.png
 artifacts/store-screenshots/02-tab-agent-sidebar.png
 artifacts/store-screenshots/03-smart-groups-dashboard.png
-artifacts/store-screenshots/04-agent-actions.png
+artifacts/store-screenshots/04-page-chat.png
 artifacts/store-screenshots/05-mobile-dashboard.png
 ```
 
@@ -269,6 +269,30 @@ Generation command:
 ```bash
 node tools/capture_ui_screenshots.js
 node tools/build_store_screenshots.js
+node tools/prepare_store_asset_review_packet.js
+```
+
+Review output:
+
+```text
+artifacts/store-asset-review/<timestamp>/store-asset-review.md
+artifacts/store-asset-review/<timestamp>/store-asset-review.html
+artifacts/store-asset-review/<timestamp>/manifest.json
+```
+
+Full local store submission review packet:
+
+```bash
+node tools/prepare_store_submission_review_packet.js
+```
+
+Review output:
+
+```text
+artifacts/store-submission-review/<timestamp>/README.md
+artifacts/store-submission-review/<timestamp>/store-submission-review.html
+artifacts/store-submission-review/<timestamp>/copyable-store-fields.md
+artifacts/store-submission-review/<timestamp>/store-submission-review.json
 ```
 
 Important boundaries:
@@ -277,6 +301,9 @@ Important boundaries:
 - These are local draft assets for review, not final listing assets.
 - They use mock extension data only.
 - They do not read real browser tabs, .env.local, API keys, page text, or real profile screenshots.
+- The generated `store-asset-review.html` page is a local preview aid only; it does not approve, publish, submit, or upload screenshots.
+- The generated `store-submission-review.html` page is a local field review aid only; it does not approve, publish, submit, upload screenshots, run real-profile QA, or replace the Chrome Web Store dashboard.
+- The review packet must show `READY_FOR_USER_REVIEW` before asking the user to approve D-L12.
 - Final screenshots still need user approval before Chrome Web Store submission.
 ```
 

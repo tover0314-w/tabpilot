@@ -8,6 +8,14 @@ CONFIRMED BY USER: 产品方向转为全量开源 + BYOK。本地扩展、prompt
 
 Monica 参考、AI Browser Layer 全量 feature list、以及 open-source self-use / hosted cloud 双模式商业模型见 `02_FEATURE_SPECS/14_MONICA_REFERENCE_AI_BROWSER_LAYER_COMMERCIAL_MODEL.md`。该文档提出的 login、hosted AI gateway、cloud memory/sync、Free/Plus/Pro pricing 和 usage billing 仍是 `CONFIRM`，不能直接当作已确认实现范围。
 
+2026-06-15 competitor pricing research is recorded in `06_REFERENCES/04_COMPETITOR_PRICING_RESEARCH.md`. It should be treated as market context, not final TabMosaic pricing. The core takeaway is:
+
+```text
+Free / BYOK should remain genuinely useful.
+Hosted Plus should sell no-setup AI/search convenience.
+Hosted Pro should sell heavier multi-tab research, memory/sync, vision/PDF, and higher limits only after privacy/provider boundaries are confirmed.
+```
+
 ## 2. 免费版价值
 
 免费版应足够让用户感受到产品价值：
@@ -48,6 +56,8 @@ Pro 应该围绕长期工作区和更强 AI：
 | AI credits exhausted | 用量不足 | 升级或使用自己的 API key |
 
 ## 5. 建议套餐
+
+当前套餐名称、额度和价格仍是草案。竞品调研显示，AI assistant/browser 产品通常为 managed model、larger context、research/search、vision/media 和 convenience 收费；workspace/tab 产品通常为 sync、session backup、templates、team/admin 收费。因此 TabMosaic 不应该把首次 Smart Organize 体验放在付费墙后面。
 
 ### Free
 
@@ -123,3 +133,20 @@ Workspace chat: high credits
 - License、public repo 范围和 hosted/pro 开源边界需要单独确认。
 
 Pro 定价区间仍需在商业化页面前单独确认。
+
+## 9. 市场价格锚点
+
+See `06_REFERENCES/04_COMPETITOR_PRICING_RESEARCH.md`.
+
+Implementation implications:
+
+- Search Tool must have credits/rate limits in hosted mode because Tavily-style search has direct API cost.
+- Vision/screenshot/PDF hosted workflows must be metered separately from simple chat after D-055 is confirmed.
+- Local BYOK usage should not be artificially limited by TabMosaic, because users pay their own provider cost.
+- Dashboard Billing should show simple user-facing units such as search credits, page-context reads, and screenshot-context reads instead of raw token accounting.
+
+Confirmation gates still open:
+
+- D-047 Free / Plus / Pro pricing and credits.
+- D-054 usage analytics needed for billing.
+- D-055 PDF/image/screenshot provider boundary.

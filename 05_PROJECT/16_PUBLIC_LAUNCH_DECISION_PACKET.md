@@ -2,9 +2,13 @@
 
 Status: CONFIRM BEFORE PUBLIC LAUNCH
 Purpose: collect the remaining user decisions blocking public source release / Chrome Web Store / launch posts
-Last updated: 2026-06-13
+Last updated: 2026-06-15
 
 This packet does not finalize decisions. It turns the remaining blockers into a compact approval list.
+
+The generated local handoff packet also includes `launch-decision-review.html`, a local-only visual review page for the same gates and copyable reply. It does not approve, publish, submit, or change any public state.
+
+For final local review, run `node tools/prepare_release_candidate_packet.js`. It generates an ignored release candidate packet that links the packaged extension zip/checksum, this launch decision handoff, the screenshot review packet, and the real-profile QA checklist from one local HTML page. It is still a review aid only and does not approve launch or run real-profile QA.
 
 Recommended reply format:
 
@@ -14,6 +18,16 @@ D-L02 approve
 D-L03 change: ...
 D-L04 approve after I provide email/domain
 ```
+
+Before applying any filled reply, validate it locally:
+
+```bash
+node tools/launch_readiness_report.js --template-only > /tmp/tabmosaic-launch-reply.txt
+# Fill /tmp/tabmosaic-launch-reply.txt, then run:
+node tools/validate_public_launch_decision_reply.js /tmp/tabmosaic-launch-reply.txt
+```
+
+The validator checks missing gates, duplicate gates, unresolved `<placeholder>` values, and gates the user still marked `keep blocked`. It does not approve decisions, edit docs, publish anything, submit to Chrome Web Store, run QA, or change launch state.
 
 ## 1. Current Readiness
 
@@ -49,13 +63,50 @@ Public repo boundary is now treated as confirmed by the user's full-open-source 
 
 The product can move toward a GitHub source release before Chrome Web Store launch, but only if the README clearly says local/private beta, install-from-source, and public Chrome Web Store launch not ready yet.
 
+## 1.1 One-Page Launch Tracker
+
+This is the operational checklist for moving from source-release ready to public launch ready. Items marked `USER INPUT` need the user to provide or approve something; items marked `QA` need a real-world verification pass; items marked `BUILD` can be implemented after the related decision is approved.
+
+| Gate | Status | Owner | What Is Needed Next | Evidence / Source |
+|---|---|---|---|---|
+| D-L03 Brand/domain | BLOCKING | USER INPUT | Choose final public name and domain path, or approve launching GitHub with `TabMosaic AI` clearly labeled as working name only | `01_PRODUCT/08_BRAND_DOMAIN_PRELIMINARY_SCAN.md` |
+| D-L04 Developer identity/support | BLOCKING | USER INPUT | Provide public developer name, support email, and website URL for store/legal copy | `05_PROJECT/13_PRIVACY_POLICY_DRAFT.md` placeholders |
+| D-L05 Privacy policy URL | BLOCKING | USER INPUT | Approve final privacy policy wording and where it will be hosted | `05_PROJECT/13_PRIVACY_POLICY_DRAFT.md` |
+| D-L06 Store single purpose | BLOCKING | USER INPUT | Approve exact Chrome Web Store single-purpose wording before submission | `05_PROJECT/07_STORE_SUBMISSION_DRAFT.md` |
+| D-L07 Store data disclosure | BLOCKING | USER INPUT | Confirm Chrome Web Store data category checkbox mapping and Limited Use wording from the actual dashboard | `05_PROJECT/14_CHROME_STORE_DATA_DISCLOSURE_DRAFT.md` |
+| D-L08 First public BYOK scope | BLOCKING | USER INPUT | Confirm first public build remains local/open-source/BYOK with no hosted AI, account, cloud sync, or cloud memory | README + provider docs |
+| D-L09 Free/Pro boundary | BLOCKING | USER INPUT | Confirm public copy may say local BYOK core is free/open source and hosted services are later paid | Paywall/billing spec |
+| D-L10 Analytics policy | BLOCKING | USER INPUT | Confirm first public build has no remote analytics involving browsing activity | `04_TECH/08_ANALYTICS_EVENTS.md` |
+| D-L11 Real-profile QA | BLOCKING FOR STORE | QA | Run one redacted real-profile manual QA pass before Chrome Web Store/public marketing; temporary Chrome runtime QA already passed | `05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md`, `05_PROJECT/08_QA_EVIDENCE.md` |
+| D-L12 Final screenshots/demo | BLOCKING | USER INPUT + QA | Approve final screenshot/demo assets generated from synthetic/mock data only | `artifacts/store-screenshots/`, `artifacts/store-asset-review/`, `05_PROJECT/15_PUBLIC_LAUNCH_MATERIALS_DRAFT.md` |
+| D-L13 Beta ramp | BLOCKING | USER INPUT | Approve 5-10 trusted tester ramp, issue templates, and feedback handling | `.github/ISSUE_TEMPLATE/` |
+| D-L14 Launch timing | BLOCKING | USER INPUT | Approve when GitHub, marketing, Product Hunt/HN/X, and Chrome Web Store submission may happen | this packet |
+
+Current executable status:
+
+```text
+Can do now without more confirmation:
+- keep improving local/open-source build quality;
+- run temporary Chrome runtime QA;
+- regenerate synthetic screenshots and release package;
+- prepare draft copy and checklists.
+
+Needs user confirmation before changing public state:
+- final brand/domain;
+- support email / privacy URL;
+- store listing submission;
+- public marketing posts;
+- hosted/cloud/payment decisions;
+- any analytics involving browsing activity.
+```
+
 ## 2. Decision Summary
 
 | ID | Decision | Recommendation | Status |
 |---|---|---|---|
 | D-L01 | Open-source license | Apache-2.0 for permissive adoption plus explicit patent grant | CONFIRMED BY USER |
 | D-L02 | Public repo boundary | Publish the local extension core, docs, prompts/schemas, tools, issue templates, and privacy materials; exclude secrets, ignored artifacts, completed real-profile QA notes, local private-beta config, and unapproved raw imported archives | CONFIRMED BY USER |
-| D-L03 | Product name / domain | Keep TabMosaic AI as working name only for now; re-confirm public brand/domain because the 2026-06-12 scan found a Chrome Web Store extension named `Tab Mosaic` | CONFIRM |
+| D-L03 | Product name / domain | Keep TabMosaic AI as working name only for now; re-confirm public brand/domain because the 2026-06-15 scan confirmed a Chrome Web Store extension named `Tab Mosaic` and a crowded `Tab + noun` naming space | CONFIRM |
 | D-L04 | Public developer identity / support email | Use a stable public support email on the chosen domain | CONFIRM |
 | D-L05 | Privacy policy URL | Publish the standalone privacy policy after placeholders are replaced and approved | CONFIRM |
 | D-L06 | Chrome Web Store single-purpose wording | Use the draft in `05_PROJECT/07_STORE_SUBMISSION_DRAFT.md` after final review; 2026-06-12 official policy review completed, but acceptance still requires actual submission | CONFIRM |
@@ -174,6 +225,7 @@ Important:
 ```text
 Do not finalize TabMosaic AI publicly until the near-name conflict is reviewed.
 Chrome Web Store already has a near-name extension listing: Tab Mosaic.
+The 2026-06-15 rescan also found multiple occupied or risky `Tab + noun` names: TabPilot, TabWeave, TabAtlas, TabCraft, TabMind, TabOrbit, and TabForge.
 Domain availability and trademark risk must be checked in real time before purchase or public launch.
 Do not assume any domain is available from old notes.
 ```
@@ -380,6 +432,18 @@ Evidence template:
 
 ```text
 05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md
+artifacts/real-profile-qa/<timestamp>/real-profile-qa-checklist.html
+```
+
+Latest automated evidence:
+
+```text
+2026-06-15 Chrome runtime QA refresh passed with temporary synthetic Chrome profiles:
+- normal runtime smoke passed real native groups, Sidebar composer, Dashboard apply/move/drag/drop/focus, Undo, Restore, and selected-tabs/page-context flows;
+- large-tab probe organized 96 synthetic tabs in 1446ms with 9 groups, 96 moved tabs, 8 safe duplicate closes, and 9 review duplicate groups;
+- DeepSeek Agent runtime flow passed through the real Sidebar composer with follow-up, AI draft, and Apply moving 2 tabs.
+
+This lowers launch risk but does not replace the required redacted real-profile manual QA pass.
 ```
 
 Pass criteria:
@@ -402,6 +466,7 @@ Sources:
 tools/capture_ui_screenshots.js
 tools/build_store_screenshots.js
 artifacts/store-screenshots/
+artifacts/store-asset-review/<timestamp>/store-asset-review.html
 ```
 
 Recommendation:
@@ -409,6 +474,7 @@ Recommendation:
 ```text
 Use mock/synthetic data only.
 Generate final assets from the current approved UI.
+Review the generated local HTML preview before asking for D-L12 approval.
 User approves every screenshot and video before posting or store submission.
 ```
 

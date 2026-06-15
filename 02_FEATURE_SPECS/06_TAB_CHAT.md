@@ -25,9 +25,11 @@ Future candidate: clicking the chip can open a scope menu for Current Tab, Selec
 | Scope | P0/P1 | 说明 |
 |---|---|---|
 | Current Tab | P0 | 当前激活页面 |
+| Selected Text | P1 / current beta buildable | 用户主动从当前页面选中文本后，仅用高亮文本作为本轮上下文 |
 | Selected Tabs | P1 / current beta buildable | 用户在 sidebar/dashboard 勾选多个 tabs；用户发起后可读取最多 6 个 tabs 的可见文本 |
 | Current Group | P1 / current beta buildable | 当前 Chrome group 或 dashboard group；用户发起后可读取最多 6 个 tabs 的可见文本 |
 | Page Region | P1 candidate | 用户主动框选/点选当前网页里的一个可见区域，仅用该区域作为本轮上下文 |
+| Pasted Link | P1 / current beta buildable | 用户粘贴 URL 后可先保存/建 todo；只有点击 Fetch link 并批准站点权限后才读取链接页面正文 |
 | Current Window | P1 | 当前窗口所有 tabs |
 | All Windows | P1/Pro | 当前浏览器所有普通窗口 tabs |
 | Workspace | P1/Pro | 保存的历史工作区 |
@@ -72,6 +74,8 @@ CONFIRMED BY IMPLEMENTATION:
 - Chrome internal / restricted pages should produce one natural unreadable-page reply, not multiple technical status messages.
 - Unreadable-page replies should explain the likely reason: browser/extension page, missing temporary site permission, protected page, or no readable visible text.
 - DeepSeek Page Agent answers current-tab page questions from current visible page text after the user explicitly asks from the Sidebar composer.
+- DeepSeek Page Agent answers selected-text questions from user-highlighted text only after the user explicitly chooses `Selected text` from the Sidebar composer picker. This flow does not include full-page visible text, description, headings, full URL, query/hash, hidden DOM, or cloud storage. If no text is highlighted, it asks the user to select text first.
+- Selected-text rewrite/polish prompts and the `Rewrite selection` template reuse the same highlighted-text-only boundary with `workflow: contextual_writing`, then render one copy-only draft with `Copy draft` and `Save memo`. The extension does not insert the rewritten text into the page or submit anything.
 - Page Agent input includes current-tab title, hostname, visible text, selected text, headings, description, and up to 10 local page-chat Q/A turns for follow-up resolution. It does not include full URL, query/hash, cookies, form values, hidden DOM, browser history, workspace memory, or TabMosaic cloud storage.
 - Common work pages include generic site-skill hints so Page Agent knows whether to read visible text as a code-review surface, issue triage surface, CI/checks surface, cloud console, project issue, design file, or collaborative document. The hints do not include owner/repo names, object paths, issue keys, run numbers, design/document IDs, full URL, query/hash, hidden DOM, or extra page content.
 - Obvious token-like strings, API keys, and connection strings are redacted best-effort before Page Agent upload.
@@ -81,7 +85,9 @@ CONFIRMED BY IMPLEMENTATION:
 - Real temporary-profile QA has verified a 4-turn current-page DeepSeek conversation on `https://www.hao123.com/`, with each turn staying in `current_tab` Page Agent scope and using the local `.env.local` DeepSeek config only when the tester passes `--ai`.
 - DeepSeek metadata Agent answers open-ended tab-management questions from minimized tab metadata only.
 - DeepSeek open-ended answers render as plain assistant bubbles; they should not append separate tab cards, `Open tab`, `Groups`, `Open Dashboard`, or suggested action UI.
+- DeepSeek metadata Agent explicit move/group/regroup requests must end in a validated Apply / Cancel preview when a safe target can be verified. If the model returns incomplete/no draft content, the extension may recover with a local verified `move_tabs` preview using the same minimized tab metadata already collected for the Agent request. This recovery path must disclose that browser changes require Apply, must not close tabs, must not read page body, and must not send full URLs.
 - The metadata Agent path still does not receive page body text or page summaries.
+- Pasted-link Q&A first slice is explicit and user-triggered: the Sidebar detects pasted URLs without opening/fetching them, then `Fetch link` asks Chrome for that link origin, fetches readable text with credentials omitted, and sends a fetched-link Page Agent payload when AI is configured. The payload and session result exclude full URL, query/hash, cookies, hidden DOM, forms, browser history, and cloud storage.
 
 DO NOT BUILD YET WITHOUT CONFIRMATION:
 - Automatic/background page-body upload without a user current-page request.
@@ -112,6 +118,9 @@ CONFIRMED BY IMPLEMENTATION / FIRST SLICE:
 - DeepSeek multi-tab Page Agent can answer from capped visible text, titles, hostnames, headings, selected text, skipped reasons, and skipped reason breakdown counts.
 - Multi-tab Page Agent payload excludes full URLs, query strings, hashes, cookies, hidden DOM, browser history, saved workspace contents, persistent summaries, and TabMosaic cloud storage.
 - AI tab summaries are validated against real readable tab IDs before rendering.
+- Compare Selected Tabs is implemented as a selected-tabs/current-group workflow: template or natural-language compare prompts return a recommendation, Markdown comparison table, tradeoffs, missing information, and source notes. AI comparison rows are validated against real readable tab IDs before rendering. Explicit follow-up buttons can create a local Work Queue todo or research missing info through the internal search tool; the workflow still does not save memos, mutate tabs/pages, or act automatically.
+- Research Brief is implemented as a selected-tabs/current-group workflow: template or natural-language research brief prompts return findings, contradictions, gaps, next steps, and source notes. The result is rendered as a normal Markdown assistant message with source chips and explicit Create todo / Research missing info follow-ups. It does not claim web search unless the user clicks the follow-up search action, and it does not save memos or store page text.
+- Contextual Writing is implemented for selected-tabs/current-group first slice: the `Draft from tabs` template or natural writing prompts such as project update/email/memo draft route through `workflow: contextual_writing`, use the same capped visible-text tool-card flow, and return a normal Markdown assistant message with `Copy draft`, `Save memo`, and `Run log`. It never reads unselected tabs, inserts text, submits forms, sends messages/email, mutates pages, moves/closes tabs, or creates cloud memory.
 - Group/selected-tabs answers lead with normal assistant prose, then render compact session-only supporting metadata: scope label, visible-text/metadata source, read/skipped counts, skipped reason chips, top hosts/themes, and safe next steps.
 - If every selected/group tab is skipped or unreadable, the answer falls back to metadata only, explicitly says no page body was read/sent/stored, and gives retry guidance for selecting normal readable work pages.
 - Group/selected-tabs chat supports session-only follow-up routing for the same active scope. Natural follow-ups such as `Which one should I review first?` re-enter the context-tabs Agent flow and include up to 10 local Q/A turns for reference resolution.
@@ -213,7 +222,35 @@ CONFIRMED BY IMPLEMENTATION / FIRST SLICE:
 
 ## 7. Workspace Chat
 
-Pro 能力：
+First local slice implemented:
+
+```text
+Sidebar prompt
+→ user asks `summarize my workspace`, `show workspace todos`, `show saved sources`, or `review workspace risks`
+→ Sidebar answers as one normal Markdown assistant message
+→ answer uses only local workspace state:
+   - latest extension-created tab/group snapshot
+   - saved workspace goal
+   - local Work Queue
+   - saved memos
+   - saved collections
+   - saved workspace snapshots
+   - local Done/Later/Keep tab states
+   - duplicate-review metadata
+→ optional Open rows can focus still-open tabs only
+```
+
+Safety:
+
+```text
+- Does not read live page text.
+- Does not send data to AI/search providers.
+- Does not read full URLs, Chrome history, bookmarks, cookies, form values, screenshots, hidden DOM, or cloud memory.
+- Does not move, close, restore, reopen, upload, summarize, or mutate tabs/pages.
+- Full historical workspace chat, full restore, cloud sync, embeddings, and cross-device memory remain future / confirmation-gated work.
+```
+
+Future Pro ability:
 
 ```text
 我昨天的 AI tab manager research 里，哪些项目支持自动去重？

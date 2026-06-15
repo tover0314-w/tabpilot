@@ -60,6 +60,7 @@ CONFIRMED BY IMPLEMENTATION:
 用途：
 
 - 用户要求总结当前页面时，临时注入脚本提取正文。
+- 页面 quick rail 只作为 content script UI 入口渲染；它不读取正文，真正读取仍然走用户触发的 `scripting + activeTab` / optional site access flow。
 
 策略：
 
@@ -67,6 +68,20 @@ CONFIRMED BY IMPLEMENTATION:
 - 使用 `activeTab` 让用户点击/触发后获取当前 tab 临时权限。
 - current-group / selected-tabs 页面问答使用 optional `http://*/*` / `https://*/*`，只在用户主动询问后按具体站点临时请求，回答后释放。
 - 只读取 visible/readable content，不读取表单值、密码字段、storage。
+
+### 5.1 Page Quick Rail content script
+
+CONFIRMED BY IMPLEMENTATION:
+
+```text
+- manifest content_scripts injects page_quick_rail.js only on http://*/* and https://*/*.
+- The content script renders a small right-edge UI in a shadow root.
+- It does not call executeScript, getSelection, innerText, captureVisibleTab, tabs, tabGroups, cookies, history, network APIs, or page storage APIs.
+- It uses only extension-local `chrome.storage.local` for the user-hidden quick-rail preference.
+- It sends only a user-clicked quick action id to the background: chat, read, region, or save.
+- Background handles RUN_QUICK_RAIL_ACTION by opening Sidebar, setting current-tab metadata context, and pre-filling a pending prompt.
+- Page text reading, region picking, todo creation, and AI provider calls still require the Sidebar flow after the user click.
+```
 
 ## 6. storage API
 
@@ -173,3 +188,4 @@ browsingData
 - P0 默认整理当前浏览器所有普通窗口。
 - `downloads` / `bookmarks` / `history` 权限不进入 P0。
 - optional `http://*/*` / `https://*/*` 已确认用于用户触发的 group/selected-tabs 内容读取；默认不授予，按具体站点请求，回答后释放。
+- Page Quick Rail content script renders on ordinary http/https pages as UI only. It is not a page-reading permission and does not replace the user-triggered scripting/permission flow.

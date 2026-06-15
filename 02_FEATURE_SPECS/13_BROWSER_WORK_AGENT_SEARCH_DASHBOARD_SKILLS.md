@@ -617,6 +617,7 @@ Do not build yet:
 - Explicit Search Tool requests from Sidebar route to an internal `search_web_provider` tool state.
 - If no search provider is configured, Sidebar explains that Tavily-style search needs a provider and sends only the typed query by default.
 - Missing search provider state includes one `Open settings` action that opens Dashboard Settings, while the default Dashboard workbench remains search-free.
+- Missing or failed search provider state includes compact redacted diagnostics: provider, origin, API-key status, result count, and error type. It does not show or store the query, API key, source URLs, tab titles, page text, or result bodies.
 - When search results are available, Sidebar answers in natural language first and shows sources as a compact attachment with user-clicked Open actions, not as a search-results dashboard.
 - User can see Tasks and Collections as lightweight browser work concepts.
 - Smart Groups board remains visible and useful.
@@ -630,6 +631,7 @@ Do not build yet:
 - Tools declare privacy policies.
 - External search provider query is never run unless provider is configured and user triggers it.
 - Configured Tavily-style search sends only the normalized user-typed query, with raw content and images off by default.
+- Search diagnostics are local status metadata only. They may record whether a query was sent, but they must not store the query text, API key, source URLs, source snippets, result bodies, tab titles, page text, full URLs, or screenshots.
 - Browser-changing tools remain Apply/Undo gated.
 - Local tab search does not read page text.
 ```
@@ -684,8 +686,8 @@ Do not build yet:
 2. Request explicit provider origin permission. DONE for the internal executor and Settings save path.
 3. Implement Tavily adapter. DONE for POST /search with query-only payload.
 4. Render result list. DONE as natural Sidebar answer plus compact Sources attachment.
-5. Save selected results to collection. NEXT.
-6. Add redacted diagnostics and tests. PARTIAL: executor smoke test and minimal Settings-path smoke added; user-facing diagnostics still pending.
+5. Save selected results to collection. DONE.
+6. Add redacted diagnostics and tests. DONE: background writes `tabmosaic.searchDiagnostics`; Sidebar not-configured/failed messages show provider/origin/key status/result count/error type; Dashboard Settings shows a compact redacted diagnostics block; smoke and screenshot coverage are updated.
 ```
 
 ### Slice D: richer AI browser inputs

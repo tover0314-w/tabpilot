@@ -27,6 +27,12 @@
 - `tools/preflight.js`：统一本地预检入口，运行 secret scan、语法检查、smoke、打包、zip env 检查和 beta readiness check。
 - `tools/secret_scan.js`：扫描 git tracked files，防止 `.env` 或真实 API key 进入提交和 CI。
 - `tools/public_repo_audit.js`：公开仓库前审计 tracked + 未忽略新增文件，拦截本地输出、私测配置、未确认 license 等风险，并输出 public repo blocker。
+- `tools/launch_readiness_report.js`：读取 public launch tracker 和 public repo audit 输出，打印人类可读 / JSON 的上线阻塞项、owner、下一步输入和当前 readiness。
+- `tools/validate_public_launch_decision_reply.js`：校验用户填写的 D-L03 到 D-L14 public launch decision reply，检查漏项、重复项、未替换 placeholder、keep blocked 项和警告；只读校验，不批准、不改文档、不发布；支持 `--self-test` 和 `--json`。
+- `tools/prepare_public_launch_handoff_packet.js`：生成 ignored 的 public launch handoff 包，汇总 launch gates、本地 HTML 决策审核页、可复制审批回复、截图审核包和真实 QA 包路径；不批准、不发布、不读取私密浏览数据；支持 `--self-test`。
+- `tools/prepare_release_candidate_packet.js`：生成 ignored 的 release candidate 审查包，把扩展 zip/checksum、readiness、store asset review、real-profile QA checklist 和 public launch handoff 汇到一个 README / HTML / JSON manifest 入口；不批准、不提交、不发布、不跑真实 profile QA；支持 `--self-test`。
+- `tools/real_profile_qa_redaction_check.js`：本地检查已脱敏 real-profile QA 报告，拦截 full URL、API key、bearer token、真实邮箱和 token-like query value；支持 `--self-test`。
+- `tools/prepare_real_profile_qa_packet.js`：生成 ignored 的真实 Chrome profile QA 本地包，复制空白结果模板、写入本地 HTML checklist、步骤和脱敏检查命令；不打开 Chrome、不读取 tabs/profile/secrets；支持 `--self-test`。
 - `tools/provider_registry_check.js`：校验 BYOK provider registry、Dashboard 下拉、BYOK guide、manifest host permission 和 provider host label 是否一致。
 - `tools/issue_form_smoke_test.js`：检查私测和 public issue forms 的结构、隐私红线和 required safety acknowledgements。
 - `tools/verify_release_package.js`：按 manifest 版本校验 release zip、checksum、package manifest 和包内安全内容。
@@ -34,6 +40,8 @@
 - `tools/capture_ui_screenshots.js`：可选 UI 截图脚本，用 mock extension 数据生成 sidebar / dashboard 预览图。
 - `tools/capture_real_page_chat_screenshot.js`：可选真实公开页面 Sidebar QA 截图脚本，使用临时 Chrome profile、临时 extension copy、显式 `--ai` DeepSeek 配置，验证 current-page 多轮对话和 selected page-region 对话。
 - `tools/build_store_screenshots.js`：可选 Chrome Web Store screenshot 草稿生成脚本，用 mock UI 截图生成 5 张本地 1280x800 PNG，输出到 ignored artifacts，DO NOT SUBMIT YET。
+- `tools/prepare_store_asset_review_packet.js`：生成 ignored 的 Chrome Web Store 截图审核包，检查 5 张 canonical mock/synthetic 截图尺寸、旧 PNG 残留、HTML 本地预览页和 D-L12 用户审批清单；支持 `--self-test`。
+- `tools/prepare_store_submission_review_packet.js`：生成 ignored 的 Chrome Web Store submission review 包，把 store listing 字段、permission justification、privacy placeholders、data disclosure、截图审核包和 store launch gates 汇总成本地 README / HTML / copyable fields / JSON；不提交、不发布、不上传、不跑真实 profile QA；支持 `--self-test`。
 - `tools/extension_smoke_test.js`：无依赖 Node smoke test，覆盖 manifest、localization、permission explanation、redacted diagnostics、Chat Refine、rules、dedupe safety、sensitive summary confirmation、AI output validation、AI status visibility 和 local data deletion。
 - `tools/chrome_runtime_smoke_test.js`：可选 Chrome runtime smoke test，使用临时 profile 尝试加载 unpacked extension 并验证真实 native tab groups；`--real-ai-content-regroup-screenshot` 会用临时 fixture pages + DeepSeek 生成内容重分组 Sidebar 截图。
 - `tools/open_manual_qa_profile.js`：打开一次性手动 QA Chrome profile，加载 extension、本地 checklist、合成 QA tabs、sidepanel 和 dashboard，不触碰真实 Chrome profile；checklist 覆盖 AI 状态、敏感页 summary 确认、Undo/Restore、Dashboard apply 和隐私输出。
@@ -75,6 +83,7 @@
 - `12_AGENTIC_CLASSIFICATION_AND_CONTEXT_TOOLS.md`：Agentic 分类、上下文深度和工具列表规格。
 - `13_BROWSER_WORK_AGENT_SEARCH_DASHBOARD_SKILLS.md`：Browser Work Agent、Tavily-style search、Dashboard Workbench、任务/收藏和开源 skill 复用规格。
 - `14_MONICA_REFERENCE_AI_BROWSER_LAYER_COMMERCIAL_MODEL.md`：Monica 功能参考、AI Browser Layer 全量 feature list、开源/BYOK 与登录云套餐商业模式规格。
+- `15_AI_BROWSER_RELEVANT_FEATURE_EXPANSION.md`：基于 Atlas、Comet、Dia、Arc Max、SigmaOS、Opera、Brave、Chrome、Firefox、VertiTab 的 AI browser / tab-workspace 功能扩展规格，聚焦 tabs-as-tasks、continue workspace、local work search、safe tab commands 和 agent safety。
 
 ## 03_UX
 
@@ -127,3 +136,4 @@
 - `01_SOURCES.md`：官方参考。
 - `02_ASSUMPTIONS.md`：假设。
 - `03_RESEARCH_TODO.md`：后续调研。
+- `04_COMPETITOR_PRICING_RESEARCH.md`：竞品定价和商业化包装调研，作为 Free/BYOK、hosted Plus/Pro、Search Tool credits 和 workspace monetization 的市场参考；不确认最终价格。

@@ -14,7 +14,7 @@
 - [ ] 重新核实开源项目 stars。
 - [ ] 分析 OneTab、Session Buddy、Toby、Workona、Tab Manager Plus。
 - [ ] 分析 AI tab organizer 类扩展用户评价。
-- [ ] 分析 dashboard/workspace 类产品定价。
+- [x] 分析 dashboard/workspace 类产品定价 first pass（2026-06-15；see `06_REFERENCES/04_COMPETITOR_PRICING_RESEARCH.md`；exact public prices still require manual recheck before pricing launch）。
 - [ ] 调研开源 AI browser / browser extension 的 README、license、star growth 和社区反馈机制。
 
 ## 技术研究

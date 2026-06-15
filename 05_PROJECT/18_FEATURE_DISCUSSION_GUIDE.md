@@ -29,7 +29,6 @@ Why:
 ```text
 - Real-profile manual QA is still pending.
 - Final brand/domain is not confirmed.
-- Open-source license is not confirmed.
 - Privacy policy URL and support email are not final.
 - Chrome Web Store disclosure and final store screenshots/demo are not approved.
 - Beta user feedback has not been collected.
@@ -146,6 +145,7 @@ What exists:
 - Metadata semantic features: project, workflow, artifact type, intent, domain category, sensitive hint.
 - Weak domain-only AI group names are rejected.
 - Metadata-only split/merge suggestions exist.
+- `preview refinements` can turn latest metadata split suggestions into an Apply/Cancel regrouping preview.
 ```
 
 Good target:
@@ -182,6 +182,7 @@ Still pending:
 - Real-profile classification QA.
 - More local fallback intelligence when AI is unavailable.
 - Better UI for explaining why a group was created.
+- Applying refinement previews from real messy windows needs manual QA.
 ```
 
 ## 4. Deduplication And Undo/Restore
@@ -536,13 +537,15 @@ Still pending:
 Current state:
 
 ```text
-NOT READY FOR PUBLIC PUSH / PUBLIC STORE LAUNCH
+READY FOR GITHUB SOURCE RELEASE / NOT READY FOR PUBLIC STORE LAUNCH
 ```
 
 What exists:
 
 ```text
 - Open-source direction is confirmed.
+- Apache-2.0 license is confirmed and `LICENSE` exists.
+- Public repo boundary is confirmed for source release.
 - CONTRIBUTING draft exists.
 - Public repo audit exists and intentionally blocks unresolved launch items.
 - Public launch materials draft exists.
@@ -551,20 +554,20 @@ What exists:
 Still pending:
 
 ```text
-- Open-source license.
-- Public repo boundary and raw archive handling.
 - Final brand/domain.
+- Privacy policy URL and support email.
+- Chrome Web Store disclosure approval.
 - Store screenshots/demo approval.
-- Real-profile QA.
+- Real-profile QA before Chrome Web Store/public marketing.
 - Beta feedback.
 ```
 
 Decision gates:
 
 ```text
-- License.
 - Final brand/domain.
-- Public repo boundary.
+- Privacy policy URL and support email.
+- Store disclosure and launch materials.
 - Pricing/free-Pro limits.
 - Analytics.
 ```

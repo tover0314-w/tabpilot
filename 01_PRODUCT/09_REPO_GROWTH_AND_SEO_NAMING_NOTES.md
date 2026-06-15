@@ -1,7 +1,7 @@
 # Repo Growth And SEO Naming Notes
 
 Status: RECOMMENDED - PUBLIC BRAND STILL CONFIRM  
-Last updated: 2026-06-13  
+Last updated: 2026-06-15
 Purpose: learn from high-star open-source AI projects such as OpenClaw and turn TabMosaic AI into a more star-worthy GitHub project without prematurely finalizing the public brand.
 
 ## 1. OpenClaw-Inspired Repo Lessons
@@ -113,42 +113,62 @@ The user dislikes `tabpilot`, and the prior scan found `Tab Mosaic` as a near-na
 
 Do not finalize any name without real-time domain, GitHub, Chrome Web Store, social, and trademark checks.
 
+2026-06-15 rescan update:
+
+```text
+Do not shortlist common Tab+Noun names without strong new evidence.
+TabPilot, TabWeave, TabAtlas, TabCraft, TabMind, TabOrbit, TabForge, and TabWorkbench-style names are occupied, close, or risky in current public search/store results.
+BrowserLayer AI is better as positioning than as a cleared brand because "browser layer" is already an industry phrase around AI agents and browser infrastructure.
+```
+
 ## 5. Candidate Name Shortlist
 
 These are brainstorming candidates only, not confirmed names.
 
-| Candidate | Direction | SEO/brand thought | Risk |
+| Candidate | Direction | SEO/brand thought | Current scan status |
 |---|---|---|---|
-| WorkTabs AI | Direct office workflow | Clear, keyword-rich, easy to understand | Generic, may be crowded |
-| TabWorkbench | Browser workbench | Strong product metaphor, fits dashboard/work tasks | Longer, still tab-generic |
-| BrowserLayer AI | AI browser layer | Owns the positioning phrase | Broad, may sound platform-level |
-| ContextTabs | Tab context agent | Good for tab/page/group chat | Generic but descriptive |
-| TabContext AI | SEO direct | Very clear for page/tab context | Generic |
-| WorkContext AI | Broader than tabs | Good for office workers and browser work | Less obviously Chrome tabs |
-| TabCraft AI | Organize/build metaphor | Friendly and short | Generic `Tab + noun` risk |
-| Tabridge AI | Tabs + bridge/context | More distinctive coined name | Needs pronunciation check |
-| Navo AI | Navigation/workflow feel | Short coined name, easier to own | SEO needs subtitle support |
-| OrbiTab | Workspace/orbit metaphor | Distinctive | May feel playful |
-| ContextFlow | Agent workflow | Strong for page/tab reasoning | Not tab-specific |
-| BrowseMind | AI browser feel | Easy to understand | Could be crowded |
+| WorkTabs AI | Direct office workflow | Clear, keyword-rich, easy to understand | Generic; not recommended as final without deeper scan |
+| TabWorkbench | Browser workbench | Strong product metaphor, fits dashboard/work tasks | Risky; Tabit - Browser Tab Workbench already appears in search |
+| BrowserLayer AI | AI browser layer | Strongly matches positioning | Use as subtitle/descriptor, not as cleared brand |
+| ContextTabs | Tab context agent | Good for tab/page/group chat | Generic; Firefox/AI context-tabs terminology appears in search |
+| TabContext AI | SEO direct | Very clear for page/tab context | Generic Tab+term; needs deeper scan |
+| WorkContext AI | Broader than tabs | Good for office workers and browser work | Generic; likely hard to own |
+| Tabridge AI | Tabs + bridge/context | More distinctive coined name | Needs pronunciation, domain, store, GitHub, social, trademark scan |
+| Navo AI | Navigation/workflow feel | Short coined name, easier to own | External Navo AI references exist; needs deeper scan |
+| OrbiTab | Workspace/orbit metaphor | Distinctive | Too close to TabOrbit direction; deprioritize |
+| ContextFlow | Agent workflow | Strong for page/tab reasoning | Occupied/crowded; not recommended |
+| BrowseMind | AI browser feel | Easy to understand | Occupied/crowded; not recommended |
+
+Names to avoid or deprioritize after the 2026-06-15 scan:
+
+```text
+TabMosaic
+TabPilot
+TabWeave
+TabAtlas
+TabCraft
+TabMind
+TabOrbit
+TabForge
+TabWorkbench
+ContextFlow
+BrowseMind
+```
 
 Recommended next shortlist for real scan:
 
 ```text
-TabWorkbench
-ContextTabs
-TabContext AI
-WorkContext AI
-BrowserLayer AI
-Navo AI
+Need a new shortlist.
+Prefer coined names or browser-work names that do not start with `Tab`.
+Keep "Open-source AI browser layer for Chrome" as the SEO subtitle.
 ```
 
 My current preference:
 
 ```text
 Use a descriptive public subtitle immediately: Open-source AI browser layer for Chrome.
-Shortlist names separately.
-Avoid rushing a repo rename until domain/social/store checks are done.
+Do not rush a public repo/product rename.
+Generate a new coined-name shortlist, then run domain/GitHub/Chrome Store/social/trademark screening before user confirmation.
 ```
 
 ## 6. Repo Growth Playbook

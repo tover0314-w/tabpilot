@@ -32,7 +32,7 @@
     </header>
 
     <div class="dashboard-workbench">
-      <aside class="dashboard-rail">
+      <aside class="dashboard-rail" hidden>
         <section class="dashboard-nav-section dashboard-nav-segment">
           <p class="dashboard-nav-label sr-only" data-i18n="dashboardNavLabel">Navigation</p>
           <button class="dashboard-nav-item active" type="button" data-page="workspace">
@@ -43,6 +43,10 @@
             <span class="dashboard-nav-icon" aria-hidden="true">⊕</span>
             <span data-i18n="autoOrganize">Auto Organize</span>
             <span id="rulesCountBadge" class="dashboard-count">0</span>
+          </button>
+          <button class="dashboard-nav-item" type="button" data-page="memory" hidden>
+            <span class="dashboard-nav-icon" aria-hidden="true">✦</span>
+            <span data-i18n="memory">Memory</span>
           </button>
           <button class="dashboard-nav-item" type="button" data-page="settings" hidden>
             <span class="dashboard-nav-icon" aria-hidden="true">⚙</span>
@@ -63,7 +67,7 @@
 
       <main class="dashboard-stage">
         <section class="dashboard-page active" data-page="workspace">
-          <section class="dashboard-agent-workbench" aria-label="Browser Workbench" data-i18n-aria-label="browserWorkbench">
+          <section class="dashboard-agent-workbench" aria-label="Browser Workbench" data-i18n-aria-label="browserWorkbench" hidden>
             <div class="dashboard-agent-panels">
               <section class="dashboard-agent-panel">
                 <div class="dashboard-agent-panel-head">
@@ -93,16 +97,16 @@
             </div>
           </section>
 
-          <div class="dashboard-filter-chips" aria-label="Group filters">
-            <button class="dashboard-chip active" type="button" data-filter="all">
+          <div class="dashboard-filter-chips" aria-label="Dashboard actions">
+            <button class="dashboard-chip active" type="button" data-filter="all" hidden>
               <span data-i18n="allGroups">All</span>
               <span id="allGroupsCount" class="dashboard-chip-count">0</span>
             </button>
-            <button class="dashboard-chip" type="button" data-filter="ai">
+            <button class="dashboard-chip" type="button" data-filter="ai" hidden>
               <span data-i18n="aiGroups">AI groups</span>
               <span id="aiGroupsCount" class="dashboard-chip-count">0</span>
             </button>
-            <button class="dashboard-chip" type="button" data-filter="rules">
+            <button class="dashboard-chip" type="button" data-filter="rules" hidden>
               <span data-i18n="ruleGroups">Rule groups</span>
               <span id="ruleGroupsCount" class="dashboard-chip-count">0</span>
             </button>
@@ -139,10 +143,21 @@
             <span id="workspaceActionStatus" class="dashboard-chip-status" role="status"></span>
           </div>
 
+          <section
+            id="dashboardContinue"
+            class="dashboard-continue-strip"
+            aria-label="Continue workspace"
+            data-i18n-aria-label="continueWorkspaceAria"
+            hidden
+          ></section>
+
           <section id="smart-groups" class="dashboard-section">
             <div class="dashboard-section-head">
               <div>
                 <p class="section-title" data-i18n="smartGroups">Smart Groups</p>
+                <small id="dashboardGroupSummary" class="dashboard-section-copy dashboard-simple-copy" data-i18n="dashboardGroupsSummaryEmpty">
+                  Latest native Chrome groups.
+                </small>
               </div>
             </div>
             <div id="dashboardGroups" class="dashboard-group-grid"></div>
@@ -165,17 +180,83 @@
           </details>
         </section>
 
+        <section class="dashboard-page" data-page="memory">
+          <header class="dashboard-page-head">
+            <div>
+              <h1 class="dashboard-page-title" data-i18n="memory">Memory</h1>
+              <p class="dashboard-page-sub" data-i18n="memoryPageCopy">
+                Saved because you clicked Save. Stored locally.
+              </p>
+            </div>
+          </header>
+
+          <section id="memory" class="dashboard-section dashboard-memory-section">
+            <div class="dashboard-memory-toolbar">
+              <label class="dashboard-memory-search">
+                <span class="sr-only" data-i18n="searchMemory">Search memory</span>
+                <input
+                  id="memorySearchInput"
+                  type="search"
+                  placeholder="Search saved memos and collections"
+                  data-i18n-placeholder="searchMemoryPlaceholder"
+                  autocomplete="off"
+                />
+              </label>
+              <span id="dashboardMemorySummary" class="dashboard-chip-status" role="status"></span>
+            </div>
+            <div id="dashboardMemoryItems" class="dashboard-memory-list"></div>
+          </section>
+        </section>
+
         <section class="dashboard-page" data-page="rules">
           <header class="dashboard-page-head">
             <div>
-              <h1 class="dashboard-page-title" data-i18n="autoOrganize">Auto Organize</h1>
+              <h1 class="dashboard-page-title" data-i18n="rulesMemory">Rules & Memory</h1>
               <p id="rulesSubtitle" class="dashboard-page-sub" data-i18n="rulesMemoryCopy">
                 Local correction rules created from chat refine and dashboard edits.
               </p>
             </div>
           </header>
           <section id="rules" class="dashboard-section">
-            <p class="section-title" data-i18n="rulesMemory">Rules & Memory</p>
+            <p class="section-title" data-i18n="localRules">Local rules</p>
+            <p class="dashboard-section-copy dashboard-rules-copy" data-i18n="rulesLocalSafetyCopy">
+              These rules are stored on this device. They use tab metadata only and do not read, upload, move, or close pages by themselves.
+            </p>
+            <form id="dashboardRuleForm" class="dashboard-rule-form" autocomplete="off">
+              <input id="dashboardRuleIdInput" type="hidden" />
+              <label class="dashboard-rule-field">
+                <span data-i18n="ruleType">Rule type</span>
+                <select id="dashboardRuleTypeInput">
+                  <option value="domain" data-i18n="ruleTypeDomain">Domain</option>
+                  <option value="url_pattern" data-i18n="ruleTypeUrlPattern">URL pattern</option>
+                </select>
+              </label>
+              <label class="dashboard-rule-field dashboard-rule-field-wide">
+                <span data-i18n="rulePattern">Pattern</span>
+                <input
+                  id="dashboardRulePatternInput"
+                  type="text"
+                  placeholder="docs.google.com"
+                  data-i18n-placeholder="rulePatternPlaceholder"
+                  maxlength="180"
+                />
+              </label>
+              <label class="dashboard-rule-field dashboard-rule-field-wide">
+                <span data-i18n="targetGroup">Target group</span>
+                <input
+                  id="dashboardRuleTargetInput"
+                  type="text"
+                  placeholder="Product Planning"
+                  data-i18n-placeholder="targetGroupPlaceholder"
+                  maxlength="80"
+                />
+              </label>
+              <div class="dashboard-rule-form-actions">
+                <button id="dashboardRuleSubmitButton" class="mini-button" type="submit" data-i18n="saveRule">Save rule</button>
+                <button id="dashboardRuleResetButton" class="mini-button" type="button" data-i18n="reset">Reset</button>
+              </div>
+              <p id="dashboardRuleFormStatus" class="dashboard-rule-form-status" role="status"></p>
+            </form>
             <div id="dashboardRules" class="dashboard-list dashboard-rules-list"></div>
           </section>
         </section>
@@ -339,6 +420,7 @@
                 </button>
               </div>
               <p id="searchSettingsStatus" class="settings-status" role="status"></p>
+              <div id="searchDiagnosticsPanel" class="settings-diagnostics search-diagnostics-panel" aria-live="polite"></div>
             </form>
 
             <details class="settings-advanced settings-privacy-details">

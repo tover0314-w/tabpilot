@@ -20,6 +20,7 @@
 - [x] chat refine（local preview/apply first slice）。
 - [x] sidebar composer direct commands（summary / organize / undo / restore / dashboard）。
 - [x] sidebar quick actions route through chat thread。
+- [x] sidebar idle welcome assistant message（no standalone welcome panel；Smart Organize / Current Page / AI setup / Dashboard actions）。
 - [x] sidebar ephemeral user/agent message thread。
 - [x] sidebar current-page summary as chat message。
 - [x] sidebar local current-page question answer。
@@ -50,7 +51,9 @@
 - [x] Sidebar Agent concrete tool routing first slice（group/selected-tabs deep questions call validated local context tools）。
 - [x] Current group / selected-tabs content read flow first slice（user-triggered, tool card, cap 6, session-only, skipped-tab disclosure）。
 - [x] Multi-tab Agent tool-card UI first slice（compact assistant-message card, no debug panel）。
-- [ ] Agentic Classification V2 refinement（split/merge suggestions surfaced in UI first slice done；real-profile classification QA pending）。
+- [x] Agentic Classification V2 refinement polish（completed organize message now shows folded split/merge suggestions；broad same-domain groups such as GitHub/Supabase can surface workflow split suggestions；metadata-only/no page read/no auto regroup）。
+- [x] Agentic Classification refinement preview action（`preview refinements` turns latest metadata split suggestions into an Apply/Cancel regroup preview；metadata-only；no page read/full URL/cloud；no browser change until Apply）。
+- [ ] Agentic Classification V2 real-profile classification QA（messy office/knowledge-work tabs；verify quality with real configured AI provider when available）。
 - [x] Group / selected-tabs follow-up context reuse（session-only multi-turn context, no persistence）。
 - [x] Content-assisted regrouping preview（confirmed：user-triggered, tool card, capped visible text, Apply / Cancel）。
 - [x] saved workspace restore first slice（hidden/private-beta；regroups currently open saved tab IDs only；Undo available；does not reopen closed pages）。
@@ -68,7 +71,7 @@
 - [ ] multi-tab chat polish / real-profile QA（native optional site permission prompt acceptance, sensitive page edge cases, real-profile selected-tabs behavior）。
 - [x] current-page site-skill first slice（GitHub PR pages pass a generic code-review hint to Page Agent；no owner/repo/PR number/full URL；no new permission）。
 - [x] current-page site-skill registry first slice（GitHub issues/CI, cloud consoles, Linear/Jira issues, design files, collaborative docs pass generic reading hints；no object paths/IDs/full URLs；no new permission）。
-- [ ] workspace chat。
+- [x] workspace chat first slice（local tabs/groups/todos/memos/collections/saved workspace snapshots/tab states/duplicate review only；normal Markdown assistant message；no page text/full URL/history/bookmarks/web/cloud）。
 - [ ] cloud sync。
 - [ ] hosted AI gateway。
 - [x] BYOK provider config for user-provided OpenAI-compatible HTTPS hosts beyond DeepSeek（explicit provider-origin permission before save/test）。
@@ -88,7 +91,8 @@
 - [ ] local LLM polish（model install automation / rich model browser metadata）。
 - [x] page region table-structure polish first slice（bounded table headers/rows in selected region payload；same redaction path；no screenshot）。
 - [x] page region cropped screenshot metadata first slice（user-selected region only；transient visible-tab capture cropped in memory；full capture discarded；text-only Page Agent receives metadata, not image bytes）。
-- [ ] page region context polish（vision-model cropped image upload, complex SaaS page real-profile QA, richer visual understanding）。
+- [x] page region cropped vision first slice（vision-capable model path sends the user-selected cropped region image as session-only `image_url` context；text JSON excludes data URL/full URL/query/hash；no persistence）。
+- [ ] page region context polish（complex SaaS page real-profile QA, richer visual understanding, cropped image annotation/editing）。
 - [ ] auto-add new tabs to groups。
 - [x] Agent search provider config UX first slice（D-039：Tavily-style BYOK provider settings, save/clear, permission copy；Dashboard 不放 search UI）。
 - [ ] Agent search real-key QA（explicit search only；send user query only；no tab/page/full URL payload）。
@@ -97,9 +101,78 @@
 - [x] Todo Agent MVP polish first slice（Dashboard Work Queue done/reopen/archive/focus source/open Sidebar context；local-only）。
 - [x] Todo Agent Sidebar command first slice（natural-language todo creation from current tab / current group / selected tabs；local-only metadata）。
 - [x] Todo Agent Sidebar command polish first slice（current-page checklist todo after user-triggered page read；search result to todo；local-only Work Queue storage）。
-- [ ] Todo Agent Sidebar command polish（richer task naming, multi-source todos, checklist editing UX）。
+- [x] Todo Agent Sidebar command polish second slice（explicit task naming；chat commands to rename latest todo, add checklist item, and mark checklist item done；plain assistant messages；local-only）。
+- [x] Todo Agent Sidebar command polish next slice（multi-todo target selection, named checklist edits, and current Sidebar context merge into an existing local todo）。
+- [x] Todo Agent advanced checklist polish first slice（hidden Dashboard Workbench inline checklist add/delete/reorder；local-only）。
+- [x] Todo Agent advanced checklist source notes slice（per-item local source notes in hidden Dashboard Workbench）。
+- [x] Todo Agent local multi-source decomposition first slice（hidden Dashboard Workbench `Suggest steps` from local source notes, linked tabs, saved memos, and saved collections；no AI/page read）。
+- [x] Todo Agent local source action extraction polish（`Suggest steps` now prioritizes concrete action lines from saved memo bodies/source snippets before generic Review fallbacks；local-only）。
+- [ ] Todo Agent advanced checklist polish next slice（richer multi-source decomposition across explicit search result bodies/files/PDFs/screenshots）。
 - [x] Link understanding first slice（pasted URL detection；no silent fetch；save source / create todo locally）。
-- [ ] Search provider diagnostics（redacted status, provider origin, result count, no key/log leakage）。
+- [x] Search provider diagnostics（redacted status, provider origin, result count/error type, no key/query/result-body leakage；Sidebar + Dashboard Settings）。
+- [x] Monica-inspired Context Picker MVP first slice（Sidebar `@` picker opens the same compact composer picker, filters context/tools, inserts a natural prompt without reading page content, and keeps `+` as shortcut actions）。
+- [x] Visible screenshot vision context first slice（explicit Sidebar Screenshot action；vision-capable model gate；compressed screenshot upload only after user action；session-only/no persistence）。
+- [ ] Context Picker File / PDF sources（explicit upload/read only；no silent reads；pasted-link explicit fetch and visible screenshot vision are implemented separately）。
+- [x] Selected text quick action first slice（selection-only context from active page；explain/rewrite/summarize；subtle UI, no noisy floating toolbox）。
+- [x] Read link explicit-fetch flow first slice（pasted URL can be saved locally or fetched only after user clicks Fetch link；optional origin permission；readable text → Page Agent；no silent network fetch；session-only until Save/Todo）。
+- [ ] PDF read first slice（user-triggered PDF text extraction, session-only by default, page/section references where available）。
+- [x] Screenshot/image context first slice（provider capability detection, user-triggered vision upload only, no persistence by default）。
+- [x] Research Brief workflow first slice（selected tabs/current group → findings, contradictions, gaps, next steps, source notes；Save memo + Create todo + Research missing info follow-ups）。
+- [x] Research Brief polish first slice（Research missing info → internal Search Tool → session-only research addendum with provider summary, source signals, source citations, and privacy boundary）。
+- [x] Research Brief query decomposition first slice（explicit Research missing info click decomposes into up to 3 focused Search Tool queries；dedupes sources；sends query text only；no tab/page/full URL payload）。
+- [x] Research Brief saved-source input first slice（saved local memos/collections → research brief via configured OpenAI-compatible provider；Save memo / Research missing info；no live page read, web search, full URLs, new storage, or cloud memory）。
+- [x] Research Brief visible-screenshot input first slice（explicit current visible screenshot → research brief via vision-capable OpenAI-compatible provider；Save memo / Research missing info；sends only compressed screenshot + title/hostname metadata；no hidden DOM/off-screen text/full URL/file/PDF/search/saved-source bodies/new storage/cloud memory）。
+- [ ] Research Brief polish next slice（file/PDF context, uploaded image context, deeper citation refinement）。
+- [x] Contextual Writing Agent first slice（current-page draft reply/update/comment；copy-only `Copy draft` action；no auto-submit/page mutation）。
+- [x] Selected-context writing first slice（selected text rewrite/polish + selected page-region draft/rewrite route through `workflow: contextual_writing`; highlighted/region context only; `Copy draft` / `Save memo`; no insert/submit/page mutation）。
+- [x] Multi-tab contextual writing first slice（selected-tabs/current-group → copy-only project update/email/memo draft via `workflow: contextual_writing`; capped visible-text context; `Copy draft` / `Save memo` / `Run log`; no unselected tabs, insert, submit, send, or page mutation）。
+- [x] Saved-source contextual writing first slice（saved local memos/collections → copy-only project update/email/memo draft via configured OpenAI-compatible provider；`Copy draft` / `Save memo` / `Run log`; no live page read, web search, full URLs, new storage, or cloud memory）。
+- [x] Local Memo first slice（save assistant answer/research brief/fetched-link answer as explicit local memo；tags and local search）。
+- [x] Dashboard Memory view first slice（hidden/lightweight `#memory` page for explicit local memos + collections；search, Focus source, Ask in Sidebar；default Dashboard remains simple；no page read/full URL/cloud）。
+- [x] Smart Fill Lite first slice（selected-region table/list extraction；row classify/tag；Copy Markdown/CSV；Create todo checklist；no auto-fill/page mutation/search enrichment）。
+- [x] Universal Browser Work Search first slice（Sidebar local search across open tabs, groups, todos, memos, collections, saved workspaces, latest run, duplicate review, and tab states；no Chrome history/bookmarks/page text/web）。
+- [x] Browser Work / open-tab search routing polish（explicit memo/todo/workspace/collection/saved/local work searches route to Browser Work Search；simple open-tab searches such as `find github` remain tab search）。
+- [x] Tabs as tasks first slice（Done / Keep / Later local states; Dashboard tab-row state menu + Sidebar natural-language commands; local metadata only; no close/move/read/upload）。
+- [x] Compare Selected Tabs workflow first slice（2-6 selected tabs → recommendation, Markdown comparison table, source chips, missing info）。
+- [x] Compare Selected Tabs action polish first slice（explicit Create todo + Research missing info buttons；local Work Queue / internal search tool only；no memo yet）。
+- [x] Compare Selected Tabs save memo first slice（explicit Save memo stores assistant answer/tags/minimized linked-tab metadata only）。
+- [x] Continue Workspace card（Dashboard conditional Continue strip from workspace goal + local snapshots + todos + collections + later tabs + duplicate review；hands off to Sidebar Work Brief；local-only）。
+- [x] Work Brief command（`what should I continue?` / `brief my browser` from local state only；Sidebar Markdown answer + Open still-open tabs only）。
+- [x] Workspace chat first slice（Sidebar answers `summarize/show/review workspace` from local tabs/groups/todos/memos/collections/saved workspace snapshots/tab states/duplicate review only；normal Markdown assistant message；no page text/full URL/history/bookmarks/web/cloud）。
+- [x] Safe Tab Commands first slice A（Apply-gated move/rename/regroup drafts + Done/Later/Keep local tab-state drafts; no page text/full URL/close/move for tab-state metadata）。
+- [x] Safe Tab Commands first slice B1（tab-level `protect/keep this tab` uses Apply-gated Keep state and affects future auto organize / duplicate close planning）。
+- [x] Safe Tab Commands first slice B2a（local-state Undo for Done/Later/Keep/Protected restores previous local states and removes created Later todo）。
+- [x] Safe Tab Commands first slice B2b（safe duplicate close commands；Markdown preview + Apply revalidation + Restore Closed after actual close）。
+- [x] Protected tabs first slice（user-protected tab safety layer via local Keep state; skips auto grouping and safe duplicate close）。
+- [x] Protected groups/domains first slice（Sidebar Apply-gated protected domain/group rules stored locally in `tabmosaic.userRules`; future organize/duplicate close skip matching tabs）。
+- [x] Dashboard Rules & Memory readability polish（hidden/lightweight `#rules` page shows human-readable Group vs Protect local rules, local-only safety copy, hits/last-used/source, Enable/Disable/Delete with confirmation；default Dashboard remains simple）。
+- [x] Dashboard Rules & Memory manual editor first slice（hidden `#rules` page can create/edit local `domain` and `url_pattern` Group rules；protected rules cannot be repurposed；save only writes local `tabmosaic.userRules`）。
+- [x] Auto-add new tabs Suggest mode safe first slice（Sidebar `suggest group for this tab`；metadata-only group suggestion；Apply/Cancel required；no background listener/default auto-move）。
+- [ ] Auto-add new tabs background/default mode（new-tab listener, default Suggest/Off, and Auto for local rules；BLOCKED UNTIL CONFIRMED by D-057）。
+- [x] Memory relief actions safe first slice（Sidebar Apply-gated safe command；discard/sleep inactive tabs, collapse inactive groups, save likely read-later tabs locally；no non-duplicate close；no exact MB claim）。
+- [ ] Memory relief close-later slice（save-for-later then close non-duplicate tabs；BLOCKED UNTIL CONFIRMED because it changes non-duplicate tab-closing behavior）。
+- [ ] Rules & Memory suggestion/audit next slice（suggested rules from repeated corrections, richer audit trail, naming preferences；keep default Dashboard uncluttered）。
+- [x] Source provenance chips first slice（current-page / selected-text / page-region / selected-tabs-group / AI metadata answers show compact source chips；search keeps existing Sources actions；file/PDF source chips pending until file/PDF context exists）。
+- [x] Agent safety layer hardening first slice（untrusted page text boundary in Page Agent / multi-tab Agent payloads；prompt-injection signal detection；unsafe instruction-like output blocking；tool card Allowed/Blocked labels；no new permissions）。
+- [x] AI triage first slice（metadata-first `Act now / Later / Reference / Can close / Needs review` after organize；normal assistant message；no page text unless user asks）。
+- [x] Workspace goal detection first slice（Set goal from triage or chat command；local editable `tabmosaic.workspaceGoal`；Work Brief prioritizes it；local-todo inference polish pending）。
+- [x] Workspace goal polish first slice（saved workspace defaults to the local goal name；`make goal a todo` creates a local Work Queue checklist；Work Brief highlights goal-linked todos/memos；local metadata only）。
+- [x] Workspace goal local inference polish（when no goal is saved, Sidebar infers a likely goal from local todos, memos, collections, saved workspaces, Later tab states, and latest tab/group metadata；does not auto-save, read page text, use AI, or upload）。
+- [ ] Workspace goal polish next slice（richer goal editing UX and cloud/paid journey resume after confirmation）。
+- [x] Decision Brief workflow first slice（selected tabs/current group → recommendation, decision criteria, tradeoff table, assumptions, missing info, source notes, Save memo/Create todo/Research missing info；saved-source and search-result inputs handled in follow-up slices；files pending）。
+- [x] Decision Brief saved-source input first slice（saved local memos/collections → decision brief via configured OpenAI-compatible provider；Save memo / Research missing info；no live page read, web search, full URLs, tab-based todo, new storage, or cloud memory）。
+- [x] Decision Brief query decomposition first slice（explicit Research missing info click decomposes decision gaps into up to 3 focused Search Tool queries；dedupes sources；sends query text only；no selected-tab page text/full URL payload）。
+- [x] Decision Brief search-result input first slice（current session Agent Search results → decision brief via configured OpenAI-compatible provider；Search card Brief action + natural command；sends only titles/hostnames/sanitized paths/snippets/source labels；no result-page open, live page read, full URL, saved-source body, new storage, or cloud memory）。
+- [x] Decision Brief visible-screenshot input first slice（explicit current visible screenshot → decision brief via vision-capable OpenAI-compatible provider；Save memo / Research missing info；sends only compressed screenshot + title/hostname metadata；no hidden DOM/off-screen text/full URL/file/PDF/search/saved-source bodies/new storage/cloud memory）。
+- [x] Webpage understanding mode first slice（current page explain/risk/next-step answer from user-triggered visible text；restricted pages fall back to title/metadata with clear limit；file/PDF/screenshot pending）。
+- [x] Review workflow pack first slice（current-page `review_page` for PR/settings/doc/design/launch QA style pages；draft findings and local todos only；no auto-submit or page mutation）。
+- [x] Clip-to-context unified composer chips first slice（composer shows active scope + extra typed context chips for selected text, page region, pasted link, and Agent search；file/PDF/vision screenshot chips pending confirmation）。
+- [x] Translation and reading assistant first slice（selected text/current page translate, simplify, glossary, bilingual summary, rewrite；copy-only output）。
+- [x] Agent run transcript first slice（local redacted run log: request, context used, tool calls, skipped pages, applied actions, undo/restore state）。
+- [x] Cost/model router first slice（Sidebar composer picker shows a local-only Routing hint for metadata, current page, selected text, page region, selected tabs/group, and Agent Search Tool paths；no provider switching, marketplace, new permission, or new upload）。
+- [x] Prompt / Skill Templates MVP（curated cleanup/page/research/writing/review/visual-review/translation templates；declare context/tools/output/blocked actions；no third-party dynamic skills）。
+- [x] Right-edge quick access rail first slice（normal webpages only；max 4 visible icons；Chat/Page/Region/Todo；opens Sidebar with pending prompt；no silent read/upload/action）。
+- [x] Quick rail settings/polish first slice（local hide/disable rail；four visible controls max；More overflow with Todo/Translate；tooltip/a11y collapsed state；ordinary http/https only；no layout shift visual QA）。
 
 ## P2 Could-have
 
@@ -109,6 +182,19 @@
 - [ ] deep research mode。
 - [ ] cross-browser support。
 - [ ] mobile companion。
+- [ ] Search engine result overlay（optional only；avoid default page clutter）。
+- [ ] Host-specific email/calendar workflows（Gmail/Outlook AI reply, calendar event draft；requires separate permission/account confirmation）。
+- [ ] Model response comparison（BYOK advanced or hosted Pro; not default）。
+- [ ] Built-in workflow gallery（reviewed workflows only; no dynamic third-party skill execution）。
+- [ ] Hosted cloud plan（login, hosted AI/search, usage ledger, billing, opt-in sync/memory；blocked by confirmation gates）。
+- [ ] Full browser history journeys（requires history permission and explicit privacy confirmation）。
+- [ ] Bookmark integration（requires bookmarks permission and separate scope confirmation）。
+- [ ] Split/compare layout（window/layout management; decide permission and UX boundary first）。
+- [ ] Reader/Simplify mode（optional page overlay, not default）。
+- [ ] Full Browser Operator（blocked until security model and user confirmation）。
+- [ ] Page monitor / watch mode（user-marked pages only；background reads and change detection blocked by privacy confirmation）。
+- [ ] Connected-app workflows（Gmail/Calendar/Slack/Notion/CRM；blocked by account/privacy scope confirmation）。
+- [ ] Auto-write / auto-submit workflows（email replies, comments, settings forms；copy-only drafts first, submission blocked until separately confirmed）。
 
 ## Research Tasks
 
@@ -116,5 +202,5 @@
 - [x] 测试 toolbar popup `RUN_TOOLBAR_ACTION` + sidePanel.open 用户手势限制（smoke guard：popup 只发 confirmed actions，background allowlist/openSidePanelForWindow 处理）。
 - [x] 测试 synthetic 96 tabs 下真实 Chrome `tabs.group` performance first slice（temporary profile；real-profile manual QA 仍未完成）。
 - [x] 调研 Chrome built-in AI extensions 支持情况（official Chrome docs checked 2026-06-12；future `chrome_builtin_ai` adapter candidate only；not a P0 BYOK replacement and not a Base URL preset）。
-- [ ] 调研竞品定价。
+- [x] 调研竞品定价（first pass completed 2026-06-15；see `06_REFERENCES/04_COMPETITOR_PRICING_RESEARCH.md`；exact public prices still need manual recheck before D-047）。
 - [ ] 访谈 10 个重度 tabs 用户。

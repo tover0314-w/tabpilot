@@ -1,7 +1,7 @@
 # Agent Search And Browser Work Agent Implementation Plan
 
-Status: DRAFT / READY FOR USER REVIEW  
-Date: 2026-06-13  
+Status: IMPLEMENTATION PLAN / FIRST LOCAL SLICES IMPLEMENTED
+Date: 2026-06-15
 Owner: Product + Engineering + AI Prompt  
 Related:
 
@@ -81,6 +81,18 @@ Acceptance criteria:
 - The request body contains user query, max results, depth, and no page text/tab list/full browser URL.
 - Dashboard still has no search bar.
 
+Implementation status:
+
+```text
+FIRST SLICE IMPLEMENTED:
+- `tabmosaic.searchSettings` exists for local/private-beta Search Tool configuration.
+- Dashboard Settings has a hidden/private-beta Search Tool section; default Dashboard still has no search bar.
+- Unconfigured search returns an assistant setup message and sends nothing.
+- Configured explicit search sends only the user query and bounded search options to the provider.
+- Search diagnostics store provider/status/result-count level data only, not query text, API key, tab titles, page text, or result bodies.
+- Provider/key UX and public copy remain D-039 confirmation-gated.
+```
+
 ### Slice 2: Search Results As Agent Work
 
 Purpose:
@@ -103,6 +115,18 @@ Acceptance criteria:
 - User can ask "web search best Chrome tab managers" and get a clean answer.
 - User can save a result list locally.
 - Dashboard Collections shows the saved result set without becoming a search UI.
+
+Implementation status:
+
+```text
+FIRST SLICE IMPLEMENTED:
+- Search results render inside the Sidebar assistant answer as compact source rows.
+- Source rows expose user-clicked Open, Save, Todo, and Brief actions.
+- Save stores a sanitized local Collection source from the selected result: title, hostname, sanitized path/source metadata, snippet, provider/source label, and timestamp.
+- Todo creates a local Work Queue item from the selected search result metadata/snippet.
+- Brief routes current-session search results through `DRAFT_FROM_SEARCH_RESULTS` with `workflow: decision_brief`.
+- No raw result page body, full URL query/hash, browser history, tab/page text, screenshots, cloud storage, or background crawl is used.
+```
 
 ### Slice 3: Todo Agent MVP
 
@@ -127,6 +151,16 @@ Acceptance criteria:
 - User can return to the related tabs from the todo.
 - No page text or full URLs are stored unless separately confirmed later.
 
+Implementation status:
+
+```text
+FIRST LOCAL SLICES IMPLEMENTED:
+- Sidebar can create local todos from current tab, selected tabs, current group, pasted links, search results, AI triage, workspace goal, current-page checklist flow, and selected page-region Smart Fill outputs.
+- Dashboard hidden/private-beta Work Queue supports Done / Reopen / Archive and lightweight checklist editing.
+- Todo storage stays local under `tabmosaic.agentTasks` with sanitized title/checklist text and minimized linked-tab/source metadata.
+- Page-text-derived checklist todos require an explicit current-page/Page Agent request; search-result and tab-context todos do not read page text.
+```
+
 ### Slice 4: Link Understanding
 
 Purpose:
@@ -146,6 +180,17 @@ Acceptance criteria:
 
 - User can paste a link and ask "what is this / save this / compare with current page".
 - No arbitrary page fetch happens silently.
+
+Implementation status:
+
+```text
+FIRST SLICE IMPLEMENTED:
+- Sidebar detects pasted http(s) links without opening or fetching them.
+- The first assistant reply explains that the link was not opened or fetched.
+- User can save the link locally, turn it into a local todo, or explicitly fetch it.
+- Explicit fetch requests temporary origin permission, fetches with credentials omitted, sends readable text through the Page Agent only when a provider is configured, and excludes full URL query/hash/cookies/forms/hidden DOM/cloud storage.
+- Real-profile optional permission QA remains pending.
+```
 
 ### Slice 5: Screenshot / Attachment Inputs
 
@@ -167,6 +212,16 @@ Acceptance criteria:
 - User can add a small explicit context object.
 - Agent explains what data will be sent before sending it.
 
+Implementation status:
+
+```text
+PARTIAL FIRST SLICE IMPLEMENTED:
+- Visible screenshot context is implemented as an explicit Sidebar action gated by a vision-capable configured provider.
+- Selected page-region cropped image context is implemented for explicit region vision flow.
+- Screenshot bytes are session-only and are not stored by TabMosaic.
+- File/PDF/uploaded-image context remains pending and confirmation-gated.
+```
+
 ## 5. Agent Architecture
 
 Use a single bounded Agent with a local tool registry.
@@ -187,15 +242,16 @@ Do not build multi-agent planner/executor/researcher in MVP.
 
 | Tool | Status | Next action |
 |---|---|---|
-| `search_web_provider` | Executor implemented | Add public config UX and real-key QA |
+| `search_web_provider` | First slice implemented | D-039 public UX confirmation and real-key QA |
 | `search_open_tabs` | Local metadata search implemented | Keep as Agent answer path |
-| `search_saved_work` | Contract exists | Wire to Work Queue / Collections after saved result model |
-| `save_search_results` | Not implemented | Slice 2 |
-| `create_todo_from_search_results` | Not implemented | Slice 2 / 3 |
-| `create_todo_from_tabs` | First local action exists | Expand status/actions |
+| `search_saved_work` | Local saved-work search implemented through Browser Work Search | Polish result ranking with real usage |
+| `save_search_results` | First slice implemented | Real-key QA and Dashboard saved-source review |
+| `create_todo_from_search_results` | First slice implemented | Real-key QA and Work Queue UX review |
+| `create_todo_from_tabs` | First local action implemented | Real-profile QA and naming polish |
 | `read_current_page` | Implemented | Continue prompt quality polish |
 | `read_selected_tabs` | Implemented first slice | Real-profile QA pending |
-| `select_page_region` | Implemented first slice | Vision upload pending confirmation |
+| `select_page_region` | Implemented first slice | Real-profile QA on complex SaaS pages |
+| `visible_screenshot` | Partial first slice implemented | Vision-provider QA and file/PDF boundary review |
 
 ## 7. QA Plan
 
@@ -223,12 +279,12 @@ Manual / real Chrome:
 
 ## 8. Suggested Sequence
 
-1. Confirm D-039 provider/key UX.
-2. Implement Slice 1.
-3. Run preflight + real Tavily smoke with a user-provided key.
-4. Implement Slice 2.
-5. Implement Slice 3.
-6. Revisit link/screenshot/attachment scope after UI and privacy review.
+1. Confirm D-039 provider/key UX before public onboarding copy.
+2. Run real Tavily/Search Tool smoke with a user-provided key.
+3. Run real-profile QA for optional origin permission prompts on pasted-link fetch.
+4. Review Search Result Save/Todo UI in Dashboard Work Queue / Collections.
+5. Confirm D-043 before file/PDF/uploaded-image context.
+6. Revisit hosted/cloud/search credits only after Free/Pro and analytics gates are confirmed.
 
 ## 9. Out Of Scope For This Implementation Plan
 

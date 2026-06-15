@@ -15,6 +15,7 @@ const syntaxTargets = [
   "extension/popup.js",
   "extension/i18n.js",
   "extension/diagnostics.js",
+  "extension/page_quick_rail.js",
   "extension/sidepanel.js",
   "extension/dashboard.js",
   "tools/extension_smoke_test.js",
@@ -27,11 +28,19 @@ const syntaxTargets = [
   "tools/capture_real_ai_sidepanel_result.js",
   "tools/capture_real_page_chat_screenshot.js",
   "tools/build_store_screenshots.js",
+  "tools/prepare_store_asset_review_packet.js",
+  "tools/prepare_store_submission_review_packet.js",
   "tools/deepseek_real_tabs_classification.js",
   "tools/deepseek_smoke_test.js",
   "tools/write_private_beta_ai_config.js",
   "tools/secret_scan.js",
   "tools/public_repo_audit.js",
+  "tools/launch_readiness_report.js",
+  "tools/validate_public_launch_decision_reply.js",
+  "tools/prepare_public_launch_handoff_packet.js",
+  "tools/prepare_release_candidate_packet.js",
+  "tools/real_profile_qa_redaction_check.js",
+  "tools/prepare_real_profile_qa_packet.js",
   "tools/provider_registry_check.js",
   "tools/issue_form_smoke_test.js",
   "tools/verify_release_package.js",
@@ -51,7 +60,15 @@ function main() {
   runStep("Extension smoke", process.execPath, ["tools/extension_smoke_test.js"]);
   runStep("Provider registry check", process.execPath, ["tools/provider_registry_check.js"]);
   runStep("Issue form smoke", process.execPath, ["tools/issue_form_smoke_test.js"]);
+  runStep("Real-profile QA redaction checker self-test", process.execPath, ["tools/real_profile_qa_redaction_check.js", "--self-test"]);
+  runStep("Real-profile QA packet self-test", process.execPath, ["tools/prepare_real_profile_qa_packet.js", "--self-test"]);
+  runStep("Store asset review packet self-test", process.execPath, ["tools/prepare_store_asset_review_packet.js", "--self-test"]);
+  runStep("Store submission review packet self-test", process.execPath, ["tools/prepare_store_submission_review_packet.js", "--self-test"]);
+  runStep("Public launch handoff packet self-test", process.execPath, ["tools/prepare_public_launch_handoff_packet.js", "--self-test"]);
+  runStep("Release candidate packet self-test", process.execPath, ["tools/prepare_release_candidate_packet.js", "--self-test"]);
   runStep("Public repo audit", process.execPath, ["tools/public_repo_audit.js"]);
+  runStep("Launch readiness report", process.execPath, ["tools/launch_readiness_report.js"]);
+  runStep("Public launch decision reply validator self-test", process.execPath, ["tools/validate_public_launch_decision_reply.js", "--self-test"]);
 
   if (SHOULD_RUN_DEEPSEEK || SHOULD_RUN_DEEPSEEK_FIXTURE) {
     const args = ["tools/deepseek_smoke_test.js"];

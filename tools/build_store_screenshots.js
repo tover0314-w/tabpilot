@@ -68,6 +68,7 @@ main().catch((error) => {
 async function main() {
   const sharp = resolveSharp();
   fs.mkdirSync(OUT_DIR, { recursive: true });
+  removeStaleScreenshots();
 
   for (const item of SCREENSHOTS) {
     await buildScreenshot(sharp, item);
@@ -125,6 +126,15 @@ async function buildScreenshot(sharp, item) {
 
   if (stats.size < 50000) {
     throw new Error(`${item.name} looks too small (${stats.size} bytes)`);
+  }
+}
+
+function removeStaleScreenshots() {
+  const expectedNames = new Set(SCREENSHOTS.map((item) => item.name));
+
+  for (const entry of fs.readdirSync(OUT_DIR)) {
+    if (!entry.endsWith(".png") || expectedNames.has(entry)) continue;
+    fs.rmSync(path.join(OUT_DIR, entry), { force: true });
   }
 }
 

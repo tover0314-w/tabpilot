@@ -7,7 +7,7 @@
 | ID | 决策 | 当前建议 | 状态 |
 |---|---|---|---|
 | D-001 | 产品名 | TabMosaic AI（TabPilot 已有同类 Chrome 扩展和 tabpilot.ai 冲突） | CONFIRMED BY USER DELEGATION |
-| D-001-A | Public brand/domain finalization | 2026-06-12 初扫发现 Chrome Web Store 已有 `Tab Mosaic` 近似扩展；TabMosaic AI 可继续作为 working name，但公开品牌、域名购买和商店 listing 名称需重新确认 | CONFIRM |
+| D-001-A | Public brand/domain finalization | 2026-06-15 复扫确认 Chrome Web Store 已有 `Tab Mosaic` 近似扩展，且 TabPilot / TabWeave / TabAtlas / TabCraft / TabMind / TabOrbit 等 `Tab + noun` 命名空间拥挤；TabMosaic AI 可继续作为 working name，但公开品牌、域名购买和商店 listing 名称需重新确认 | CONFIRM |
 | D-002 | P0 主入口 | 点击插件 icon 即自动整理 | CONFIRMED BY DISCUSSION |
 | D-003 | 顶部结果展示 | 使用 Chrome 原生 tab groups | CONFIRMED BY DISCUSSION |
 | D-004 | Sidebar 角色 | 展示结果、引导对话、Undo、总结 | CONFIRMED BY DISCUSSION |
@@ -58,11 +58,30 @@
 | D-047 | Free / Plus / Pro pricing and credits | Free/BYOK 提供可用开源核心；Plus/Pro 售卖免配置 hosted AI、搜索、更多多 tab 研究、memory/sync 和更高额度 | CONFIRM |
 | D-048 | Cloud memory / sync defaults | 默认 local-first；cloud memory、workspace sync、embedding/search index 都需要用户显式开启 | CONFIRM |
 | D-049 | Account provider and payment stack | 登录、订阅、支付、用量账本的具体技术栈待架构评审后确认 | CONFIRM |
-| D-050 | Command palette / selected-text toolbar scope | P1 做轻量上下文入口；不要做页面上到处漂浮的复杂按钮 | CONFIRM |
+| D-050 | Command palette / selected-text toolbar scope | P1 做轻量上下文入口；页面右侧允许极简 icon rail，但不要做大面积漂浮工具箱 | CONFIRMED BY USER |
 | D-051 | Host-specific integrations | PDF/YouTube 可优先评估；Gmail/social posting/form automation 暂不进入 MVP | CONFIRM |
-| D-052 | Skill/workflow ecosystem policy | MVP 先做经过 review 的内置 workflows；不动态执行第三方 skill 代码 | CONFIRM |
+| D-052 | Skill/workflow ecosystem policy | MVP 先做经过 review 的内置 Prompt / Skill Templates；不动态执行第三方 skill 代码 | CONFIRMED BY USER |
 | D-053 | Hosted cloud source boundary | 本地 extension 全量开源已确认；云端 hosted backend 是否开源、分仓或闭源托管需确认 | CONFIRM |
 | D-054 | Usage analytics for billing | 为计费/额度只记录 action/credit 级别用量，不记录 raw tab title、full URL、page text 或截图内容 | CONFIRM |
+| D-055 | PDF/image/screenshot provider boundary | PDF 尽量本地抽取文本；图片/截图默认只走用户触发的区域/文件上下文；vision model 上传需明确 provider 能力和用户动作 | CONFIRM |
+| D-056 | Context Picker priority | 建议下一步优先做 Sidebar `@` context picker，把 Current Page / Selected Text / Page Region / Selected Tabs / Search / Link / File / Screenshot 统一成一个极简入口 | RECOMMENDED |
+| D-057 | Auto-add new tabs to groups | SAFE FIRST SLICE IMPLEMENTED: user-triggered Sidebar Suggest mode suggests a group for the current tab and requires Apply; CONFIRM still needed for background listeners, default Suggest/Off behavior, or Auto mode for high-confidence local rules | CONFIRM |
+| D-058 | Tabs as tasks | 建议把 tab 增加 Done / Keep / Later 本地工作状态，连接 Work Queue、Collections、Restore 和保护规则 | RECOMMENDED |
+| D-059 | Universal Browser Work Search scope | 建议先只搜索 extension-created local objects：open tabs、groups、todos、collections、memos、latest run；不请求 history/bookmarks | RECOMMENDED |
+| D-060 | Browser history / journeys | 建议 MVP 不请求 history permission；Journey Resume 只基于本扩展创建的 snapshots/todos/collections | CONFIRM |
+| D-061 | Bookmarks integration | 建议 MVP 不请求 bookmarks permission；bookmark manager 后续单独确认 | CONFIRM |
+| D-062 | Memory relief actions | SAFE FIRST SLICE IMPLEMENTED: Apply-gated discard inactive tabs, collapse inactive groups, and local Later saves; CONFIRM still needed for save-for-later then close non-duplicate tabs, auto-discard, or background relief; no exact MB promises | CONFIRM |
+| D-063 | Protected tabs | 建议支持用户保护 tab/group/domain，作为所有 close/move/mark-done/auto-add 的安全层 | RECOMMENDED |
+| D-064 | Safe Tab Commands | 建议允许 validated + Apply-gated tab commands；不做 unrestricted Browser Operator | RECOMMENDED |
+| D-065 | Local/on-device tab intelligence | 建议优先利用本地 derived metadata / local model 做分类辅助，减少云端数据发送 | RECOMMENDED |
+| D-066 | AI triage and goal detection | 建议增加 metadata-first 的 `Act now / Later / Reference / Can close / Needs review` 以及一个可编辑 workspace goal，把整理结果转成待处理工作 | RECOMMENDED |
+| D-067 | Decision Brief workflow | 建议增加 selected tabs / saved sources 决策简报：推荐、取舍表、假设、缺口、引用来源、save/todo actions | RECOMMENDED |
+| D-068 | Webpage understanding and review workflows | 建议增加当前页面 explain/review/checklist workflows，适配 PR、docs、SaaS settings、launch QA；不自动提交、不改页面设置 | RECOMMENDED |
+| D-069 | Clip-to-context and translation | 建议把 selected text、page region、link、file、screenshot、selected tabs 统一成 composer context chips，并支持 copy-only 翻译/解释/改写 | RECOMMENDED |
+| D-070 | Agent run transcript | 建议保留本地脱敏 agent run transcript，展示用了哪些上下文、调用了哪些工具、改了什么、能否撤销/恢复 | RECOMMENDED |
+| D-071 | Page monitor / watch mode | 建议 MVP 不做；后台读取和网页变化检测需要单独隐私确认 | CONFIRM |
+| D-072 | AI Browser skill card placement | 内置 Prompt / Skill Templates 放在 composer/context picker 或 assistant follow-up suggestion，不在 Dashboard 堆大功能墙 | CONFIRMED BY USER |
+| D-073 | Right-edge quick access rail | 允许学习 Monica 的右侧快捷入口：默认最多 4 个可见 icon，Chat/Read/Region/Translate/Save，点击后进入 Sidebar/tool flow，不静默读取/上传/操作 | CONFIRMED BY USER |
 
 ## 用户体验确认项
 

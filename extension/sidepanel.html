@@ -77,11 +77,26 @@
       </section>
 
       <section class="agent-composer-section">
+        <div
+          id="composerPicker"
+          class="composer-picker"
+          aria-label="Context and skill shortcuts"
+          data-i18n-aria-label="composerPickerLabel"
+          hidden
+        ></div>
         <form id="chatForm" class="chat-form agent-composer">
           <div id="agentContextBar" class="agent-context-bar" role="status" aria-live="polite">
             <span class="agent-context-dot" aria-hidden="true"></span>
-            <span id="agentContextLabel" class="agent-context-label" data-i18n="contextCurrentTab">Current tab</span>
-            <strong id="agentContextName" class="agent-context-name" data-i18n="contextNoTab">No active tab</strong>
+            <span class="agent-context-primary">
+              <span id="agentContextLabel" class="agent-context-label" data-i18n="contextCurrentTab">Current tab</span>
+              <strong id="agentContextName" class="agent-context-name" data-i18n="contextNoTab">No active tab</strong>
+            </span>
+            <span
+              id="composerContextChips"
+              class="composer-context-chips"
+              aria-label="Attached context"
+              data-i18n-aria-label="composerContextChips"
+            ></span>
           </div>
           <textarea
             id="chatInput"
@@ -94,10 +109,12 @@
             id="pageRegionButton"
             class="secondary-button composer-tool-button"
             type="button"
-            title="Add page region context"
-            aria-label="Add page region context"
-            data-i18n-title="toolCardSelectPageRegion"
-            data-i18n-aria-label="toolCardSelectPageRegion"
+            title="Add context or skill"
+            aria-label="Add context or skill"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            data-i18n-title="composerPickerButton"
+            data-i18n-aria-label="composerPickerButton"
           >
             <span aria-hidden="true">+</span>
           </button>

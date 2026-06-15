@@ -388,11 +388,31 @@ Use:
 05_PROJECT/12_REAL_PROFILE_QA_RESULT_TEMPLATE.md
 ```
 
+To prepare a local-only real-profile QA packet under ignored `artifacts/real-profile-qa/`:
+
+```bash
+node tools/prepare_real_profile_qa_packet.js
+node tools/prepare_real_profile_qa_packet.js --self-test
+```
+
+Expected:
+
+```text
+- A local packet directory is created under artifacts/real-profile-qa/.
+- The packet contains a blank result draft, local HTML checklist, README, and copyable commands.
+- The script does not open Chrome.
+- The script does not read tabs, browser history, cookies, page text, screenshots, Chrome profile files, .env.local, or provider keys.
+- `--self-test` creates a temporary packet, verifies the blank draft through the redaction checker, and removes the packet.
+```
+
+Use the generated `real-profile-qa-checklist.html` as the human checklist while testing. It is a local review aid only; it does not save, upload, approve, or publish the completed QA result.
+
 Rules:
 
 ```text
 - Do not paste full URLs, real tab titles, page text, API keys, bearer tokens, cookies, private screenshots, private emails, private rule patterns, or confidential customer/company names.
 - Prefer keeping completed real-profile QA notes outside git.
 - If a completed result must be shared, manually redact it first.
+- Before sharing a redacted copy, run `node tools/real_profile_qa_redaction_check.js path/to/redacted-real-profile-qa.md`.
 - Keep READY_PUBLIC_CHROME_WEB_STORE_LAUNCH=no until the public-launch blockers are resolved.
 ```

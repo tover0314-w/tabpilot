@@ -1,7 +1,7 @@
 # Brand / Domain Preliminary Scan
 
 Status: PRELIMINARY SCAN - CONFIRM BEFORE PUBLIC BRAND/DOMAIN
-Last updated: 2026-06-12
+Last updated: 2026-06-15
 
 This scan supports the open-source launch decision. It does not finalize a public name, domain, trademark position, Chrome Web Store listing name, or legal clearance.
 
@@ -15,6 +15,7 @@ Search intent:
 - "TabMosaic AI"
 - site:chromewebstore.google.com "TabMosaic"
 - adjacent AI tab manager names: TabWeave, TabAtlas, TabForge
+- 2026-06-15 live web scan for TabPilot, TabWeave, TabAtlas, TabCraft, TabMind, TabOrbit, TabForge, TabWorkbench, BrowserLayer AI, WorkContext AI, BrowseMind, ContextFlow
 
 Domain / DNS probes:
 - tabmosaic.ai
@@ -73,19 +74,55 @@ Exact phrase cleanliness is not enough because "Tab Mosaic" already exists in th
 Several `Tab + noun` names are already crowded in the AI/tab manager space:
 
 ```text
-TabWeave: GitHub project named TabWeave, described as an AI-powered Chrome tab organizer.
-Source: https://github.com/AnkanAdhikary/TabWeave_AI-Powered-Chrome-Extension
+TabPilot: Chrome Web Store listing and tabpilot.ai site exist for an AI-powered tab-management product.
+Source: https://chromewebstore.google.com/detail/tabpilot-formerly-tab-gro/ghbdjeckopemkoomopmpgjifafpcjhga
 
-TabAtlas: Chrome Web Store extension with smart grouping, semantic grouping, side panel, and native groups.
-Source: https://chromewebstore.google.com/detail/tabatlas/hnpdgbfcceoplkicnpgeaiokedopkknj
+TabWeave: Chrome Web Store listing exists, plus GitHub/project references for AI tab organization.
+Source: https://chromewebstore.google.com/detail/tabweave/pmfoefbiapldlpljfpjienjahdfmefej
 
-TabForge: search results show existing smart tab manager references; not treated as cleared.
+TabAtlas: Chrome Web Store listings exist for tab search, grouping, archiving, and semantic grouping.
+Source: https://chromewebstore.google.com/detail/tabatlas/lmkkdaefcklkpghjdhhmnmjklhkflhdc
+
+TabCraft: public website positions it as an advanced browser tab-management Chrome extension.
+Source: https://tabcraft.me/en/
+
+TabMind / tabMind: Chrome Web Store listing exists for AI smart tree-style tabs and native tab-group support.
+Source: https://chromewebstore.google.com/detail/tabmind-ai-smart-tree-sty/gflnpbocipnophkejkonleggabjhaghn
+
+TabOrbit: Chrome Web Store listing exists for tab sync.
+Source: https://chromewebstore.google.com/detail/taborbit-make-your-browse/oigdipdneppbghoepbmhpclkoehliccp
+
+TabForge: search results show existing smart tab manager references and Product Hunt references; not treated as cleared.
 ```
 
 Assessment:
 
 ```text
-Generic "Tab + metaphor" naming is crowded. A more distinctive coined name may be better for SEO, recall, GitHub search, and Chrome Web Store differentiation.
+Generic "Tab + metaphor" naming is heavily crowded. Several names previously considered reasonable are now confirmed as occupied or risky. A more distinctive coined name, or a name anchored around "browser work / AI browser layer" instead of "tab manager", is better for SEO, recall, GitHub search, and Chrome Web Store differentiation.
+```
+
+### AI browser layer wording scan
+
+The phrase `AI browser layer` / `browser layer` is useful positioning language, but it is not unique enough to be a defensible public product name by itself.
+
+Observed adjacent usage:
+
+```text
+StableBrowse uses "browser layer for AI agents" language.
+Source: https://www.ycombinator.com/companies/stablebrowse
+
+Browser Use uses "The way AI uses the web" / browser infrastructure language.
+Source: https://browser-use.com/
+
+Google Chrome AI pages now describe AI working with open tabs and browser context.
+Source: https://www.google.com/chrome/ai-innovations/
+```
+
+Assessment:
+
+```text
+Keep "open-source AI browser layer for Chrome" as a subtitle/positioning phrase.
+Do not treat BrowserLayer AI as cleared without deeper domain, trademark, GitHub, Chrome Web Store, and social-handle review.
 ```
 
 ### Domain probe
@@ -103,7 +140,7 @@ Do not rely on this as availability. Final domain availability must be checked i
 | Area | Risk | Notes |
 |---|---|---|
 | Chrome Web Store confusion | High | `Tab Mosaic` already exists as an extension listing. |
-| SEO differentiation | Medium-high | `tab` and `mosaic` are generic terms and may compete with existing extension, art, layout, and window-management results. |
+| SEO differentiation | High | `tab` naming is crowded across TabPilot, TabWeave, TabAtlas, TabCraft, TabMind, TabOrbit, TabForge, and Tabit-style names. |
 | GitHub discoverability | Medium | Open-source helps, but generic terms make search recall weaker. |
 | Trademark/legal | Unknown | Requires separate trademark and legal review before final public launch. |
 | Domain purchase | Unknown | Requires registrar-time check. |
@@ -139,18 +176,34 @@ Avoid treating the following as clear candidates without a new real-time scan:
 
 ```text
 TabMosaic
+TabPilot
 TabWeave
 TabAtlas
+TabCraft
+TabMind
+TabOrbit
 TabForge
+TabWorkbench
+ContextFlow
+BrowseMind
 ```
 
 Better next exploration:
 
 ```text
 - more distinctive coined names
-- names that can own "AI browser layer" rather than only "tab manager"
+- names that can own a product brand while using "AI browser layer for Chrome" as a subtitle
 - names with easier spoken recall
-- names with available GitHub org/repo, domain, Chrome Web Store listing, and social handles
+- names with available GitHub org/repo, domain, Chrome Web Store listing, social handles, and trademark path
+- names that avoid `Tab + common noun` unless the domain/store/search evidence is unusually clean
+```
+
+Potential next search direction:
+
+```text
+1. Coined short names with no direct "tab" prefix.
+2. Work/browser-context names that still rank through subtitle copy: "open-source AI browser layer for Chrome".
+3. Names that can support a product family later: extension, hosted AI, sync/memory, team workspace.
 ```
 
 ## 6. Decision Gate
