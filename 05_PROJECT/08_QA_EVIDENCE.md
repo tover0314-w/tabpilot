@@ -7785,3 +7785,38 @@ Evidence notes:
 - The generated RC packet is ignored local evidence under `artifacts/` and was not committed.
 - The packet still does not approve launch, submit to Chrome Web Store, post marketing copy, run real-profile QA, or read private browser data.
 - Final launch remains blocked until GitHub Actions can run, D-L03 through D-L14 are resolved, and one redacted real-profile QA pass is completed.
+
+## 2026-06-15 Launch Unblock Packet
+
+Source state verified: added `tools/prepare_launch_unblock_packet.js`, a local-only unblock packet generator that turns the current final-launch blockers into one README / HTML action board / Markdown checklist / decision reply template / JSON summary. It is designed for the account owner and user to clear the remaining launch gates without treating the packet itself as approval.
+
+Commands:
+
+```bash
+node --check tools/prepare_launch_unblock_packet.js
+node tools/prepare_launch_unblock_packet.js --self-test
+node tools/prepare_launch_unblock_packet.js --include-remote-ci --json
+rg -n "FINAL_LAUNCH_READY|READY_REMOTE_CI|GITHUB_ACTIONS_BILLING_LOCK|gh run rerun|D-L03|D-L14|Launch Unblock|BLOCKED_NEEDS_ACTION" artifacts/launch-unblock/2026-06-15T12-37-36-696Z/README.md artifacts/launch-unblock/2026-06-15T12-37-36-696Z/launch-unblock.html artifacts/launch-unblock/2026-06-15T12-37-36-696Z/action-checklist.md artifacts/launch-unblock/2026-06-15T12-37-36-696Z/unblock-summary.json artifacts/launch-unblock/2026-06-15T12-37-36-696Z/public-launch-decision-reply-template.txt
+```
+
+Result:
+
+```text
+PASS launch unblock packet self-test
+status=BLOCKED_NEEDS_ACTION
+artifacts/launch-unblock/2026-06-15T12-37-36-696Z/README.md
+artifacts/launch-unblock/2026-06-15T12-37-36-696Z/launch-unblock.html
+artifacts/launch-unblock/2026-06-15T12-37-36-696Z/action-checklist.md
+artifacts/launch-unblock/2026-06-15T12-37-36-696Z/public-launch-decision-reply-template.txt
+artifacts/launch-unblock/2026-06-15T12-37-36-696Z/unblock-summary.json
+FINAL_LAUNCH_READY=no
+READY_REMOTE_CI=no
+REMOTE_CI: Resolve GitHub account billing / Actions lock, then run: gh run rerun 27546486103
+D-L03 through D-L14 are present in the action checklist / decision template.
+```
+
+Evidence notes:
+
+- The generated unblock packet is ignored local evidence under `artifacts/` and was not committed.
+- The packet does not approve launch decisions, submit to Chrome Web Store, publish marketing copy, run real-profile QA, or read private browser data.
+- It gives the user/account owner one local board for GitHub billing, public-launch decisions, real-profile QA, and post-unblock verification commands.

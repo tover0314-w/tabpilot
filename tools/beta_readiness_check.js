@@ -34,6 +34,7 @@ const requiredFiles = [
   "tools/launch_readiness_report.js",
   "tools/check_remote_ci_status.js",
   "tools/final_launch_gate_check.js",
+  "tools/prepare_launch_unblock_packet.js",
   "tools/validate_public_launch_decision_reply.js",
   "tools/prepare_public_launch_handoff_packet.js",
   "tools/prepare_release_candidate_packet.js",
@@ -91,6 +92,7 @@ function main() {
   const launchReadinessReport = readText("tools/launch_readiness_report.js", failures);
   const checkRemoteCiStatus = readText("tools/check_remote_ci_status.js", failures);
   const finalLaunchGateCheck = readText("tools/final_launch_gate_check.js", failures);
+  const prepareLaunchUnblockPacket = readText("tools/prepare_launch_unblock_packet.js", failures);
   const validatePublicLaunchDecisionReply = readText("tools/validate_public_launch_decision_reply.js", failures);
   const preparePublicLaunchHandoffPacket = readText("tools/prepare_public_launch_handoff_packet.js", failures);
   const prepareReleaseCandidatePacket = readText("tools/prepare_release_candidate_packet.js", failures);
@@ -334,6 +336,7 @@ function main() {
       "Read only after the user asks a page/context question",
       "node tools/public_repo_audit.js",
       "node tools/final_launch_gate_check.js --include-remote-ci --allow-blocked",
+      "node tools/prepare_launch_unblock_packet.js --include-remote-ci",
       "node tools/prepare_release_candidate_packet.js --include-remote-ci",
       "node tools/provider_registry_check.js",
       "node tools/prepare_public_launch_handoff_packet.js --self-test",
@@ -382,6 +385,7 @@ function main() {
       "node --check tools/launch_readiness_report.js",
       "node --check tools/check_remote_ci_status.js",
       "node --check tools/final_launch_gate_check.js",
+      "node --check tools/prepare_launch_unblock_packet.js",
       "node --check tools/prepare_public_launch_handoff_packet.js",
       "node --check tools/real_profile_qa_redaction_check.js",
       "node --check tools/prepare_real_profile_qa_packet.js",
@@ -389,6 +393,7 @@ function main() {
       "node tools/launch_readiness_report.js --json",
       "node tools/check_remote_ci_status.js --self-test",
       "node tools/final_launch_gate_check.js --self-test",
+      "node tools/prepare_launch_unblock_packet.js --self-test",
       "node tools/real_profile_qa_redaction_check.js --self-test",
       "node tools/prepare_real_profile_qa_packet.js --self-test",
       "node tools/prepare_store_asset_review_packet.js --self-test",
@@ -739,6 +744,24 @@ function main() {
       "REMOTE_CI",
       "GITHUB_ACTIONS_BILLING_LOCK",
       "PASS final launch gate check self-test"
+    ],
+    failures
+  );
+  requireIncludes(
+    "tools/prepare_launch_unblock_packet.js",
+    prepareLaunchUnblockPacket,
+    [
+      "Launch Unblock Packet",
+      "artifacts/launch-unblock",
+      "FINAL_LAUNCH_READY=",
+      "READY_REMOTE_CI=",
+      "public-launch-decision-reply-template.txt",
+      "action-checklist.md",
+      "unblock-summary.json",
+      "--include-remote-ci",
+      "gh run rerun",
+      "does not approve any launch decision, submit to Chrome Web Store, publish marketing copy, run real-profile QA, or read private browser data",
+      "PASS launch unblock packet self-test"
     ],
     failures
   );
