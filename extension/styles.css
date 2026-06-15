@@ -7020,3 +7020,53 @@ body,
 .dashboard-body .dashboard-details-section summary {
   min-height: 36px;
 }
+
+/* Final guard for real Chrome side panels resized below a usable width. */
+body.sidepanel-body[data-narrow-sidepanel] {
+  min-width: 0 !important;
+  min-height: 100vh;
+  overflow: hidden !important;
+  background:
+    linear-gradient(160deg, rgba(246, 248, 246, 0.98), rgba(236, 244, 241, 0.96)),
+    var(--bg);
+}
+
+body.sidepanel-body[data-narrow-sidepanel] .tab-agent-shell {
+  display: none !important;
+}
+
+body.sidepanel-body[data-narrow-sidepanel]::before {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  z-index: 1;
+  display: grid !important;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(33, 47, 43, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 28px rgba(29, 45, 41, 0.12);
+  color: rgba(24, 33, 31, 0.72);
+  content: "TM";
+  font-size: 11px;
+  font-weight: 720;
+  transform: translateX(-50%);
+}
+
+body.sidepanel-body[data-narrow-sidepanel]::after {
+  position: fixed;
+  top: 58px;
+  left: 50%;
+  z-index: 1;
+  display: block !important;
+  width: min(110px, calc(100vw - 8px));
+  color: rgba(24, 33, 31, 0.48);
+  content: "Expand";
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+  transform: translateX(-50%);
+}

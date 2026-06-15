@@ -22,6 +22,7 @@ const MAX_AGENT_RUN_TRANSCRIPTS = 20;
 const MAX_TODO_LINKED_TABS = 24;
 const MAX_TRIAGE_TODO_LINKED_TABS = 8;
 const BROWSER_WORK_SEARCH_RESULT_LIMIT = 5;
+const NARROW_SIDEPANEL_WIDTH = 300;
 const TAB_WORK_STATES = new Set(["done", "later", "keep"]);
 
 const statusPanel = document.querySelector("#statusPanel");
@@ -323,6 +324,8 @@ const COMPOSER_TEMPLATE_ITEMS = [
   }
 ];
 
+installNarrowSidepanelGuard();
+
 await initI18n();
 applyI18n();
 await initSidebarContext();
@@ -366,6 +369,21 @@ document.querySelectorAll("[data-prompt]").forEach((button) => {
   });
 });
 document.addEventListener("click", handleComposerDocumentClick);
+
+function installNarrowSidepanelGuard() {
+  const updateNarrowState = () => {
+    const viewportWidth = Math.min(
+      window.innerWidth || Number.POSITIVE_INFINITY,
+      window.visualViewport?.width || Number.POSITIVE_INFINITY
+    );
+    const isNarrow = Number.isFinite(viewportWidth) && viewportWidth < NARROW_SIDEPANEL_WIDTH;
+    document.body?.toggleAttribute("data-narrow-sidepanel", isNarrow);
+  };
+
+  updateNarrowState();
+  window.addEventListener("resize", updateNarrowState, { passive: true });
+  window.visualViewport?.addEventListener?.("resize", updateNarrowState, { passive: true });
+}
 
 async function organizeNow() {
   setBusy(true);

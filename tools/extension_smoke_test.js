@@ -477,6 +477,8 @@ test("sidepanel opens as a chat-first Tab Agent UI", () => {
   assert(css.includes("Side panel narrow-state guard") && css.includes("@media (max-width: 260px)"), "Sidepanel should have a narrow-width fallback instead of clipped partial UI");
   assert(css.includes(".sidepanel-body .tab-agent-shell") && css.includes("display: none !important"), "Narrow sidepanel fallback should hide the full chat UI before it clips");
   assert(css.includes('content: "Widen"'), "Narrow sidepanel fallback should show a clear resize hint");
+  assert(sidepanelJs.includes("installNarrowSidepanelGuard") && sidepanelJs.includes("window.visualViewport?.width"), "Sidepanel should use a JS viewport guard for real Chrome side panel resizing");
+  assert(css.includes('body.sidepanel-body[data-narrow-sidepanel]') && css.includes('content: "Expand"'), "Real narrow Sidepanel state should use a final JS-driven CSS guard");
   assert(sidepanelHtml.includes("tab-agent-shell"), "Sidepanel should use the Tab Agent layout shell");
   assert(sidepanelHtml.includes("agent-thread"), "Sidepanel should render a conversation thread");
   assert(sidepanelHtml.includes("agent-composer"), "Sidepanel should use a bottom chat composer");
@@ -7151,7 +7153,7 @@ test("AI classification status stays lightweight in sidebar and dashboard", () =
   assert(screenshotTool.includes("quick-rail-page.png"), "Screenshot mock should include the page quick rail");
   assert(screenshotTool.includes("quick-rail-fixture.html"), "Screenshot mock should render quick rail on a normal web page fixture");
   assert(screenshotTool.includes("sidepanel-narrow-guard.png"), "Screenshot mock should include the narrow Sidepanel guard state");
-  assert(screenshotTool.includes("minBytes") && screenshotTool.includes("sidepanel-narrow-guard"), "Narrow Sidepanel guard screenshot should use an appropriate small-image threshold");
+  assert(screenshotTool.includes("minBytes") && screenshotTool.includes("data-narrow-sidepanel"), "Narrow Sidepanel guard screenshot should wait for the JS-driven guard state");
   assert(screenshotTool.includes("sidepanel-template-picker.png"), "Screenshot mock should include the Prompt / Skill Templates picker");
   assert(screenshotTool.includes("sidepanel-at-context-picker.png"), "Screenshot mock should include the @ context picker");
   assert(screenshotTool.includes('#composerPicker[data-trigger=\"mention\"]'), "Screenshot mock should wait for the @ context picker trigger state");

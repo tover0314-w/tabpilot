@@ -530,7 +530,7 @@ async function main() {
         fullPage: false,
         language: "en",
         minBytes: 1200,
-        readySelector: ".sidepanel-body"
+        readySelector: '.sidepanel-body[data-narrow-sidepanel]'
       },
       {
         name: "sidepanel-classification-refinements.png",

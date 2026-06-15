@@ -7870,3 +7870,33 @@ Evidence notes:
 - Page region QA selected one visible region only, then answered from that selected-region context.
 - `sidepanel-narrow-guard.png` exists specifically to prevent the clipped skinny Sidepanel UI regression from coming back.
 - The temporary Chrome runtime tests do not replace the final D-L11 redacted real-profile manual QA pass required before Chrome Web Store/public marketing launch.
+
+## 2026-06-15 Real Chrome Narrow Sidepanel Guard Follow-up
+
+Status: PASSED for local private-beta evidence
+
+Source state verified: added a JavaScript viewport guard for the Sidepanel so real Chrome side-panel resize events below a usable width set `data-narrow-sidepanel` and force the UI into a compact `TM / Expand` state. This is a follow-up to the user-reported real Chrome screenshot where the CSS-only guard did not prevent partial `TabMosaic / Chat` text from clipping into a skinny vertical strip.
+
+Commands:
+
+```bash
+node tools/extension_smoke_test.js
+node tools/capture_ui_screenshots.js
+node tools/preflight.js
+```
+
+Result:
+
+```text
+83 smoke tests passed
+PASS UI screenshots captured
+artifacts/ui-screenshots/sidepanel-narrow-guard.png
+PASS release package verified for v0.1.0
+sha256=7098a07a4b41266fc4fe10ac0b70a6caf484ee70ad510419148b37d0681ef94e
+```
+
+Evidence notes:
+
+- `sidepanel-narrow-guard.png` now waits for `.sidepanel-body[data-narrow-sidepanel]`, so the screenshot proves the JavaScript guard activated.
+- The expected narrow state is a small `TM` mark plus `Expand`, not clipped `TA`, `C`, or partial chat cards.
+- Public launch remains blocked by the existing user/QA gates; this entry only documents a local private-beta UI regression fix.
