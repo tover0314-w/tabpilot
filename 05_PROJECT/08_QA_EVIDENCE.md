@@ -7643,3 +7643,36 @@ Evidence notes:
 - The large-tab probe validated bounded behavior on 96 synthetic tabs and did not use real browsing data.
 - The screenshot capture regenerated local mock/synthetic screenshots under ignored `artifacts/`.
 - Public source release remains ready. Public marketing / Chrome Web Store launch remains blocked by D-L03 through D-L14 until the user confirms launch decisions and one redacted real-profile QA pass is completed.
+
+## 2026-06-15 Remote GitHub Actions CI Billing Blocker
+
+Source state verified: after commit `9244fe6` was pushed to `origin/main`, the remote GitHub Actions CI run failed before any job step started. GitHub's check-run annotation identifies the cause as an account billing lock, not a repository test failure.
+
+Commands:
+
+```bash
+gh run list --branch main --limit 3 --json databaseId,headSha,status,conclusion,workflowName,createdAt,updatedAt,url
+gh api repos/tover0314-w/tabpilot/commits/9244fe628f06ecfbdc352ea181b3fb714b558921/check-runs --jq '.check_runs[] | {name,status,conclusion,html_url,annotations_count:.output.annotations_count}'
+gh api repos/tover0314-w/tabpilot/check-runs/81416399124/annotations --jq '.[0]'
+```
+
+Result:
+
+```text
+Run: 27545121258
+Commit: 9244fe628f06ecfbdc352ea181b3fb714b558921
+Workflow: CI
+Job: Extension smoke and package
+Status: completed
+Conclusion: failure
+Steps: none
+Annotation: The job was not started because your account is locked due to a billing issue.
+```
+
+Evidence notes:
+
+- The remote job had no runner name and no executed steps, so no checkout, Node setup, smoke test, package, or upload step ran remotely.
+- Local `node tools/preflight.js`, `node tools/secret_scan.js`, `node tools/public_repo_audit.js`, package generation, and package verification passed before the push.
+- This blocker requires the GitHub account owner to resolve billing / Actions account status, then rerun the CI workflow.
+- Suggested rerun command after billing is resolved: `gh run rerun 27545121258`.
+- Public source release code is pushed, but remote CI is not green until GitHub Actions can start jobs again.
